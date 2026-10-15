@@ -2,20 +2,21 @@ import { mapDefinitions } from '../../data/maps/maps.js';
 import { neonStroke, neon } from '../rendering/neon.js';
 import { ArenaCollision } from './collision.js';
 import { ArenaNavigation } from './navigation.js';
+import { browserCanvas } from '../rendering/offscreen.js';
 
 export const arenaDefinitions = mapDefinitions;
 
-export function createArenas() {
+export function createArenas({ createCanvas = browserCanvas } = {}) {
   const cache = {};
   return {
     get(id) {
       if (!Object.hasOwn(arenaDefinitions, id)) id = 'empty';
-      return cache[id] || (cache[id] = createDatacenterArena());
+      return cache[id] || (cache[id] = createDatacenterArena(createCanvas));
     },
   };
 }
 
-function createDatacenterArena() {
+function createDatacenterArena(createCanvas) {
   const size = 2200,
     cell = 25,
     cols = 88,
@@ -52,17 +53,14 @@ function createDatacenterArena() {
     g.stroke();
   }
   function groundPattern(g, ratio) {
-    if (typeof document === 'undefined' || typeof DOMMatrix === 'undefined') return null;
     if (!tile || tileRatio !== ratio) {
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(tileSize * ratio);
-      canvas.height = Math.round(tileSize * ratio);
-      const c = canvas.getContext('2d');
+      const canvas = createCanvas(Math.round(tileSize * ratio), Math.round(tileSize * ratio));
+      const c = canvas?.getContext('2d');
       if (!c) return null;
       c.scale(ratio, ratio);
       paintTile(c);
-      tile = g.createPattern(canvas, 'repeat');
-      tile?.setTransform(new DOMMatrix().scale(1 / ratio));
+      tile = g.createPattern?.(canvas, 'repeat') || null;
+      tile?.setTransform?.({ a: 1 / ratio, b: 0, c: 0, d: 1 / ratio, e: 0, f: 0 });
       tileRatio = ratio;
     }
     return tile;
@@ -131,9 +129,6 @@ function createDatacenterArena() {
 
   return {
     size,
-    cell,
-    cols,
-    objects,
     collision,
     ...navigation,
     blocked: collision.blocked,

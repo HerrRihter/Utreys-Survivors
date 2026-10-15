@@ -1,27 +1,27 @@
 {
   "node": "v22.22.0",
   "platform": "linux/x64",
-  "baseCommit": "e9a269dc4ee0d5a7573e5028ca918521ff71f505",
+  "baseCommit": "8b39bd791355be81e9b254cb31f1659a9afb55b1",
   "date": "2026-10-15",
   "waves": {
     "scenario": "300 s of natural waves; seed=123456; stationary invulnerable Utrace",
     "steps": 18000,
     "maxEnemies": 50,
     "milliseconds": {
-      "median": 0.050248999999894295,
-      "p95": 0.10538399999995818,
-      "p99": 0.21766299999990224,
-      "maximum": 8.155636000000015
+      "median": 0.06018800000003921,
+      "p95": 0.17757899999992333,
+      "p99": 0.2620809999998528,
+      "maximum": 5.304815000000019
     }
   },
   "stress": {
     "scenario": "60 s with 300 enemies around a moving Traceability hero; seed=424242",
     "steps": 3600,
     "milliseconds": {
-      "median": 0.669793000000027,
-      "p95": 1.4748200000003635,
-      "p99": 2.112242000000151,
-      "maximum": 7.063453000000209
+      "median": 0.8001620000000003,
+      "p95": 1.4732719999997244,
+      "p99": 1.9244289999996909,
+      "maximum": 4.848710999999639
     }
   }
 }

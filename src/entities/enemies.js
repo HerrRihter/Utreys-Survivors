@@ -2,16 +2,19 @@ import { unitDefinitions } from '../../data/enemies/units.js';
 import { neonStroke } from '../rendering/neon.js';
 import { clientEmblems, drawClientEmblem } from '../rendering/art/client-emblems.js';
 import { enemyArt } from '../rendering/art/enemy-art.js';
+import { browserCanvas } from '../rendering/offscreen.js';
 
-export const Enemies = (() => {
+// Enemy data plus rendering with per-device-ratio sprite caches. `createCanvas` makes the
+// offscreen canvases; without one (headless tests) everything is painted directly.
+export function createEnemies({ createCanvas = browserCanvas } = {}) {
   const units = unitDefinitions;
   const labels = new Map();
 
   function drawLabel(g, u, x, y) {
     let label = labels.get(u);
-    if (!label && typeof document !== 'undefined') {
-      const canvas = document.createElement('canvas'),
-        ctx = canvas.getContext('2d');
+    const canvas = label ? null : createCanvas(1, 1),
+      ctx = canvas?.getContext('2d');
+    if (!label && ctx) {
       ctx.font = 'bold 11px monospace';
       const width = Math.ceil(ctx.measureText(u.name).width) + 8,
         height = 20;
@@ -141,15 +144,15 @@ export const Enemies = (() => {
     );
   }
   function cachedSprite(e, u, ratio) {
-    if (typeof document === 'undefined' || !document.createElement) return null;
     const key = spriteKey(e, u) + '@' + ratio;
     let canvas = sprites.get(key);
     if (!canvas) {
       if (sprites.size > 600) sprites.clear();
-      canvas = document.createElement('canvas');
-      canvas.width = Math.ceil(spriteBox.width * ratio);
-      canvas.height = Math.ceil(spriteBox.height * ratio);
-      const c = canvas.getContext('2d');
+      canvas = createCanvas(
+        Math.ceil(spriteBox.width * ratio),
+        Math.ceil(spriteBox.height * ratio),
+      );
+      const c = canvas?.getContext('2d');
       if (!c) return null;
       c.scale(ratio, ratio);
       c.translate(spriteBox.left, spriteBox.top);
@@ -182,4 +185,7 @@ export const Enemies = (() => {
   }
 
   return { units, mitigation, telegraph, draw, projectile };
-})();
+}
+
+// Shared instance for React previews (bestiary, arena view); the game session makes its own.
+export const Enemies = createEnemies();

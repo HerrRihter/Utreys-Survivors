@@ -5,7 +5,7 @@ export function traceabilityCharge(state, blocked = false) {
   if (!state) return { charge: 0, flash: 0 };
   const age = state.t - (state.p.chainImpactAt ?? -Infinity);
   const flash = Math.max(0, Math.min(1, 1 - age / 0.18));
-  if (blocked || state.p.stun > 0) return { charge: 0, flash };
+  if (blocked) return { charge: 0, flash };
   const action = state.p.action;
   if (action && !action.hit) {
     const progress = Math.min(1, action.elapsed / (action.duration * actionTiming.impactProgress));

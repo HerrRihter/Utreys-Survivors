@@ -1,13 +1,17 @@
 import { getWaveSchedule } from './wave-schedule.js';
 
+// `c` = { state, units, arena, rand, spawn }.
 export function seedPopulation(c) {
   const spec = getWaveSchedule(c.state.map).population;
   if (!spec) return;
-  const radius = c.Enemies.units[spec.unit].r;
+  const radius = c.units[spec.unit].r;
   for (let i = 0; i < spec.initial; i++) {
     for (let attempt = 0; attempt < 80; attempt++) {
-      const position = { x: c.rand(100, c.WORLD - 100), y: c.rand(120, c.WORLD - 100) };
-      if (c.dist(position, c.state.p) < 140 || c.Arena.blocked(position.x, position.y, radius))
+      const position = { x: c.rand(100, c.arena.size - 100), y: c.rand(120, c.arena.size - 100) };
+      if (
+        Math.hypot(position.x - c.state.p.x, position.y - c.state.p.y) < 140 ||
+        c.arena.blocked(position.x, position.y, radius)
+      )
         continue;
       c.spawn(spec.unit, false, { ...position, variant: i % spec.variants });
       break;

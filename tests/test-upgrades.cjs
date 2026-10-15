@@ -9,6 +9,7 @@ async function main() {
   vm.createContext(e);
   for (const f of ['src/systems/upgrades.js', 'src/systems/persistence.js'])
     await loadModule(e, projectRoot + '/' + f, { fresh: false });
+  e.Progression = e.createProgression({ storage: e.localStorage });
   const P = e.Progression,
     U = e.UpgradeSystem.create(P);
   const state = () => ({
@@ -63,6 +64,7 @@ async function main() {
   reload.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
   vm.createContext(reload);
   await loadModule(reload, projectRoot + '/src/systems/persistence.js', { fresh: true });
+  reload.Progression = reload.createProgression({ storage: reload.localStorage });
   assert.equal(reload.Progression.data.levels.training_utrace, 1);
   saved.set(
     'utreys-progression-v1',
@@ -74,6 +76,7 @@ async function main() {
     }),
   );
   await loadModule(reload, projectRoot + '/src/systems/persistence.js', { fresh: true });
+  reload.Progression = reload.createProgression({ storage: reload.localStorage });
   assert.equal(reload.Progression.data.codes, 44);
   assert.equal(reload.Progression.data.levels.health, 2);
   assert.equal(reload.Progression.data.levels.training_panoramix, undefined);

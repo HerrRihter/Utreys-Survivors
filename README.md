@@ -33,7 +33,7 @@ GitHub Actions выполняет те же проверки и браузерн
 
 ## Навигация
 
-Основная игра — `/`, просмотр арены — `/?view=arena`, противники — `/?view=opponents`. Старые адреса opponents-preview.html и village-preview.html перенаправляют на соответствующие экраны.
+Основная игра — `/`, просмотр арены — `/?view=arena`, противники — `/?view=opponents`. Старые адреса opponents-preview.html и arena-preview.html перенаправляют на соответствующие экраны.
 
 [Техническая документация](documentation.md) · [Контракт структуры](docs/STRUCTURE-CONTRACT.md) · [Индекс документов](docs/README.md)
 

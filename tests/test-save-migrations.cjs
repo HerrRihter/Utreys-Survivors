@@ -7,6 +7,7 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   const load = async () => {
     const env = { localStorage: storage };
     await loadModule(env, path.resolve('src/systems/persistence.js'));
+    env.Progression = env.createProgression({ storage: env.localStorage });
     return env.Progression;
   };
   saved.set(
@@ -33,13 +34,12 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   const { AudioSystem } = await loadModule({}, path.resolve('src/core/audio.js'));
   const target = { addEventListener() {}, removeEventListener() {} };
   const c = {
-    localStorage: storage,
+    storage,
     window: target,
     document: target,
-    $: () => null,
     performance: { now: () => 0 },
-    Math,
-    mode: 'menu',
+    random: Math.random,
+    getMode: () => 'menu',
   };
   saved.set('gaul-audio', JSON.stringify({ enabled: false, music: 0.17, effects: 0.42 }));
   let audio = AudioSystem.create(c);
@@ -56,7 +56,7 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   assert.doesNotThrow(() =>
     AudioSystem.create({
       ...c,
-      localStorage: {
+      storage: {
         getItem: storage.getItem,
         setItem() {
           throw Error('blocked');

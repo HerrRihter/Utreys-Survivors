@@ -20,8 +20,6 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   s.t += 0.2;
   assert.equal(traceabilityCharge(s).flash, 0);
   assert.equal(traceabilityCharge(s, true).charge, 0);
-  s.p.stun = 1;
-  assert.equal(traceabilityCharge(s).charge, 0);
   s.p = {};
   s.attack = 0.225;
   s.attackCycle = 0.45;

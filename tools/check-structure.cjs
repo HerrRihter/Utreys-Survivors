@@ -41,6 +41,11 @@ function checkStructure({
     if (!fs.existsSync(path.join(root, file)))
       throw new Error('Missing publication resource: ' + file);
   }
+  // Every runtime file is published: unused media must be deleted, not left behind.
+  const published = new Set(inventory.groups.flatMap((group) => group.files));
+  for (const file of assets)
+    if (file.startsWith('assets/runtime/') && !published.has(file))
+      throw new Error('Unused runtime asset: ' + file);
   const references = [
     ...contract.referenceFiles,
     ...contract.referenceRoots.flatMap((dir) => walk(root, dir)),

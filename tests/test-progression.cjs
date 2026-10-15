@@ -11,6 +11,7 @@ async function main() {
     e.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
     vm.createContext(e);
     await loadModule(e, projectRoot + '/src/systems/persistence.js', { fresh: false });
+    e.Progression = e.createProgression({ storage: e.localStorage });
     return e.Progression;
   }
   let p = await load();
@@ -65,6 +66,7 @@ async function main() {
   e.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
   vm.createContext(e);
   await loadModule(e, projectRoot + '/src/systems/persistence.js', { fresh: false });
+  e.Progression = e.createProgression({ storage: e.localStorage });
   e.Progression.earn(3);
   assert.equal(e.Progression.data.codes, 3);
   assert.equal(e.Progression.persistent, false);
@@ -105,6 +107,7 @@ async function main() {
     document: { hidden: false, addEventListener: (name, fn) => (docEvents[name] = fn) },
   };
   await loadModule(batched, projectRoot + '/src/systems/persistence.js');
+  batched.Progression = batched.createProgression({ storage: batched.localStorage });
   const rewards = batched.Progression;
   for (let i = 0; i < 100; i++) rewards.kill();
   rewards.earn(30);
@@ -152,12 +155,11 @@ async function main() {
   const savedWrites = writes;
   rewards.flush();
   assert.equal(writes, savedWrites, 'Clean flush does not write');
-  const beforeRank = writes;
-  assert(rewards.grantArmorRank());
-  assert.equal(writes, beforeRank, 'Active forge does not write storage in a combat frame');
-  assert.equal(rewards.armorRank, 1);
+  const beforeStats = writes;
+  rewards.recordBossKill();
+  assert.equal(writes, beforeStats, 'Combat stats do not write storage in a combat frame');
   events.pagehide();
-  assert.equal(snapshot.levels.armor, 1);
+  assert(writes > beforeStats, 'Deferred stats are saved on pagehide');
   assert.equal(rewards.codes, snapshot.codes);
   console.log(
     'PASS: combat rewards coalesce into idle saves; lifecycle and purchases flush; failed saves can retry.',

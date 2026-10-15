@@ -1,27 +1,27 @@
 import { AssetPaths } from '../rendering/asset-paths.js';
 import { createEventScope } from './lifecycle.js';
+// Music by mode, pooled sound effects and the persisted mix. No DOM controls: the UI calls
+// toggle()/setVolume() and re-reads `settings` when `onChange` fires.
 export const AudioSystem = {
-  create(c) {
+  create({ window, document, storage, performance, random, getMode, onChange = () => {} }) {
     const events = createEventScope();
     const root = new URL(AssetPaths.url('audio/'));
     const settings = { enabled: true, music: 0.3, effects: 0.65 };
     try {
-      const current = c.localStorage.getItem('utreys-audio');
-      const legacy = current == null ? c.localStorage.getItem('gaul-audio') : null;
+      const current = storage.getItem('utreys-audio');
+      const legacy = current == null ? storage.getItem('gaul-audio') : null;
       const saved = JSON.parse(current ?? legacy);
       if (saved) {
         if (typeof saved.enabled === 'boolean') settings.enabled = saved.enabled;
         for (const key of ['music', 'effects'])
           if (Number.isFinite(saved[key])) settings[key] = Math.max(0, Math.min(1, saved[key]));
       }
-      if (current == null && saved)
-        c.localStorage.setItem('utreys-audio', JSON.stringify(settings));
+      if (current == null && saved) storage.setItem('utreys-audio', JSON.stringify(settings));
     } catch {}
     const clips = {
       hit: ['hit-1.mp3', 'hit-2.mp3'],
       hurt: ['hurt.mp3'],
       throw: ['throw.ogg'],
-      stone: ['stone.ogg'],
       pickup: ['pickup.ogg'],
       heal: ['heal.ogg'],
       level: ['level.ogg'],
@@ -40,8 +40,8 @@ export const AudioSystem = {
       result = 'defeat',
       current = null;
     function make(file) {
-      if (!c.window.Audio) return null;
-      const audio = new c.window.Audio(new URL(file, root).href);
+      if (!window.Audio) return null;
+      const audio = new window.Audio(new URL(file, root).href);
       audio.preload = 'auto';
       // Short impacts vary in pitch with their speed. Pitch-preserving time
       // stretching adds metallic artifacts and unnecessary audio processing.
@@ -54,13 +54,13 @@ export const AudioSystem = {
       } catch {}
     }
     function quiet() {
-      return !unlocked || stopped || !settings.enabled || c.document.hidden;
+      return !unlocked || stopped || !settings.enabled || document.hidden;
     }
     function silenceEffects() {
       for (const pool of pools.values()) for (const audio of pool) audio.pause();
     }
     function sync() {
-      const mode = c.mode;
+      const mode = getMode();
       const wanted = mode === 'menu' ? 'tavern' : mode === 'end' ? result : 'battle';
       if (current?.name !== wanted) {
         current?.audio.pause();
@@ -83,17 +83,17 @@ export const AudioSystem = {
         play(current.audio);
     }
     function effect(name) {
-      if (quiet() || !settings.effects || c.mode === 'pause') return;
+      if (quiet() || !settings.effects || getMode() === 'pause') return;
       const files = clips[name] || clips.ui;
       if (!files) return;
-      const now = c.performance.now();
+      const now = performance.now();
       if (
         now - (cooldowns.get(name) ?? -Infinity) <
         (name === 'death' ? 180 : name === 'pickup' ? 100 : 65)
       )
         return;
       cooldowns.set(name, now);
-      const file = files[Math.floor(c.Math.random() * files.length)];
+      const file = files[Math.floor(random() * files.length)];
       let pool = pools.get(file);
       if (!pool) {
         pool = [];
@@ -107,78 +107,39 @@ export const AudioSystem = {
       if (!audio) return;
       audio.currentTime = 0;
       audio.volume = settings.effects * (name === 'pickup' ? 0.35 : name === 'death' ? 0.55 : 0.65);
-      audio.playbackRate = ['hit', 'throw', 'stone', 'punchSwing'].includes(name)
-        ? 0.94 + c.Math.random() * 0.12
+      audio.playbackRate = ['hit', 'throw', 'punchSwing'].includes(name)
+        ? 0.94 + random() * 0.12
         : 1;
       play(audio);
     }
     function save() {
       try {
-        c.localStorage.setItem('utreys-audio', JSON.stringify(settings));
+        storage.setItem('utreys-audio', JSON.stringify(settings));
       } catch {}
     }
-    function refreshControls() {
-      const text = `ЗВУК: ${settings.enabled ? 'ВКЛ' : 'ВЫКЛ'}`;
-      const button = c.$('sound');
-      if (button) {
-        button.textContent = text;
-        button.setAttribute?.('aria-pressed', String(settings.enabled));
-      }
-      const settingsBtn = c.$('settingsSound');
-      if (settingsBtn) {
-        settingsBtn.textContent = text;
-        settingsBtn.setAttribute?.('aria-pressed', String(settings.enabled));
-      }
-      const pauseBtn = c.$('pauseSound');
-      if (pauseBtn) {
-        pauseBtn.textContent = text;
-        pauseBtn.setAttribute?.('aria-pressed', String(settings.enabled));
-      }
-      const musicVal = c.$('musicVolumeVal');
-      if (musicVal) musicVal.textContent = Math.round(settings.music * 100) + '%';
-      const effectsVal = c.$('effectsVolumeVal');
-      if (effectsVal) effectsVal.textContent = Math.round(settings.effects * 100) + '%';
-    }
-    function unlock(event) {
-      const panel = c.document.querySelector?.('.audio-settings');
-      if (event?.target && panel && !panel.contains(event.target)) panel.open = false;
+    function unlock() {
       unlocked = true;
       sync();
     }
-    events.listen(c.document, 'pointerdown', unlock);
-    events.listen(c.document, 'keydown', unlock);
-    events.listen(c.document, 'visibilitychange', sync);
+    events.listen(document, 'pointerdown', unlock);
+    events.listen(document, 'keydown', unlock);
+    events.listen(document, 'visibilitychange', sync);
     function toggleEnabled() {
       settings.enabled = !settings.enabled;
       unlock();
       save();
-      refreshControls();
+      onChange();
       effect('ui');
     }
-    const soundBtn = c.$('sound');
-    if (soundBtn) soundBtn.onclick = toggleEnabled;
-    const settingsSoundBtn = c.$('settingsSound');
-    if (settingsSoundBtn) settingsSoundBtn.onclick = toggleEnabled;
-    const pauseSoundBtn = c.$('pauseSound');
-    if (pauseSoundBtn) pauseSoundBtn.onclick = toggleEnabled;
-    for (const [id, key] of [
-      ['musicVolume', 'music'],
-      ['effectsVolume', 'effects'],
-    ]) {
-      const control = c.$(id);
-      if (!control) continue;
-      control.value = Math.round(settings[key] * 100);
-      control.oninput = () => {
-        settings[key] = Math.max(0, Math.min(1, Number(control.value) / 100));
-        if (key === 'effects') silenceEffects();
-        const valLabel = c.$(key === 'music' ? 'musicVolumeVal' : 'effectsVolumeVal');
-        if (valLabel) valLabel.textContent = Math.round(settings[key] * 100) + '%';
-        unlock();
-        save();
-      };
-      control.onchange = () => effect('ui');
+    // percent: 0–100 from a slider; `commit` marks the end of a drag (plays a short cue).
+    function setVolume(key, percent, commit = false) {
+      settings[key] = Math.max(0, Math.min(1, Number(percent) / 100));
+      if (key === 'effects') silenceEffects();
+      unlock();
+      save();
+      onChange();
+      if (commit) effect('ui');
     }
-    refreshControls();
     return {
       effect,
       sync,
@@ -205,7 +166,10 @@ export const AudioSystem = {
         sync();
       },
       toggle: toggleEnabled,
-      settings,
+      setVolume,
+      get settings() {
+        return { ...settings };
+      },
     };
   },
 };

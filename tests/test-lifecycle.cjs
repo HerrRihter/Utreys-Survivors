@@ -5,7 +5,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   const h = await createHarness({ createSession: false });
   const baseline = h.eventCount();
   for (let mount = 0; mount < 3; mount++) {
-    const session = h.env.GameSession.create(h.env);
+    const session = h.createSession();
     assert(h.eventCount() > baseline);
     session.run();
     session.run();

@@ -4,7 +4,6 @@ const path = require('node:path');
 const { loadModule, resourcePath } = require('./helpers/load-modules.cjs');
 async function main() {
   const handlers = {},
-    nodes = {},
     created = [],
     storage = {};
   let now = 0;
@@ -32,14 +31,15 @@ async function main() {
         handlers[name] = fn;
       },
     },
-    localStorage: {
+    storage: {
       getItem: (key) => storage[key] ?? null,
       setItem: (key, value) => (storage[key] = value),
     },
     performance: { now: () => now },
     Math,
     mode: 'menu',
-    $: (id) => (nodes[id] ??= { setAttribute() {} }),
+    random: () => c.Math.random(),
+    getMode: () => c.mode,
   };
   const { AudioSystem } = await loadModule({}, path.resolve('src/core/audio.js'));
   const audio = AudioSystem.create(c);
@@ -98,19 +98,17 @@ async function main() {
   c.document.hidden = false;
   handlers.visibilitychange();
   assert(!battle.paused);
-  nodes.sound.onclick();
+  audio.toggle();
   assert(created.every((item) => item.paused));
   assert.equal(JSON.parse(storage['utreys-audio']).enabled, false);
-  nodes.sound.onclick();
+  audio.toggle();
   assert(!battle.paused);
-  nodes.musicVolume.value = 0;
-  nodes.musicVolume.oninput();
+  audio.setVolume('music', 0);
   assert(battle.paused);
   now += 100;
   audio.effect('pickup');
   assert(created.some((item) => item.src.endsWith('pickup.ogg') && !item.paused));
-  nodes.musicVolume.value = 45;
-  nodes.musicVolume.oninput();
+  audio.setVolume('music', 45);
   assert.equal(battle.volume, 0.45);
   c.mode = 'level';
   audio.sync();
@@ -136,7 +134,7 @@ async function main() {
     assert(!buffer.subarray(0, 100).toString().includes('<html'), 'Downloaded file is audio');
   }
   const reloaded = AudioSystem.create(c);
-  assert.equal(nodes.musicVolume.value, 45);
+  assert.equal(reloaded.settings.music, 0.45, 'mix persists across sessions');
   reloaded.stop();
   console.log(
     'PASS: gesture unlock, local audio files, scene switching, pause/resume, visibility, mute, persistent mixing, cooldowns, bounded voices and one-shot endings.',
@@ -145,20 +143,19 @@ async function main() {
   const h = await createHarness();
   h.session.start();
   const sounds = [];
-  const combatContext = {
-    Math,
-    selected: 'utrace',
-    state: h.session.state,
-    soundEffect: (name) => sounds.push(name),
-    Enemies: h.env.Enemies,
-    Corpses: { add() {} },
-    Progression: { kill: () => 0 },
-    rand: () => 0,
-    Arena: { clear: () => true },
-    Heroes: h.env.Heroes,
-  };
-  const combat = h.env.CombatSystem.create(combatContext),
-    p = combatContext.state.p;
+  const run = { selected: 'utrace', state: h.session.state };
+  const combat = h.env.CombatSystem.create({
+      run,
+      heroes: h.env.Heroes,
+      enemies: h.env.Enemies,
+      corpses: { add() {} },
+      progression: { kill: () => 0 },
+      world: { arena: { clear: () => true } },
+      audio: { effect: (name) => sounds.push(name) },
+      math: { random: () => 0.5, rand: () => 0 },
+      toast() {},
+    }),
+    p = run.state.p;
   combat.beginAction(p, 0.4, { x: p.x + 10, y: p.y });
   assert.deepEqual(sounds, ['punchSwing']);
   combat.heroImpact({ direction: { x: 1, y: 0 } });

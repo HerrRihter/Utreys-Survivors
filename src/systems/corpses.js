@@ -1,6 +1,7 @@
-import { Enemies } from '../entities/enemies.js';
 import { compact } from '../core/compact.js';
-export const Corpses = (() => {
+
+// Fallen enemies: a cached pose per unit that tips over and fades out.
+export function createCorpses({ enemies, createCanvas }) {
   const lifetime = 8,
     fadeTime = 2,
     limit = 180,
@@ -8,12 +9,11 @@ export const Corpses = (() => {
   function pose(e) {
     const key = e.unit;
     if (cache.has(key)) return cache.get(key);
-    const c = document.createElement('canvas');
-    c.width = 256;
-    c.height = 256;
-    const g = c.getContext('2d');
+    const c = createCanvas(256, 256),
+      g = c?.getContext('2d');
+    if (!g) return null;
     g.imageSmoothingEnabled = false;
-    Enemies.draw(g, { ...e, x: 128, y: 196, heading: 0, hit: 0, action: null, animationTime: 0 });
+    enemies.draw(g, { ...e, x: 128, y: 196, heading: 0, hit: 0, action: null, animationTime: 0 });
     cache.set(key, c);
     return c;
   }
@@ -57,9 +57,9 @@ export const Corpses = (() => {
       g.scale(1, 1 - 0.42 * ease);
       g.rotate(b.angle * ease);
       g.scale(b.flip ? -1 : 1, 1);
-      g.drawImage(b.frame, -128, -196);
+      if (b.frame) g.drawImage(b.frame, -128, -196);
       g.restore();
     }
   }
-  return { add, update, draw, opacity, lifetime, limit };
-})();
+  return { add, update, draw };
+}

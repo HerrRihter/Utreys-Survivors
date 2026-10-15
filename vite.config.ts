@@ -17,11 +17,6 @@ export default defineConfig({
             source: readFileSync(new URL(file, import.meta.url)),
           });
         }
-        this.emitFile({
-          type: 'asset',
-          fileName: 'village-preview.html',
-          source: readFileSync(new URL('arena-preview.html', import.meta.url)),
-        });
         for (const file of activeAssets) {
           this.emitFile({
             type: 'asset',

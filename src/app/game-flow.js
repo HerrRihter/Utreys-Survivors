@@ -1,34 +1,60 @@
 import { createNodeState } from '../systems/node-objectives.js';
 import { getWaveSchedule, createWaveState } from '../systems/wave-schedule.js';
-import { seedPopulation } from '../systems/population.js';
 import { permanentUpgradeDefinitions } from '../../data/upgrades.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { arenaDefinitions } from '../world/arenas.js';
+
+// Run lifecycle (start, pause, level-up, finish) and menu navigation. Only changes state:
+// React reads `run` through the session's stores, `ui.emit()` / `hud.emit()` announce changes.
 export const GameFlow = {
-  create(sessionContext) {
+  create({
+    run,
+    settings,
+    progression,
+    heroes,
+    enemies,
+    upgrades,
+    world,
+    abilities,
+    audio,
+    input,
+    math,
+    storage,
+    toast,
+    ui,
+    hud,
+  }) {
+    function setMode(mode) {
+      run.mode = mode;
+      audio.sync();
+    }
+    function changed() {
+      ui.emit();
+      hud.emit();
+    }
     function recordRun() {
-      const s = sessionContext.state;
+      const s = run.state;
       if (!s || s.resultRecorded) return;
-      sessionContext.Progression.recordTime(s.t);
-      sessionContext.Progression.recordLevel(s.level);
+      progression.recordTime(s.t);
+      progression.recordLevel(s.level);
       s.resultRecorded = true;
     }
     function start() {
       recordRun();
-      if (!sessionContext.Progression.owned(sessionContext.selected))
-        sessionContext.selected = 'utrace';
-      const hero = sessionContext.Heroes.defs[sessionContext.selected],
-        levels = sessionContext.Progression.data.levels;
-      sessionContext.resetInput();
-      sessionContext.state = {
+      if (!progression.owned(run.selected)) run.selected = 'utrace';
+      const hero = heroes.defs[run.selected],
+        levels = progression.data.levels,
+        health = hero.hp + levels.health * permanentUpgradeDefinitions.health.factor;
+      input.resetInput();
+      run.state = {
         t: 0,
-        map: sessionContext.selectedMap,
-        ...createWaveState(getWaveSchedule(sessionContext.selectedMap)),
+        map: run.selectedMap,
+        ...createWaveState(getWaveSchedule(run.selectedMap)),
         kills: 0,
         level: 1,
         xp: 0,
         need: 8,
         attack: 0.2,
-        ring: 1,
         enemies: [],
         nodes: createNodeState(),
         corpses: [],
@@ -36,7 +62,6 @@ export const GameFlow = {
         shots: [],
         codes: [],
         earned: 0,
-        music: 0,
         gems: [],
         fx: [],
         texts: [],
@@ -52,157 +77,202 @@ export const GameFlow = {
           magnet: 75,
           armor: 0,
           regen: 0,
-          stones: 0,
-          orbit: 0,
         },
         p: {
-          x: sessionContext.WORLD / 2,
-          y: sessionContext.WORLD / 2,
-          hp: hero.hp + levels.health * permanentUpgradeDefinitions.health.factor,
-          max: hero.hp + levels.health * permanentUpgradeDefinitions.health.factor,
+          x: world.arena.size / 2,
+          y: world.arena.size / 2,
+          hp: health,
+          max: health,
           speed: hero.speed,
           inv: 0,
           flip: false,
           facing: { x: 1, y: 0 },
         },
       };
-      sessionContext.abilities.init();
-      if (sessionContext.selected === 'ba') {
-        const client = sessionContext.$('baClient')?.value;
-        sessionContext.state.baSpecialization = {
-          client: baClientIds.includes(client) ? client : baClientIds[0],
+      abilities.init();
+      if (run.selected === 'ba')
+        run.state.baSpecialization = {
+          client: baClientIds.includes(run.baClient) ? run.baClient : baClientIds[0],
           bonus: 0,
         };
-      }
-      sessionContext.UpgradeSystem.permanent(sessionContext.state, sessionContext.selected, levels);
-      sessionContext.Arena.prepare(
-        Object.values(sessionContext.Enemies.units).map((unit) => unit.r),
-        sessionContext.state.p,
+      upgrades.permanent(run.state, run.selected, levels);
+      world.arena.prepare(
+        Object.values(enemies.units).map((unit) => unit.r),
+        run.state.p,
       );
-      seedPopulation(sessionContext);
-      sessionContext.mode = 'play';
-      [
-        'menu',
-        'runHeroSelect',
-        'end',
-        'paused',
-        'levelup',
-        'bossbar',
-        'achievements',
-        'settings',
-      ].forEach((id) => sessionContext.show(id, false));
-      ['hud', 'pause', 'stick'].forEach((id) => sessionContext.show(id, true));
-      sessionContext.show('hint', sessionContext.gameSettings?.hints !== false);
-      sessionContext.$('heroLabel').textContent = hero.name.toUpperCase();
-      sessionContext.toast(
-        sessionContext.arenaDefinitions[sessionContext.selectedMap].name.toUpperCase() +
-          ' · ' +
-          sessionContext.arenaDefinitions[sessionContext.selectedMap].description,
-      );
-      sessionContext.soundEffect('ui');
-      sessionContext.hud();
+      run.screen = null;
+      run.result = null;
+      setMode('play');
+      const map = arenaDefinitions[run.selectedMap];
+      toast(map.name.toUpperCase() + ' · ' + map.description);
+      audio.effect('ui');
+      changed();
     }
     function menu() {
       recordRun();
-      sessionContext.Progression.flush();
-      sessionContext.mode = 'menu';
-      sessionContext.$('abilities')?.classList?.toggle?.('hidden', true);
-      sessionContext.state = null;
-      sessionContext.resetInput();
-      [
-        'end',
-        'paused',
-        'levelup',
-        'hud',
-        'hint',
-        'pause',
-        'stick',
-        'bossbar',
-        'runHeroSelect',
-        'shop',
-        'achievements',
-        'settings',
-      ].forEach((id) => sessionContext.show(id, false));
-      sessionContext.show('menu', true);
-      sessionContext.renderShop();
-      const toastEl = sessionContext.$('toast');
-      if (toastEl?.style) toastEl.style.opacity = '0';
-      sessionContext.updateRecord();
+      progression.flush();
+      setMode('menu');
+      run.state = null;
+      run.screen = 'menu';
+      run.toast = { text: '', left: 0 };
+      input.resetInput();
+      changed();
     }
     function pause() {
-      if (sessionContext.mode === 'play') {
-        sessionContext.Progression.flush();
-        sessionContext.mode = 'pause';
-        sessionContext.resetInput();
-        sessionContext.show('settings', false);
-        sessionContext.show('paused', true);
-        sessionContext.abilities.hud();
-      } else if (sessionContext.mode === 'pause') {
-        sessionContext.mode = 'play';
-        sessionContext.show('settings', false);
-        sessionContext.show('paused', false);
-        sessionContext.show('hint', sessionContext.gameSettings?.hints !== false);
-        sessionContext.abilities.hud();
-      }
+      if (run.mode === 'play') {
+        progression.flush();
+        setMode('pause');
+        input.resetInput();
+      } else if (run.mode === 'pause') {
+        setMode('play');
+      } else return;
+      if (run.screen === 'settings') run.screen = null;
+      changed();
     }
     function levelUp() {
-      sessionContext.state.xp -= sessionContext.state.need;
-      sessionContext.state.level++;
-      sessionContext.state.need = sessionContext.Math.floor(sessionContext.state.need * 1.23 + 3);
-      sessionContext.mode = 'level';
-      sessionContext.resetInput();
-      sessionContext.choice = sessionContext.UpgradeSystem.offer(
-        sessionContext.selected,
-        sessionContext.state,
-      );
-      sessionContext.$('cards').replaceChildren();
-      sessionContext.choice.forEach((u, i) => {
-        const b = sessionContext.document.createElement('button');
-        b.className = 'upgrade';
-        b.innerHTML = `<em>${u.icon}</em><strong>${u.name}</strong><span>${u.group}${u.max ? ` · Ранг ${(sessionContext.state.upgradeRanks?.[u.id] || 0) + 1}/${u.max}` : ``}</span><span>${u.desc}</span><span style="margin-top:16px;color:#00e5ff">[ ${i + 1} ]</span>`;
-        b.onclick = () => pickUpgrade(i);
-        sessionContext.$('cards').append(b);
-      });
-      sessionContext.show('levelup', true);
-      sessionContext.soundEffect('level');
-      sessionContext.hud();
+      const s = run.state;
+      s.xp -= s.need;
+      s.level++;
+      s.need = Math.floor(s.need * 1.23 + 3);
+      setMode('level');
+      input.resetInput();
+      run.choice = upgrades.offer(run.selected, s);
+      audio.effect('level');
+      changed();
     }
     function pickUpgrade(i) {
-      if (sessionContext.mode !== 'level' || !sessionContext.choice[i]) return;
-      sessionContext.UpgradeSystem.apply(sessionContext.choice[i], sessionContext.state);
-      sessionContext.show('levelup', false);
-      sessionContext.mode = 'play';
-      sessionContext.soundEffect('ui');
-      if (sessionContext.state.xp >= sessionContext.state.need) levelUp();
+      if (run.mode !== 'level' || !run.choice[i]) return;
+      upgrades.apply(run.choice[i], run.state);
+      setMode('play');
+      audio.effect('ui');
+      if (run.state.xp >= run.state.need) levelUp();
+      else changed();
     }
     function finish(win) {
-      if (!sessionContext.state || sessionContext.state.resultRecorded) return;
+      const s = run.state;
+      if (!s || s.resultRecorded) return;
       recordRun();
-      sessionContext.Progression.flush();
-      sessionContext.finishAudio(win);
-      sessionContext.mode = 'end';
-      sessionContext.abilities.hud();
-      sessionContext.resetInput();
-      sessionContext.show('end', true);
-      sessionContext.show('pause', false);
-      sessionContext.show('stick', false);
-      sessionContext.$('endTag').textContent = win
-        ? sessionContext.arenaDefinitions[sessionContext.selectedMap].victoryTag
-        : 'ЗАБЕГ ОКОНЧЕН';
-      sessionContext.$('endTitle').textContent = win ? 'Забег завершён' : 'Попробовать ещё раз?';
-      sessionContext.$('endText').textContent = win
-        ? 'Отличный результат. Можно начать новый забег или проверить улучшения.'
-        : 'Даже героям нужен привал. Попробуй другую сборку и вернись в игру.';
-      sessionContext.$('endStats').innerHTML =
-        `<div><strong>${sessionContext.clock(sessionContext.state.t)}</strong><span>ВРЕМЯ</span></div><div><strong>${sessionContext.state.kills}</strong><span>ПРОТИВНИКОВ ПОБЕЖДЕНО</span></div><div><strong>${sessionContext.state.level}</strong><span>УРОВЕНЬ</span></div><div><strong>+${sessionContext.state.earned}</strong><span>ЖЕТОНОВ</span></div>`;
-      sessionContext.best = {
-        kills: sessionContext.Math.max(sessionContext.best.kills || 0, sessionContext.state.kills),
-        time: sessionContext.Math.max(sessionContext.best.time || 0, sessionContext.state.t),
+      progression.flush();
+      audio.finish(win);
+      setMode('end');
+      input.resetInput();
+      run.result = {
+        tag: win ? arenaDefinitions[run.selectedMap].victoryTag : 'ЗАБЕГ ОКОНЧЕН',
+        title: win ? 'Забег завершён' : 'Попробовать ещё раз?',
+        text: win
+          ? 'Отличный результат. Можно начать новый забег или проверить улучшения.'
+          : 'Даже героям нужен привал. Попробуй другую сборку и вернись в игру.',
+        stats: [
+          { value: math.clock(s.t), label: 'ВРЕМЯ' },
+          { value: String(s.kills), label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО' },
+          { value: String(s.level), label: 'УРОВЕНЬ' },
+          { value: '+' + s.earned, label: 'ЖЕТОНОВ' },
+        ],
+      };
+      run.best = {
+        kills: Math.max(run.best.kills || 0, s.kills),
+        time: Math.max(run.best.time || 0, s.t),
       };
       try {
-        sessionContext.localStorage.setItem('utreys-best', JSON.stringify(sessionContext.best));
+        storage.setItem('utreys-best', JSON.stringify(run.best));
       } catch {}
+      changed();
     }
-    return { start, menu, pause, levelUp, pickUpgrade, finish };
+
+    // Menu screens. Each returns nothing and announces the change.
+    function show(screen) {
+      run.screen = screen;
+      ui.emit();
+    }
+    function openHeroSelect() {
+      if (run.mode !== 'menu') return;
+      const owned = Object.keys(heroes.defs).filter((id) => progression.owned(id));
+      if (!owned.length) throw new Error('Нет доступных героев для нового забега');
+      run.pendingHero = owned.includes(run.selected) ? run.selected : owned[0];
+      if (!baClientIds.includes(run.baClient)) run.baClient = baClientIds[0];
+      show('heroSelect');
+    }
+    function chooseHero(id) {
+      if (!progression.owned(id)) return;
+      run.pendingHero = id;
+      ui.emit();
+    }
+    function chooseBaClient(id) {
+      run.baClient = id;
+      ui.emit();
+    }
+    function chooseMap(id) {
+      if (!arenaDefinitions[id]) return;
+      run.selectedMap = id;
+      world.select(id);
+      ui.emit();
+    }
+    function startSelected() {
+      run.selected = run.pendingHero;
+      start();
+    }
+    function openMenuScreen(screen) {
+      if (run.mode === 'menu') show(screen);
+    }
+    function openSettings(origin) {
+      run.settingsOrigin = origin;
+      show('settings');
+    }
+    function closeSettings() {
+      show(run.settingsOrigin === 'menu' ? 'menu' : null);
+    }
+    // Escape: close the open screen; false means nothing was open (the caller may pause).
+    function closeScreen() {
+      if (run.screen === 'settings') {
+        closeSettings();
+        return true;
+      }
+      if (run.mode === 'menu' && run.screen && run.screen !== 'menu') {
+        show('menu');
+        return true;
+      }
+      return false;
+    }
+    function buyHero(id) {
+      if (!progression.owned(id) && progression.buyHero(id)) ui.emit();
+    }
+    function buyUpgrade(id) {
+      if (progression.buyUpgrade(id)) ui.emit();
+    }
+    function claimAchievement(id) {
+      if (progression.claimAchievement(id, run.best)) {
+        audio.effect('pickup');
+        ui.emit();
+      }
+    }
+    function toggleSetting(key) {
+      settings.toggle(key);
+      audio.effect('ui');
+      changed();
+    }
+    return {
+      start,
+      menu,
+      pause,
+      levelUp,
+      pickUpgrade,
+      finish,
+      openHeroSelect,
+      closeHeroSelect: () => show('menu'),
+      chooseHero,
+      chooseBaClient,
+      chooseMap,
+      startSelected,
+      openShop: () => openMenuScreen('shop'),
+      openAchievements: () => openMenuScreen('achievements'),
+      backToMenu: () => show('menu'),
+      openSettings,
+      closeSettings,
+      closeScreen,
+      buyHero,
+      buyUpgrade,
+      claimAchievement,
+      toggleSetting,
+    };
   },
 };

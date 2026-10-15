@@ -39,15 +39,7 @@ function validateSchedules(schedules, maps, units) {
     const inactive = schedule.active === false;
     shape(
       schedule,
-      [
-        ...(inactive ? ['active'] : []),
-        'normal',
-        'recurring',
-        'boss',
-        'population',
-        'residents',
-        'notifications',
-      ],
+      [...(inactive ? ['active'] : []), 'normal', 'recurring', 'boss', 'notifications'],
       id,
     );
     if (Object.hasOwn(schedule, 'active'))
@@ -109,9 +101,6 @@ function validateSchedules(schedules, maps, units) {
       if (inactive)
         fail(
           schedule.boss === null &&
-            schedule.population === null &&
-            Array.isArray(schedule.residents) &&
-            schedule.residents.length === 0 &&
             Array.isArray(schedule.notifications) &&
             schedule.notifications.length === 0,
           id + ' inactive schedule must not define active content',
@@ -126,24 +115,6 @@ function validateSchedules(schedules, maps, units) {
         'boss messages',
       );
     }
-    if (schedule.population !== null) {
-      const spec = schedule.population;
-      shape(
-        spec,
-        ['unit', 'initial', 'maximum', 'every', 'growthEvery', 'variants'],
-        id + '.population',
-      );
-      unit(spec.unit);
-      fail(units[spec.unit].civilian === true, 'population must use a civilian unit');
-      integer(spec.initial, 0, 'initial');
-      integer(spec.maximum, spec.initial, 'maximum');
-      positive(spec.every, 'population every');
-      positive(spec.growthEvery, 'growthEvery');
-      integer(spec.variants, 1, 'variants');
-    }
-    fail(Array.isArray(schedule.residents), 'residents must be an array');
-    schedule.residents.forEach(unit);
-    fail(new Set(schedule.residents).size === schedule.residents.length, 'duplicate resident unit');
     fail(Array.isArray(schedule.notifications), 'notifications must be an array');
     for (const notification of schedule.notifications) {
       shape(notification, ['time', 'message'], 'notification');

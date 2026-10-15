@@ -17,6 +17,7 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
       },
     };
     await loadModule(env, path.resolve(__dirname, '../src/systems/persistence.js'));
+    env.Progression = env.createProgression({ storage: env.localStorage });
     return env.Progression;
   };
   let p = await load();
@@ -56,11 +57,10 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
     heroAttack(
       {
         state,
-        selected: id,
-        Heroes: { defs: heroDefinitions },
-        Enemies: { units: { l3: {} } },
-        Arena: { clear },
-        soundEffect() {},
+        hero: heroDefinitions[id],
+        units: { l3: {} },
+        arena: { clear },
+        effect() {},
         damage(e, n) {
           e.hp -= n;
         },

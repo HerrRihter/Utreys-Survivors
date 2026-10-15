@@ -3,559 +3,284 @@ import { createArenas, arenaDefinitions } from '../world/arenas.js';
 import { createMath } from '../core/math.js';
 import { CanvasSystem } from '../rendering/canvas.js';
 import { SpriteRenderer } from '../rendering/sprite-renderer.js';
-import { GameUI } from '../ui/game-ui.js';
+import { SceneRenderer } from '../rendering/scene-renderer.js';
+import { canvasFactory } from '../rendering/offscreen.js';
 import { AudioSystem } from '../core/audio.js';
 import { InputSystem } from '../core/input.js';
+import { GameLoop } from '../core/game-loop.js';
 import { GameFlow } from './game-flow.js';
+import { createStore } from './store.js';
+import { createRunState, createGameSettings } from './run-state.js';
+import * as views from './views.js';
 import { EnemySpawning } from '../systems/enemy-spawning.js';
 import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
-import { SceneRenderer } from '../rendering/scene-renderer.js';
 import { AbilitySystem } from '../systems/abilities.js';
-import { GameLoop } from '../core/game-loop.js';
+import { UpgradeSystem } from '../systems/upgrades.js';
+import { createCorpses } from '../systems/corpses.js';
+import { createEnemies } from '../entities/enemies.js';
+import { Heroes } from '../entities/heroes.js';
+import { MenuPortraits } from '../ui/menu-portraits.js';
+
+// Composition root of one game mount. Every system gets exactly the collaborators it uses;
+// React talks to the session through `ui`/`hud` stores, read models (views) and commands.
 export const GameSession = {
   create({
     document,
     window,
-    localStorage,
+    storage,
     performance,
     requestAnimationFrame,
     cancelAnimationFrame,
-    Math,
-    Heroes,
-    Progression,
-    UpgradeSystem: UpgradeSystemFactory,
-    Enemies,
-    Corpses,
-    MenuPortraits,
+    canvas,
+    progression,
+    heroes = Heroes,
   }) {
     const events = createEventScope();
     let disposed = false;
-    const UpgradeSystem = UpgradeSystemFactory.create(Progression);
-    const arenas = createArenas();
-    let selectedMap = 'empty';
+    const createCanvas = canvasFactory(document);
+    const ctx = canvas.getContext('2d');
+    const view = CanvasSystem.create({ window, canvas, ctx });
+    view.resize();
+    events.listen(window, 'resize', view.resize);
+
+    const math = createMath(Math);
+    const run = createRunState({ storage });
+    const settings = createGameSettings({ storage });
+    const ui = createStore(),
+      hud = createStore();
+    const arenas = createArenas({ createCanvas });
     // Resolved once per map change: the simulation reads it hundreds of times per frame.
-    let arena = arenas.get(selectedMap);
-    let audioController = null;
-    const sessionContext = {
-      get abilities() {
-        return abilities;
-      },
-      get selectedMap() {
-        return selectedMap;
-      },
-      get arenaDefinitions() {
-        return arenaDefinitions;
-      },
-      get document() {
-        return document;
-      },
-      get window() {
-        return window;
-      },
-      get localStorage() {
-        return localStorage;
-      },
-      get performance() {
-        return performance;
-      },
-      get requestAnimationFrame() {
-        return requestAnimationFrame;
-      },
-      get cancelAnimationFrame() {
-        return cancelAnimationFrame;
-      },
-      get Math() {
-        return Math;
-      },
-      get Heroes() {
-        return Heroes;
-      },
-      get Progression() {
-        return Progression;
-      },
-      get UpgradeSystem() {
-        return UpgradeSystem;
-      },
-      get Arena() {
-        return arena;
-      },
-      get Enemies() {
-        return Enemies;
-      },
-      get Corpses() {
-        return Corpses;
-      },
-      get MenuPortraits() {
-        return MenuPortraits;
-      },
-      get $() {
-        return $;
-      },
-      get canvas() {
-        return canvas;
-      },
-      get ctx() {
-        return ctx;
-      },
-      get W() {
-        return W;
-      },
-      set W(value) {
-        W = value;
-      },
-      get H() {
-        return H;
-      },
-      set H(value) {
-        H = value;
-      },
-      get WORLD() {
-        return arena.size;
-      },
-      get resizeCanvas() {
-        return resizeCanvas;
-      },
-      get selected() {
-        return selected;
-      },
-      set selected(value) {
-        selected = value;
-      },
-      get mode() {
-        return mode;
-      },
-      set mode(value) {
-        mode = value;
-        if (document?.body) document.body.dataset.mode = value;
-        audioController?.sync();
-      },
-      get state() {
-        return state;
-      },
-      set state(value) {
-        state = value;
-      },
-      get keys() {
-        return keys;
-      },
-      set keys(value) {
-        keys = value;
-      },
-      get toastLeft() {
-        return toastLeft;
-      },
-      set toastLeft(value) {
-        toastLeft = value;
-      },
-      get choice() {
-        return choice;
-      },
-      set choice(value) {
-        choice = value;
-      },
-      get pointer() {
-        return pointer;
-      },
-      set pointer(value) {
-        pointer = value;
-      },
-      get stick() {
-        return stick;
-      },
-      set stick(value) {
-        stick = value;
-      },
-      get best() {
-        return best;
-      },
-      set best(value) {
-        best = value;
-      },
-      get rand() {
-        return rand;
-      },
-      get clamp() {
-        return clamp;
-      },
-      get dist() {
-        return dist;
-      },
-      get clock() {
-        return clock;
-      },
-      get sprite() {
-        return sprite;
-      },
-      get portraits() {
-        return portraits;
-      },
-      get fitPortrait() {
-        return fitPortrait;
-      },
-      get menuPortraitPhase() {
-        return menuPortraitPhase;
-      },
-      set menuPortraitPhase(value) {
-        menuPortraitPhase = value;
-      },
-      get animateMenu() {
-        return animateMenu;
-      },
-      get soundEffect() {
-        return audioController.effect;
-      },
-      get finishAudio() {
-        return audioController.finish;
-      },
-      get stopAudio() {
-        return audioController.stop;
-      },
-      get resumeAudio() {
-        return audioController.resume;
-      },
-      get show() {
-        return show;
-      },
-      get toast() {
-        return toast;
-      },
-      get resetInput() {
-        return resetInput;
-      },
-      get start() {
-        return start;
-      },
-      get menu() {
-        return menu;
-      },
-      get updateRecord() {
-        return updateRecord;
-      },
-      get pendingRunHero() {
-        return pendingRunHero;
-      },
-      set pendingRunHero(value) {
-        pendingRunHero = value;
-      },
-      get updateRunHeroStats() {
-        return updateRunHeroStats;
-      },
-      get renderRunHeroes() {
-        return renderRunHeroes;
-      },
-      get openRunHeroSelect() {
-        return openRunHeroSelect;
-      },
-      get renderShop() {
-        return renderShop;
-      },
-      get closeShop() {
-        return closeShop;
-      },
-      get renderAchievements() {
-        return renderAchievements;
-      },
-      get openAchievements() {
-        return openAchievements;
-      },
-      get closeAchievements() {
-        return closeAchievements;
-      },
-      get openSettings() {
-        return openSettings;
-      },
-      get closeSettings() {
-        return closeSettings;
-      },
-      get gameSettings() {
-        return gameSettings;
-      },
-      get pause() {
-        return pause;
-      },
-      get levelUp() {
-        return levelUp;
-      },
-      get pickUpgrade() {
-        return pickUpgrade;
-      },
-      get spawn() {
-        return spawn;
-      },
-      get updateSpawning() {
-        return updateSpawning;
-      },
-      get damage() {
-        return damage;
-      },
-      get beginAction() {
-        return beginAction;
-      },
-      get advanceAction() {
-        return advanceAction;
-      },
-      get hurtPlayer() {
-        return hurtPlayer;
-      },
-      get heroImpact() {
-        return heroImpact;
-      },
-      get finish() {
-        return finish;
-      },
-      get update() {
-        return update;
-      },
-      get hud() {
-        return hud;
-      },
-      get background() {
-        return background;
-      },
-      get draw() {
-        return draw;
-      },
-      get run() {
-        return run;
-      },
-      get stop() {
-        return stop;
+    const world = {
+      arena: arenas.get(run.selectedMap),
+      select(id) {
+        this.arena = arenas.get(id);
       },
     };
-
-    const $ = (id) => document.getElementById(id),
-      canvas = $('game'),
-      ctx = canvas.getContext('2d');
-    let W = 960,
-      H = 540;
-    const { resizeCanvas } = CanvasSystem.create(sessionContext);
-    resizeCanvas();
-    events.listen(window, 'resize', resizeCanvas);
-    let selected = 'utrace',
-      mode = 'menu',
-      state = null,
-      keys = new Set(),
-      toastLeft = 0,
-      choice = [];
-    if (document?.body) document.body.dataset.mode = mode;
-    let pointer = null,
-      stick = { x: 0, y: 0 },
-      best = { kills: 0, time: 0 };
-    try {
-      best = JSON.parse(localStorage.getItem('utreys-best')) || best;
-    } catch {}
-    const { rand, clamp, dist, clock } = createMath(Math);
-    const { sprite } = SpriteRenderer.create(sessionContext);
-
-    const portraits = MenuPortraits.create({
+    const enemies = createEnemies({ createCanvas });
+    const corpses = createCorpses({ enemies, createCanvas });
+    const upgrades = UpgradeSystem.create(progression);
+    const audio = AudioSystem.create({
+      window,
       document,
-      sprite,
-      artStatus() {
-        return 'canvas-v1';
-      },
+      storage,
+      performance,
+      random: () => Math.random(),
+      getMode: () => run.mode,
+      onChange: ui.emit,
     });
-    const fitPortrait = portraits.fit;
-    let menuPortraitPhase = -1;
-    const {
-      animateMenu,
-      show,
+    function toast(text) {
+      run.toast = { text, left: 3 };
+      ui.emit();
+    }
+
+    const combat = CombatSystem.create({
+      run,
+      heroes,
+      enemies,
+      corpses,
+      progression,
+      world,
+      audio,
+      math,
       toast,
-      updateRecord,
-      updateRunHeroStats,
-      renderRunHeroes,
-      openRunHeroSelect,
-      renderShop,
-      closeShop,
-      renderAchievements,
-      openAchievements,
-      closeAchievements,
-      openSettings,
-      closeSettings,
-      gameSettings,
+    });
+    const abilities = AbilitySystem.create({
+      run,
+      world,
+      damage: combat.damage,
+      progression,
+      audio,
+    });
+    const spawning = EnemySpawning.create({ run, enemies, world, math, toast, audio });
+    function activateAbility(slot) {
+      const cast = abilities.activate(slot);
+      if (cast) hud.emit();
+      return cast;
+    }
+    // Input calls back into the flow created right after it.
+    const input = InputSystem.create({
+      window,
+      document,
+      canvas,
+      run,
+      actions: {
+        pause: () => flow.pause(),
+        pickUpgrade: (i) => flow.pickUpgrade(i),
+        activateAbility,
+        closeScreen: () => flow.closeScreen(),
+      },
+      onStick: hud.emit,
+    });
+    const flow = GameFlow.create({
+      run,
+      settings,
+      progression,
+      heroes,
+      enemies,
+      upgrades,
+      world,
+      abilities,
+      audio,
+      input,
+      math,
+      storage,
+      toast,
+      ui,
       hud,
-    } = GameUI.create(sessionContext);
+    });
+    const simulation = Simulation.create({
+      run,
+      view,
+      world,
+      heroes,
+      enemies,
+      corpses,
+      progression,
+      audio,
+      math,
+      abilities,
+      combat,
+      spawning,
+      events: { finish: flow.finish, levelUp: flow.levelUp },
+    });
+    const { sprite } = SpriteRenderer.create({ run, heroes });
+    const renderer = SceneRenderer.create({
+      ctx,
+      view,
+      run,
+      world,
+      corpses,
+      heroes,
+      enemies,
+      abilities,
+      sprite,
+      settings,
+      math,
+      performance,
+    });
 
-    audioController = AudioSystem.create(sessionContext);
-
-    const abilities = AbilitySystem.create(sessionContext);
-    const input = InputSystem.create(sessionContext);
-    const { resetInput, bind: bindInput } = input;
-    const { start, menu, pause, levelUp, pickUpgrade, finish } = GameFlow.create(sessionContext);
-
-    updateRecord();
-    ['runHeroSelect', 'shop', 'achievements', 'settings'].forEach((id) => show(id, false));
-    let pendingRunHero = selected;
-
-    const mapSelect = $('runMap');
-    if (mapSelect) {
-      mapSelect.innerHTML = Object.entries(arenaDefinitions)
-        .map(([id, map]) => `<option value="${id}">${map.name}</option>`)
-        .join('');
-      mapSelect.value = selectedMap;
-      // A single arena is shown for context but cannot be switched.
-      mapSelect.disabled = Object.keys(arenaDefinitions).length < 2;
-      const description = $('mapDescription');
-      if (description) description.textContent = arenaDefinitions[selectedMap].description;
+    // Hero portraits in menus: React attaches canvases, the loop animates them in the menu.
+    const portraits = MenuPortraits.create({ document, sprite, artStatus: () => 'canvas-v1' });
+    const attached = new Map();
+    let portraitPhase = -1;
+    function attachPortrait(target, hero, { animated = true } = {}) {
+      portraits.fit(target, hero, 0);
+      if (animated) attached.set(target, hero);
+      return () => attached.delete(target);
     }
-    if (mapSelect)
-      mapSelect.onchange = () => {
-        selectedMap = arenaDefinitions[mapSelect.value] ? mapSelect.value : 'empty';
-        arena = arenas.get(selectedMap);
-        $('mapDescription').textContent = arenaDefinitions[selectedMap].description;
-      };
-    const startBtn = $('start');
-    if (startBtn) startBtn.onclick = openRunHeroSelect;
-    const runHeroBackBtn = $('runHeroBack');
-    if (runHeroBackBtn)
-      runHeroBackBtn.onclick = () => {
-        show('runHeroSelect', false);
-        show('menu', true);
-      };
-    const runHeroStartBtn = $('runHeroStart');
-    if (runHeroStartBtn)
-      runHeroStartBtn.onclick = () => {
-        selected = pendingRunHero;
-        start();
-      };
-    const againBtn = $('again');
-    if (againBtn) againBtn.onclick = start;
-    const backBtn = $('back');
-    if (backBtn) backBtn.onclick = menu;
-    const quitBtn = $('quit');
-    if (quitBtn) quitBtn.onclick = menu;
-
-    const shopOpenBtn = $('shopOpen');
-    if (shopOpenBtn)
-      shopOpenBtn.onclick = () => {
-        if (mode !== 'menu') return;
-        renderShop();
-        show('menu', false);
-        show('shop', true);
-      };
-
-    const shopCloseBtn = $('shopClose');
-    if (shopCloseBtn) shopCloseBtn.onclick = closeShop;
-
-    const achOpen = $('achievementsOpen'),
-      achClose = $('achievementsClose');
-    if (achOpen)
-      achOpen.onclick = () => {
-        if (mode !== 'menu') return;
-        openAchievements();
-      };
-    if (achClose) achClose.onclick = closeAchievements;
-
-    const setOpen = $('settingsOpen'),
-      pauseSetOpen = $('pauseSettings'),
-      setClose = $('settingsClose'),
-      setBack = $('settingsBack');
-    if (setOpen)
-      setOpen.onclick = () => {
-        if (mode === 'menu') openSettings('menu');
-      };
-    if (pauseSetOpen) pauseSetOpen.onclick = () => openSettings('paused');
-    if (setClose) setClose.onclick = closeSettings;
-    if (setBack) setBack.onclick = closeSettings;
-
-    const pauseBtn = $('pause');
-    if (pauseBtn) pauseBtn.onclick = pause;
-    const resumeBtn = $('resume');
-    if (resumeBtn) resumeBtn.onclick = pause;
-    bindInput();
-
-    const { spawn, updateSpawning } = EnemySpawning.create(sessionContext);
-    const { damage, beginAction, advanceAction, hurtPlayer, heroImpact } =
-      CombatSystem.create(sessionContext);
-
-    const { update } = Simulation.create(sessionContext);
-
-    const { background, draw } = SceneRenderer.create(sessionContext);
-
-    // Scheduling is explicit; tests can advance simulation without a browser loop.
-    const loop = GameLoop.create(sessionContext);
-    const { stop } = loop;
-    function run() {
-      if (!disposed) loop.run();
+    function animatePortraits(now) {
+      const phase = Math.floor(now / 190) % 8;
+      if (phase === portraitPhase) return;
+      portraitPhase = phase;
+      for (const [target, hero] of attached) portraits.fit(target, hero, phase);
     }
+
+    // The HUD is refreshed at most ten times a second from the frame loop.
+    let hudClock = 0;
+    function frame(now, dt) {
+      if (run.mode === 'play') simulation.update(dt);
+      if (run.mode === 'menu') animatePortraits(now);
+      if (run.toast.left > 0) {
+        run.toast.left -= dt;
+        if (run.toast.left <= 0) ui.emit();
+      }
+      hudClock += dt;
+      if (run.state && hudClock >= 0.1) {
+        hudClock = 0;
+        hud.emit();
+      }
+      renderer.draw();
+    }
+    const loop = GameLoop.create({ requestAnimationFrame, cancelAnimationFrame, frame, audio });
+    input.bind();
+
     function dispose() {
       if (disposed) return;
       disposed = true;
-      stop();
+      loop.stop();
       input.dispose();
-      audioController.dispose();
+      audio.dispose();
       events.dispose();
-      Progression.flush?.();
-      for (const id of [
-        'runMap',
-        'start',
-        'runHeroBack',
-        'runHeroStart',
-        'again',
-        'back',
-        'quit',
-        'shopOpen',
-        'shopClose',
-        'achievementsOpen',
-        'achievementsClose',
-        'settingsOpen',
-        'pauseSettings',
-        'settingsClose',
-        'settingsBack',
-        'settingShake',
-        'settingHints',
-        'pause',
-        'resume',
-        'ability0',
-        'ability1',
-        'sound',
-        'settingsSound',
-        'pauseSound',
-        'musicVolume',
-        'effectsVolume',
-      ]) {
-        const element = $(id);
-        if (element) {
-          element.onclick = null;
-          element.onchange = null;
-          element.oninput = null;
-        }
-      }
+      progression.flush?.();
     }
+    const read = { run, progression, heroes, enemies, settings };
 
     return {
-      start,
-      activateAbility: abilities.activate,
-      upgrades: UpgradeSystem,
-      update,
-      draw,
-      pause,
-      pickUpgrade,
-      spawn,
-      damage,
-      finish,
-      menu,
-      run,
-      stop,
+      // Engine API (tests, tools)
+      start: flow.start,
+      menu: flow.menu,
+      pause: flow.pause,
+      pickUpgrade: flow.pickUpgrade,
+      finish: flow.finish,
+      activateAbility,
+      update: simulation.update,
+      draw: renderer.draw,
+      spawn: spawning.spawn,
+      damage: combat.damage,
+      upgrades,
+      enemies,
+      run() {
+        if (!disposed) loop.run();
+      },
+      stop: loop.stop,
       dispose,
-      keys,
+      keys: run.keys,
       get state() {
-        return state;
+        return run.state;
       },
       get mode() {
-        return mode;
+        return run.mode;
       },
       get running() {
         return loop.running;
       },
       selectMap(id) {
         if (!arenaDefinitions[id]) throw new Error('Unknown map: ' + id);
-        selectedMap = id;
-        arena = arenas.get(selectedMap);
-        if (mapSelect) mapSelect.value = id;
+        flow.chooseMap(id);
       },
       select(hero) {
-        selected = hero;
+        run.selected = hero;
+        run.pendingHero = hero;
+      },
+
+      // React bindings
+      ui: { subscribe: ui.subscribe, getVersion: ui.getVersion },
+      hud: { subscribe: hud.subscribe, getVersion: hud.getVersion },
+      views: {
+        run: () => run,
+        menu: () => views.menuView(read),
+        heroSelect: () => views.heroSelectView(read),
+        shop: () => views.shopView(read),
+        achievements: () => views.achievementsView(read),
+        levelUp: () => views.levelUpView(read),
+        hud: () => views.hudView(read),
+        settings: () => ({ shake: settings.shake, hints: settings.hints, ...audio.settings }),
+      },
+      commands: {
+        openHeroSelect: flow.openHeroSelect,
+        closeHeroSelect: flow.closeHeroSelect,
+        chooseHero: flow.chooseHero,
+        chooseBaClient: flow.chooseBaClient,
+        chooseMap: flow.chooseMap,
+        startSelected: flow.startSelected,
+        restart: flow.start,
+        menu: flow.menu,
+        pause: flow.pause,
+        pickUpgrade: flow.pickUpgrade,
+        activateAbility,
+        openShop: flow.openShop,
+        openAchievements: flow.openAchievements,
+        backToMenu: flow.backToMenu,
+        openSettings: flow.openSettings,
+        closeSettings: flow.closeSettings,
+        buyHero: flow.buyHero,
+        buyUpgrade: flow.buyUpgrade,
+        claimAchievement: flow.claimAchievement,
+        toggleSetting: flow.toggleSetting,
+        toggleSound: audio.toggle,
+        setVolume: audio.setVolume,
+        attachPortrait,
       },
     };
   },

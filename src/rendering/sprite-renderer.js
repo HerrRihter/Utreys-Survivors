@@ -1,7 +1,9 @@
 import { traceabilityCharge } from './hero-charge.js';
+import { blocksAttack } from '../systems/ability-state.js';
 
+// Hero sprites for the scene and menu portraits; the Traceability ring reads the live run.
 export const SpriteRenderer = {
-  create(session) {
+  create({ run, heroes }) {
     return {
       sprite(
         context,
@@ -17,9 +19,9 @@ export const SpriteRenderer = {
       ) {
         const charge =
           actor?.player && name === 'traceability'
-            ? traceabilityCharge(session.state, session.abilities.blocksAttack())
+            ? traceabilityCharge(run.state, blocksAttack(run.state))
             : null;
-        session.Heroes.draw(context, name, x, y, size, flip, actor?.walk || 0, charge);
+        heroes.draw(context, name, x, y, size, flip, actor?.walk || 0, charge);
       },
     };
   },

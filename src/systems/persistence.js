@@ -1,6 +1,19 @@
 import { heroUnlockPrices, permanentUpgrades } from '../../data/upgrades.js';
 import { achievementDefinitions } from '../../data/achievements.js';
-export const Progression = (() => {
+// Saved meta-progression (codes, heroes, upgrades, achievements). Nothing runs at import:
+// the session creates one per mount with its storage and page-lifecycle event targets.
+/**
+ * @param {{
+ *   storage: { getItem(key: string): string | null, setItem(key: string, value: string): void },
+ *   events?: any,
+ *   document?: any,
+ * }} options
+ */
+export function createProgression({
+  storage,
+  events = globalThis,
+  document = globalThis.document,
+} = {}) {
   const key = 'utreys-progression-v1',
     prices = heroUnlockPrices,
     upgrades = permanentUpgrades;
@@ -16,7 +29,7 @@ export const Progression = (() => {
   for (const id of Object.keys(upgrades)) data.levels[id] = 0;
   const integer = (v, max = 1e9) => (Number.isSafeInteger(v) && v >= 0 ? Math.min(max, v) : 0);
   try {
-    const saved = JSON.parse(localStorage.getItem(key));
+    const saved = JSON.parse(storage.getItem(key));
     if (saved && typeof saved === 'object') {
       data.codes = integer(saved.codes ?? saved.helmets ?? 0);
       data.kills = integer(saved.kills);
@@ -63,7 +76,7 @@ export const Progression = (() => {
     }
     if (!dirty) return;
     try {
-      localStorage.setItem(key, JSON.stringify(data));
+      storage.setItem(key, JSON.stringify(data));
       persistent = true;
       dirty = false;
     } catch {
@@ -96,10 +109,17 @@ export const Progression = (() => {
       else flush();
     }, 1000);
   }
-  globalThis.addEventListener?.('pagehide', flush);
-  globalThis.document?.addEventListener?.('visibilitychange', () => {
-    if (document.hidden) flush();
-  });
+  const onVisibility = () => {
+    if (document?.hidden) flush();
+  };
+  events?.addEventListener?.('pagehide', flush);
+  document?.addEventListener?.('visibilitychange', onVisibility);
+  // Saves anything pending and releases the page listeners.
+  function dispose() {
+    flush();
+    events?.removeEventListener?.('pagehide', flush);
+    document?.removeEventListener?.('visibilitychange', onVisibility);
+  }
   function earn(amount) {
     if (!Number.isSafeInteger(amount) || amount <= 0) return 0;
     data.codes += amount;
@@ -138,12 +158,6 @@ export const Progression = (() => {
     save();
     return true;
   }
-  function grantArmorRank() {
-    if (data.levels.armor >= upgrades.armor.max) return false;
-    data.levels.armor++;
-    deferSave();
-    return true;
-  }
   function recordTime(t) {
     if (typeof t === 'number' && t > 0) {
       data.stats.totalTime += t;
@@ -177,7 +191,7 @@ export const Progression = (() => {
   }
   const isClaimed = (id) => data.claimedAchievements.includes(id);
   return {
-    grantArmorRank,
+    dispose,
     prices,
     upgrades,
     owned,
@@ -196,17 +210,8 @@ export const Progression = (() => {
     get achievements() {
       return achievementDefinitions;
     },
-    get stats() {
-      return { ...data.stats };
-    },
-    get claimedAchievements() {
-      return [...data.claimedAchievements];
-    },
     get codes() {
       return data.codes;
-    },
-    get armorRank() {
-      return data.levels.armor;
     },
     get data() {
       return JSON.parse(JSON.stringify(data));
@@ -215,4 +220,4 @@ export const Progression = (() => {
       return persistent;
     },
   };
-})();
+}

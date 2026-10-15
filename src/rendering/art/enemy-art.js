@@ -118,7 +118,7 @@ export const unitArt = {
   },
 };
 
-export const styleArt = {
+const styleArt = {
   // Regulatory emblem / bug fortress.
   pulse: {
     draw(g, u, hitFlash, flip) {
@@ -173,7 +173,7 @@ export const styleArt = {
 };
 
 // Data-driven client node: any unit without dedicated art.
-export const nodeArt = {
+const nodeArt = {
   draw(g, u, hitFlash, flip) {
     const w = u.r * 1.6,
       h = u.r * 1.8;

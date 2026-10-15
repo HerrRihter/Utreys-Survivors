@@ -38,12 +38,11 @@ export function createWaveState(schedule) {
   return {
     spawn: schedule.normal.firstDelay,
     waveNext: Object.fromEntries(schedule.recurring.map((spec) => [spec.unit, spec.first])),
-    populationNext: schedule.population?.every ?? null,
     bossSpawned: false,
   };
 }
 
-// The preview uses the same schedules as gameplay, including residents and population.
+// The preview uses the same schedules as gameplay.
 export function waveRoster(schedule) {
   const arrivals = new Map();
   const add = (unit, time) => arrivals.set(unit, Math.min(arrivals.get(unit) ?? Infinity, time));
@@ -52,7 +51,5 @@ export function waveRoster(schedule) {
   for (const spec of schedule.recurring) add(spec.unit, spec.first);
   for (const node of nodeDefinitions) add(node.bug, 0);
   if (schedule.boss) add(schedule.boss.unit, Infinity);
-  for (const unit of schedule.residents) add(unit, 0);
-  if (schedule.population) add(schedule.population.unit, 0);
   return [...arrivals].sort((a, b) => a[1] - b[1]).map(([unit, time]) => ({ unit, time }));
 }

@@ -9,37 +9,32 @@ assert(enemyPhrases.l3.includes('Дубли!'));
 assert(enemyPhrases.progress.includes('Отгрузка!') && enemyPhrases.multon.includes('Отгрузка!'));
 const enemy = { unit: 'l3', hp: 100, x: 1100, y: 1100 };
 const state = { t: 0, p: { x: 1100, y: 1100 }, enemies: [enemy] };
-const context = {
-  state,
-  W: 800,
-  H: 600,
-  WORLD: 2200,
-  Math: {
-    random() {
-      throw Error('Gameplay RNG consumed');
-    },
-  },
+const view = { W: 800, H: 600 };
+// Speech is cosmetic: it must never consume the gameplay random source.
+Math.random = () => {
+  throw Error('Gameplay RNG consumed');
 };
-updateEnemySpeech(context);
+const speak = () => updateEnemySpeech(state, view, 2200);
+speak();
 assert(!enemy.speech);
 state.t = speechSettings.interval;
-updateEnemySpeech(context);
+speak();
 assert.equal(enemy.speech.text, 'Дубли!');
 const until = enemy.speech.until;
-updateEnemySpeech(context);
+speak();
 assert.equal(enemy.speech.until, until, 'same game time does not advance speech');
 state.t = until + 0.1;
-updateEnemySpeech(context);
+speak();
 assert(!enemy.speech, 'expires');
 state.t = 25;
 enemy.x = 10;
-updateEnemySpeech(context);
+speak();
 assert(!enemy.speech, 'offscreen silent');
 enemy.x = 1100;
-updateEnemySpeech(context);
+speak();
 assert.equal(enemy.speech.text, enemyPhrases.l3[1]);
 enemy.hp = 0;
-updateEnemySpeech(context);
+speak();
 assert(!enemy.speech, 'dead enemies stop speaking');
 console.log(
   'PASS: editable phrases, timing, rotation, camera filtering and isolated cosmetic state',

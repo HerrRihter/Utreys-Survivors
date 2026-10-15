@@ -1,7 +1,9 @@
+// One hero strike. `c` holds exactly what a strike touches:
+// { state, hero, arena, units, effect, damage }.
 export function heroAttack(c, action, stats) {
   const s = c.state,
     p = s.p,
-    spec = c.Heroes.defs[c.selected];
+    spec = c.hero;
   const dir = action.direction || p.facing;
   const range = (spec.range + (stats.punchReach || 0)) * stats.range;
   const power = spec.damage * stats.damage;
@@ -23,7 +25,7 @@ export function heroAttack(c, action, stats) {
       color: spec.color,
       kind: 'code',
     });
-    c.soundEffect('throw');
+    c.effect('throw');
     return;
   }
   if (spec.attack === 'chain') {
@@ -39,7 +41,7 @@ export function heroAttack(c, action, stats) {
         d <= range &&
         d < firstDistance &&
         (e.x - p.x) * dir.x + (e.y - p.y) * dir.y >= 0 &&
-        c.Arena.clear(p, e, 2)
+        c.arena.clear(p, e, 2)
       ) {
         first = e;
         firstDistance = d;
@@ -58,7 +60,7 @@ export function heroAttack(c, action, stats) {
         if (
           seen.has(next) ||
           Math.hypot(next.x - target.x, next.y - target.y) > range ||
-          !c.Arena.clear(target, next, 2)
+          !c.arena.clear(target, next, 2)
         )
           continue;
         seen.add(next);
@@ -79,7 +81,7 @@ export function heroAttack(c, action, stats) {
       const distance = Math.max(1, Math.hypot(dx, dy));
       c.damage(target.e, power, (dx / distance) * push, (dy / distance) * push, origin);
     }
-    c.soundEffect('magic');
+    c.effect('magic');
     return;
   }
   const radial = spec.attack === 'scan';
@@ -101,7 +103,7 @@ export function heroAttack(c, action, stats) {
       along = dx * dir.x + dy * dir.y;
     const delta = Math.abs(Math.atan2(dx * dir.y - dy * dir.x, along));
     const outside = radial ? Math.max(Math.abs(dx), Math.abs(dy)) >= range + e.r : d >= range + e.r;
-    if (e.hp <= 0 || outside || !c.Arena.clear(p, e, 2)) continue;
+    if (e.hp <= 0 || outside || !c.arena.clear(p, e, 2)) continue;
     if (!radial && (along < 0 || delta > spec.half + Math.asin(Math.min(1, e.r / Math.max(1, d)))))
       continue;
     c.damage(
@@ -120,7 +122,7 @@ export function heroAttack(c, action, stats) {
         life: 0.6,
         max: 0.6,
       });
-    if (radial && e.hp > 0 && !e.boss && !c.Enemies.units[e.unit].miniboss) {
+    if (radial && e.hp > 0 && !e.boss && !c.units[e.unit].miniboss) {
       e.abilityStun = Math.max(e.abilityStun || 0, 0.6);
       e.action = null;
     }

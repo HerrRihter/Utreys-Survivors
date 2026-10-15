@@ -1,37 +1,30 @@
+// requestAnimationFrame scheduling only: `frame(now, dt)` does the work (dt capped at 50 ms,
+// 0 on the first frame after a resume). Tests can call the simulation without this loop.
 export const GameLoop = {
-  create(sessionContext) {
+  create({ requestAnimationFrame, cancelAnimationFrame, frame, audio }) {
     let running = false,
       frameId = null,
       freshFrame = false,
       last = 0;
-    function frame(now) {
+    function tick(now) {
       if (!running) return;
-      const dt = freshFrame ? 0 : sessionContext.Math.min((now - last) / 1000 || 0, 0.05);
+      const dt = freshFrame ? 0 : Math.min((now - last) / 1000 || 0, 0.05);
       freshFrame = false;
       last = now;
-      if (sessionContext.mode === 'play') sessionContext.update(dt);
-      if (sessionContext.mode === 'menu') sessionContext.animateMenu(now);
-      if (sessionContext.toastLeft > 0) {
-        sessionContext.toastLeft -= dt;
-        if (sessionContext.toastLeft <= 0) {
-          const toast = sessionContext.$('toast');
-          if (toast?.style) toast.style.opacity = '0';
-        }
-      }
-      sessionContext.draw();
-      if (running) frameId = sessionContext.requestAnimationFrame(frame);
+      frame(now, dt);
+      if (running) frameId = requestAnimationFrame(tick);
     }
     function run() {
       if (running) return;
       running = true;
-      sessionContext.resumeAudio();
+      audio.resume();
       freshFrame = true;
-      frameId = sessionContext.requestAnimationFrame(frame);
+      frameId = requestAnimationFrame(tick);
     }
     function stop() {
       running = false;
-      sessionContext.stopAudio();
-      if (frameId !== null) sessionContext.cancelAnimationFrame(frameId);
+      audio.stop();
+      if (frameId !== null) cancelAnimationFrame(frameId);
       frameId = null;
     }
     return {

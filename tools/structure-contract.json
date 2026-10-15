@@ -1,7 +1,7 @@
 {
   "directories": {
     "assets": ["runtime", "source"],
-    "assets/runtime": ["audio", "ui"],
+    "assets/runtime": ["audio"],
     "src": [
       "app",
       "core",
@@ -16,7 +16,6 @@
     "data": ["animations", "characters", "enemies", "maps"]
   },
   "runtimeAssetPatterns": [
-    "^assets/runtime/ui/([a-z0-9-]+|achievements/[a-z0-9-]+)\\.png$",
     "^assets/runtime/audio/(music|sfx)/[a-z0-9-]+\\.(mp3|ogg|wav)$",
     "^assets/runtime/audio/(CREDITS\\.md|[A-Za-z0-9-]+-LICENSE\\.txt)$"
   ],

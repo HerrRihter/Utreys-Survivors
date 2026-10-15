@@ -94,8 +94,6 @@ export const waveSchedules = {
       message: 'ВНИМАНИЕ: Подключение шлюза ЦРПТ! Валидация криптохвостов!',
       sound: 'boss',
     },
-    population: null,
-    residents: [],
     notifications: [
       { time: 5, message: 'Сеть L3 активирована. Обработка потока кодов маркировки.' },
       { time: 30, message: 'Линии Пепси подключены: входящий поток запросов розлива!' },

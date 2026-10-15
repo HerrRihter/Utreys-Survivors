@@ -1,14 +1,14 @@
 import { enemyPhrases, speechSettings } from '../../data/enemies/phrases.js';
 import { cameraOrigin } from '../rendering/camera.js';
 
-export function updateEnemySpeech(context) {
-  const s = context.state;
+// Picks who speaks next among visible enemies; `view` = { W, H } of the screen.
+export function updateEnemySpeech(s, view, worldSize) {
   for (const enemy of s.enemies)
     if (enemy.speech && (enemy.hp <= 0 || s.t >= enemy.speech.until)) enemy.speech = null;
   if (s.t < (s.nextSpeechAt ?? speechSettings.interval)) return;
-  const width = context.W || 960,
-    height = context.H || 640;
-  const { x: cx, y: cy } = cameraOrigin(s.p, width, height, context.WORLD);
+  const width = view.W || 960,
+    height = view.H || 640;
+  const { x: cx, y: cy } = cameraOrigin(s.p, width, height, worldSize);
   const candidates = s.enemies.filter(
     (e) =>
       e.hp > 0 &&

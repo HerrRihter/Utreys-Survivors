@@ -7,7 +7,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const noop = () => {};
 
-async function createHarness({ createSession = true } = {}) {
+async function createHarness({ createSession: withSession = true } = {}) {
   const nodes = new Map(),
     listeners = {},
     scheduled = new Map();
@@ -111,17 +111,30 @@ async function createHarness({ createSession = true } = {}) {
   };
   vm.createContext(env);
   for (const file of [
-    'src/systems/upgrades.js',
     'src/systems/persistence.js',
     'src/entities/heroes.js',
     'src/entities/enemies.js',
-    'src/systems/corpses.js',
-    'src/ui/menu-portraits.js',
     'src/systems/combat.js',
     'src/app/game-session.js',
   ]) {
     await loadModule(env, path.join(root, file));
   }
+  env.Progression = env.createProgression({
+    storage: env.localStorage,
+    events: env.window,
+    document,
+  });
+  const createSession = () =>
+    env.GameSession.create({
+      document,
+      window: env.window,
+      storage: env.localStorage,
+      performance: env.performance,
+      requestAnimationFrame: env.requestAnimationFrame,
+      cancelAnimationFrame: env.cancelAnimationFrame,
+      canvas: document.getElementById('game'),
+      progression: env.Progression,
+    });
   function tick(now) {
     const [id, callback] = scheduled.entries().next().value;
     scheduled.delete(id);
@@ -136,7 +149,8 @@ async function createHarness({ createSession = true } = {}) {
     noop,
     context,
     eventCount,
-    session: createSession ? env.GameSession.create(env) : null,
+    createSession,
+    session: withSession ? createSession() : null,
   };
 }
 

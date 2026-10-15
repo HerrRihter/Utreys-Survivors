@@ -2,15 +2,15 @@
   "date": "2026-10-15",
   "viewport": "1280x720",
   "50 enemies": {
-    "fps": 132.3,
-    "jsMedianMs": 0.8,
-    "jsP95Ms": 1.3,
-    "jsMaxMs": 6.4
+    "fps": 142.4,
+    "jsMedianMs": 0.7,
+    "jsP95Ms": 1.1,
+    "jsMaxMs": 4.6
   },
   "300 enemies": {
-    "fps": 70.4,
-    "jsMedianMs": 2.5,
-    "jsP95Ms": 4.8,
-    "jsMaxMs": 10
+    "fps": 72.8,
+    "jsMedianMs": 2.3,
+    "jsP95Ms": 4.3,
+    "jsMaxMs": 7.4
   }
 }

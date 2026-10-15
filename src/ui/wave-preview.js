@@ -6,12 +6,6 @@ export function waveTiming(schedule, unit) {
   if (schedule.boss?.unit === unit) return 'После устранения всех багов узлов';
   const entry = waveRoster(schedule).find((entry) => entry.unit === unit);
   if (!entry) return 'Резервный поток кодов';
-  if (schedule.residents?.includes(unit)) return 'На карте изначально';
-  if (schedule.population?.unit === unit) {
-    return (
-      'С начала боя · население ' + schedule.population.initial + '–' + schedule.population.maximum
-    );
-  }
   const parts = [entry.time === 0 ? 'С начала боя' : 'С ' + clock(entry.time)];
   const recurring = schedule.recurring.find((spec) => spec.unit === unit);
   if (recurring)

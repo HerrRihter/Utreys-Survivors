@@ -14,9 +14,9 @@ function pulseArea(u) {
   };
 }
 
-export function resolveEnemyStrike(c, e, u, aim) {
-  const s = c.state,
-    p = s.p;
+// `c` = { arena, effect, hurtPlayer }; `s` is the running state.
+export function resolveEnemyStrike(c, s, e, u, aim) {
+  const p = s.p;
   const angle = Math.atan2(aim.y - e.y, aim.x - e.x),
     ax = Math.cos(angle),
     ay = Math.sin(angle);
@@ -30,12 +30,12 @@ export function resolveEnemyStrike(c, e, u, aim) {
       damage: e.damage,
       kind: e.unit,
     });
-    c.soundEffect('throw');
+    c.effect('throw');
     return;
   }
   const area = u.attack === 'pulse' ? pulseArea(u) : u.burst;
   if (area) {
-    if (c.dist(e, p) < u.range + area.reach) c.hurtPlayer(e);
+    if (Math.hypot(e.x - p.x, e.y - p.y) < u.range + area.reach) c.hurtPlayer(e);
     s.fx.push({
       kind: 'ring',
       x: e.x,
@@ -45,9 +45,10 @@ export function resolveEnemyStrike(c, e, u, aim) {
       max: area.ring.life,
       color: area.ring.color,
     });
-    c.soundEffect(area.sound);
+    c.effect(area.sound);
     return;
   }
   const along = (p.x - e.x) * ax + (p.y - e.y) * ay;
-  if (c.dist(e, p) < u.range + 8 && along >= -8 && c.Arena.clear(e, p, 2)) c.hurtPlayer(e);
+  if (Math.hypot(e.x - p.x, e.y - p.y) < u.range + 8 && along >= -8 && c.arena.clear(e, p, 2))
+    c.hurtPlayer(e);
 }

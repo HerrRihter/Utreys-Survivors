@@ -186,7 +186,7 @@ export const ArenaCollision = (() => {
       }
       g.restore();
     }
-    return { polygons, blocked, clear, draw };
+    return { blocked, clear, draw };
   }
   return { create };
 })();
