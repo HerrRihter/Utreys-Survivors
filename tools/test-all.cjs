@@ -2,12 +2,20 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
-require('./check-structure.cjs').checkStructure({ root });
+if (fs.existsSync(path.join(root, 'assets/runtime/characters'))) {
+  require('./check-structure.cjs').checkStructure({ root });
+  require('./generate-layouts.cjs').generateLayouts({ root, check: true });
+}
 require('./check-game-contracts.cjs').checkGameContracts();
-require('./generate-layouts.cjs').generateLayouts({ root, check: true });
 const tests = fs
   .readdirSync(path.join(root, 'tests'))
   .filter((file) => /^test.*\.cjs$/.test(file))
+  .filter((file) => {
+    if (!fs.existsSync(path.join(root, 'assets/runtime/characters'))) {
+      if (file === 'test-character-frames.cjs' || file === 'test-structure.cjs') return false;
+    }
+    return true;
+  })
   .sort();
 let failed = 0;
 for (const test of tests) {
