@@ -79,7 +79,7 @@ async function main() {
     now += 200;
     audio.effect('death');
   }
-  assert.equal(created.filter((item) => /death-[123]\.ogg$/.test(item.src)).length, 3);
+  assert.equal(created.filter((item) => /death-[123]\.mp3$/.test(item.src)).length, 3);
   const voices = created.length;
   for (let i = 0; i < 100; i++) audio.effect('death');
   assert.equal(created.length, voices, 'Mass kills share a voice cooldown');
