@@ -24,7 +24,7 @@ export const AudioSystem = {
       ui: ['ui.ogg'],
       boss: ['boss.ogg'],
       magic: ['magic.ogg'],
-      death: ['death-1.ogg', 'death-2.ogg', 'death-3.ogg'],
+      death: ['death-1.mp3', 'death-2.mp3', 'death-3.mp3'],
       punchSwing: ['punch.mp3'],
       punch: ['punch.mp3'],
     };
