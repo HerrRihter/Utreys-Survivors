@@ -13,7 +13,7 @@ function recordRun(){
     }
 function start(){
       recordRun();
-      if(!sessionContext.Progression.owned(sessionContext.selected))sessionContext.selected='placeholder';
+      if(!sessionContext.Progression.owned(sessionContext.selected))sessionContext.selected='utrace';
       const hero=sessionContext.Villagers.defs[sessionContext.selected],levels=sessionContext.Progression.data.levels;
       sessionContext.resetInput();
       sessionContext.state={
@@ -86,13 +86,14 @@ function menu(){
       recordRun();
       sessionContext.Progression.flush();
       sessionContext.mode='menu';
-      sessionContext.$('abilities').classList.toggle('hidden',true);
+      sessionContext.$('abilities')?.classList?.toggle?.('hidden',true);
       sessionContext.state=null;
       sessionContext.resetInput();
       ['end','paused','levelup','hud','hint','pause','stick','bossbar','runHeroSelect','shop','achievements','settings'].forEach(id=>sessionContext.show(id,false));
       sessionContext.show('menu',true);
       sessionContext.renderShop();
-      sessionContext.$('toast').style.opacity=0;
+      const toastEl = sessionContext.$('toast');
+      if (toastEl?.style) toastEl.style.opacity = '0';
       sessionContext.updateRecord();
     }
 function pause(){

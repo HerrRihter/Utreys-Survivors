@@ -101,7 +101,8 @@ export const AudioSystem = {create(c) {
     settings.enabled = !settings.enabled;
     unlock(); save(); refreshControls(); effect('ui');
   }
-  c.$('sound').onclick = toggleEnabled;
+  const soundBtn = c.$('sound');
+  if (soundBtn) soundBtn.onclick = toggleEnabled;
   const settingsSoundBtn = c.$('settingsSound');
   if (settingsSoundBtn) settingsSoundBtn.onclick = toggleEnabled;
   const pauseSoundBtn = c.$('pauseSound');

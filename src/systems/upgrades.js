@@ -16,7 +16,7 @@ UpgradeSystem={create(Progression){
   item('magnet','Притяжение предметов','+30 к радиусу притяжения опыта и жетонов.','magnet',30,5)
  ];
  const heroes={
-  placeholder:[item('punchTempo','Быстрая атака','+15% к темпу атак.','punchTempo',.15),item('punchReach','Увеличенный радиус','+12 к дальности атаки.','punchReach',12),item('punchForce','Сильный удар','+55 к силе отбрасывания.','punchForce',55)]
+  utrace:[item('punchTempo','Быстрая трассировка','+15% к темпу обработки кодов.','punchTempo',.15),item('punchReach','Широкий луч','+12 к дальности сканирования.','punchReach',12),item('punchForce','Импульс верификации','+55 к силе отталкивания запросов.','punchForce',55)]
  };
  const abilities=Object.fromEntries(Object.entries(abilityDefinitions).map(([hero,defs])=>[hero,defs.map(a=>({
   id:abilityUpgradeId(a.id),ability:a.id,name:a.name,desc:abilityUpgradeDescriptions[a.id],icon:'◆',max:abilityUpgradeMax,

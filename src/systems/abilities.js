@@ -35,12 +35,13 @@ export const AbilitySystem={create(c){
  let controls=null,buttons=null;
  function hud(){
   const s=c.state,visible=!!s&&c.mode==='play';
-  controls??=c.$('abilities');
-  if(controls.classList.contains('hidden')===visible)controls.classList.toggle('hidden',!visible);
+  controls=c.$('abilities');
+  if(controls?.classList&&controls.classList.contains('hidden')===visible)controls.classList.toggle('hidden',!visible);
   if(!s?.abilities)return;
-  buttons??=[c.$('ability0'),c.$('ability1')];
+  buttons=[c.$('ability0'),c.$('ability1')];
   for(let i=0;i<2;i++){
    const a=s.abilities[i],b=buttons[i];
+   if(!a||!b)continue;
    const max=a.id==='forge'&&c.Progression.armorRank>=c.Progression.upgrades.armor.max;
    const text=`${i?'E':'Q'} · ${a.name} · ${abilityRank(s,a.id)}/${abilityUpgradeMax}\n${max?'Максимум':a.left>0?'Активно '+a.left.toFixed(1)+' с':a.cd>0?Math.ceil(a.cd)+' с':'Готово'}`;
    const disabled=c.mode!=='play'||a.cd>0||a.left>0||max||s.p.stun>0;

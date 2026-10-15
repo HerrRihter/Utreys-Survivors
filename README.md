@@ -1,17 +1,24 @@
-# Utreys Survivors
+# Utreys Survivors (React)
 
-Игровой прототип в жанре survival arena: один персонаж-заглушка, пустая арена и базовые системы управления, боя и развития.
+Игровой прототип в жанре survival arena, переписанный на React и Vite: один персонаж-заглушка, пустая арена, интерактивный бестиарий, просмотр карты арены и базовые системы управления, боя и развития.
 
-Откройте `index.html` или запустите локальный сервер:
+## Запуск в режиме разработки
 
-```powershell
-npm.cmd install
-npm.cmd run dev
+```bash
+npm run dev
 ```
 
-Для обновления локальных файловых JS-бандлов и сборки сайта:
+Приложение запустится на порту 3000 (`http://localhost:3000`).
 
-```powershell
-npm.cmd run generate
-npm.cmd run build
+## Сборка
+
+```bash
+npm run build
+```
+
+## Проверка типов и тесты
+
+```bash
+npm run lint
+npm test
 ```

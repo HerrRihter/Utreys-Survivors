@@ -4,7 +4,7 @@ export let Progression;
 'use strict';
 Progression=(()=>{
  const key='utreys-progression-v1',prices=heroUnlockPrices,upgrades=permanentUpgrades;
- let data={helmets:0,kills:0,unlocked:['placeholder'],levels:{health:0,power:0,speed:0},stats:{totalTime:0,maxTime:0,bossKills:0,abilitiesUsed:0,maxLevel:0},claimedAchievements:[]},persistent=true;
+ let data={helmets:0,kills:0,unlocked:['utrace'],levels:{health:0,power:0,speed:0},stats:{totalTime:0,maxTime:0,bossKills:0,abilitiesUsed:0,maxLevel:0},claimedAchievements:[]},persistent=true;
  for(const id of Object.keys(upgrades))data.levels[id]=0;
  const integer=(v,max=1e9)=>Number.isSafeInteger(v)&&v>=0?Math.min(max,v):0;
  try{
@@ -12,7 +12,7 @@ Progression=(()=>{
   if(saved&&typeof saved==='object'){
    data.helmets=integer(saved.helmets);
    data.kills=integer(saved.kills);
-   if(Array.isArray(saved.unlocked))data.unlocked=[...new Set(['placeholder',...saved.unlocked.filter(id=>Object.hasOwn(prices,id))])];
+   if(Array.isArray(saved.unlocked))data.unlocked=[...new Set(['utrace',...saved.unlocked.filter(id=>Object.hasOwn(prices,id))])];
    for(const id of Object.keys(upgrades))data.levels[id]=integer(saved.levels?.[id],upgrades[id].max);
    if(saved.stats&&typeof saved.stats==='object'){
     data.stats.totalTime=typeof saved.stats.totalTime==='number'&&saved.stats.totalTime>=0?saved.stats.totalTime:0;

@@ -120,7 +120,7 @@ get stop(){return stop}
     const {resizeCanvas}=CanvasSystem.create(sessionContext);
     resizeCanvas();
     window.addEventListener('resize',resizeCanvas);
-    let selected='placeholder',mode='menu',state=null,keys=new Set(),toastLeft=0,choice=[];
+    let selected='utrace',mode='menu',state=null,keys=new Set(),toastLeft=0,choice=[];
     if(document?.body)document.body.dataset.mode=mode;
     let pointer=null,stick={x:0,y:0},best={kills:0,time:0};
     try{
@@ -168,43 +168,53 @@ get stop(){return stop}
     const mapSelect=$('runMap');
     if(mapSelect){mapSelect.innerHTML=Object.entries(arenaDefinitions).map(([id,map])=>`<option value="${id}">${map.name}</option>`).join('');mapSelect.value=selectedMap;}
     if(mapSelect)mapSelect.onchange=()=>{selectedMap=arenaDefinitions[mapSelect.value]?mapSelect.value:'empty';$('mapDescription').textContent=arenaDefinitions[selectedMap].description;};
-    $('start').onclick=openRunHeroSelect;
-    $('runHeroBack').onclick=()=>{
-      show('runHeroSelect',false);
-      show('menu',true);
+    const startBtn = $('start');
+    if (startBtn) startBtn.onclick = openRunHeroSelect;
+    const runHeroBackBtn = $('runHeroBack');
+    if (runHeroBackBtn) runHeroBackBtn.onclick = () => {
+      show('runHeroSelect', false);
+      show('menu', true);
     };
-    $('runHeroStart').onclick=()=>{
-      selected=pendingRunHero;
+    const runHeroStartBtn = $('runHeroStart');
+    if (runHeroStartBtn) runHeroStartBtn.onclick = () => {
+      selected = pendingRunHero;
       start();
     };
-    $('again').onclick=start;
-    $('back').onclick=menu;
-    $('quit').onclick=menu;
+    const againBtn = $('again');
+    if (againBtn) againBtn.onclick = start;
+    const backBtn = $('back');
+    if (backBtn) backBtn.onclick = menu;
+    const quitBtn = $('quit');
+    if (quitBtn) quitBtn.onclick = menu;
     
-    $('shopOpen').onclick=()=>{
-      if(mode!=='menu')return;
+    const shopOpenBtn = $('shopOpen');
+    if (shopOpenBtn) shopOpenBtn.onclick = () => {
+      if (mode !== 'menu') return;
       renderShop();
-      show('menu',false);
-      show('shop',true);
+      show('menu', false);
+      show('shop', true);
     };
     
-    $('shopClose').onclick=closeShop;
+    const shopCloseBtn = $('shopClose');
+    if (shopCloseBtn) shopCloseBtn.onclick = closeShop;
 
-    const achOpen=$('achievementsOpen'),achClose=$('achievementsClose');
-    if(achOpen)achOpen.onclick=()=>{
-      if(mode!=='menu')return;
+    const achOpen = $('achievementsOpen'), achClose = $('achievementsClose');
+    if (achOpen) achOpen.onclick = () => {
+      if (mode !== 'menu') return;
       openAchievements();
     };
-    if(achClose)achClose.onclick=closeAchievements;
+    if (achClose) achClose.onclick = closeAchievements;
 
-    const setOpen=$('settingsOpen'),pauseSetOpen=$('pauseSettings'),setClose=$('settingsClose'),setBack=$('settingsBack');
-    if(setOpen)setOpen.onclick=()=>{if(mode==='menu')openSettings('menu');};
-    if(pauseSetOpen)pauseSetOpen.onclick=()=>openSettings('paused');
-    if(setClose)setClose.onclick=closeSettings;
-    if(setBack)setBack.onclick=closeSettings;
+    const setOpen = $('settingsOpen'), pauseSetOpen = $('pauseSettings'), setClose = $('settingsClose'), setBack = $('settingsBack');
+    if (setOpen) setOpen.onclick = () => { if (mode === 'menu') openSettings('menu'); };
+    if (pauseSetOpen) pauseSetOpen.onclick = () => openSettings('paused');
+    if (setClose) setClose.onclick = closeSettings;
+    if (setBack) setBack.onclick = closeSettings;
     
-    $('pause').onclick=pause;
-    $('resume').onclick=pause;
+    const pauseBtn = $('pause');
+    if (pauseBtn) pauseBtn.onclick = pause;
+    const resumeBtn = $('resume');
+    if (resumeBtn) resumeBtn.onclick = pause;
     bindInput();
 
     const {spawn,updateSpawning}=EnemySpawning.create(sessionContext);

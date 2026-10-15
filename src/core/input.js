@@ -1,15 +1,19 @@
 export let InputSystem;
 InputSystem={create(sessionContext){
 function resetInput(){
-      sessionContext.keys.clear();
+      sessionContext.keys?.clear?.();
       sessionContext.pointer=null;
       sessionContext.stick={x:0,y:0};
-      sessionContext.$('knob').style.transform='';
-      sessionContext.$('stick').style.left='';
-      sessionContext.$('stick').style.top='';
-      sessionContext.$('stick').style.bottom='';
-      sessionContext.$('stick').style.right='';
-      sessionContext.$('stick').classList.toggle('engaged',false);
+      const knob = sessionContext.$('knob');
+      if (knob?.style) knob.style.transform='';
+      const stick = sessionContext.$('stick');
+      if (stick?.style) {
+        stick.style.left='';
+        stick.style.top='';
+        stick.style.bottom='';
+        stick.style.right='';
+        stick.classList.toggle('engaged',false);
+      }
     }
 function bind(){
 [0,1].forEach(i=>{const b=sessionContext.$('ability'+i);b.onclick=()=>sessionContext.abilities.activate(i);b.addEventListener('pointerdown',e=>e.stopPropagation());});
@@ -50,19 +54,23 @@ sessionContext.canvas.style.touchAction='none';
 sessionContext.canvas.addEventListener('pointerdown',e=>{
       if(sessionContext.mode!=='play'||e.pointerType==='mouse'||sessionContext.pointer)return;
       sessionContext.pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
-      const control=sessionContext.$('stick'),size=control.offsetWidth||88;
-      control.style.left=`${e.clientX-size/2}px`;
-      control.style.top=`${e.clientY-size/2}px`;
-      control.style.bottom='auto';
-      control.style.right='auto';
-      control.classList.toggle('engaged',true);
+      const control=sessionContext.$('stick');
+      if (control?.style) {
+        const size=control.offsetWidth||88;
+        control.style.left=`${e.clientX-size/2}px`;
+        control.style.top=`${e.clientY-size/2}px`;
+        control.style.bottom='auto';
+        control.style.right='auto';
+        control.classList.toggle('engaged',true);
+      }
       sessionContext.canvas.setPointerCapture(e.pointerId);
     });
 sessionContext.canvas.addEventListener('pointermove',e=>{
       if(!sessionContext.pointer||sessionContext.pointer.id!==e.pointerId)return;
       let dx=e.clientX-sessionContext.pointer.x,dy=e.clientY-sessionContext.pointer.y,l=sessionContext.Math.hypot(dx,dy);
       sessionContext.stick={x:dx/sessionContext.Math.max(35,l),y:dy/sessionContext.Math.max(35,l)};
-      sessionContext.$('knob').style.transform=`translate(${sessionContext.stick.x*24}px,${sessionContext.stick.y*24}px)`;
+      const knob = sessionContext.$('knob');
+      if (knob?.style) knob.style.transform=`translate(${sessionContext.stick.x*24}px,${sessionContext.stick.y*24}px)`;
     });
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>sessionContext.canvas.addEventListener(ev,e=>{if(!e||sessionContext.pointer?.id===e.pointerId)sessionContext.resetInput();}));
 }

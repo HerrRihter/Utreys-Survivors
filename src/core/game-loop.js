@@ -10,7 +10,10 @@ function frame(now) {
       if (sessionContext.mode === 'menu') sessionContext.animateMenu(now);
       if (sessionContext.toastLeft > 0) {
         sessionContext.toastLeft -= dt;
-        if (sessionContext.toastLeft <= 0) sessionContext.$('toast').style.opacity = 0;
+        if (sessionContext.toastLeft <= 0) {
+          const toast = sessionContext.$('toast');
+          if (toast?.style) toast.style.opacity = '0';
+        }
       }
       sessionContext.draw();
       if (running) frameId = sessionContext.requestAnimationFrame(frame);

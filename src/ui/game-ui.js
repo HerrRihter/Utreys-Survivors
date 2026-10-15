@@ -9,16 +9,22 @@ function animateMenu(now){
       sessionContext.document.querySelectorAll('[data-portrait]').forEach(c=>sessionContext.fitPortrait(c,c.dataset.portrait,phase));
     }
 function show(id,on){
-      sessionContext.$(id).classList.toggle('hidden',!on);
+      const el = sessionContext.$(id);
+      if (el) el.classList.toggle('hidden',!on);
     }
 function toast(text){
-      sessionContext.$('toast').textContent=text;
-      sessionContext.$('toast').style.opacity=1;
-      sessionContext.toastLeft=3;
+      const el = sessionContext.$('toast');
+      if (el) {
+        el.textContent=text;
+        if (el.style) el.style.opacity='1';
+        sessionContext.toastLeft=3;
+      }
     }
 function updateRecord(){
-      sessionContext.$('wallet').textContent='ЖЕТОНЫ: '+sessionContext.Progression.data.helmets;
-      sessionContext.$('record').textContent=sessionContext.best.time?`ЛУЧШЕЕ ВРЕМЯ: ${sessionContext.clock(sessionContext.best.time)}`:'Лучшее время появится после первого забега.';
+      const w = sessionContext.$('wallet');
+      if (w) w.textContent='КОДЫ: '+sessionContext.Progression.data.helmets;
+      const r = sessionContext.$('record');
+      if (r) r.textContent=sessionContext.best.time?`ЛУЧШЕЕ ВРЕМЯ: ${sessionContext.clock(sessionContext.best.time)}`:'Лучшее время появится после первого забега.';
       const defs=sessionContext.Progression.achievements;
       const data=sessionContext.Progression.data;
       const unclaimed=defs?defs.filter(a=>a.getProgress(data,sessionContext.best)>=a.target&&!sessionContext.Progression.isClaimed(a.id)).length:0;
@@ -342,43 +348,43 @@ function hud(){
       sessionContext.abilities.hud();
       if(!sessionContext.state)return;
       const s=sessionContext.state;
-      elHealth??=sessionContext.$('health');
-      elXp??=sessionContext.$('xp');
-      elLevel??=sessionContext.$('levelText');
-      elTime??=sessionContext.$('time');
-      elKills??=sessionContext.$('kills');
-      elWeapon??=sessionContext.$('weapon');
-      elHelmets??=sessionContext.$('helmets');
-      elBosshealth??=sessionContext.$('bosshealth');
+      elHealth=sessionContext.$('health');
+      elXp=sessionContext.$('xp');
+      elLevel=sessionContext.$('levelText');
+      elTime=sessionContext.$('time');
+      elKills=sessionContext.$('kills');
+      elWeapon=sessionContext.$('weapon');
+      elHelmets=sessionContext.$('helmets');
+      elBosshealth=sessionContext.$('bosshealth');
 
       const hp=sessionContext.Math.ceil(s.p.hp),max=s.p.max,healthPct=sessionContext.Math.round(s.p.hp/max*1000)/10;
-      if(healthPct!==lastHealthPct){lastHealthPct=healthPct;elHealth.style.width=`${healthPct}%`;}
-      if(hp!==lastHp||max!==lastMax||s.level!==lastLevel){
+      if(healthPct!==lastHealthPct && elHealth?.style){lastHealthPct=healthPct;elHealth.style.width=`${healthPct}%`;}
+      if((hp!==lastHp||max!==lastMax||s.level!==lastLevel) && elLevel){
         lastHp=hp;lastMax=max;lastLevel=s.level;
         elLevel.textContent=`УР. ${s.level}  ·  ${sessionContext.Math.ceil(hp)} / ${max} HP`;
       }
-      if(s.xp!==lastXp||s.need!==lastNeed){
+      if((s.xp!==lastXp||s.need!==lastNeed) && elXp?.style){
         lastXp=s.xp;lastNeed=s.need;
         elXp.style.width=`${sessionContext.Math.min(100,s.xp/s.need*100)}%`;
       }
       const sec=sessionContext.Math.floor(s.t);
-      if(sec!==lastTime){
+      if(sec!==lastTime && elTime){
         lastTime=sec;
         elTime.textContent=sessionContext.clock(s.t);
       }
-      if(s.kills!==lastKills){
+      if(s.kills!==lastKills && elKills){
         lastKills=s.kills;
         elKills.textContent=`${s.kills} ПОБЕЖДЕНО`;
       }
       const wKey=`${sessionContext.selected}:${s.map}`;
-      if(wKey!==lastWeaponKey){
+      if(wKey!==lastWeaponKey && elWeapon){
         lastWeaponKey=wKey;
-        elWeapon.textContent=sessionContext.Villagers.defs[sessionContext.selected].weapon+' · '+sessionContext.arenaDefinitions[s.map].name;
+        elWeapon.textContent=sessionContext.Villagers.defs[sessionContext.selected]?.weapon+' · '+sessionContext.arenaDefinitions[s.map]?.name;
       }
       const hCount=sessionContext.Progression.helmets;
-      if(hCount!==lastHelmets||s.earned!==lastEarned){
+      if((hCount!==lastHelmets||s.earned!==lastEarned) && elHelmets){
         lastHelmets=hCount;lastEarned=s.earned;
-        elHelmets.textContent='ЖЕТОНЫ: '+hCount+' (+'+s.earned+')';
+        elHelmets.textContent='КОДЫ: '+hCount+' (+'+s.earned+')';
       }
       const boss=s.enemies.find(e=>e.boss);
       const bossActive=!!boss;
@@ -387,10 +393,10 @@ function hud(){
         show('bossbar',bossActive);
       }
       if(boss){
-        const bossName=sessionContext.$('bossname'),name='СТРАЖ АРЕНЫ';
-        if(bossName.textContent!==name)bossName.textContent=name;
+        const bossName=sessionContext.$('bossname'),name=boss.name||'ШЛЮЗ ЦРПТ';
+        if(bossName && bossName.textContent!==name)bossName.textContent=name;
         const bossPct=sessionContext.Math.round(boss.hp/boss.max*1000)/10;
-        if(bossPct!==lastBossHpPct){
+        if(bossPct!==lastBossHpPct && elBosshealth?.style){
           lastBossHpPct=bossPct;
           elBosshealth.style.width=`${bossPct}%`;
         }
