@@ -1,0 +1,16 @@
+{
+  "scenario": "300 simulation seconds; seed=123456; stationary invulnerable player; first upgrade chosen; no Canvas rendering",
+  "node": "v24.20.0",
+  "platform": "win32/x64",
+  "baseCommit": "afef1c35e628486bd71294080aa17c331fa09f8c",
+  "workingTree": "uncommitted audit remediation",
+  "steps": 18000,
+  "simulatedSeconds": 300.0000000000558,
+  "maxEnemies": 50,
+  "milliseconds": {
+    "median": 0.029200000000059845,
+    "p95": 0.05660000000000309,
+    "p99": 0.09859999999997626,
+    "maximum": 3.242500000000007
+  }
+}

@@ -1,8 +1,6 @@
 {
-  "name": "Utreys Survivors",
+  "name": "Utrace Survivors",
   "description": "Арена для тестирования персонажей, сражений и игровых систем.",
-  "prompt": "Utreys Survivors - an action roguelite survivor game prototype",
-  "capabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "prompt": "Utrace Survivors - a survival arena game",
+  "capabilities": []
 }

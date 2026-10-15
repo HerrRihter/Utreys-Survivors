@@ -11,3 +11,8 @@
 *.jpg binary
 # Archived source material is checked against its original byte-level hashes.
 assets/source/** -text whitespace=cr-at-eol
+
+*.ts text eol=lf
+*.tsx text eol=lf
+*.yaml text eol=lf
+.gitignore text eol=lf

@@ -1,4 +1,5 @@
-import {waveSchedules} from '../../data/enemies/waves.js';
+import { nodeDefinitions } from '../../data/enemies/nodes.js';
+import { waveSchedules } from '../../data/enemies/waves.js';
 
 export function getWaveSchedule(map) {
   if (!Object.hasOwn(waveSchedules, map)) throw new Error('Unknown wave schedule: ' + map);
@@ -18,12 +19,12 @@ export function normalWave(schedule, time) {
     interval: Math.max(stage.minInterval, stage.interval - time * stage.timeFactor),
     batch: stage.batch + (stage.batchEvery === null ? 0 : Math.floor(time / stage.batchEvery)),
     cap: stage.cap,
-    weights: stage.weights
+    weights: stage.weights,
   };
 }
 
 export function selectWaveUnit(schedule, time, roll = Math.random()) {
-  const {weights} = scheduleStage(schedule.normal.stages, time);
+  const { weights } = scheduleStage(schedule.normal.stages, time);
   const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
   let cumulative = 0;
   for (const [unit, weight] of weights) {
@@ -36,9 +37,9 @@ export function selectWaveUnit(schedule, time, roll = Math.random()) {
 export function createWaveState(schedule) {
   return {
     spawn: schedule.normal.firstDelay,
-    waveNext: Object.fromEntries(schedule.recurring.map(spec => [spec.unit, spec.first])),
+    waveNext: Object.fromEntries(schedule.recurring.map((spec) => [spec.unit, spec.first])),
     populationNext: schedule.population?.every ?? null,
-    bossSpawned: false
+    bossSpawned: false,
   };
 }
 
@@ -46,10 +47,12 @@ export function createWaveState(schedule) {
 export function waveRoster(schedule) {
   const arrivals = new Map();
   const add = (unit, time) => arrivals.set(unit, Math.min(arrivals.get(unit) ?? Infinity, time));
-  for (const stage of schedule.normal.stages) for (const [unit] of stage.weights) add(unit, stage.time);
+  for (const stage of schedule.normal.stages)
+    for (const [unit] of stage.weights) add(unit, stage.time);
   for (const spec of schedule.recurring) add(spec.unit, spec.first);
-  if (schedule.boss) add(schedule.boss.unit, schedule.boss.time);
+  for (const node of nodeDefinitions) add(node.bug, 0);
+  if (schedule.boss) add(schedule.boss.unit, Infinity);
   for (const unit of schedule.residents) add(unit, 0);
   if (schedule.population) add(schedule.population.unit, 0);
-  return [...arrivals].sort((a, b) => a[1] - b[1]).map(([unit, time]) => ({unit, time}));
+  return [...arrivals].sort((a, b) => a[1] - b[1]).map(([unit, time]) => ({ unit, time }));
 }

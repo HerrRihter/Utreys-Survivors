@@ -1,0 +1,73 @@
+const assert = require('node:assert/strict');
+const { unitDefinitions } = require('../data/enemies/units.js');
+const { waveSchedules } = require('../data/enemies/waves.js');
+const { validateUnits } = require('../tools/check-game-contracts.cjs');
+const { createHarness } = require('./helpers/game-harness.cjs');
+
+(async () => {
+  const added = [
+    'mars_petfood',
+    'baltika',
+    'multon',
+    'loreal',
+    'procter_gamble',
+    'progress',
+    'royal_canin',
+    'cherkizovo',
+    'ferrero',
+    'mondelez',
+    'vetis',
+  ];
+  validateUnits(unitDefinitions);
+  for (const patch of [
+    { attack: 'typo' },
+    { hp: NaN },
+    { frontDamageMultiplier: 2 },
+    { color: 'red' },
+  ])
+    assert.throws(
+      () => validateUnits({ invalid: { ...unitDefinitions.l3, ...patch } }),
+      /Unit contract/,
+    );
+  const scheduled = new Set(
+    waveSchedules.empty.normal.stages.flatMap((s) => s.weights.map(([id]) => id)),
+  );
+  for (const id of added) {
+    assert(scheduled.has(id), `${id} reachable in waves`);
+    const h = await createHarness();
+    const s = h.session;
+    s.start();
+    s.state.spawn = 9999;
+    s.state.attack = 9999;
+    const u = unitDefinitions[id];
+    const p = s.state.p;
+    const e = s.spawn(id, false, { x: p.x - 40, y: p.y });
+    e.heading = 0;
+    e.cd = 9999;
+    e.action = { elapsed: 0, duration: u.wind, hit: false, aim: { x: p.x, y: p.y } };
+    const hp = p.hp;
+    for (let i = 0; i < Math.ceil((u.wind + 0.4) / 0.05); i++) s.update(0.05);
+    assert(p.hp < hp, `${id} actual attack damages player`);
+    assert.equal(s.state.bossSpawned, false, `${id} does not trigger boss progression`);
+    h.env.Legion.draw(h.context, e, () => {});
+    e.action = { aim: p, hit: false };
+    h.env.Legion.telegraph(h.context, e);
+    h.env.Legion.projectile(h.context, { x: 0, y: 0, kind: id });
+    if (u.frontDamageMultiplier) {
+      assert.equal(h.env.Legion.mitigation(e, { x: e.x + 20, y: e.y }), u.frontDamageMultiplier);
+      assert.equal(h.env.Legion.mitigation(e, { x: e.x - 20, y: e.y }), 1);
+    }
+    const kills = s.state.kills;
+    s.damage(e, e.hp / (u.frontDamageMultiplier || 1) + 1);
+    assert.equal(s.state.kills, kills + 1);
+    assert.equal(s.state.gems.at(-1).v, u.xp);
+    assert.equal(s.state.bossDead, false);
+    s.dispose();
+  }
+  console.log(
+    'PASS: eleven opponents spawn, attack, render, reward XP and preserve boss progression',
+  );
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

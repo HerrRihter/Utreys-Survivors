@@ -41,8 +41,15 @@ function createPNG(width, height, getPixel) {
   ihdrData.writeUInt32BE(height, 4);
   ihdrData[8] = 8;
   ihdrData[9] = 6;
-  ihdrData[10] = 0; ihdrData[11] = 0; ihdrData[12] = 0;
-  return Buffer.concat([sig, makeChunk('IHDR', ihdrData), makeChunk('IDAT', compressed), makeChunk('IEND', Buffer.alloc(0))]);
+  ihdrData[10] = 0;
+  ihdrData[11] = 0;
+  ihdrData[12] = 0;
+  return Buffer.concat([
+    sig,
+    makeChunk('IHDR', ihdrData),
+    makeChunk('IDAT', compressed),
+    makeChunk('IEND', Buffer.alloc(0)),
+  ]);
 }
 
 // Canvas-like rasterizer in pure Node
@@ -82,8 +89,16 @@ class IconRaster {
 
   strokeCircle(cx, cy, radius, thickness, [r, g, b, a = 1]) {
     const half = thickness / 2;
-    for (let y = Math.floor(cy - radius - thickness); y <= Math.ceil(cy + radius + thickness); y++) {
-      for (let x = Math.floor(cx - radius - thickness); x <= Math.ceil(cx + radius + thickness); x++) {
+    for (
+      let y = Math.floor(cy - radius - thickness);
+      y <= Math.ceil(cy + radius + thickness);
+      y++
+    ) {
+      for (
+        let x = Math.floor(cx - radius - thickness);
+        x <= Math.ceil(cx + radius + thickness);
+        x++
+      ) {
         const d = Math.hypot(x - cx, y - cy);
         const dist = Math.abs(d - radius);
         if (dist <= half - 0.5) this.setPixel(x, y, r, g, b, a);
@@ -154,12 +169,7 @@ class IconRaster {
   toPNG() {
     return createPNG(this.w, this.h, (x, y) => {
       const i = (y * this.w + x) * 4;
-      return [
-        this.buf[i],
-        this.buf[i + 1],
-        this.buf[i + 2],
-        Math.round(this.buf[i + 3] * 255)
-      ];
+      return [this.buf[i], this.buf[i + 1], this.buf[i + 2], Math.round(this.buf[i + 3] * 255)];
     });
   }
 }
@@ -232,7 +242,7 @@ function makeKills500() {
     [32, 28, 5, [255, 190, 40]],
     [38, 22, 4, [255, 100, 20]],
     [35, 24, 3, [255, 230, 80]],
-    [45, 17, 3, [255, 160, 30]]
+    [45, 17, 3, [255, 160, 30]],
   ];
   for (const [fx, fy, rad, col] of flames) {
     r.fillCircle(fx, fy, rad, [...col, 0.8]);
@@ -287,10 +297,17 @@ function makeKills2500() {
   r.fillCircle(32, 28, 4, [245, 200, 70]); // eagle body
   r.drawLine(32, 30, 32, 50, [190, 140, 40], 2.8); // standard pole
   // Lightning bolt striking through
-  const bolt = [[33, 14], [28, 24], [34, 25], [29, 36], [36, 37], [30, 48]];
+  const bolt = [
+    [33, 14],
+    [28, 24],
+    [34, 25],
+    [29, 36],
+    [36, 37],
+    [30, 48],
+  ];
   for (let b = 0; b < bolt.length - 1; b++) {
-    r.drawLine(bolt[b][0], bolt[b][1], bolt[b+1][0], bolt[b+1][1], [255, 255, 200], 2.2);
-    r.drawLine(bolt[b][0], bolt[b][1], bolt[b+1][0], bolt[b+1][1], [180, 220, 255], 3.8);
+    r.drawLine(bolt[b][0], bolt[b][1], bolt[b + 1][0], bolt[b + 1][1], [255, 255, 200], 2.2);
+    r.drawLine(bolt[b][0], bolt[b][1], bolt[b + 1][0], bolt[b + 1][1], [180, 220, 255], 3.8);
   }
   // Crack sparks
   r.fillCircle(33, 27, 2, [255, 255, 255]);
@@ -413,7 +430,7 @@ function makeBossCenturion() {
   r.drawBaseBadge([220, 70, 60]);
   // Scarlet crest plume (horizontal crest)
   for (let x = 18; x <= 46; x++) {
-    const h = 5 + Math.sin((x - 18) / 28 * Math.PI) * 4;
+    const h = 5 + Math.sin(((x - 18) / 28) * Math.PI) * 4;
     for (let y = 14; y <= 14 + h; y++) {
       r.setPixel(x, y, 220, 40, 40, 1);
     }
@@ -450,11 +467,11 @@ function makeUnlockAllHeroes() {
   r.fillCircle(30, 29, 3, [225, 180, 70]);
   // Group circle of 5 hero colored gems around
   const gems = [
-    [20, 42, [230, 60, 50]],   // Obelix red
-    [26, 46, [50, 130, 230]],  // Panoramix blue
-    [32, 48, [240, 200, 50]],  // Asterix gold
-    [38, 46, [140, 80, 200]],  // Cacofonix purple
-    [44, 42, [70, 180, 90]]    // Automatix green
+    [20, 42, [230, 60, 50]], // Obelix red
+    [26, 46, [50, 130, 230]], // Panoramix blue
+    [32, 48, [240, 200, 50]], // Asterix gold
+    [38, 46, [140, 80, 200]], // Cacofonix purple
+    [44, 42, [70, 180, 90]], // Automatix green
   ];
   for (const [gx, gy, col] of gems) {
     r.fillCircle(gx, gy, 3, col);
@@ -554,12 +571,10 @@ const icons = {
   'unlock-all-heroes.png': makeUnlockAllHeroes,
   'helmets-100.png': makeHelmets100,
   'upgrades-10.png': makeUpgrades10,
-  'abilities-25.png': makeAbilities25
+  'abilities-25.png': makeAbilities25,
 };
 
-const dirs = [
-  path.resolve(__dirname, '../assets/runtime/ui/achievements')
-];
+const dirs = [path.resolve(__dirname, '../assets/runtime/ui/achievements')];
 
 for (const dir of dirs) {
   fs.mkdirSync(dir, { recursive: true });

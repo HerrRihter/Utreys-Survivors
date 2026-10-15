@@ -9,7 +9,7 @@ export const achievementDefinitions = [
     unit: 'раз',
     reward: 5,
     rewardType: 'кодов',
-    getProgress: (data) => data.stats?.abilitiesUsed || 0
+    getProgress: (data) => data.stats?.abilitiesUsed || 0,
   },
   {
     id: 'abilities_50',
@@ -21,7 +21,7 @@ export const achievementDefinitions = [
     unit: 'раз',
     reward: 15,
     rewardType: 'кодов',
-    getProgress: (data) => data.stats?.abilitiesUsed || 0
+    getProgress: (data) => data.stats?.abilitiesUsed || 0,
   },
   {
     id: 'abilities_100',
@@ -33,7 +33,7 @@ export const achievementDefinitions = [
     unit: 'раз',
     reward: 30,
     rewardType: 'кодов',
-    getProgress: (data) => data.stats?.abilitiesUsed || 0
+    getProgress: (data) => data.stats?.abilitiesUsed || 0,
   },
   {
     id: 'abilities_250',
@@ -45,7 +45,7 @@ export const achievementDefinitions = [
     unit: 'раз',
     reward: 50,
     rewardType: 'кодов',
-    getProgress: (data) => data.stats?.abilitiesUsed || 0
+    getProgress: (data) => data.stats?.abilitiesUsed || 0,
   },
   {
     id: 'survive_run_60',
@@ -57,7 +57,7 @@ export const achievementDefinitions = [
     format: 'time',
     reward: 5,
     rewardType: 'кодов',
-    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0))
+    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0)),
   },
   {
     id: 'survive_run_180',
@@ -69,19 +69,19 @@ export const achievementDefinitions = [
     format: 'time',
     reward: 15,
     rewardType: 'кодов',
-    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0))
+    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0)),
   },
   {
     id: 'survive_run_300',
     title: 'Полная синхронизация',
-    desc: 'Успешно завершить 5-минутный стресс-тест контура',
+    desc: 'Удерживать контур в одном забеге 5 минут',
     icon: '🏆',
     category: 'survival',
     target: 300,
     format: 'time',
     reward: 35,
     rewardType: 'кодов',
-    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0))
+    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0)),
   },
   {
     id: 'survive_total_600',
@@ -93,7 +93,7 @@ export const achievementDefinitions = [
     format: 'time',
     reward: 20,
     rewardType: 'кодов',
-    getProgress: (data) => Math.floor(data.stats?.totalTime || 0)
+    getProgress: (data) => Math.floor(data.stats?.totalTime || 0),
   },
   {
     id: 'kills_10',
@@ -105,7 +105,7 @@ export const achievementDefinitions = [
     unit: 'запросов',
     reward: 5,
     rewardType: 'кодов',
-    getProgress: (data) => data.kills || 0
+    getProgress: (data) => data.kills || 0,
   },
   {
     id: 'kills_100',
@@ -117,7 +117,7 @@ export const achievementDefinitions = [
     unit: 'запросов',
     reward: 15,
     rewardType: 'кодов',
-    getProgress: (data) => data.kills || 0
+    getProgress: (data) => data.kills || 0,
   },
   {
     id: 'kills_500',
@@ -129,7 +129,7 @@ export const achievementDefinitions = [
     unit: 'запросов',
     reward: 35,
     rewardType: 'кодов',
-    getProgress: (data) => data.kills || 0
+    getProgress: (data) => data.kills || 0,
   },
   {
     id: 'boss_crpt',
@@ -141,7 +141,7 @@ export const achievementDefinitions = [
     unit: 'раз',
     reward: 50,
     rewardType: 'кодов',
-    getProgress: (data) => data.stats?.bossKills || 0
+    getProgress: (data) => data.stats?.bossKills || 0,
   },
   {
     id: 'helmets_100',
@@ -153,7 +153,7 @@ export const achievementDefinitions = [
     unit: 'кодов',
     reward: 25,
     rewardType: 'кодов',
-    getProgress: (data) => data.helmets || 0
+    getProgress: (data) => data.helmets || 0,
   },
   {
     id: 'upgrades_10',
@@ -165,6 +165,10 @@ export const achievementDefinitions = [
     unit: 'улучшений',
     reward: 30,
     rewardType: 'кодов',
-    getProgress: (data) => Object.values(data.levels || {}).reduce((sum, val) => sum + (Number.isFinite(val) ? val : 0), 0)
-  }
+    getProgress: (data) =>
+      Object.values(data.levels || {}).reduce(
+        (sum, val) => sum + (Number.isFinite(val) ? val : 0),
+        0,
+      ),
+  },
 ];

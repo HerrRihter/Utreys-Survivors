@@ -1,0 +1,128 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { createHarness } = require('./helpers/game-harness.cjs');
+const { loadModule } = require('./helpers/load-modules.cjs');
+const { heroDefinitions } = require('../data/characters/heroes.js');
+const { heroUnlockPrices } = require('../data/upgrades.js');
+const { abilityDefinitions } = require('../data/characters/abilities.js');
+const { heroAttack } = require('../src/systems/hero-attacks.js');
+
+(async () => {
+  const storage = new Map();
+  const load = async () => {
+    const env = {
+      localStorage: {
+        getItem: (key) => storage.get(key),
+        setItem: (key, value) => storage.set(key, value),
+      },
+    };
+    await loadModule(env, path.resolve(__dirname, '../src/systems/persistence.js'));
+    return env.Progression;
+  };
+  let p = await load();
+  for (const [id, price] of Object.entries(heroUnlockPrices)) {
+    assert(!p.owned(id));
+    assert(!p.buyHero(id), 'insufficient funds');
+    assert(!p.buyUpgrade('training_' + id), 'locked training');
+    p.earn(price);
+    assert(p.buyHero(id));
+    assert.equal(p.data.helmets, 0);
+    assert(!p.buyHero(id), 'duplicate purchase');
+    p = await load();
+    assert(p.owned(id), 'purchase survives reload');
+  }
+  for (const id of Object.keys(heroDefinitions)) {
+    assert.equal(abilityDefinitions[id].length, 2);
+    const h = await createHarness();
+    if (id !== 'utrace') {
+      h.session.select(id);
+      h.session.start();
+      assert.equal(h.session.state.p.max, heroDefinitions.utrace.hp, 'locked selection falls back');
+      h.env.Progression.earn(heroUnlockPrices[id]);
+      assert(h.env.Progression.buyHero(id));
+    }
+    h.session.select(id);
+    h.session.start();
+    assert.equal(h.session.state.p.max, heroDefinitions[id].hp);
+    assert(h.session.activateAbility(0));
+    assert(h.session.activateAbility(1));
+    h.session.update(0.05);
+    h.session.draw();
+    h.session.dispose();
+  }
+  const attack = (id, positions) => {
+    const enemies = positions.map(([x, y]) => ({ x, y, hp: 100, r: 10, unit: 'l3' }));
+    const state = { p: { x: 0, y: 0, facing: { x: 1, y: 0 } }, enemies, fx: [], shots: [] };
+    heroAttack(
+      {
+        state,
+        selected: id,
+        Villagers: { defs: heroDefinitions },
+        Legion: { units: { l3: {} } },
+        Village: { clear: () => true },
+        soundEffect() {},
+        damage(e, n) {
+          e.hp -= n;
+        },
+      },
+      { direction: { x: 1, y: 0 } },
+      { damage: 1, range: 1 },
+    );
+    return state;
+  };
+  const chain = attack('traceability', [
+    [60, 0],
+    [150, 0],
+    [240, 0],
+    [330, 0],
+  ]);
+  assert.deepEqual(
+    chain.enemies.map((e) => Math.round((100 - e.hp) * 100) / 100),
+    [24, 19.2, 15.36, 0],
+  );
+  const qa = attack('qa', [
+    [40, 0],
+    [-40, 0],
+  ]);
+  assert(
+    qa.enemies.every((e) => e.hp === 81 && e.abilityStun === 0.25),
+    'QA reaches rear and interrupts',
+  );
+  const base = attack('utrace', [
+    [30, 60],
+    [-30, 0],
+  ]);
+  const ba = attack('ba', [
+    [30, 60],
+    [-30, 0],
+  ]);
+  assert.equal(base.enemies[0].hp, 100);
+  assert(ba.enemies[0].hp < 100 && ba.enemies[1].hp === 100, 'BA wider forward sector');
+  assert.equal(attack('serialization', []).shots.length, 1);
+  const h = await createHarness();
+  h.env.Progression.earn(100);
+  h.env.Progression.buyHero('serialization');
+  h.session.select('serialization');
+  h.session.start();
+  const s = h.session.state;
+  s.spawn = 9999;
+  s.attack = 0;
+  const targets = [110, 180].map((dx) => {
+    const e = h.session.spawn('l3', false, { x: s.p.x + dx, y: s.p.y });
+    e.speed = 0;
+    e.cd = 9999;
+    return e;
+  });
+  for (let i = 0; i < 14; i++) h.session.update(0.05);
+  assert(
+    targets.every((e) => e.hp === e.max - 23),
+    'one packet pierces two targets exactly once',
+  );
+  h.session.dispose();
+  console.log(
+    'PASS: hero purchases, persistence, selection, abilities and distinct attack geometry',
+  );
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

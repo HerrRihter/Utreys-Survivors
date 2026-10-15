@@ -1,9 +1,13 @@
 export let GameLoop;
-GameLoop={create(sessionContext){
-let running = false, frameId = null, freshFrame = false, last=0;
-function frame(now) {
+GameLoop = {
+  create(sessionContext) {
+    let running = false,
+      frameId = null,
+      freshFrame = false,
+      last = 0;
+    function frame(now) {
       if (!running) return;
-      const dt = freshFrame ? 0 : sessionContext.Math.min((now-last)/1000 || 0, .05);
+      const dt = freshFrame ? 0 : sessionContext.Math.min((now - last) / 1000 || 0, 0.05);
       freshFrame = false;
       last = now;
       if (sessionContext.mode === 'play') sessionContext.update(dt);
@@ -18,18 +22,25 @@ function frame(now) {
       sessionContext.draw();
       if (running) frameId = sessionContext.requestAnimationFrame(frame);
     }
-function run() {
+    function run() {
       if (running) return;
       running = true;
       sessionContext.resumeAudio();
       freshFrame = true;
       frameId = sessionContext.requestAnimationFrame(frame);
     }
-function stop() {
+    function stop() {
       running = false;
       sessionContext.stopAudio();
       if (frameId !== null) sessionContext.cancelAnimationFrame(frameId);
       frameId = null;
     }
-return {run,stop,get running(){return running}};
-}};
+    return {
+      run,
+      stop,
+      get running() {
+        return running;
+      },
+    };
+  },
+};

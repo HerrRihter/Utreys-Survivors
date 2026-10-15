@@ -1,13 +1,10 @@
+import { drawNodes } from '../rendering/node-objectives.js';
+import { createNodeState } from '../systems/node-objectives.js';
 import React, { useEffect, useRef, useState } from 'react';
-import { Village } from '../world/village/village.js';
 import { createArenas, arenaDefinitions } from '../world/arenas.js';
 
-interface ArenaViewProps {
-  onBackToGame: () => void;
-}
-
-export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
-  const [selectedArena, setSelectedArena] = useState<string>('empty');
+export const ArenaView: React.FC = () => {
+  const selectedArena = 'empty';
   const [isClose, setIsClose] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showBounds, setShowBounds] = useState<boolean>(false);
@@ -19,12 +16,12 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
     const g = canvas.getContext('2d');
     if (!g) return;
 
-    const arenas = createArenas(Village);
-    let animId: number;
+    const arenas = createArenas();
 
     const render = () => {
       const world = arenas.get(selectedArena);
       g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, canvas.width, canvas.height);
 
       const scale = isClose ? 0.95 : 0.43;
       g.translate(660, 500);
@@ -32,12 +29,20 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
       g.translate(-1100, isClose ? -1070 : -1090);
 
       world.draw(g);
+      drawNodes(g, createNodeState());
 
       if (showBounds && world.collision) {
         world.collision.draw(g);
+        g.strokeStyle = '#00e5ff';
+        g.lineWidth = 5;
+        g.strokeRect(0, 0, world.size, world.size);
       }
 
       if (showLabels && world.houses) {
+        g.fillStyle = '#00e5ff';
+        g.font = 'bold 24px monospace';
+        g.textAlign = 'center';
+        g.fillText('ЯДРО UTRACE', world.size / 2, world.size / 2);
         for (const h of world.houses) {
           if (!h.name) continue;
           g.font = 'bold 19px monospace';
@@ -49,43 +54,89 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
           g.fillText(h.name, h.x + h.w / 2, h.y + h.h + 37);
         }
       }
-
-      animId = requestAnimationFrame(render);
     };
 
     render();
-
-    return () => {
-      cancelAnimationFrame(animId);
-    };
   }, [selectedArena, isClose, showLabels, showBounds]);
 
-  const arena = (arenaDefinitions as Record<string, { name: string; description: string; notes?: string }>)[selectedArena] || {
+  const arena = (
+    arenaDefinitions as Record<string, { name: string; description: string; notes?: string }>
+  )[selectedArena] || {
     name: 'Дата-центр Utrace',
     description: 'Высоконагруженный серверный контур',
     notes: '',
   };
 
   return (
-    <div className="overlay" style={{ alignItems: 'flex-start', display: 'flex', flexDirection: 'column', width: '100%', height: '100%', overflowY: 'auto', background: '#0a1619', color: '#f0f8f8', padding: '24px' }}>
-      <main style={{ maxWidth: '1220px', margin: '0 auto', width: '100%' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
+    <div
+      className="overlay"
+      style={{
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+        background: '#0a1619',
+        color: 'var(--ink)',
+        padding: '80px 24px 24px',
+      }}
+    >
+      <main style={{ maxWidth: '1220px', margin: '0 auto', width: '100%', flexShrink: 0 }}>
+        <header
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '20px',
+            marginBottom: '16px',
+          }}
+        >
           <div>
-            <div className="eyebrow" style={{ color: '#00e5ff', fontSize: '11px', letterSpacing: '2px', marginBottom: '4px' }}>СЕРВЕРНАЯ ИНФРАСТРУКТУРА</div>
-            <h1 style={{ margin: 0, fontSize: '32px', color: '#00e5ff' }}>{arena.name}</h1>
-            <p style={{ color: '#a0bec7', maxWidth: '880px', margin: '8px 0 0', fontSize: '14px', lineHeight: 1.6 }}>{arena.description}</p>
+            <div
+              className="eyebrow"
+              style={{
+                color: 'var(--cyan)',
+                fontSize: '11px',
+                letterSpacing: '2px',
+                marginBottom: '4px',
+              }}
+            >
+              СЕРВЕРНАЯ ИНФРАСТРУКТУРА
+            </div>
+            <h1 style={{ margin: 0, fontSize: '32px', color: 'var(--cyan)' }}>{arena.name}</h1>
+            <p
+              style={{
+                color: '#a0bec7',
+                maxWidth: '880px',
+                margin: '8px 0 0',
+                fontSize: '14px',
+                lineHeight: 1.6,
+              }}
+            >
+              {arena.description}
+            </p>
           </div>
-          <button className="primary" onClick={onBackToGame} style={{ background: '#00e5ff', color: '#041724', whiteSpace: 'nowrap', boxShadow: '4px 4px 0 #008ba3' }}>
-            В игру →
-          </button>
         </header>
 
-        <nav style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', margin: '16px 0', alignItems: 'center' }}>
+        <nav
+          style={{
+            display: 'flex',
+            gap: '14px',
+            flexWrap: 'wrap',
+            margin: '16px 0',
+            alignItems: 'center',
+          }}
+        >
           <button
             type="button"
             className="small"
             onClick={() => setIsClose(false)}
-            style={{ borderColor: !isClose ? '#00e5ff' : undefined, color: !isClose ? '#00e5ff' : undefined }}
+            style={{
+              borderColor: !isClose ? 'var(--cyan)' : undefined,
+              color: !isClose ? 'var(--cyan)' : undefined,
+            }}
           >
             Весь кластер
           </button>
@@ -94,12 +145,24 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
             type="button"
             className="small"
             onClick={() => setIsClose(true)}
-            style={{ borderColor: isClose ? '#00e5ff' : undefined, color: isClose ? '#00e5ff' : undefined }}
+            style={{
+              borderColor: isClose ? 'var(--cyan)' : undefined,
+              color: isClose ? 'var(--cyan)' : undefined,
+            }}
           >
             Центральное ядро
           </button>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', color: '#90b4bc' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              color: '#90b4bc',
+            }}
+          >
             <input
               type="checkbox"
               checked={showLabels}
@@ -108,7 +171,16 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
             Узлы сети
           </label>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', color: '#90b4bc' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              color: '#90b4bc',
+            }}
+          >
             <input
               type="checkbox"
               checked={showBounds}
@@ -119,7 +191,9 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
         </nav>
 
         {arena.notes && (
-          <p style={{ fontSize: '12px', color: '#00e5ffaa', margin: '4px 0 16px' }}>{arena.notes}</p>
+          <p style={{ fontSize: '12px', color: '#00e5ffaa', margin: '4px 0 16px' }}>
+            {arena.notes}
+          </p>
         )}
 
         <canvas
@@ -127,7 +201,13 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
           width={1320}
           height={1000}
           aria-label={`План дата-центра: ${arena.name}`}
-          style={{ display: 'block', width: '100%', border: '1px solid #1a5763', background: '#0a1619', borderRadius: '4px' }}
+          style={{
+            display: 'block',
+            width: '100%',
+            border: '1px solid #1a5763',
+            background: '#0a1619',
+            borderRadius: '4px',
+          }}
         />
       </main>
     </div>

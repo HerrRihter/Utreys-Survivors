@@ -4,9 +4,18 @@
     "assets/runtime": ["characters", "world", "projectiles", "effects", "ui", "audio"],
     "assets/runtime/characters": ["heroes", "enemies", "civilians"],
     "assets/runtime/world": ["village", "lutetia", "scenery"],
-    "src": ["app", "core", "entities", "systems", "world", "rendering", "ui", "pages", "components"],
-    "data": ["animations", "characters", "enemies", "projectiles", "maps"],
-    "runtime": ["src", "previews"]
+    "src": [
+      "app",
+      "core",
+      "entities",
+      "systems",
+      "world",
+      "rendering",
+      "ui",
+      "pages",
+      "components"
+    ],
+    "data": ["animations", "characters", "enemies", "projectiles", "maps"]
   },
   "runtimeAssetPatterns": [
     "^assets/runtime/characters/(heroes|enemies|civilians)/[a-z0-9-]+/(animations/(idle|walk|attack|hurt|death)/[0-9]+|animations/[a-z0-9-]+|[a-z0-9-]+)\\.png$",
@@ -17,7 +26,13 @@
     "^assets/runtime/audio/(CREDITS\\.md|[A-Za-z0-9-]+-LICENSE\\.txt)$"
   ],
   "framePattern": "^characters/(heroes|enemies|civilians)/([a-z0-9-]+)/animations/(idle|walk|attack|hurt|death)/[0-9]+\\.png$",
-  "forbiddenReferences": ["assets/audio/", "assets/ui/", "assets/runtime/lutetia/", "characters/frames/", "achivements"],
-  "referenceRoots": ["src", "data", "previews", "runtime"],
+  "forbiddenReferences": [
+    "assets/audio/",
+    "assets/ui/",
+    "assets/runtime/lutetia/",
+    "characters/frames/",
+    "achivements"
+  ],
+  "referenceRoots": ["src", "data"],
   "referenceFiles": ["index.html", "opponents-preview.html", "village-preview.html"]
 }

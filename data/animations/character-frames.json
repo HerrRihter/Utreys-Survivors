@@ -1,56 +1,8 @@
 {
   "width": 256,
   "height": 256,
-  "anchor": [
-    128,
-    236
-  ],
+  "anchor": [128, 236],
   "characters": {
-    "asterix": {
-      "actions": {
-        "walk": [
-          "characters/heroes/asterix/animations/walk/0.png",
-          "characters/heroes/asterix/animations/walk/1.png",
-          "characters/heroes/asterix/animations/walk/2.png",
-          "characters/heroes/asterix/animations/walk/3.png"
-        ],
-        "attack": [
-          "characters/heroes/asterix/animations/attack/0.png",
-          "characters/heroes/asterix/animations/attack/1.png",
-          "characters/heroes/asterix/animations/attack/2.png",
-          "characters/heroes/asterix/animations/attack/3.png"
-        ]
-      },
-      "idle": {
-        "action": "attack",
-        "index": 0
-      },
-      "renderer": "animation"
-    },
-    "obelix": {
-      "actions": {
-        "walk": [
-          "characters/heroes/obelix/animations/walk/0.png",
-          "characters/heroes/obelix/animations/walk/1.png",
-          "characters/heroes/obelix/animations/walk/2.png",
-          "characters/heroes/obelix/animations/walk/3.png"
-        ],
-        "attack": [
-          "characters/heroes/obelix/animations/attack/0.png",
-          "characters/heroes/obelix/animations/attack/1.png",
-          "characters/heroes/obelix/animations/attack/2.png",
-          "characters/heroes/obelix/animations/attack/3.png"
-        ]
-      },
-      "idle": {
-        "action": "attack",
-        "index": 3
-      },
-      "renderer": "animation",
-      "actionScale": {
-        "attack": 1.1688311688311688
-      }
-    },
     "roman-0": {
       "actions": {
         "walk": [
@@ -152,114 +104,6 @@
         "index": 0
       },
       "renderer": "animation"
-    },
-    "cacofonix": {
-      "actions": {
-        "walk": [
-          "characters/heroes/cacofonix/animations/walk/0.png",
-          "characters/heroes/cacofonix/animations/walk/1.png",
-          "characters/heroes/cacofonix/animations/walk/2.png",
-          "characters/heroes/cacofonix/animations/walk/3.png"
-        ],
-        "attack": [
-          "characters/heroes/cacofonix/animations/attack/0.png",
-          "characters/heroes/cacofonix/animations/attack/1.png",
-          "characters/heroes/cacofonix/animations/attack/2.png",
-          "characters/heroes/cacofonix/animations/attack/3.png"
-        ],
-        "hurt": [
-          "characters/heroes/cacofonix/animations/hurt/0.png",
-          "characters/heroes/cacofonix/animations/hurt/1.png",
-          "characters/heroes/cacofonix/animations/hurt/2.png",
-          "characters/heroes/cacofonix/animations/hurt/3.png"
-        ]
-      },
-      "idle": {
-        "action": "walk",
-        "index": 1
-      },
-      "renderer": "villager"
-    },
-    "antisanitarix": {
-      "actions": {
-        "walk": [
-          "characters/heroes/antisanitarix/animations/walk/0.png",
-          "characters/heroes/antisanitarix/animations/walk/1.png",
-          "characters/heroes/antisanitarix/animations/walk/2.png",
-          "characters/heroes/antisanitarix/animations/walk/3.png"
-        ],
-        "attack": [
-          "characters/heroes/antisanitarix/animations/attack/0.png",
-          "characters/heroes/antisanitarix/animations/attack/1.png",
-          "characters/heroes/antisanitarix/animations/attack/2.png",
-          "characters/heroes/antisanitarix/animations/attack/3.png"
-        ],
-        "hurt": [
-          "characters/heroes/antisanitarix/animations/hurt/0.png",
-          "characters/heroes/antisanitarix/animations/hurt/1.png",
-          "characters/heroes/antisanitarix/animations/hurt/2.png",
-          "characters/heroes/antisanitarix/animations/hurt/3.png"
-        ]
-      },
-      "idle": {
-        "action": "walk",
-        "index": 1
-      },
-      "renderer": "villager"
-    },
-    "automatix": {
-      "actions": {
-        "walk": [
-          "characters/heroes/automatix/animations/walk/0.png",
-          "characters/heroes/automatix/animations/walk/1.png",
-          "characters/heroes/automatix/animations/walk/2.png",
-          "characters/heroes/automatix/animations/walk/3.png"
-        ],
-        "attack": [
-          "characters/heroes/automatix/animations/attack/0.png",
-          "characters/heroes/automatix/animations/attack/1.png",
-          "characters/heroes/automatix/animations/attack/2.png",
-          "characters/heroes/automatix/animations/attack/3.png"
-        ],
-        "hurt": [
-          "characters/heroes/automatix/animations/hurt/0.png",
-          "characters/heroes/automatix/animations/hurt/1.png",
-          "characters/heroes/automatix/animations/hurt/2.png",
-          "characters/heroes/automatix/animations/hurt/3.png"
-        ]
-      },
-      "idle": {
-        "action": "walk",
-        "index": 1
-      },
-      "renderer": "villager"
-    },
-    "panoramix": {
-      "actions": {
-        "walk": [
-          "characters/heroes/panoramix/animations/walk/0.png",
-          "characters/heroes/panoramix/animations/walk/1.png",
-          "characters/heroes/panoramix/animations/walk/2.png",
-          "characters/heroes/panoramix/animations/walk/3.png"
-        ],
-        "attack": [
-          "characters/heroes/panoramix/animations/attack/0.png",
-          "characters/heroes/panoramix/animations/attack/1.png",
-          "characters/heroes/panoramix/animations/attack/2.png",
-          "characters/heroes/panoramix/animations/attack/3.png"
-        ],
-        "hurt": [
-          "characters/heroes/panoramix/animations/hurt/0.png",
-          "characters/heroes/panoramix/animations/hurt/1.png",
-          "characters/heroes/panoramix/animations/hurt/2.png",
-          "characters/heroes/panoramix/animations/hurt/3.png"
-        ]
-      },
-      "idle": {
-        "action": "walk",
-        "index": 1
-      },
-      "renderer": "villager"
     },
     "spear": {
       "actions": {
@@ -675,12 +519,8 @@
           "characters/civilians/citizen-0/animations/walk/2.png",
           "characters/civilians/citizen-0/animations/walk/3.png"
         ],
-        "attack": [
-          "characters/civilians/citizen-0/animations/walk/0.png"
-        ],
-        "hurt": [
-          "characters/civilians/citizen-0/animations/walk/2.png"
-        ]
+        "attack": ["characters/civilians/citizen-0/animations/walk/0.png"],
+        "hurt": ["characters/civilians/citizen-0/animations/walk/2.png"]
       },
       "idle": {
         "action": "walk",
@@ -696,12 +536,8 @@
           "characters/civilians/citizen-1/animations/walk/2.png",
           "characters/civilians/citizen-1/animations/walk/3.png"
         ],
-        "attack": [
-          "characters/civilians/citizen-1/animations/walk/0.png"
-        ],
-        "hurt": [
-          "characters/civilians/citizen-1/animations/walk/2.png"
-        ]
+        "attack": ["characters/civilians/citizen-1/animations/walk/0.png"],
+        "hurt": ["characters/civilians/citizen-1/animations/walk/2.png"]
       },
       "idle": {
         "action": "walk",
@@ -717,12 +553,8 @@
           "characters/civilians/citizen-2/animations/walk/2.png",
           "characters/civilians/citizen-2/animations/walk/3.png"
         ],
-        "attack": [
-          "characters/civilians/citizen-2/animations/walk/0.png"
-        ],
-        "hurt": [
-          "characters/civilians/citizen-2/animations/walk/2.png"
-        ]
+        "attack": ["characters/civilians/citizen-2/animations/walk/0.png"],
+        "hurt": ["characters/civilians/citizen-2/animations/walk/2.png"]
       },
       "idle": {
         "action": "walk",

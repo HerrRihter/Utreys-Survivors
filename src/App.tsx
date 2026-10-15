@@ -1,37 +1,29 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GameView } from './components/GameView';
 import { ArenaView } from './components/ArenaView';
 import { OpponentsView } from './components/OpponentsView';
 
 export function App() {
-  const [currentView, setCurrentView] = useState<'game' | 'arena' | 'opponents'>('game');
+  const [currentView, setCurrentView] = useState<'game' | 'arena' | 'opponents'>(() => {
+    const requested = new URLSearchParams(window.location.search).get('view');
+    return requested === 'arena' || requested === 'opponents' ? requested : 'game';
+  });
+  useEffect(() => {
+    document.body.dataset.view = currentView;
+  }, [currentView]);
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       {/* Top Quick Navigation Bar when in menu or browsing */}
       {currentView !== 'game' && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '12px',
-            left: '16px',
-            zIndex: 60,
-            display: 'flex',
-            gap: '8px',
-            background: 'rgba(10, 22, 25, 0.95)',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #1a5763',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-          }}
-        >
+        <nav className="view-navigation" aria-label="Разделы игры">
           <button
             type="button"
             className="small"
             onClick={() => setCurrentView('game')}
             style={{
-              borderColor: '#00e5ff',
-              color: '#00e5ff',
+              borderColor: 'var(--cyan)',
+              color: 'var(--cyan)',
               cursor: 'pointer',
             }}
           >
@@ -42,8 +34,8 @@ export function App() {
             className="small"
             onClick={() => setCurrentView('arena')}
             style={{
-              borderColor: currentView === 'arena' ? '#00e5ff' : undefined,
-              color: currentView === 'arena' ? '#00e5ff' : undefined,
+              borderColor: currentView === 'arena' ? 'var(--cyan)' : undefined,
+              color: currentView === 'arena' ? 'var(--cyan)' : undefined,
               cursor: 'pointer',
             }}
           >
@@ -54,19 +46,26 @@ export function App() {
             className="small"
             onClick={() => setCurrentView('opponents')}
             style={{
-              borderColor: currentView === 'opponents' ? '#00e5ff' : undefined,
-              color: currentView === 'opponents' ? '#00e5ff' : undefined,
+              borderColor: currentView === 'opponents' ? 'var(--cyan)' : undefined,
+              color: currentView === 'opponents' ? 'var(--cyan)' : undefined,
               cursor: 'pointer',
             }}
           >
             Враги и клиенты
           </button>
-        </div>
+        </nav>
       )}
 
       {/* Main Game View kept mounted to maintain canvas context, audio state and game session */}
-      <div style={{ display: currentView === 'game' ? 'block' : 'none', width: '100vw', height: '100vh' }}>
+      <div
+        style={{
+          display: currentView === 'game' ? 'block' : 'none',
+          width: '100vw',
+          height: '100vh',
+        }}
+      >
         <GameView
+          active={currentView === 'game'}
           onNavigateToArena={() => setCurrentView('arena')}
           onNavigateToOpponents={() => setCurrentView('opponents')}
         />
@@ -74,13 +73,13 @@ export function App() {
 
       {currentView === 'arena' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
-          <ArenaView onBackToGame={() => setCurrentView('game')} />
+          <ArenaView />
         </div>
       )}
 
       {currentView === 'opponents' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
-          <OpponentsView onBackToGame={() => setCurrentView('game')} />
+          <OpponentsView />
         </div>
       )}
     </div>
