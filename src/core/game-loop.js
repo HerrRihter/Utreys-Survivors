@@ -1,5 +1,4 @@
-export let GameLoop;
-GameLoop = {
+export const GameLoop = {
   create(sessionContext) {
     let running = false,
       frameId = null,

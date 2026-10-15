@@ -1,7 +1,6 @@
-import { Legion } from '../entities/legion.js';
-export let Corpses;
-('use strict');
-Corpses = (() => {
+import { Enemies } from '../entities/enemies.js';
+import { compact } from '../core/compact.js';
+export const Corpses = (() => {
   const lifetime = 8,
     fadeTime = 2,
     limit = 180,
@@ -14,33 +13,29 @@ Corpses = (() => {
     c.height = 256;
     const g = c.getContext('2d');
     g.imageSmoothingEnabled = false;
-    Legion.draw(g, { ...e, x: 128, y: 196, heading: 0, hit: 0, action: null, animationTime: 0 });
+    Enemies.draw(g, { ...e, x: 128, y: 196, heading: 0, hit: 0, action: null, animationTime: 0 });
     cache.set(key, c);
     return c;
   }
-  function add(list, e, sprite, impact = { x: 1, y: 0 }) {
+  function add(list, e, impact = { x: 1, y: 0 }) {
     const length = Math.hypot(impact.x, impact.y),
       nx = length > 0 ? impact.x / length : 1,
       ny = length > 0 ? impact.y / length : 0;
-    const count = e.unit === 'turtle' ? 6 : e.unit === 'ram' ? 4 : 1;
-    for (let i = 0; i < count; i++) {
-      const soldier = count > 1 ? { unit: 'roman', type: 'roman', phase: i % 3 } : e;
-      list.push({
-        x: e.x + (count > 1 ? ((i % 3) - 1) * 24 : 0),
-        y: e.y + (count > 1 ? (Math.floor(i / 3) - 0.5) * 24 : 0),
-        age: 0,
-        flip: Math.cos(e.heading || 0) < 0,
-        fallX: nx,
-        fallY: ny,
-        angle: Math.atan2(nx, -ny / 0.58),
-        frame: pose(soldier, sprite),
-      });
-    }
+    list.push({
+      x: e.x,
+      y: e.y,
+      age: 0,
+      flip: Math.cos(e.heading || 0) < 0,
+      fallX: nx,
+      fallY: ny,
+      angle: Math.atan2(nx, -ny / 0.58),
+      frame: pose(e),
+    });
     if (list.length > limit) list.splice(0, list.length - limit);
   }
   function update(list, dt) {
     for (const body of list) body.age += dt;
-    return list.filter((body) => body.age < lifetime);
+    return compact(list, (body) => body.age < lifetime);
   }
   function opacity(body) {
     return Math.min(1, Math.max(0, (lifetime - body.age) / fadeTime));

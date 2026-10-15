@@ -5,9 +5,7 @@ import {
   abilityUpgradeId,
 } from '../../data/characters/abilities.js';
 import { permanentUpgradeDefinitions, heroTrainingDefinitions } from '../../data/upgrades.js';
-export let UpgradeSystem;
-('use strict');
-UpgradeSystem = {
+export const UpgradeSystem = {
   create(Progression) {
     const add = (key, value) => (s) => (s.stats[key] = (s.stats[key] || 0) + value);
     const item = (id, name, desc, key, value, max = 3) => ({
@@ -98,14 +96,7 @@ UpgradeSystem = {
           desc: abilityUpgradeDescriptions[a.id],
           icon: '◆',
           max: abilityUpgradeMax,
-          available: () =>
-            a.id !== 'forge' || Progression.armorRank < Progression.upgrades.armor.max,
-          apply: (s) => {
-            if (a.id === 'forge') {
-              const slot = s.abilities?.find((x) => x.id === 'forge');
-              if (slot) slot.cd = Math.max(0, slot.cd - (slot.cooldownPerRank || 0));
-            }
-          },
+          apply: () => {},
         })),
       ]),
     );

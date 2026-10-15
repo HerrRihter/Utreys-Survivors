@@ -1,3 +1,5 @@
+import { traceabilityCharge } from './hero-charge.js';
+
 export const SpriteRenderer = {
   create(session) {
     return {
@@ -13,7 +15,11 @@ export const SpriteRenderer = {
         phase = 0,
         actor = null,
       ) {
-        session.Villagers.draw(context, name, x, y, size, flip, actor?.walk || 0);
+        const charge =
+          actor?.player && name === 'traceability'
+            ? traceabilityCharge(session.state, session.abilities.blocksAttack())
+            : null;
+        session.Heroes.draw(context, name, x, y, size, flip, actor?.walk || 0, charge);
       },
     };
   },

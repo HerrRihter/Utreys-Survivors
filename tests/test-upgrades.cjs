@@ -1,8 +1,7 @@
-const { loadModule, resourcePath } = require('./helpers/load-modules.cjs');
+const { loadModule } = require('./helpers/load-modules.cjs');
 async function main() {
   const projectRoot = require('node:path').resolve(__dirname, '..');
-  const fs = require('node:fs'),
-    vm = require('node:vm'),
+  const vm = require('node:vm'),
     assert = require('node:assert/strict');
   const saved = new Map(),
     e = { localStorage: { getItem: (k) => saved.get(k), setItem: (k, v) => saved.set(k, v) } };
@@ -34,7 +33,11 @@ async function main() {
         );
       if (U.heroes[hero].some((u) => (s.upgradeRanks?.[u.id] || 0) < u.max))
         assert(choices.some((c) => c.group === 'Оружие героя'));
-      if (U.abilities[hero].some((u) => (s.upgradeRanks?.[u.id] || 0) < u.max && u.available(s)))
+      if (
+        U.abilities[hero].some(
+          (u) => (s.upgradeRanks?.[u.id] || 0) < u.max && (!u.available || u.available(s)),
+        )
+      )
         assert(choices.some((u) => u.group === 'Активное умение'));
       U.apply(choices[0], s);
     }
@@ -64,14 +67,14 @@ async function main() {
   saved.set(
     'utreys-progression-v1',
     JSON.stringify({
-      helmets: 44,
+      codes: 44,
       kills: 37,
       unlocked: ['panoramix'],
       levels: { health: 2, power: 1, speed: 3 },
     }),
   );
   await loadModule(reload, projectRoot + '/src/systems/persistence.js', { fresh: true });
-  assert.equal(reload.Progression.data.helmets, 44);
+  assert.equal(reload.Progression.data.codes, 44);
   assert.equal(reload.Progression.data.levels.health, 2);
   assert.equal(reload.Progression.data.levels.training_panoramix, undefined);
   assert(!reload.Progression.owned('panoramix'));

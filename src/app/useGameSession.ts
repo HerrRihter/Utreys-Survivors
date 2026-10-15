@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { GameSession } from './game-session.js';
-import { Villagers } from '../entities/heroes.js';
+import { Heroes } from '../entities/heroes.js';
 import { Progression } from '../systems/persistence.js';
 import { UpgradeSystem } from '../systems/upgrades.js';
-import { Legion } from '../entities/legion.js';
+import { Enemies } from '../entities/enemies.js';
 import { Corpses } from '../systems/corpses.js';
 import { MenuPortraits } from '../ui/menu-portraits.js';
 
@@ -27,15 +27,18 @@ export function useGameSession(active: boolean) {
       requestAnimationFrame: (callback: FrameRequestCallback) =>
         window.requestAnimationFrame(callback),
       cancelAnimationFrame: (id: number) => window.cancelAnimationFrame(id),
-      Villagers,
+      Heroes,
       Progression,
       UpgradeSystem,
-      Legion,
+      Enemies,
       Corpses,
       MenuPortraits,
     });
 
     sessionRef.current = session;
+    // Opt-in handle for tools/benchmark-render.cjs; inert without ?bench in the URL.
+    if (new URLSearchParams(window.location.search).has('bench'))
+      (window as unknown as { __utraceSession?: typeof session }).__utraceSession = session;
     session.run();
 
     return () => {

@@ -1,6 +1,5 @@
 import { createEventScope } from './lifecycle.js';
-export let InputSystem;
-InputSystem = {
+export const InputSystem = {
   create(sessionContext) {
     const events = createEventScope();
     function resetInput() {

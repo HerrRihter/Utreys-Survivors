@@ -20,7 +20,7 @@ const assets = require('../tools/active-assets.json');
   for (const file of [
     'src/app/game-session.js',
     'src/entities/heroes.js',
-    'src/entities/legion.js',
+    'src/entities/enemies.js',
     'src/systems/corpses.js',
   ])
     await loadModule(env, path.resolve(file));

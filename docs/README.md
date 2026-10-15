@@ -7,12 +7,13 @@
 - [Контракт структуры](STRUCTURE-CONTRACT.md)
 - [Противники, баги-минибоссы и цель забега](ENEMIES-AND-NODES.md)
 - [Герои, покупки и неоновый стиль](HEROES.md)
+- [Реплики, палитра и очистка прежнего контента](CONTENT-CLEANUP-2026-10-15.md)
 - [Исходный аудит 15 октября](PROJECT-AUDIT-2026-10-15.md) — снимок проблем до исправлений
 - [Выполненные изменения и проверка](AUDIT-IMPLEMENTATION-2026-10-15.md)
 - [Что удалено и почему](archive/RETIRED-2026-10-15.md)
 
 ## История
 
-Остальные документы этой папки, включая IMPLEMENTATION-PLAN, ACTIVE-ABILITIES-PLAN, PROJECT-STRUCTURE-AUDIT, ART-SOURCES, ADDING-CHARACTERS, CHARACTER-FRAMES, NEW-MAPS и отчёты COMBAT/MICROFREEZE/FRAME/DEPTH/PERFORMANCE, описывают прежнюю игру и прежние измерения. Они сохранены как история решений и материалов, не как инструкции запуска текущего продукта. Их команды и список контента не следует применять без адаптации.
+В archive/legacy перенесены IMPLEMENTATION-PLAN, ACTIVE-ABILITIES-PLAN, PROJECT-STRUCTURE-AUDIT, ART-SOURCES, ADDING-CHARACTERS, CHARACTER-FRAMES, NEW-MAPS и прежние отчёты COMBAT/MICROFREEZE/FRAME/DEPTH/PERFORMANCE. Они сохранены как история решений и материалов, не как инструкции запуска текущего продукта. Их команды и список контента не следует применять без адаптации.
 
 Исходные PNG, промпты и лицензии сохраняются в assets. Старые профили не являются baseline производительности текущей React/Vite-версии. Новые измерения должны указывать commit, сценарий, браузер, устройство и окружение.

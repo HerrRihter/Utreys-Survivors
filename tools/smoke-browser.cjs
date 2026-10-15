@@ -189,7 +189,7 @@ const assets = require('./active-assets.json');
         await page.evaluate(() =>
           localStorage.setItem(
             'utreys-progression-v1',
-            JSON.stringify({ helmets: 440, unlocked: ['utrace'] }),
+            JSON.stringify({ codes: 440, unlocked: ['utrace'] }),
           ),
         );
         await page.reload();
@@ -201,15 +201,19 @@ const assets = require('./active-assets.json');
         const savedHeroes = await page.evaluate(() =>
           JSON.parse(localStorage.getItem('utreys-progression-v1')),
         );
-        assert.equal(savedHeroes.helmets, 0);
+        assert.equal(savedHeroes.codes, 0);
         assert.equal(savedHeroes.unlocked.length, 5);
         await page.reload();
         for (const [id, hero] of Object.entries(heroDefinitions)) {
           await page.locator('#start').click();
           await page.locator(`[data-hero="${id}"]`).click();
+          assert.equal(await page.locator('#baClientChoice').isVisible(), id === 'ba');
+          if (id === 'ba') await page.locator('#baClient').selectOption('multon');
           await page.locator('#runHeroStart').click();
           await page.waitForFunction(() => document.body.dataset.mode === 'play');
           assert.equal(await page.locator('#heroLabel').innerText(), hero.name.toUpperCase());
+          if (id === 'ba')
+            assert.match(await page.locator('#weapon').innerText(), /Мултон.*\+0 HP/);
           await page.keyboard.press('q');
           await page.keyboard.press('e');
           await page.keyboard.press('Escape');
@@ -217,6 +221,9 @@ const assets = require('./active-assets.json');
         }
         await page.setViewportSize({ width: 390, height: 844 });
         await page.locator('#start').click();
+        await page.locator('[data-hero="ba"]').click();
+        await page.locator('#baClient').selectOption('ferrero');
+        assert(await page.locator('#baClientChoice').isVisible());
         await page.screenshot({ path: 'test-results/hero-selection-mobile.png' });
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
         assert.deepEqual(errors, []);

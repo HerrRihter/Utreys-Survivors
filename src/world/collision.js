@@ -1,135 +1,5 @@
-export let VillageCollision;
-('use strict');
 // Ground-contact shapes in normalized sprite coordinates, not roof/canopy silhouettes.
-VillageCollision = (() => {
-  const shapes = {
-    chief: [
-      [
-        [0.14, 0.69],
-        [0.68, 0.64],
-        [0.89, 0.85],
-        [0.82, 0.96],
-        [0.17, 0.96],
-      ],
-    ],
-    asterix: [
-      [
-        [0.17, 0.72],
-        [0.65, 0.66],
-        [0.88, 0.87],
-        [0.81, 0.98],
-        [0.14, 0.96],
-      ],
-    ],
-    obelix: [
-      [
-        [0.15, 0.7],
-        [0.68, 0.64],
-        [0.9, 0.88],
-        [0.84, 0.97],
-        [0.15, 0.96],
-      ],
-    ],
-    forge: [
-      [
-        [0.28, 0.72],
-        [0.7, 0.66],
-        [0.88, 0.9],
-        [0.83, 0.96],
-        [0.28, 0.97],
-      ],
-      [
-        [0.04, 0.88],
-        [0.27, 0.86],
-        [0.31, 0.98],
-        [0.04, 0.98],
-      ],
-    ],
-    fish: [
-      [
-        [0.17, 0.7],
-        [0.69, 0.64],
-        [0.89, 0.87],
-        [0.83, 0.96],
-        [0.15, 0.98],
-      ],
-      [
-        [0.06, 0.86],
-        [0.26, 0.84],
-        [0.29, 0.98],
-        [0.05, 0.98],
-      ],
-    ],
-    bard: [
-      [
-        [0.33, 0.76],
-        [0.57, 0.74],
-        [0.69, 0.95],
-        [0.25, 0.97],
-      ],
-      [
-        [0.66, 0.79],
-        [0.76, 0.8],
-        [0.83, 0.96],
-        [0.73, 0.98],
-      ],
-    ],
-    trees: [
-      [
-        [0.22, 0.8],
-        [0.35, 0.79],
-        [0.5, 0.96],
-        [0.21, 0.98],
-      ],
-      [
-        [0.52, 0.76],
-        [0.65, 0.76],
-        [0.72, 0.9],
-        [0.48, 0.92],
-      ],
-      [
-        [0.76, 0.82],
-        [0.86, 0.82],
-        [0.94, 0.96],
-        [0.72, 0.94],
-      ],
-    ],
-    fence: [
-      [
-        [0.015, 0.91],
-        [0.985, 0.91],
-        [0.985, 0.995],
-        [0.015, 0.995],
-      ],
-    ],
-    gate: [
-      [
-        [0.06, 0.86],
-        [0.25, 0.84],
-        [0.39, 0.94],
-        [0.39, 0.98],
-        [0.08, 0.98],
-      ],
-      [
-        [0.6, 0.94],
-        [0.78, 0.84],
-        [0.93, 0.86],
-        [0.94, 0.98],
-        [0.6, 0.98],
-      ],
-    ],
-  };
-  const dimensions = {
-    chief: [617, 496],
-    asterix: [411, 378],
-    obelix: [515, 436],
-    forge: [550, 447],
-    fish: [511, 448],
-    bard: [504, 539],
-    trees: [666, 637],
-    fence: [773, 353],
-    gate: [708, 682],
-  };
+export const ArenaCollision = (() => {
   function create(objects, size) {
     const polygons = [],
       bucketSize = 100,
@@ -138,8 +8,6 @@ VillageCollision = (() => {
     let queryStamp = 1;
     const candidateList = [];
     for (const o of objects) {
-      const [w, h] = dimensions[o.art] || [1, 1],
-        height = (o.width * h) / w;
       const [fx, fy, fw, fh] = o.footprint || [0, 0, 0, 0];
       const outlines =
         o.footprintPolygons ||
@@ -152,14 +20,14 @@ VillageCollision = (() => {
                 [fx, fy + fh],
               ],
             ]
-          : shapes[o.art]);
+          : []);
       for (const shape of outlines) {
         const points = shape.map(([x, y]) =>
           o.footprintPolygons
             ? { x: o.x + (o.flip ? -x : x), y: o.y + y }
             : o.footprint
               ? { x: o.x + x, y: o.y + y }
-              : { x: o.x + (x - 0.5) * o.width, y: o.y + 12 + (y - 1) * height },
+              : { x: o.x + x, y: o.y + y },
         );
         const p = {
           points,
@@ -248,6 +116,8 @@ VillageCollision = (() => {
         Math.max(a.y, b.y) > size - r
       )
         return false;
+      // Open arenas need only the bounds test above.
+      if (polygons.length === 0) return true;
       const minX = Math.min(a.x, b.x) - r,
         minY = Math.min(a.y, b.y) - r,
         maxX = Math.max(a.x, b.x) + r,

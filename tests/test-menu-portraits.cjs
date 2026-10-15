@@ -1,11 +1,9 @@
-const { loadModule, resourcePath } = require('./helpers/load-modules.cjs');
+const { loadModule } = require('./helpers/load-modules.cjs');
 async function main() {
   const projectRoot = require('node:path').resolve(__dirname, '..');
-  const fs = require('fs'),
-    vm = require('vm'),
+  const vm = require('vm'),
     assert = require('assert/strict');
-  const code = fs.readFileSync(projectRoot + '/src/ui/menu-portraits.js', 'utf8'),
-    frames = [],
+  const frames = [],
     draws = [];
   const env = {
     AnimationArt: { status: { heroes: 'ready' } },
@@ -45,7 +43,7 @@ async function main() {
       },
     }),
   };
-  for (let i = 0; i < 8; i++) portraits.fit(canvas, 'obelix', i);
+  for (let i = 0; i < 8; i++) portraits.fit(canvas, 'ba', i);
   assert.equal(frames.length, 8, 'Frames cached once');
   assert.equal(new Set(draws.map((d) => d[0])).size, 8, 'All poses animate');
   for (const d of draws) {
@@ -56,13 +54,13 @@ async function main() {
   console.log(
     'PASS: eight animated menu poses, one common silhouette bound, stable scale, safe margins, cache reuse.',
   );
-  portraits.fit(canvas, 'obelix');
+  portraits.fit(canvas, 'ba');
   assert.equal(frames.length, 8, 'Repeated calls reuse cached poses');
   status = 'fallback';
-  portraits.fit(canvas, 'obelix');
+  portraits.fit(canvas, 'ba');
   assert.equal(frames.length, 16, 'Changed art status invalidates cached poses');
   portraits.clear();
-  portraits.fit(canvas, 'obelix');
+  portraits.fit(canvas, 'ba');
   assert.equal(frames.length, 24, 'Explicit invalidation rebuilds all poses');
 }
 main().catch((error) => {

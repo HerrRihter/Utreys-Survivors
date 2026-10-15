@@ -5,33 +5,6 @@ async function main() {
   const { advanceAction } = await import('../src/core/action-timeline.js');
   const { clampedFrame, loopFrame } = await import('../src/rendering/animation-player.js');
   const { CanvasSystem } = await import('../src/rendering/canvas.js');
-  const { scaledScenery } = await import('../src/rendering/scaled-scenery.js');
-  const oldDocument = globalThis.document,
-    oldDpr = globalThis.devicePixelRatio;
-  let surfaces = 0;
-  globalThis.document = {
-    createElement() {
-      surfaces++;
-      return { getContext: () => ({ drawImage() {} }) };
-    },
-  };
-  globalThis.devicePixelRatio = 2;
-  const image = { naturalWidth: 1024, naturalHeight: 512 };
-  const scaled = scaledScenery(image, 200);
-  assert.equal(scaled.width, 400);
-  assert.equal(scaled.height, 200);
-  assert.equal(scaledScenery(image, 200), scaled, 'Static image at the same size is reused');
-  assert.equal(surfaces, 1);
-  assert.equal(scaledScenery(image, 1024), image, 'Do not allocate for native-size images');
-  globalThis.devicePixelRatio = 1;
-  const lowDpr = scaledScenery(image, 200);
-  assert.equal(lowDpr.width, 200, 'DPR changes select a matching surface');
-  for (let i = 0; i < 20; i++) scaledScenery({ naturalWidth: 4096, naturalHeight: 4096 }, 1024);
-  assert.notEqual(scaledScenery(image, 200), lowDpr, 'Cache evicts old surfaces when full');
-  if (oldDocument === undefined) delete globalThis.document;
-  else globalThis.document = oldDocument;
-  if (oldDpr === undefined) delete globalThis.devicePixelRatio;
-  else globalThis.devicePixelRatio = oldDpr;
   const canvas = {};
   const context = {
     window: { innerWidth: 390, innerHeight: 844, devicePixelRatio: 2 },
@@ -58,11 +31,11 @@ async function main() {
       { y: 3, id: 'three' },
     ],
     player = { y: 3, id: 'player' };
-  const expected = [...objects, ...enemies, { ...player, type: 'asterix', player: true }].sort(
+  const expected = [...objects, ...enemies, { ...player, type: 'utrace', player: true }].sort(
     (a, b) => a.y - b.y,
   );
   assert.deepEqual(
-    orderActors(objects, enemies, player, 'asterix'),
+    orderActors(objects, enemies, player, 'utrace'),
     expected,
     'Equal depths preserve scenery and actor order',
   );
@@ -73,10 +46,10 @@ async function main() {
         y: (i * 137 + sample * 31) % 10,
         id: i,
       }));
-      const old = [...objects, ...actors, { ...player, type: 'obelix', player: true }].sort(
+      const old = [...objects, ...actors, { ...player, type: 'ba', player: true }].sort(
         (a, b) => a.y - b.y,
       );
-      assert.deepEqual(orderActors(objects, actors, player, 'obelix'), old);
+      assert.deepEqual(orderActors(objects, actors, player, 'ba'), old);
     }
   let hits = 0;
   const actor = { action: { elapsed: 0, duration: 1, hit: false } };

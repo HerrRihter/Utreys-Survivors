@@ -24,6 +24,8 @@ const { createHarness } = require('./helpers/game-harness.cjs');
     { hp: NaN },
     { frontDamageMultiplier: 2 },
     { color: 'red' },
+    { burst: { reach: 16, ring: { r: 0, life: 0.2, color: '#00e676' }, sound: 'hit' } },
+    { attack: 'pulse', burst: unitDefinitions.l3.burst },
   ])
     assert.throws(
       () => validateUnits({ invalid: { ...unitDefinitions.l3, ...patch } }),
@@ -49,13 +51,13 @@ const { createHarness } = require('./helpers/game-harness.cjs');
     for (let i = 0; i < Math.ceil((u.wind + 0.4) / 0.05); i++) s.update(0.05);
     assert(p.hp < hp, `${id} actual attack damages player`);
     assert.equal(s.state.bossSpawned, false, `${id} does not trigger boss progression`);
-    h.env.Legion.draw(h.context, e, () => {});
+    h.env.Enemies.draw(h.context, e);
     e.action = { aim: p, hit: false };
-    h.env.Legion.telegraph(h.context, e);
-    h.env.Legion.projectile(h.context, { x: 0, y: 0, kind: id });
+    h.env.Enemies.telegraph(h.context, e);
+    h.env.Enemies.projectile(h.context, { x: 0, y: 0, kind: id });
     if (u.frontDamageMultiplier) {
-      assert.equal(h.env.Legion.mitigation(e, { x: e.x + 20, y: e.y }), u.frontDamageMultiplier);
-      assert.equal(h.env.Legion.mitigation(e, { x: e.x - 20, y: e.y }), 1);
+      assert.equal(h.env.Enemies.mitigation(e, { x: e.x + 20, y: e.y }), u.frontDamageMultiplier);
+      assert.equal(h.env.Enemies.mitigation(e, { x: e.x - 20, y: e.y }), 1);
     }
     const kills = s.state.kills;
     s.damage(e, e.hp / (u.frontDamageMultiplier || 1) + 1);

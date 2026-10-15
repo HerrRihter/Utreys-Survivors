@@ -6,12 +6,16 @@ export const AudioSystem = {
     const root = new URL(AssetPaths.url('audio/'));
     const settings = { enabled: true, music: 0.3, effects: 0.65 };
     try {
-      const saved = JSON.parse(c.localStorage.getItem('gaul-audio'));
+      const current = c.localStorage.getItem('utreys-audio');
+      const legacy = current == null ? c.localStorage.getItem('gaul-audio') : null;
+      const saved = JSON.parse(current ?? legacy);
       if (saved) {
         if (typeof saved.enabled === 'boolean') settings.enabled = saved.enabled;
         for (const key of ['music', 'effects'])
           if (Number.isFinite(saved[key])) settings[key] = Math.max(0, Math.min(1, saved[key]));
       }
+      if (current == null && saved)
+        c.localStorage.setItem('utreys-audio', JSON.stringify(settings));
     } catch {}
     const clips = {
       hit: ['hit-1.mp3', 'hit-2.mp3'],
@@ -110,7 +114,7 @@ export const AudioSystem = {
     }
     function save() {
       try {
-        c.localStorage.setItem('gaul-audio', JSON.stringify(settings));
+        c.localStorage.setItem('utreys-audio', JSON.stringify(settings));
       } catch {}
     }
     function refreshControls() {

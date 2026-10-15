@@ -1,8 +1,10 @@
 import { drawNodes } from '../rendering/node-objectives.js';
+import { drawEnemySpeech } from '../rendering/enemy-speech.js';
+import { enemyPhrases, speechSettings } from '../../data/enemies/phrases.js';
 import { createNodeState } from '../systems/node-objectives.js';
 import { useEffect, type RefObject } from 'react';
 import { unitDefinitions } from '../../data/enemies/units.js';
-import { Legion } from '../entities/legion.js';
+import { Enemies } from '../entities/enemies.js';
 import { createArenas } from '../world/arenas.js';
 import { ALL_UNIT_KEYS } from './opponent-details';
 
@@ -95,13 +97,13 @@ export function useOpponentPreview({
         };
 
         if (effectiveMotion === 'attack') {
-          Legion.telegraph(g, mockEnemy);
+          Enemies.telegraph(g, mockEnemy);
 
           // Unique functioning attack actions and projectiles
-          if (unit === 'l3') {
-            g.strokeStyle = '#00e676';
+          if ('burst' in u && u.burst) {
+            g.strokeStyle = u.burst.ring.color;
             g.beginPath();
-            g.arc(cx, cy, 25, 0, Math.PI * 2);
+            g.arc(cx, cy, u.burst.ring.r, 0, Math.PI * 2);
             g.stroke();
           } else if ('attack' in u && u.attack === 'pulse') {
             const waveR = 24 + ((phase * 80) % u.range);
@@ -115,11 +117,6 @@ export function useOpponentPreview({
             g.beginPath();
             g.arc(cx, cy - 16, waveR, 0, Math.PI * 2);
             g.stroke();
-          } else if (unit === 'pepsi') {
-            g.strokeStyle = '#00e5ff';
-            g.beginPath();
-            g.arc(cx, cy, 30, 0, Math.PI * 2);
-            g.stroke();
           } else if ('frontDamageMultiplier' in u) {
             g.strokeStyle = u.color + 'd9';
             g.lineWidth = 3.5;
@@ -130,11 +127,32 @@ export function useOpponentPreview({
           } else if ('attack' in u && u.attack === 'projectile') {
             const prog = (phase * 1.8) % 1;
             const px = cx + (reverse ? -1 : 1) * (prog * 115);
-            Legion.projectile(g, { x: px, y: cy - 10, kind: unit });
+            Enemies.projectile(g, { x: px, y: cy - 10, kind: unit });
           }
         }
 
-        Legion.draw(g, mockEnemy, () => {});
+        Enemies.draw(g, mockEnemy);
+        const phrases = enemyPhrases[unit];
+        const cycle = Math.floor(phase / 10);
+        if (phrases?.length && phase % 10 < speechSettings.duration) {
+          drawEnemySpeech(
+            g,
+            {
+              t: phase,
+              enemies: [
+                {
+                  ...mockEnemy,
+                  hp: 1,
+                  speech: {
+                    text: phrases[cycle % phrases.length],
+                    until: cycle * 10 + speechSettings.duration,
+                  },
+                },
+              ],
+            },
+            { x: 0, y: 0, width: canvas.width, height: canvas.height },
+          );
+        }
       }
 
       animId = requestAnimationFrame(loop);

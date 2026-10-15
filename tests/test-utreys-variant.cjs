@@ -11,7 +11,6 @@ async function main() {
   const { mapDefinitions } = await import('../data/maps/maps.js');
   const { unitDefinitions } = await import('../data/enemies/units.js');
   const { achievementDefinitions } = await import('../data/achievements.js');
-  const { Village } = await import('../src/world/village/village.js');
   const { createArenas } = await import('../src/world/arenas.js');
 
   assert.deepEqual(Object.keys(heroDefinitions), [
@@ -40,7 +39,7 @@ async function main() {
     );
   }
 
-  const arena = createArenas(Village).get('empty');
+  const arena = createArenas().get('empty');
   assert.equal(arena.clear({ x: 500, y: 500 }, { x: 510, y: 510 }, 14), true);
   assert.equal(arena.blocked(5, 5, 14), true);
 

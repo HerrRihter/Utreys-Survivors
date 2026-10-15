@@ -1,21 +1,21 @@
 import { drawNodes } from './node-objectives.js';
 import { drawEnemySpeech } from './enemy-speech.js';
 import { neonStroke } from './neon.js';
-import { drawHazards } from './art/expansion-art.js';
 import { orderActors } from './depth-order.js';
-export let SceneRenderer;
-('use strict');
-SceneRenderer = {
+import { cameraOrigin } from './camera.js';
+
+// The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
+const noScenery = [];
+export const SceneRenderer = {
   create(sessionContext) {
+    const visible = [];
     let cachedVignette = null,
       cachedVignetteW = 0,
       cachedVignetteH = 0;
-    let cityVignette = null;
     function getVignette(w, h) {
       if (cachedVignette && cachedVignetteW === w && cachedVignetteH === h) return cachedVignette;
       cachedVignetteW = w;
       cachedVignetteH = h;
-      cityVignette = null;
       cachedVignette = sessionContext.ctx.createRadialGradient(
         w / 2,
         h / 2,
@@ -29,25 +29,26 @@ SceneRenderer = {
       return cachedVignette;
     }
     function background(cx, cy) {
-      sessionContext.ctx.fillStyle = '#89954e';
+      sessionContext.ctx.fillStyle = '#0a1619';
       sessionContext.ctx.fillRect(0, 0, sessionContext.W, sessionContext.H);
       sessionContext.ctx.save();
       sessionContext.ctx.translate(-cx, -cy);
-      sessionContext.Village.drawGround(sessionContext.ctx);
+      sessionContext.Arena.drawGround(sessionContext.ctx, {
+        x: cx - 20,
+        y: cy - 20,
+        width: sessionContext.W + 40,
+        height: sessionContext.H + 40,
+      });
       sessionContext.ctx.restore();
     }
     function draw() {
       const s = sessionContext.state,
         p = s ? s.p : { x: 1100, y: 1010 },
-        cx = sessionContext.clamp(
-          p.x - sessionContext.W / 2,
-          0,
-          sessionContext.WORLD - sessionContext.W,
-        ),
-        cy = sessionContext.clamp(
-          p.y - sessionContext.H / 2,
-          0,
-          sessionContext.WORLD - sessionContext.H,
+        { x: cx, y: cy } = cameraOrigin(
+          p,
+          sessionContext.W,
+          sessionContext.H,
+          sessionContext.WORLD,
         );
       sessionContext.ctx.save();
       if (
@@ -68,15 +69,7 @@ SceneRenderer = {
           maxX = cx + sessionContext.W + 50,
           minY = cy - 50,
           maxY = cy + sessionContext.H + 50;
-        const sceneryView = { minX, maxX, minY, maxY };
         drawNodes(sessionContext.ctx, s.nodes);
-        drawHazards(sessionContext.ctx, s);
-        sessionContext.Villagers.ground(
-          sessionContext.ctx,
-          s,
-          sessionContext.selected,
-          sessionContext.abilities.effectiveStats(),
-        );
         sessionContext.Corpses.draw(
           sessionContext.ctx,
           s.corpses,
@@ -85,9 +78,9 @@ SceneRenderer = {
           sessionContext.W,
           sessionContext.H,
         );
-        for (const h of s.helmets) {
+        for (const h of s.codes) {
           if (h.x < minX || h.x > maxX || h.y < minY || h.y > maxY) continue;
-          sessionContext.Villagers.helmet(sessionContext.ctx, h.x, h.y);
+          sessionContext.Heroes.codeToken(sessionContext.ctx, h.x, h.y);
         }
         for (const g of s.gems) {
           if (g.x < minX || g.x > maxX || g.y < minY || g.y > maxY) continue;
@@ -115,34 +108,22 @@ SceneRenderer = {
         }
         for (const e of s.enemies) {
           if (e.x < minX - 70 || e.x > maxX + 70 || e.y < minY - 70 || e.y > maxY + 70) continue;
-          sessionContext.Legion.telegraph(sessionContext.ctx, e);
+          sessionContext.Enemies.telegraph(sessionContext.ctx, e);
         }
         sessionContext.abilities.draw(sessionContext.ctx);
-        const actors = orderActors(
-          sessionContext.Village.depthObjects,
-          s.enemies,
-          p,
-          sessionContext.selected,
-        );
+        // Sort only what can appear on screen.
+        visible.length = 0;
+        for (const e of s.enemies)
+          if (e.x >= minX - 100 && e.x <= maxX + 100 && e.y >= minY - 100 && e.y <= maxY + 100)
+            visible.push(e);
+        const actors = orderActors(noScenery, visible, p, sessionContext.selected);
         for (const e of actors) {
-          if (e.scenery) {
-            sessionContext.Village.drawObject(sessionContext.ctx, e, p, sceneryView);
-            continue;
-          }
           if (
             !e.player &&
             (e.x < minX - 100 || e.x > maxX + 100 || e.y < minY - 100 || e.y > maxY + 100)
           )
             continue;
-          const size = e.boss
-            ? 3.5
-            : e.type === 'obelix'
-              ? 3.5
-              : e.player
-                ? 3
-                : e.type === 'monster'
-                  ? 3
-                  : 2.5;
+          const size = e.boss ? 3.5 : e.player ? 3 : 2.5;
           sessionContext.ctx.fillStyle = '#14291e66';
           sessionContext.ctx.beginPath();
           sessionContext.ctx.ellipse(
@@ -173,7 +154,7 @@ SceneRenderer = {
               e.phase || 0,
               e,
             );
-          else sessionContext.Legion.draw(sessionContext.ctx, e, sessionContext.sprite);
+          else sessionContext.Enemies.draw(sessionContext.ctx, e, sessionContext.sprite);
           if (e.player) {
             const aim = p.action?.direction || p.facing;
             sessionContext.ctx.save();
@@ -190,7 +171,7 @@ SceneRenderer = {
             sessionContext.ctx.fillStyle = '#00e5ff';
             sessionContext.ctx.fillRect(e.x - 3, e.y - 45, 6, 2);
           } else if (e.hp < e.max && !e.boss) {
-            const unitR = sessionContext.Legion.units[e.unit]?.r || 18;
+            const unitR = sessionContext.Enemies.units[e.unit]?.r || 18;
             sessionContext.ctx.fillStyle = '#08171a';
             sessionContext.ctx.fillRect(e.x - 13, e.y - (unitR + 22), 26, 4);
             sessionContext.ctx.fillStyle = '#ff5252';
@@ -202,8 +183,7 @@ SceneRenderer = {
             );
           }
         }
-        for (const b of s.enemyShots) sessionContext.Legion.projectile(sessionContext.ctx, b);
-        sessionContext.Villagers.projectiles(sessionContext.ctx, s);
+        for (const b of s.enemyShots) sessionContext.Enemies.projectile(sessionContext.ctx, b);
         for (const b of s.shots) {
           const g = sessionContext.ctx;
           g.save();
@@ -227,7 +207,41 @@ SceneRenderer = {
             sessionContext.ctx.beginPath();
             sessionContext.ctx.moveTo(f.x, f.y);
             sessionContext.ctx.lineTo(f.toX, f.toY);
-            neonStroke(sessionContext.ctx, f.color, 2, 6);
+            neonStroke(sessionContext.ctx, f.color, 4, 10);
+            const g = sessionContext.ctx;
+            const progress = 1 - f.life / f.max;
+            g.fillStyle = '#d1fff1';
+            for (let i = 0; i < 3; i++) {
+              const t = (progress * 2 + i / 3) % 1;
+              const x = f.x + (f.toX - f.x) * t;
+              const y = f.y + (f.toY - f.y) * t;
+              g.fillRect(x - 3, y - 3, 6, 6);
+            }
+            g.beginPath();
+            g.arc(f.toX, f.toY, 8, 0, Math.PI * 2);
+            neonStroke(g, f.color, 2, 5);
+          } else if (f.kind === 'scan' || f.kind === 'scanTarget') {
+            const g = sessionContext.ctx;
+            const r = f.r;
+            g.beginPath();
+            g.rect(f.x - r, f.y - r, r * 2, r * 2);
+            neonStroke(g, f.color, 2, 6);
+            if (f.kind === 'scan') {
+              const y = f.y - r + 2 * r * (1 - f.life / f.max);
+              g.fillStyle = '#79edbd12';
+              g.fillRect(f.x - r, f.y - r, r * 2, r * 2);
+              g.beginPath();
+              g.moveTo(f.x - r, y);
+              g.lineTo(f.x + r, y);
+              neonStroke(g, f.color, 3, 5);
+            } else {
+              g.beginPath();
+              g.moveTo(f.x - 6, f.y);
+              g.lineTo(f.x + 6, f.y);
+              g.moveTo(f.x, f.y - 6);
+              g.lineTo(f.x, f.y + 6);
+              neonStroke(g, f.color, 1, 3);
+            }
           } else if (f.kind === 'spark') {
             sessionContext.ctx.fillStyle = f.color || '#00e5ff';
             sessionContext.ctx.fillRect(f.x, f.y, 3, 3);
@@ -286,12 +300,10 @@ SceneRenderer = {
           height: sessionContext.H,
         });
       } else {
-        for (const o of sessionContext.Village.depthObjects)
-          sessionContext.Village.drawObject(sessionContext.ctx, o);
         for (let i = 0; i < 14; i++)
           sessionContext.sprite(
             sessionContext.ctx,
-            'roman',
+            sessionContext.selected,
             1300 + (i % 5) * 47,
             890 + sessionContext.Math.floor(i / 5) * 60,
             2,
@@ -301,32 +313,8 @@ SceneRenderer = {
       }
       sessionContext.ctx.restore();
       const vignette = getVignette(sessionContext.W, sessionContext.H);
-      // On the dense city scene, reuse the rasterized overlay as well as the
-      // scaled buildings. Other maps retain their cheaper direct gradient.
-      if (s?.map === 'lutetia') {
-        if (!cityVignette) {
-          cityVignette = sessionContext.document.createElement('canvas');
-          cityVignette.width = Math.ceil(sessionContext.W);
-          cityVignette.height = Math.ceil(sessionContext.H);
-          const ink = cityVignette.getContext('2d');
-          const shade = ink.createRadialGradient(
-            sessionContext.W / 2,
-            sessionContext.H / 2,
-            150,
-            sessionContext.W / 2,
-            sessionContext.H / 2,
-            600,
-          );
-          shade.addColorStop(0, 'transparent');
-          shade.addColorStop(1, '#08171188');
-          ink.fillStyle = shade;
-          ink.fillRect(0, 0, sessionContext.W, sessionContext.H);
-        }
-        sessionContext.ctx.drawImage(cityVignette, 0, 0);
-      } else {
-        sessionContext.ctx.fillStyle = vignette;
-        sessionContext.ctx.fillRect(0, 0, sessionContext.W, sessionContext.H);
-      }
+      sessionContext.ctx.fillStyle = vignette;
+      sessionContext.ctx.fillRect(0, 0, sessionContext.W, sessionContext.H);
       sessionContext.ctx.restore();
     }
     return { background, draw };

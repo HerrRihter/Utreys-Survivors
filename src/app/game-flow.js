@@ -2,9 +2,8 @@ import { createNodeState } from '../systems/node-objectives.js';
 import { getWaveSchedule, createWaveState } from '../systems/wave-schedule.js';
 import { seedPopulation } from '../systems/population.js';
 import { permanentUpgradeDefinitions } from '../../data/upgrades.js';
-export let GameFlow;
-('use strict');
-GameFlow = {
+import { baClientIds } from '../../data/characters/ba-specialization.js';
+export const GameFlow = {
   create(sessionContext) {
     function recordRun() {
       const s = sessionContext.state;
@@ -17,33 +16,27 @@ GameFlow = {
       recordRun();
       if (!sessionContext.Progression.owned(sessionContext.selected))
         sessionContext.selected = 'utrace';
-      const hero = sessionContext.Villagers.defs[sessionContext.selected],
+      const hero = sessionContext.Heroes.defs[sessionContext.selected],
         levels = sessionContext.Progression.data.levels;
       sessionContext.resetInput();
       sessionContext.state = {
         t: 0,
         map: sessionContext.selectedMap,
-        winePools: [],
         ...createWaveState(getWaveSchedule(sessionContext.selectedMap)),
         kills: 0,
         level: 1,
         xp: 0,
         need: 8,
         attack: 0.2,
-        menhir: 2,
         ring: 1,
         enemies: [],
         nodes: createNodeState(),
         corpses: [],
         enemyShots: [],
         shots: [],
-        fish: [],
-        poison: [],
-        helmets: [],
+        codes: [],
         earned: 0,
         music: 0,
-        trail: 0,
-        poisonTick: 0,
         gems: [],
         fx: [],
         texts: [],
@@ -74,13 +67,18 @@ GameFlow = {
         },
       };
       sessionContext.abilities.init();
+      if (sessionContext.selected === 'ba') {
+        const client = sessionContext.$('baClient')?.value;
+        sessionContext.state.baSpecialization = {
+          client: baClientIds.includes(client) ? client : baClientIds[0],
+          bonus: 0,
+        };
+      }
       sessionContext.UpgradeSystem.permanent(sessionContext.state, sessionContext.selected, levels);
-      sessionContext.Village.prepare(
-        Object.values(sessionContext.Legion.units).map((unit) => unit.r),
+      sessionContext.Arena.prepare(
+        Object.values(sessionContext.Enemies.units).map((unit) => unit.r),
         sessionContext.state.p,
       );
-      for (const resident of sessionContext.Village.residents || [])
-        sessionContext.spawn(resident.unit, false, resident);
       seedPopulation(sessionContext);
       sessionContext.mode = 'play';
       [

@@ -1,5 +1,4 @@
-export let VillageNavigation;
-VillageNavigation = {
+export const ArenaNavigation = {
   create({ size, cell, cols, blocked, clear }) {
     const moveNext = { x: 0, y: 0 },
       moveNextX = { x: 0, y: 0 },

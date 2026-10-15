@@ -1,7 +1,7 @@
 export function heroAttack(c, action, stats) {
   const s = c.state,
     p = s.p,
-    spec = c.Villagers.defs[c.selected];
+    spec = c.Heroes.defs[c.selected];
   const dir = action.direction || p.facing;
   const range = (spec.range + (stats.punchReach || 0)) * stats.range;
   const power = spec.damage * stats.damage;
@@ -27,24 +27,43 @@ export function heroAttack(c, action, stats) {
     return;
   }
   if (spec.attack === 'chain') {
-    let origin = p;
+    p.chainImpactAt = s.t;
+    // Snapshot positions before knockback so traversal does not depend on damage side effects.
+    const candidates = s.enemies.filter((e) => e.hp > 0).map((e) => ({ e, x: e.x, y: e.y }));
+    // Nearest reachable target in front of the hero (first one wins on equal distance).
+    let first = null,
+      firstDistance = Infinity;
+    for (const e of candidates) {
+      const d = Math.hypot(e.x - p.x, e.y - p.y);
+      if (
+        d <= range &&
+        d < firstDistance &&
+        (e.x - p.x) * dir.x + (e.y - p.y) * dir.y >= 0 &&
+        c.Arena.clear(p, e, 2)
+      ) {
+        first = e;
+        firstDistance = d;
+      }
+    }
+    if (!first) return;
+    // Breadth-first over neighbours; chainLimit caps the targets per strike (null = whole group).
+    const limit = spec.chainLimit ?? Infinity;
+    const queue = [{ origin: { x: p.x, y: p.y }, target: first }];
     const seen = new Set();
-    for (let i = 0; i < 3; i++) {
-      const target = s.enemies
-        .filter(
-          (e) =>
-            e.hp > 0 &&
-            !seen.has(e) &&
-            Math.hypot(e.x - origin.x, e.y - origin.y) < range + e.r &&
-            (i > 0 || (e.x - p.x) * dir.x + (e.y - p.y) * dir.y >= 0) &&
-            c.Village.clear(origin, e, 2),
+    seen.add(first);
+    for (let i = 0; i < queue.length; i++) {
+      const { origin, target } = queue[i];
+      for (const next of candidates) {
+        if (seen.size >= limit) break;
+        if (
+          seen.has(next) ||
+          Math.hypot(next.x - target.x, next.y - target.y) > range ||
+          !c.Arena.clear(target, next, 2)
         )
-        .sort(
-          (a, b) =>
-            Math.hypot(a.x - origin.x, a.y - origin.y) - Math.hypot(b.x - origin.x, b.y - origin.y),
-        )[0];
-      if (!target) break;
-      seen.add(target);
+          continue;
+        seen.add(next);
+        queue.push({ origin: target, target: next });
+      }
       s.fx.push({
         kind: 'link',
         x: origin.x,
@@ -52,25 +71,28 @@ export function heroAttack(c, action, stats) {
         toX: target.x,
         toY: target.y - 8,
         color: spec.color,
-        life: 0.25,
-        max: 0.25,
+        life: 0.65,
+        max: 0.65,
       });
-      c.damage(target, power * Math.pow(0.8, i), dir.x * push, dir.y * push, origin);
-      origin = target;
+      const dx = target.x - origin.x,
+        dy = target.y - origin.y;
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      c.damage(target.e, power, (dx / distance) * push, (dy / distance) * push, origin);
     }
+    c.soundEffect('magic');
     return;
   }
-  const radial = spec.attack === 'pulse';
+  const radial = spec.attack === 'scan';
   s.fx.push({
-    kind: radial ? 'ring' : 'slash',
+    kind: radial ? 'scan' : 'slash',
     x: p.x,
     y: p.y - 8,
     r: range,
     angle,
     half: spec.half,
     color: spec.color,
-    life: 0.2,
-    max: 0.2,
+    life: radial ? 0.6 : 0.2,
+    max: radial ? 0.6 : 0.2,
   });
   for (const e of s.enemies) {
     const dx = e.x - p.x,
@@ -78,7 +100,8 @@ export function heroAttack(c, action, stats) {
       d = Math.hypot(dx, dy),
       along = dx * dir.x + dy * dir.y;
     const delta = Math.abs(Math.atan2(dx * dir.y - dy * dir.x, along));
-    if (e.hp <= 0 || d >= range + e.r || !c.Village.clear(p, e, 2)) continue;
+    const outside = radial ? Math.max(Math.abs(dx), Math.abs(dy)) >= range + e.r : d >= range + e.r;
+    if (e.hp <= 0 || outside || !c.Arena.clear(p, e, 2)) continue;
     if (!radial && (along < 0 || delta > spec.half + Math.asin(Math.min(1, e.r / Math.max(1, d)))))
       continue;
     c.damage(
@@ -87,8 +110,18 @@ export function heroAttack(c, action, stats) {
       (radial ? dx / Math.max(1, d) : dir.x) * push,
       (radial ? dy / Math.max(1, d) : dir.y) * push,
     );
-    if (radial && e.hp > 0 && !e.boss && !c.Legion.units[e.unit].miniboss) {
-      e.abilityStun = Math.max(e.abilityStun || 0, 0.25);
+    if (radial)
+      s.fx.push({
+        kind: 'scanTarget',
+        x: e.x,
+        y: e.y - 8,
+        r: e.r + 8,
+        color: spec.color,
+        life: 0.6,
+        max: 0.6,
+      });
+    if (radial && e.hp > 0 && !e.boss && !c.Enemies.units[e.unit].miniboss) {
+      e.abilityStun = Math.max(e.abilityStun || 0, 0.6);
       e.action = null;
     }
   }

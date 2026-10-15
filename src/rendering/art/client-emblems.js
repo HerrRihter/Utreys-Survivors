@@ -229,8 +229,8 @@ export function drawClientEmblem(g, e) {
   const draw = clientEmblems[e.unit];
   if (!draw) return false;
   g.save();
-  // Cancel actor mirroring for lettering; direction remains visible in the attack telegraph.
-  if (Math.cos(e.heading || 0) < 0) g.scale(-1, 1);
+  // Drawn in unmirrored space (Enemies.draw skips flipping for emblems);
+  // direction remains visible in the attack telegraph.
   draw(g);
   if (e.hit > 0) {
     g.globalAlpha = 0.65;

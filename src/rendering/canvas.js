@@ -1,6 +1,4 @@
-export let CanvasSystem;
-('use strict');
-CanvasSystem = {
+export const CanvasSystem = {
   create(sessionContext) {
     function resizeCanvas() {
       const zoom = sessionContext.window.innerWidth < sessionContext.window.innerHeight ? 0.9 : 1,

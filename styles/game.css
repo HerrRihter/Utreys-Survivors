@@ -567,7 +567,7 @@ button:disabled {
   }
 }
 #wallet::before,
-#helmets::before,
+#codes::before,
 #shopWallet::before {
   content: '◈';
   display: inline-block;
@@ -724,7 +724,7 @@ button:disabled {
   font-weight: bold;
   color: var(--cyan);
 }
-.ach-helmet-icon {
+.ach-codeToken-icon {
   display: inline-block;
   width: 20px;
   height: 20px;
@@ -734,16 +734,30 @@ button:disabled {
   font-style: normal;
   background: none;
 }
-.ach-helmet-icon::before {
+.ach-codeToken-icon::before {
   content: '◈';
   color: #00e5ff;
 }
-.ach-claim {
+.primary.ach-claim {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  border-color: #00e5ff;
-  color: #00e5ff;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  color: #041724;
+  box-shadow: 3px 3px 0 #008ba3;
+}
+.primary.ach-claim .ach-codeToken-icon,
+.primary.ach-claim .ach-codeToken-icon::before {
+  width: auto;
+  height: auto;
+  margin-left: 0;
+  color: #041724;
 }
 .ach-badge {
   font-size: 10px;
@@ -761,10 +775,6 @@ button:disabled {
   background: #0a1d22;
   color: #7e9fa8;
   border: 1px solid #164049;
-}
-.ach-claim {
-  padding: 6px 12px;
-  font-size: 11px;
 }
 
 @media (max-width: 650px) {
@@ -924,7 +934,7 @@ button:disabled {
     display: none;
   }
   .hudright #kills,
-  .hudright #helmets {
+  .hudright #codes {
     font-size: clamp(9px, 2.7vw, 11px);
   }
   .actions {
@@ -1649,10 +1659,10 @@ button:disabled {
     display: none;
   }
   .hudright #kills,
-  .hudright #helmets {
+  .hudright #codes {
     font-size: 10px;
   }
-  #helmets::before {
+  #codes::before {
     width: 16px;
     height: 16px;
     margin-right: 3px;

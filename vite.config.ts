@@ -10,13 +10,18 @@ export default defineConfig({
     {
       name: 'active-game-assets',
       buildStart() {
-        for (const file of ['opponents-preview.html', 'village-preview.html']) {
+        for (const file of ['opponents-preview.html', 'arena-preview.html']) {
           this.emitFile({
             type: 'asset',
             fileName: file,
             source: readFileSync(new URL(file, import.meta.url)),
           });
         }
+        this.emitFile({
+          type: 'asset',
+          fileName: 'village-preview.html',
+          source: readFileSync(new URL('arena-preview.html', import.meta.url)),
+        });
         for (const file of activeAssets) {
           this.emitFile({
             type: 'asset',

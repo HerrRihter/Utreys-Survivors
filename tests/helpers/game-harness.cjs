@@ -2,7 +2,6 @@ const { loadModule } = require('./load-modules.cjs');
 const { canvasContext } = require('./canvas-context.cjs');
 ('use strict');
 
-const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
@@ -115,7 +114,7 @@ async function createHarness({ createSession = true } = {}) {
     'src/systems/upgrades.js',
     'src/systems/persistence.js',
     'src/entities/heroes.js',
-    'src/entities/legion.js',
+    'src/entities/enemies.js',
     'src/systems/corpses.js',
     'src/ui/menu-portraits.js',
     'src/systems/combat.js',

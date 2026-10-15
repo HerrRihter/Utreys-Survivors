@@ -1,5 +1,3 @@
-export const expansionUnits = {};
-
 export const unitDefinitions = {
   l3: {
     name: 'L3',
@@ -13,6 +11,8 @@ export const unitDefinitions = {
     xp: 2,
     color: '#00e676',
     mark: 'L3',
+    // All-round strike: hits within range + reach, no line of sight needed.
+    burst: { reach: 16, ring: { r: 25, life: 0.25, color: '#00e676' }, sound: 'hit' },
   },
   crpt: {
     name: 'ЦРПТ',
@@ -41,6 +41,7 @@ export const unitDefinitions = {
     xp: 3,
     color: '#0051a8',
     mark: 'P',
+    burst: { reach: 16, ring: { r: 30, life: 0.25, color: '#00e5ff' }, sound: 'punch' },
   },
   inbev: {
     name: 'Инбев',

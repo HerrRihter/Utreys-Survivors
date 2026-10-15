@@ -1,7 +1,6 @@
 import { abilityDefinitions } from '../../data/characters/abilities.js';
-export let GameUI;
-('use strict');
-GameUI = {
+import { baClientIds } from '../../data/characters/ba-specialization.js';
+export const GameUI = {
   create(sessionContext) {
     function animateMenu(now) {
       const phase = sessionContext.Math.floor(now / 190) % 8;
@@ -25,7 +24,7 @@ GameUI = {
     }
     function updateRecord() {
       const w = sessionContext.$('wallet');
-      if (w) w.textContent = 'КОДЫ: ' + sessionContext.Progression.data.helmets;
+      if (w) w.textContent = 'КОДЫ: ' + sessionContext.Progression.data.codes;
       const r = sessionContext.$('record');
       if (r)
         r.textContent = sessionContext.best.time
@@ -44,7 +43,8 @@ GameUI = {
       if (btn) btn.textContent = unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ';
     }
     function updateRunHeroStats() {
-      const hero = sessionContext.Villagers.defs[sessionContext.pendingRunHero];
+      show('baClientChoice', sessionContext.pendingRunHero === 'ba');
+      const hero = sessionContext.Heroes.defs[sessionContext.pendingRunHero];
       sessionContext.$('runHeroStats').textContent =
         (hero.desc || `Здоровье: ${hero.hp} · Скорость: ${hero.speed}`) +
         '\n' +
@@ -55,8 +55,20 @@ GameUI = {
           .join('\n');
     }
     function renderRunHeroes() {
+      const clients = sessionContext.$('baClient');
+      if (clients) {
+        const previous = clients.value;
+        clients.replaceChildren();
+        for (const id of baClientIds) {
+          const option = sessionContext.document.createElement('option');
+          option.value = id;
+          option.textContent = sessionContext.Enemies.units[id].name;
+          clients.append(option);
+        }
+        clients.value = baClientIds.includes(previous) ? previous : baClientIds[0];
+      }
       const list = sessionContext.$('runHeroes'),
-        heroes = Object.keys(sessionContext.Villagers.defs).filter((id) =>
+        heroes = Object.keys(sessionContext.Heroes.defs).filter((id) =>
           sessionContext.Progression.owned(id),
         );
       if (!heroes.length) throw new Error('Нет доступных героев для нового забега');
@@ -65,7 +77,7 @@ GameUI = {
         ? sessionContext.selected
         : heroes[0];
       for (const id of heroes) {
-        const hero = sessionContext.Villagers.defs[id],
+        const hero = sessionContext.Heroes.defs[id],
           button = sessionContext.document.createElement('button'),
           portrait = sessionContext.document.createElement('canvas'),
           copy = sessionContext.document.createElement('span'),
@@ -106,7 +118,7 @@ GameUI = {
       updateRecord();
       const root = sessionContext.$('shopHeroes');
       root.replaceChildren();
-      for (const [id, hero] of Object.entries(sessionContext.Villagers.defs)) {
+      for (const [id, hero] of Object.entries(sessionContext.Heroes.defs)) {
         const card = sessionContext.document.createElement('div');
         card.className = 'shopcard';
         const art = sessionContext.document.createElement('canvas');
@@ -131,7 +143,7 @@ GameUI = {
           ? 'Доступен для забега'
           : 'Купить · ' + sessionContext.Progression.prices[id] + ' кодов';
         button.disabled =
-          owned || sessionContext.Progression.data.helmets < sessionContext.Progression.prices[id];
+          owned || sessionContext.Progression.data.codes < sessionContext.Progression.prices[id];
         button.onclick = () => {
           if (!sessionContext.Progression.owned(id) && sessionContext.Progression.buyHero(id))
             renderShop();
@@ -153,7 +165,7 @@ GameUI = {
           b = sessionContext.document.createElement('button');
         b.className = 'small';
         b.textContent =
-          (u.hero ? sessionContext.Villagers.defs[u.hero].name + ' · ' : '') +
+          (u.hero ? sessionContext.Heroes.defs[u.hero].name + ' · ' : '') +
           u.name +
           ' ' +
           level +
@@ -166,7 +178,7 @@ GameUI = {
         b.disabled =
           (u.hero && !sessionContext.Progression.owned(u.hero)) ||
           level >= u.max ||
-          sessionContext.Progression.data.helmets < sessionContext.Progression.cost(id);
+          sessionContext.Progression.data.codes < sessionContext.Progression.cost(id);
         if (u.hero && !sessionContext.Progression.owned(u.hero))
           b.textContent += ' · Сначала открой героя';
         b.onclick = () => {
@@ -176,7 +188,7 @@ GameUI = {
       }
       sessionContext.$('shopWallet').textContent =
         'У вас ' +
-        sessionContext.Progression.data.helmets +
+        sessionContext.Progression.data.codes +
         ' кодов · до следующей награды: ' +
         (10 - (sessionContext.Progression.data.kills % 10)) +
         ' побед' +
@@ -284,13 +296,13 @@ GameUI = {
         prog.append(progInfo, itemBar);
         const foot = sessionContext.document.createElement('div');
         foot.className = 'achievement-foot';
-        const isHelmet = !ach.rewardType || ach.rewardType === 'helmets';
+        const isCodeToken = !ach.rewardType || ach.rewardType === 'codes';
         const reward = sessionContext.document.createElement('span');
         reward.className = 'achievement-reward';
-        if (isHelmet) {
+        if (isCodeToken) {
           reward.textContent = `+${ach.reward}`;
           const hIcon = sessionContext.document.createElement('i');
-          hIcon.className = 'ach-helmet-icon';
+          hIcon.className = 'ach-codeToken-icon';
           if (hIcon.setAttribute) hIcon.setAttribute('aria-hidden', 'true');
           reward.append(hIcon);
         } else {
@@ -308,9 +320,9 @@ GameUI = {
           const btnText = sessionContext.document.createElement('span');
           btnText.textContent = `ЗАБРАТЬ +${ach.reward}`;
           btn.append(btnText);
-          if (isHelmet) {
+          if (isCodeToken) {
             const hIcon = sessionContext.document.createElement('i');
-            hIcon.className = 'ach-helmet-icon';
+            hIcon.className = 'ach-codeToken-icon';
             if (hIcon.setAttribute) hIcon.setAttribute('aria-hidden', 'true');
             btn.append(hIcon);
           }
@@ -429,7 +441,7 @@ GameUI = {
       elTime = null,
       elKills = null,
       elWeapon = null,
-      elHelmets = null,
+      elCodes = null,
       elBosshealth = null;
     let lastHealthPct = -1,
       lastHp = -1,
@@ -440,37 +452,52 @@ GameUI = {
       lastTime = -1,
       lastKills = -1,
       lastWeaponKey = '',
-      lastHelmets = -1,
+      lastCodes = -1,
       lastEarned = -1,
       lastBossActive = null,
       lastBossHpPct = -1;
+    const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
+    let elProgress = null,
+      lastProgress = '';
     function hud() {
       const nodes = sessionContext.state?.nodes || [];
-      const next = nodes
-        .filter((n) => n.status === 'guarded')
-        .sort(
-          (a, b) =>
-            Math.hypot(a.x - sessionContext.state.p.x, a.y - sessionContext.state.p.y) -
-            Math.hypot(b.x - sessionContext.state.p.x, b.y - sessionContext.state.p.y),
-        )[0];
-      const progress = sessionContext.$('nodeProgress');
-      if (progress)
-        progress.textContent =
-          `Узлы: ${nodes.filter((n) => n.status !== 'guarded').length}/${nodes.length}` +
-          (next
-            ? ` · ${next.id} ${['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][(Math.round(Math.atan2(next.y - sessionContext.state.p.y, next.x - sessionContext.state.p.x) / (Math.PI / 4)) + 8) % 8]} ${Math.round(Math.hypot(next.x - sessionContext.state.p.x, next.y - sessionContext.state.p.y))} px`
-            : ' · Шлюз ЦРПТ разблокирован');
+      const p = sessionContext.state?.p;
+      let next = null,
+        nextDistance = Infinity,
+        resolved = 0;
+      for (const n of nodes) {
+        if (n.status !== 'guarded') {
+          resolved++;
+          continue;
+        }
+        const d = Math.hypot(n.x - p.x, n.y - p.y);
+        if (d < nextDistance) {
+          next = n;
+          nextDistance = d;
+        }
+      }
+      const text =
+        `Узлы: ${resolved}/${nodes.length}` +
+        (next
+          ? ` · ${next.id} ${arrows[(Math.round(Math.atan2(next.y - p.y, next.x - p.x) / (Math.PI / 4)) + 8) % 8]} ${Math.round(nextDistance / 10) * 10} px`
+          : ' · Шлюз ЦРПТ разблокирован');
+      elProgress ||= sessionContext.$('nodeProgress');
+      if (elProgress && text !== lastProgress) {
+        lastProgress = text;
+        elProgress.textContent = text;
+      }
       sessionContext.abilities.hud();
       if (!sessionContext.state) return;
       const s = sessionContext.state;
-      elHealth = sessionContext.$('health');
-      elXp = sessionContext.$('xp');
-      elLevel = sessionContext.$('levelText');
-      elTime = sessionContext.$('time');
-      elKills = sessionContext.$('kills');
-      elWeapon = sessionContext.$('weapon');
-      elHelmets = sessionContext.$('helmets');
-      elBosshealth = sessionContext.$('bosshealth');
+      // Looked up once: the HUD nodes live for the whole session.
+      elHealth ||= sessionContext.$('health');
+      elXp ||= sessionContext.$('xp');
+      elLevel ||= sessionContext.$('levelText');
+      elTime ||= sessionContext.$('time');
+      elKills ||= sessionContext.$('kills');
+      elWeapon ||= sessionContext.$('weapon');
+      elCodes ||= sessionContext.$('codes');
+      elBosshealth ||= sessionContext.$('bosshealth');
 
       const hp = sessionContext.Math.ceil(s.p.hp),
         max = s.p.max,
@@ -499,19 +526,22 @@ GameUI = {
         lastKills = s.kills;
         elKills.textContent = `${s.kills} ПОБЕЖДЕНО`;
       }
-      const wKey = `${sessionContext.selected}:${s.map}`;
+      const wKey = `${sessionContext.selected}:${s.map}:${s.baSpecialization?.client}:${s.baSpecialization?.bonus}`;
       if (wKey !== lastWeaponKey && elWeapon) {
         lastWeaponKey = wKey;
         elWeapon.textContent =
-          sessionContext.Villagers.defs[sessionContext.selected]?.weapon +
+          sessionContext.Heroes.defs[sessionContext.selected]?.weapon +
           ' · ' +
-          sessionContext.arenaDefinitions[s.map]?.name;
+          sessionContext.arenaDefinitions[s.map]?.name +
+          (s.baSpecialization
+            ? ` · Клиент: ${sessionContext.Enemies.units[s.baSpecialization.client].name} · +${s.baSpecialization.bonus} HP`
+            : '');
       }
-      const hCount = sessionContext.Progression.helmets;
-      if ((hCount !== lastHelmets || s.earned !== lastEarned) && elHelmets) {
-        lastHelmets = hCount;
+      const hCount = sessionContext.Progression.codes;
+      if ((hCount !== lastCodes || s.earned !== lastEarned) && elCodes) {
+        lastCodes = hCount;
         lastEarned = s.earned;
-        elHelmets.textContent = 'КОДЫ: ' + hCount + ' (+' + s.earned + ')';
+        elCodes.textContent = 'КОДЫ: ' + hCount + ' (+' + s.earned + ')';
       }
       const boss = s.enemies.find((e) => e.boss);
       const bossActive = !!boss;

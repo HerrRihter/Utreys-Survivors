@@ -26,7 +26,7 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
     assert(!p.buyUpgrade('training_' + id), 'locked training');
     p.earn(price);
     assert(p.buyHero(id));
-    assert.equal(p.data.helmets, 0);
+    assert.equal(p.data.codes, 0);
     assert(!p.buyHero(id), 'duplicate purchase');
     p = await load();
     assert(p.owned(id), 'purchase survives reload');
@@ -50,16 +50,16 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
     h.session.draw();
     h.session.dispose();
   }
-  const attack = (id, positions) => {
+  const attack = (id, positions, clear = () => true) => {
     const enemies = positions.map(([x, y]) => ({ x, y, hp: 100, r: 10, unit: 'l3' }));
     const state = { p: { x: 0, y: 0, facing: { x: 1, y: 0 } }, enemies, fx: [], shots: [] };
     heroAttack(
       {
         state,
         selected: id,
-        Villagers: { defs: heroDefinitions },
-        Legion: { units: { l3: {} } },
-        Village: { clear: () => true },
+        Heroes: { defs: heroDefinitions },
+        Enemies: { units: { l3: {} } },
+        Arena: { clear },
         soundEffect() {},
         damage(e, n) {
           e.hp -= n;
@@ -75,19 +75,58 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
     [150, 0],
     [240, 0],
     [330, 0],
+    [150, 110],
+    [600, 0],
   ]);
   assert.deepEqual(
     chain.enemies.map((e) => Math.round((100 - e.hp) * 100) / 100),
-    [24, 19.2, 15.36, 0],
+    [24, 24, 24, 24, 24, 0],
+  );
+  assert.equal(chain.fx.length, 5, 'one visible link per target, including branches');
+  assert(chain.fx.every((f) => f.kind === 'link' && f.life >= 0.6));
+  const crowd = attack(
+    'traceability',
+    Array.from({ length: 20 }, (_, i) => [40 + i * 30, 0]),
+  );
+  assert.equal(
+    crowd.enemies.filter((e) => e.hp < 100).length,
+    heroDefinitions.traceability.chainLimit,
+    'chain stops at its target limit',
+  );
+  const blocked = attack(
+    'traceability',
+    [
+      [60, 0],
+      [160, 0],
+    ],
+    (a, b) => b.x < 100,
+  );
+  assert.deepEqual(
+    blocked.enemies.map((e) => e.hp),
+    [76, 100],
+    'walls stop propagation',
+  );
+  const cycle = attack('traceability', [
+    [50, 0],
+    [60, 10],
+    [60, -10],
+    [50, 0],
+  ]);
+  assert(
+    cycle.enemies.every((e) => e.hp === 76),
+    'cycles and coincident targets hit once',
   );
   const qa = attack('qa', [
     [40, 0],
     [-40, 0],
+    [85, 85],
   ]);
   assert(
-    qa.enemies.every((e) => e.hp === 81 && e.abilityStun === 0.25),
+    qa.enemies.every((e) => e.hp === 81 && e.abilityStun === 0.6),
     'QA reaches rear and interrupts',
   );
+  assert.equal(qa.fx[0].kind, 'scan');
+  assert.equal(qa.fx.filter((f) => f.kind === 'scanTarget').length, 3);
   const base = attack('utrace', [
     [30, 60],
     [-30, 0],

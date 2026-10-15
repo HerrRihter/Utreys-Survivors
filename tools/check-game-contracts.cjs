@@ -81,7 +81,6 @@ function validateSchedules(schedules, maps, units) {
         const [name, weight] = pair;
         unit(name);
         positive(weight, 'weight');
-        fail(!units[name].civilian, 'civilian in combat wave');
         fail(!seen.has(name), 'duplicate weighted unit ' + name);
         seen.add(name);
       }
@@ -172,7 +171,7 @@ function checkGameContracts() {
     'Hero contract: unlock prices',
   );
   for (const [id, hero] of Object.entries(heroDefinitions)) {
-    assert(['sector', 'chain', 'packet', 'pulse'].includes(hero.attack), 'Hero contract: attack');
+    assert(['sector', 'chain', 'packet', 'scan'].includes(hero.attack), 'Hero contract: attack');
     for (const field of ['hp', 'speed', 'interval', 'wind', 'damage', 'range', 'push'])
       assert(Number.isFinite(hero[field]) && hero[field] > 0, `Hero contract: ${id}.${field}`);
     assert.equal(abilityDefinitions[id].length, 2, 'Hero contract: two abilities');
@@ -189,6 +188,10 @@ function checkGameContracts() {
   const { unitDefinitions } = require('../data/enemies/units.js');
   const { nodeDefinitions } = require('../data/enemies/nodes.js');
   validateUnits(unitDefinitions);
+  const { unitArt } = require('../src/rendering/art/enemy-art.js');
+  const { clientEmblems } = require('../src/rendering/art/client-emblems.js');
+  for (const id of [...Object.keys(unitArt), ...Object.keys(clientEmblems)])
+    assert(Object.hasOwn(unitDefinitions, id), 'Art contract: art for unknown unit ' + id);
   assert.equal(
     new Set(nodeDefinitions.map((node) => node.id)).size,
     nodeDefinitions.length,
@@ -232,6 +235,14 @@ function validateUnits(units) {
         `Unit contract: ${id}.armor`,
       );
     if (unit.attack === 'projectile') assert(unit.range > 20, `Unit contract: ${id}.range`);
+    if (unit.burst != null) {
+      const { reach, ring, sound } = unit.burst;
+      assert((unit.attack ?? 'melee') === 'melee', `Unit contract: ${id}.burst needs melee`);
+      assert(Number.isFinite(reach) && reach >= 0, `Unit contract: ${id}.burst.reach`);
+      assert(ring && ring.r > 0 && ring.life > 0, `Unit contract: ${id}.burst.ring`);
+      assert(/^#[0-9a-f]{6}$/i.test(ring.color), `Unit contract: ${id}.burst.ring.color`);
+      assert(typeof sound === 'string' && sound, `Unit contract: ${id}.burst.sound`);
+    }
   }
 }
 if (require.main === module) console.log('Game contracts OK:', checkGameContracts(), 'maps');

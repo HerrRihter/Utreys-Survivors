@@ -38,21 +38,11 @@ export const ArenaView: React.FC = () => {
         g.strokeRect(0, 0, world.size, world.size);
       }
 
-      if (showLabels && world.houses) {
+      if (showLabels) {
         g.fillStyle = '#00e5ff';
         g.font = 'bold 24px monospace';
         g.textAlign = 'center';
         g.fillText('ЯДРО UTRACE', world.size / 2, world.size / 2);
-        for (const h of world.houses) {
-          if (!h.name) continue;
-          g.font = 'bold 19px monospace';
-          g.textAlign = 'center';
-          g.lineWidth = 5;
-          g.strokeStyle = '#051114';
-          g.strokeText(h.name, h.x + h.w / 2, h.y + h.h + 37);
-          g.fillStyle = '#00e5ff';
-          g.fillText(h.name, h.x + h.w / 2, h.y + h.h + 37);
-        }
       }
     };
 

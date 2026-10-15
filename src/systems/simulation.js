@@ -1,9 +1,11 @@
-import { updateExpansion, updateHazards } from './expansion.js';
 import { updateEnemySpeech } from './enemy-speech.js';
-import { updateMalosinus } from './malosinus.js';
-export let Simulation;
-('use strict');
-Simulation = {
+import { compact } from '../core/compact.js';
+import { resolveEnemyStrike } from './enemy-attacks.js';
+
+const isLive = (item) => item.life > 0,
+  isPresent = (item) => !item.dead,
+  isAlive = (actor) => actor.hp > 0;
+export const Simulation = {
   create(sessionContext) {
     function update(dt) {
       const s = sessionContext.state,
@@ -25,7 +27,6 @@ Simulation = {
           (sessionContext.keys.has('KeyS') || sessionContext.keys.has('ArrowDown') ? 1 : 0) -
           (sessionContext.keys.has('KeyW') || sessionContext.keys.has('ArrowUp') ? 1 : 0) +
           sessionContext.stick.y;
-      updateHazards(sessionContext, dt);
       if (p.stun > 0 || abilityMoving) {
         mx = 0;
         my = 0;
@@ -44,20 +45,12 @@ Simulation = {
       }
       const oldX = p.x,
         oldY = p.y;
-      sessionContext.Village.move(
-        p,
-        mx * p.speed * st.speed * dt,
-        my * p.speed * st.speed * dt,
-        14,
-      );
+      sessionContext.Arena.move(p, mx * p.speed * st.speed * dt, my * p.speed * st.speed * dt, 14);
       p.x = sessionContext.clamp(p.x, 52, sessionContext.WORLD - 52);
       p.y = sessionContext.clamp(p.y, 100, sessionContext.WORLD - 12);
       const travel = sessionContext.Math.hypot(p.x - oldX, p.y - oldY);
       p.moving = travel > 0.01;
-      p.walk =
-        (p.walk || 0) +
-        travel /
-          (['antisanitarix', 'automatix', 'panoramix'].includes(sessionContext.selected) ? 90 : 55);
+      p.walk = (p.walk || 0) + travel / 55;
       sessionContext.updateSpawning(dt);
       if (p.hurt) {
         p.hurt.elapsed += dt;
@@ -68,7 +61,7 @@ Simulation = {
         p.action.flip = sessionContext.Math.abs(p.facing.x) > 0.01 ? p.facing.x < 0 : p.flip;
       }
       sessionContext.advanceAction(p, dt, sessionContext.heroImpact);
-      const heroSpec = sessionContext.Villagers.defs[sessionContext.selected];
+      const heroSpec = sessionContext.Heroes.defs[sessionContext.selected];
       s.attack -= dt;
       if (
         !sessionContext.abilities.blocksAttack() &&
@@ -82,6 +75,7 @@ Simulation = {
           heroSpec.interval / (st.haste * (1 + (st.punchTempo || 0))),
         );
         const dir = { ...p.facing };
+        s.attackCycle = s.attack;
         sessionContext.beginAction(
           p,
           sessionContext.Math.max(0.18, heroSpec.wind / (st.haste * (1 + (st.punchTempo || 0)))),
@@ -89,11 +83,6 @@ Simulation = {
         );
         p.action.direction = dir;
         p.action.flip = sessionContext.Math.abs(dir.x) > 0.01 ? dir.x < 0 : p.flip;
-      }
-      s.menhir -= dt;
-      if (s.menhir <= 0 && !(p.stun > 0)) {
-        s.menhir = 2 / st.haste;
-        if (st.stones) sessionContext.throwStones(st.stones, 32);
       }
       s.ring -= dt;
       if (s.ring <= 0 && !(p.stun > 0)) {
@@ -107,17 +96,9 @@ Simulation = {
           sessionContext.soundEffect('magic');
         }
       }
-      sessionContext.Villagers.update(
-        s,
-        sessionContext.selected,
-        dt,
-        sessionContext.damage,
-        sessionContext.Village,
-        st,
-      );
       for (const e of s.enemies) {
         if (e.hp <= 0 || e.abilityStun > 0) continue;
-        const u = sessionContext.Legion.units[e.unit],
+        const u = sessionContext.Enemies.units[e.unit],
           d = sessionContext.dist(e, p);
         e.hit = sessionContext.Math.max(0, e.hit - dt);
         if (e.visualHurt) {
@@ -131,8 +112,6 @@ Simulation = {
         }
         e.vx *= sessionContext.Math.exp(-9 * dt);
         e.vy *= sessionContext.Math.exp(-9 * dt);
-        if (updateMalosinus(e, sessionContext, dt) || updateExpansion(e, sessionContext, dt))
-          continue;
         if (!e.action && !e.charge) {
           const target = sessionContext.Math.atan2(p.y - e.y, p.x - e.x),
             delta = sessionContext.Math.atan2(
@@ -146,126 +125,25 @@ Simulation = {
           );
         }
         e.animationTime = s.t;
-        sessionContext.advanceAction(e, dt, (a) => {
-          const angle = sessionContext.Math.atan2(a.aim.y - e.y, a.aim.x - e.x),
-            ax = sessionContext.Math.cos(angle),
-            ay = sessionContext.Math.sin(angle),
-            px = p.x - e.x,
-            py = p.y - e.y,
-            along = px * ax + py * ay,
-            across = sessionContext.Math.abs(px * ay - py * ax);
-          if (u.attack === 'projectile' || e.unit === 'pilum') {
-            s.enemyShots.push({
-              x: e.x,
-              y: e.y,
-              vx: ax * 235,
-              vy: ay * 235,
-              life: 2,
-              damage: e.damage,
-              kind: e.unit,
-            });
-            sessionContext.soundEffect('throw');
-          } else if (u.attack === 'pulse') {
-            if (sessionContext.dist(e, p) < u.range + 20) {
-              sessionContext.hurtPlayer(e);
-            }
-            s.fx.push({
-              kind: 'ring',
-              x: e.x,
-              y: e.y,
-              r: u.range,
-              life: 0.5,
-              max: 0.5,
-              color: u.color,
-            });
-            sessionContext.soundEffect(u.boss ? 'boss' : 'hit');
-          } else if (e.unit === 'l3') {
-            if (sessionContext.dist(e, p) < u.range + 16) {
-              sessionContext.hurtPlayer(e);
-            }
-            s.fx.push({
-              kind: 'ring',
-              x: e.x,
-              y: e.y,
-              r: 25,
-              life: 0.25,
-              max: 0.25,
-              color: '#00e676',
-            });
-            sessionContext.soundEffect('hit');
-          } else if (e.unit === 'pepsi') {
-            if (sessionContext.dist(e, p) < u.range + 16) {
-              sessionContext.hurtPlayer(e);
-            }
-            s.fx.push({
-              kind: 'ring',
-              x: e.x,
-              y: e.y,
-              r: 30,
-              life: 0.25,
-              max: 0.25,
-              color: '#00e5ff',
-            });
-            sessionContext.soundEffect('punch');
-          } else if (e.unit === 'ram') {
-            e.charge = { x: ax, y: ay, left: 1.3 };
-            e.heading = angle;
-          } else if (e.unit === 'spear') {
-            if (
-              along >= -8 &&
-              along < u.range + 14 &&
-              across < 24 &&
-              sessionContext.Village.clear(e, p, 2)
-            )
-              sessionContext.hurtPlayer(e);
-          } else if (
-            sessionContext.dist(e, p) < u.range + 8 &&
-            along >= -8 &&
-            sessionContext.Village.clear(e, p, 2)
-          )
-            sessionContext.hurtPlayer(e);
-        });
-        if (e.charge) {
-          const q = e.charge,
-            ox = e.x,
-            oy = e.y,
-            chargeSpeed = 320 * (1 - (e.abilitySlow || 0));
-          sessionContext.Village.move(e, q.x * chargeSpeed * dt, q.y * chargeSpeed * dt, e.r);
-          q.left -= dt;
-          if (sessionContext.dist(e, p) < e.r + 14) sessionContext.hurtPlayer(e);
-          if (
-            sessionContext.Math.hypot(e.x - ox, e.y - oy) < chargeSpeed * dt * 0.8 ||
-            q.left <= 0
-          ) {
-            e.charge = null;
-            e.action = null;
-            e.cd = 2;
-            s.fx.push({ kind: 'ring', x: e.x, y: e.y, r: 65, life: 0.3, max: 0.3 });
-          }
-          e.moving = true;
-          e.walk = (e.walk || 0) + dt * 5;
-          continue;
-        }
+        sessionContext.advanceAction(e, dt, (a) => resolveEnemyStrike(sessionContext, e, u, a.aim));
         if (
           !e.action &&
           !e.hurt &&
           e.cd <= 0 &&
           d < u.range &&
-          sessionContext.Village.clear(e, p, 2)
+          sessionContext.Arena.clear(e, p, 2)
         ) {
           sessionContext.beginAction(e, u.wind, p);
           e.cd = u.cooldown;
           e.heading = sessionContext.Math.atan2(p.y - e.y, p.x - e.x);
         }
         const moving =
-            !e.action &&
-            !e.hurt &&
-            d > (u.attack === 'projectile' || e.unit === 'pilum' ? u.range - 20 : e.r + 10),
+            !e.action && !e.hurt && d > (u.attack === 'projectile' ? u.range - 20 : e.r + 10),
           speed = e.speed * (1 + s.t / 1800) * (1 - (e.abilitySlow || 0)),
-          dir = moving ? sessionContext.Village.direction(e, p, e.r) : null,
+          dir = moving ? sessionContext.Arena.direction(e, p, e.r) : null,
           ox = e.x,
           oy = e.y;
-        sessionContext.Village.move(
+        sessionContext.Arena.move(
           e,
           (moving ? dir.x * speed * dt : 0) + e.vx * dt,
           (moving ? dir.y * speed * dt : 0) + e.vy * dt,
@@ -284,25 +162,15 @@ Simulation = {
         for (let i = 0; i < n && b.life > 0; i++) {
           b.x += (b.vx * dt) / n;
           b.y += (b.vy * dt) / n;
-          if (sessionContext.Village.blocked(b.x, b.y, 2)) b.life = 0;
+          if (sessionContext.Arena.blocked(b.x, b.y, 2)) b.life = 0;
           else if (sessionContext.dist(b, p) < 17) {
-            if (
-              b.kind === 'net' &&
-              !sessionContext.abilities.protectedMove() &&
-              !(p.netGrace > 0) &&
-              p.inv <= 0
-            ) {
-              p.stun = 1.25;
-              p.netGrace = 4;
-              p.action = null;
-            }
             sessionContext.hurtPlayer(b);
             b.life = 0;
           }
         }
         b.life -= dt;
       }
-      s.enemyShots = s.enemyShots.filter((b) => b.life > 0);
+      compact(s.enemyShots, isLive);
       for (const b of s.shots) {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
@@ -325,21 +193,21 @@ Simulation = {
           }
         }
       }
-      s.shots = s.shots.filter((b) => b.life > 0);
-      for (const helmet of s.helmets) {
-        const d = sessionContext.dist(helmet, p);
-        if (d < st.magnet && sessionContext.Village.clear(helmet, p, 2)) {
+      compact(s.shots, isLive);
+      for (const codeToken of s.codes) {
+        const d = sessionContext.dist(codeToken, p);
+        if (d < st.magnet && sessionContext.Arena.clear(codeToken, p, 2)) {
           const step = sessionContext.Math.min(d, 230 * dt);
-          helmet.x += ((p.x - helmet.x) / sessionContext.Math.max(1, d)) * step;
-          helmet.y += ((p.y - helmet.y) / sessionContext.Math.max(1, d)) * step;
+          codeToken.x += ((p.x - codeToken.x) / sessionContext.Math.max(1, d)) * step;
+          codeToken.y += ((p.y - codeToken.y) / sessionContext.Math.max(1, d)) * step;
         }
-        if (sessionContext.dist(helmet, p) < 20) {
-          s.earned += sessionContext.Progression.earn(helmet.value);
-          helmet.dead = true;
-          s.texts.push({ x: p.x, y: p.y - 30, v: '+' + helmet.value + ' кодов', life: 1 });
+        if (sessionContext.dist(codeToken, p) < 20) {
+          s.earned += sessionContext.Progression.earn(codeToken.value);
+          codeToken.dead = true;
+          s.texts.push({ x: p.x, y: p.y - 30, v: '+' + codeToken.value + ' кодов', life: 1 });
         }
       }
-      s.helmets = s.helmets.filter((h) => !h.dead);
+      compact(s.codes, isPresent);
       const mag = st.magnet;
       for (const gem of s.gems) {
         if (gem.dead) continue;
@@ -360,7 +228,7 @@ Simulation = {
           sessionContext.soundEffect('pickup');
         }
       }
-      s.gems = s.gems.filter((g) => !g.dead);
+      compact(s.gems, isPresent);
       // Merge nearby old drops when needed, retaining all earned experience.
       if (s.gems.length > 500) {
         const grid = new Map();
@@ -381,8 +249,8 @@ Simulation = {
           s.texts.push({ x: p.x, y: p.y - 30, v: '+25 ♥', life: 1 });
           sessionContext.soundEffect('heal');
         }
-      s.pickups = s.pickups.filter((i) => !i.dead);
-      s.enemies = s.enemies.filter((e) => e.hp > 0);
+      compact(s.pickups, isPresent);
+      compact(s.enemies, isAlive);
       updateEnemySpeech(sessionContext);
       for (const f of s.fx) {
         f.life -= dt;
@@ -391,12 +259,12 @@ Simulation = {
           f.y += f.vy * dt;
         }
       }
-      s.fx = s.fx.filter((f) => f.life > 0);
+      compact(s.fx, isLive);
       for (const t of s.texts) {
         t.life -= dt;
         t.y -= dt * 35;
       }
-      s.texts = s.texts.filter((t) => t.life > 0);
+      compact(s.texts, isLive);
       if (p.hp <= 0) {
         p.hp = 0;
         sessionContext.finish(false);

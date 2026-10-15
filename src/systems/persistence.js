@@ -1,13 +1,11 @@
 import { heroUnlockPrices, permanentUpgrades } from '../../data/upgrades.js';
 import { achievementDefinitions } from '../../data/achievements.js';
-export let Progression;
-('use strict');
-Progression = (() => {
+export const Progression = (() => {
   const key = 'utreys-progression-v1',
     prices = heroUnlockPrices,
     upgrades = permanentUpgrades;
   let data = {
-      helmets: 0,
+      codes: 0,
       kills: 0,
       unlocked: ['utrace'],
       levels: { health: 0, power: 0, speed: 0 },
@@ -20,7 +18,7 @@ Progression = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem(key));
     if (saved && typeof saved === 'object') {
-      data.helmets = integer(saved.helmets);
+      data.codes = integer(saved.codes ?? saved.helmets ?? 0);
       data.kills = integer(saved.kills);
       if (Array.isArray(saved.unlocked))
         data.unlocked = [
@@ -44,9 +42,9 @@ Progression = (() => {
       if (Array.isArray(saved.claimedAchievements))
         data.claimedAchievements = [
           ...new Set(
-            saved.claimedAchievements.filter((id) =>
-              achievementDefinitions.some((a) => a.id === id),
-            ),
+            saved.claimedAchievements
+              .map((id) => (id === 'helmets_100' ? 'codes_100' : id))
+              .filter((id) => achievementDefinitions.some((a) => a.id === id)),
           ),
         ];
     }
@@ -104,14 +102,14 @@ Progression = (() => {
   });
   function earn(amount) {
     if (!Number.isSafeInteger(amount) || amount <= 0) return 0;
-    data.helmets += amount;
+    data.codes += amount;
     deferSave();
     return amount;
   }
   function kill() {
     data.kills++;
     const reward = data.kills % 10 === 0 ? 1 : 0;
-    data.helmets += reward;
+    data.codes += reward;
     deferSave();
     return reward;
   }
@@ -121,8 +119,8 @@ Progression = (() => {
       ? (upgrades[id].hero ? 50 : 30) * (data.levels[id] + 1)
       : prices[id];
   function buyHero(id) {
-    if (!Object.hasOwn(prices, id) || owned(id) || data.helmets < prices[id]) return false;
-    data.helmets -= prices[id];
+    if (!Object.hasOwn(prices, id) || owned(id) || data.codes < prices[id]) return false;
+    data.codes -= prices[id];
     data.unlocked.push(id);
     save();
     return true;
@@ -132,10 +130,10 @@ Progression = (() => {
       !Object.hasOwn(upgrades, id) ||
       (upgrades[id].hero && !owned(upgrades[id].hero)) ||
       data.levels[id] >= upgrades[id].max ||
-      data.helmets < cost(id)
+      data.codes < cost(id)
     )
       return false;
-    data.helmets -= cost(id);
+    data.codes -= cost(id);
     data.levels[id]++;
     save();
     return true;
@@ -173,7 +171,7 @@ Progression = (() => {
     const progress = a.getProgress(data, best);
     if (progress < a.target) return false;
     data.claimedAchievements.push(id);
-    if (a.reward) data.helmets += a.reward;
+    if (a.reward) data.codes += a.reward;
     save();
     return true;
   }
@@ -204,8 +202,8 @@ Progression = (() => {
     get claimedAchievements() {
       return [...data.claimedAchievements];
     },
-    get helmets() {
-      return data.helmets;
+    get codes() {
+      return data.codes;
     },
     get armorRank() {
       return data.levels.armor;

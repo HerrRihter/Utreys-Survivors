@@ -144,7 +144,7 @@ export const achievementDefinitions = [
     getProgress: (data) => data.stats?.bossKills || 0,
   },
   {
-    id: 'helmets_100',
+    id: 'codes_100',
     title: 'База кодов',
     desc: 'Собрать 100 кодов маркировки',
     icon: '◈',
@@ -153,7 +153,7 @@ export const achievementDefinitions = [
     unit: 'кодов',
     reward: 25,
     rewardType: 'кодов',
-    getProgress: (data) => data.helmets || 0,
+    getProgress: (data) => data.codes || 0,
   },
   {
     id: 'upgrades_10',

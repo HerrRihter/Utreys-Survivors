@@ -1,8 +1,3 @@
 node_modules
 dist
-runtime
-data/animations/character-frames.js
-data/animations/character-bounds.js
-data/animations/menhir-layout.js
-data/animations/villager-layout.js
-tools/performance-*.json
+test-results

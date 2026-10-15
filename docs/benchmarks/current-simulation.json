@@ -1,16 +1,27 @@
 {
-  "scenario": "300 simulation seconds; seed=123456; stationary invulnerable player; first upgrade chosen; no Canvas rendering",
-  "node": "v24.20.0",
-  "platform": "win32/x64",
-  "baseCommit": "afef1c35e628486bd71294080aa17c331fa09f8c",
-  "workingTree": "uncommitted audit remediation",
-  "steps": 18000,
-  "simulatedSeconds": 300.0000000000558,
-  "maxEnemies": 50,
-  "milliseconds": {
-    "median": 0.029200000000059845,
-    "p95": 0.05660000000000309,
-    "p99": 0.09859999999997626,
-    "maximum": 3.242500000000007
+  "node": "v22.22.0",
+  "platform": "linux/x64",
+  "baseCommit": "e9a269dc4ee0d5a7573e5028ca918521ff71f505",
+  "date": "2026-10-15",
+  "waves": {
+    "scenario": "300 s of natural waves; seed=123456; stationary invulnerable Utrace",
+    "steps": 18000,
+    "maxEnemies": 50,
+    "milliseconds": {
+      "median": 0.050248999999894295,
+      "p95": 0.10538399999995818,
+      "p99": 0.21766299999990224,
+      "maximum": 8.155636000000015
+    }
+  },
+  "stress": {
+    "scenario": "60 s with 300 enemies around a moving Traceability hero; seed=424242",
+    "steps": 3600,
+    "milliseconds": {
+      "median": 0.669793000000027,
+      "p95": 1.4748200000003635,
+      "p99": 2.112242000000151,
+      "maximum": 7.063453000000209
+    }
   }
 }

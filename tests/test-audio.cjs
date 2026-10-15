@@ -100,7 +100,7 @@ async function main() {
   assert(!battle.paused);
   nodes.sound.onclick();
   assert(created.every((item) => item.paused));
-  assert.equal(JSON.parse(storage['gaul-audio']).enabled, false);
+  assert.equal(JSON.parse(storage['utreys-audio']).enabled, false);
   nodes.sound.onclick();
   assert(!battle.paused);
   nodes.musicVolume.value = 0;
@@ -150,12 +150,12 @@ async function main() {
     selected: 'utrace',
     state: h.session.state,
     soundEffect: (name) => sounds.push(name),
-    Legion: h.env.Legion,
+    Enemies: h.env.Enemies,
     Corpses: { add() {} },
     Progression: { kill: () => 0 },
     rand: () => 0,
-    Village: { clear: () => true },
-    Villagers: h.env.Villagers,
+    Arena: { clear: () => true },
+    Heroes: h.env.Heroes,
   };
   const combat = h.env.CombatSystem.create(combatContext),
     p = combatContext.state.p;
@@ -166,7 +166,7 @@ async function main() {
   sounds.length = 0;
   const enemy = {
     unit: 'l3',
-    type: 'roman',
+    type: 'enemy',
     hp: 20,
     x: p.x + 20,
     y: p.y,

@@ -1,10 +1,9 @@
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { neonStroke, neon } from '../rendering/neon.js';
-import { VillageCollision } from './village/collision.js';
-import { VillageNavigation } from './village/navigation.js';
+import { ArenaCollision } from './collision.js';
+import { ArenaNavigation } from './navigation.js';
 
 export const arenaDefinitions = mapDefinitions;
-export const campLanes = [180, 640, 1100, 1560, 2020];
 
 export function createArenas() {
   const cache = {};
@@ -20,12 +19,69 @@ function createDatacenterArena() {
   const size = 2200,
     cell = 25,
     cols = 88,
-    objects = [],
-    roads = [];
-  const collision = VillageCollision.create(objects, size);
-  const navigation = VillageNavigation.create({ size, cell, cols, ...collision });
+    // Datacenter floor has no obstacles yet; collision/navigation stay ready for maps that do.
+    objects = [];
+  const collision = ArenaCollision.create(objects, size);
+  const navigation = ArenaNavigation.create({ size, cell, cols, ...collision });
 
-  function drawGround(g) {
+  // Floor + grid + data buses repeat every 400 px: one tile, drawn once per device ratio.
+  const tileSize = 400;
+  let tile = null,
+    tileRatio = 0;
+  function paintTile(g) {
+    g.fillStyle = '#0a1619';
+    g.fillRect(0, 0, tileSize, tileSize);
+    g.strokeStyle = '#122e35';
+    g.lineWidth = 1;
+    g.beginPath();
+    // Edge lines straddle the seam: each tile paints its half, neighbours complete them.
+    for (let p = 0; p <= tileSize; p += 100) {
+      g.moveTo(p, 0);
+      g.lineTo(p, tileSize);
+      g.moveTo(0, p);
+      g.lineTo(tileSize, p);
+    }
+    g.stroke();
+    g.strokeStyle = '#00e5ff33';
+    g.lineWidth = 2;
+    g.beginPath();
+    g.moveTo(200, 0);
+    g.lineTo(200, tileSize);
+    g.moveTo(0, 200);
+    g.lineTo(tileSize, 200);
+    g.stroke();
+  }
+  function groundPattern(g, ratio) {
+    if (typeof document === 'undefined' || typeof DOMMatrix === 'undefined') return null;
+    if (!tile || tileRatio !== ratio) {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(tileSize * ratio);
+      canvas.height = Math.round(tileSize * ratio);
+      const c = canvas.getContext('2d');
+      if (!c) return null;
+      c.scale(ratio, ratio);
+      paintTile(c);
+      tile = g.createPattern(canvas, 'repeat');
+      tile?.setTransform(new DOMMatrix().scale(1 / ratio));
+      tileRatio = ratio;
+    }
+    return tile;
+  }
+
+  // view = visible world rectangle; without it the whole floor is drawn (previews).
+  function drawGround(g, view) {
+    const scale = g.getTransform?.()?.a;
+    const pattern = view && scale > 0 ? groundPattern(g, Math.round(scale * 4) / 4) : null;
+    if (pattern) {
+      const x0 = Math.max(0, Math.floor(view.x)),
+        y0 = Math.max(0, Math.floor(view.y)),
+        x1 = Math.min(size, Math.ceil(view.x + view.width)),
+        y1 = Math.min(size, Math.ceil(view.y + view.height));
+      g.fillStyle = pattern;
+      g.fillRect(x0, y0, x1 - x0, y1 - y0);
+      drawCore(g);
+      return;
+    }
     // Dark cyber datacenter floor
     g.fillStyle = '#0a1619';
     g.fillRect(0, 0, size, size);
@@ -56,6 +112,10 @@ function createDatacenterArena() {
     }
     g.stroke();
 
+    drawCore(g);
+  }
+
+  function drawCore(g) {
     // Central Data Processing Core Ring
     g.strokeStyle = '#00e5ff88';
     g.lineWidth = 3;
@@ -69,23 +129,16 @@ function createDatacenterArena() {
     neonStroke(g, '#64ffda66', 1, 5);
   }
 
-  function drawObject() {}
-
   return {
     size,
     cell,
     cols,
     objects,
-    roads,
-    houses: [],
-    residents: [],
-    depthObjects: [],
     collision,
     ...navigation,
     blocked: collision.blocked,
     clear: collision.clear,
     drawGround,
-    drawObject,
     draw(g) {
       drawGround(g);
     },

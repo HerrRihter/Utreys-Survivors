@@ -1,4 +1,5 @@
 import { enemyPhrases, speechSettings } from '../../data/enemies/phrases.js';
+import { cameraOrigin } from '../rendering/camera.js';
 
 export function updateEnemySpeech(context) {
   const s = context.state;
@@ -7,8 +8,7 @@ export function updateEnemySpeech(context) {
   if (s.t < (s.nextSpeechAt ?? speechSettings.interval)) return;
   const width = context.W || 960,
     height = context.H || 640;
-  const cx = Math.max(0, Math.min(context.WORLD - width, s.p.x - width / 2));
-  const cy = Math.max(0, Math.min(context.WORLD - height, s.p.y - height / 2));
+  const { x: cx, y: cy } = cameraOrigin(s.p, width, height, context.WORLD);
   const candidates = s.enemies.filter(
     (e) =>
       e.hp > 0 &&

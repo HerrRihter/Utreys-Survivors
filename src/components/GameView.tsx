@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { useGameDialogs } from '../ui/useGameDialogs';
+import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
 
 interface GameViewProps {
   active: boolean;
@@ -47,7 +48,7 @@ export const GameView: React.FC<GameViewProps> = ({
         <div className="hudbox hudright">
           <div id="kills"></div>
           <div id="weapon"></div>
-          <div id="helmets" style={{ color: 'var(--cyan)' }}></div>
+          <div id="codes" style={{ color: 'var(--cyan)' }}></div>
         </div>
       </div>
 
@@ -178,6 +179,14 @@ export const GameView: React.FC<GameViewProps> = ({
             </p>
           </div>
           <div id="runHeroes" className="run-heroes"></div>
+          <div id="baClientChoice" className="map-select hidden">
+            <label htmlFor="baClient">КЛИЕНТ БА</label>
+            <select id="baClient"></select>
+            <p>
+              За каждое убийство выбранного клиента: +{baHealthPerKill} к текущему и максимальному
+              HP до конца забега.
+            </p>
+          </div>
           <footer className="run-hero-foot">
             <div id="runHeroStats" className="run-hero-stats"></div>
             <div className="run-hero-actions">

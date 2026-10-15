@@ -1,21 +1,15 @@
 import { heroAttack } from './hero-attacks.js';
-import { expansionUnits } from '../../data/enemies/units.js';
-import { expansionDrop } from './expansion.js';
 import { advanceAction } from '../core/action-timeline.js';
-export let CombatSystem;
-('use strict');
-CombatSystem = {
+import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
+export const CombatSystem = {
   create(sessionContext) {
     function damage(e, n, dx = 0, dy = 0, source = sessionContext.state.p) {
       if (e.hp <= 0 || n <= 0) return;
-      n *= sessionContext.Legion.mitigation(e, source);
-      expansionDrop(e, n, sessionContext.state);
+      n *= sessionContext.Enemies.mitigation(e, source);
       e.hp -= n;
       sessionContext.soundEffect('hit');
       e.hit = 0.12;
-      if (e.hp > 0 && (e.unit === 'turtle' || e.unit === 'ram' || expansionUnits[e.unit]))
-        e.visualHurt = { elapsed: 0, duration: 0.34, flip: sessionContext.Math.cos(e.heading) < 0 };
-      if (e.hp > 0 && e.type === 'roman') {
+      if (e.hp > 0 && e.type === 'enemy') {
         e.hurt = {
           elapsed: 0,
           duration: 0.34,
@@ -28,7 +22,7 @@ CombatSystem = {
         e.hurt = null;
         e.action = null;
       }
-      const weight = e.nodeId ? 0 : e.r > 30 ? 0.12 : e.unit === 'veteran' ? 0.5 : 1;
+      const weight = e.nodeId ? 0 : e.r > 30 ? 0.12 : 1;
       e.vx += dx * weight;
       e.vy += dy * weight;
       if (sessionContext.state.texts.length < 45)
@@ -43,22 +37,26 @@ CombatSystem = {
         sessionContext.Corpses.add(
           sessionContext.state.corpses,
           e,
-          sessionContext.sprite,
           sessionContext.Math.hypot(dx, dy) > 0
             ? { x: dx, y: dy }
             : { x: e.x - source.x, y: e.y - source.y },
         );
-        // The ambient crowd is not a source of XP, kill rewards or random loot.
-        if (sessionContext.Legion.units[e.unit].civilian) return;
+        const s = sessionContext.state;
+        if (s.baSpecialization?.client === e.unit && s.p.hp > 0) {
+          s.baSpecialization.bonus += baHealthPerKill;
+          s.p.max += baHealthPerKill;
+          s.p.hp = Math.min(s.p.max, s.p.hp + baHealthPerKill);
+          if (s.texts.length < 45)
+            s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${baHealthPerKill} HP`, life: 0.8 });
+        }
         sessionContext.state.kills++;
-        sessionContext.abilities?.onKill();
         sessionContext.state.earned += sessionContext.Progression.kill();
         if (sessionContext.Math.random() < 0.05)
-          sessionContext.state.helmets.push({ x: e.x, y: e.y, value: 3 });
+          sessionContext.state.codes.push({ x: e.x, y: e.y, value: 3 });
         sessionContext.state.gems.push({
           x: e.x,
           y: e.y,
-          v: sessionContext.Legion.units[e.unit].xp,
+          v: sessionContext.Enemies.units[e.unit].xp,
         });
         for (let i = 0; i < 4; i++)
           sessionContext.state.fx.push({
@@ -76,33 +74,12 @@ CombatSystem = {
         if (e.boss) {
           sessionContext.state.bossDead = true;
           sessionContext.toast(
-            sessionContext.Legion.units[e.unit].name + ' повержен! Заверши валидацию контура!',
+            sessionContext.Enemies.units[e.unit].name + ' повержен! Заверши валидацию контура!',
           );
           sessionContext.soundEffect('boss');
           sessionContext.Progression?.recordBossKill?.();
         }
       }
-    }
-    function throwStones(count, baseDamage, direction = null) {
-      const s = sessionContext.state,
-        dir = direction || s.p.facing,
-        angle = sessionContext.Math.atan2(dir.y, dir.x);
-      for (let i = 0; i < count; i++) {
-        const a = angle + (i - (count - 1) / 2) * 0.19;
-        s.shots.push({
-          x: s.p.x,
-          y: s.p.y - 10,
-          vx: sessionContext.Math.cos(a) * 320,
-          vy: sessionContext.Math.sin(a) * 320,
-          life: 2.2,
-          r: 11 * s.stats.range * (1 + (s.stats.stoneSize || 0)),
-          damage: baseDamage * s.stats.damage,
-          hit: new Set(),
-          age: 0,
-          angle: a + sessionContext.Math.PI,
-        });
-      }
-      sessionContext.soundEffect('stone');
     }
     function beginAction(actor, duration, target) {
       actor.action = {
@@ -132,6 +109,6 @@ CombatSystem = {
         sessionContext.abilities?.effectiveStats() || sessionContext.state.stats,
       );
     }
-    return { damage, throwStones, beginAction, advanceAction, hurtPlayer, heroImpact };
+    return { damage, beginAction, advanceAction, hurtPlayer, heroImpact };
   },
 };

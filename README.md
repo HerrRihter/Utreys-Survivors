@@ -4,7 +4,7 @@
 
 ## Разработка
 
-Требуются Node.js 24 и npm 11.19.0. Версии пакетов закреплены в package-lock.json.
+Требуется Node.js 22 или новее. Версии пакетов закреплены в package-lock.json.
 
 ```sh
 npm ci
@@ -21,12 +21,12 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-check выполняет линт JavaScript, строгую проверку TypeScript, проверку форматирования, все тесты, контракты, актуальность генерируемых данных и production-сборку. test:browser проверяет уже собранный dist. На Windows можно использовать установленный Edge: `$env:BROWSER_CHANNEL='msedge'; npm run test:browser`.
+check выполняет линт JavaScript, строгую проверку TypeScript, проверку форматирования, все тесты, контракты и production-сборку. test:browser проверяет уже собранный dist. На Windows можно использовать установленный Edge: `$env:BROWSER_CHANNEL='msedge'; npm.cmd run test:browser`. Если PowerShell блокирует npm.ps1, используйте npm.cmd вместо npm.
 
 - `npm test` — все тестовые файлы tests/test*.cjs, автоматически.
-- `npm run format` — форматирование исходников; генерируемые JS исключены.
-- `npm run generate` — обновление производных реестров и границ сохранённых кадров.
-- `npm run build` — проверка структуры и сборка в dist.
+- `npm run format` — форматирование исходников.
+- `npm run check:structure` — проверка структуры и ресурсов.
+- `npm run build` — сборка в dist.
 - `npm run preview` — просмотр production-сборки на порту 3000.
 
 GitHub Actions выполняет те же проверки и браузерный smoke для PR. Публикация dist в GitHub Pages выполняется только для main/master и ручного запуска, после проверок.

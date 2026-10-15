@@ -1,6 +1,6 @@
 import { neonStroke } from '../neon.js';
 // Isometric U built from the supplied coral/cyan/navy company mark.
-export function drawUtraceHero(g, id, x, y, size, flip, phase) {
+export function drawUtraceHero(g, id, x, y, size, flip, phase, attackCharge = null) {
   g.save();
   g.translate(x, y);
   g.scale((flip ? -1 : 1) * size, size);
@@ -98,18 +98,29 @@ export function drawUtraceHero(g, id, x, y, size, flip, phase) {
   g.fillRect(5, -4, 3, 2 + Math.abs(bob));
   g.lineWidth = 1;
   if (id === 'traceability') {
+    const charge = attackCharge?.charge || 0;
+    const flash = attackCharge?.flash || 0;
+    const energy = Math.max(charge, flash);
+    g.save();
+    g.globalAlpha *= attackCharge ? 0.25 + energy * 0.75 : 1;
     g.strokeStyle = '#539e92';
     g.beginPath();
     g.ellipse(0, -17, 16, 11, -0.3, 0, Math.PI * 2);
-    g.stroke();
+    neonStroke(g, flash > 0 ? '#d1fff1' : '#64d9bd', 0.6 + energy * 1.2, 1 + energy * 4);
+    if (charge > 0) {
+      g.beginPath();
+      g.ellipse(0, -17, 16, 11, -0.3, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+      neonStroke(g, '#b0f5db', 1.1, 2);
+    }
     for (const [px, py] of [
       [-15, -14],
       [0, -28],
       [15, -20],
     ]) {
-      g.fillStyle = '#539e92';
+      g.fillStyle = flash > 0 ? '#e2fff4' : energy > 0.7 ? '#b0f5db' : '#539e92';
       g.fillRect(px - 1.5, py - 1.5, 3, 3);
     }
+    g.restore();
   } else if (id === 'serialization') {
     g.fillStyle = '#9dbbbc';
     g.fillRect(-7, -18, 14, 6);

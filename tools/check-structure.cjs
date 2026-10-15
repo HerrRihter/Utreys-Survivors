@@ -22,7 +22,7 @@ function walk(root, directory) {
 function checkStructure({
   root = path.resolve(__dirname, '..'),
   inventory = {
-    pages: ['index.html', 'opponents-preview.html', 'village-preview.html'],
+    pages: ['index.html', 'opponents-preview.html', 'arena-preview.html'],
     groups: [{ files: require('./active-assets.json').map((file) => 'assets/runtime/' + file) }],
   },
 } = {}) {
@@ -41,21 +41,6 @@ function checkStructure({
     if (!fs.existsSync(path.join(root, file)))
       throw new Error('Missing publication resource: ' + file);
   }
-  const frames = JSON.parse(
-    fs.readFileSync(path.join(root, 'data/animations/character-frames.json'), 'utf8'),
-  );
-  const framePattern = new RegExp(contract.framePattern);
-  for (const [id, character] of Object.entries(frames.characters)) {
-    const folders = new Set();
-    for (const file of Object.values(character.actions).flat()) {
-      const match = framePattern.exec(file);
-      if (!match) throw new Error(`Invalid frame path for ${id}: ${file}`);
-      folders.add(match[1] + '/' + match[2]);
-      if (!fs.existsSync(path.join(root, 'assets/runtime', file)))
-        throw new Error(`Missing frame: ${file}`);
-    }
-    if (folders.size !== 1) throw new Error(`Character ${id} spans multiple asset folders`);
-  }
   const references = [
     ...contract.referenceFiles,
     ...contract.referenceRoots.flatMap((dir) => walk(root, dir)),
@@ -69,6 +54,11 @@ function checkStructure({
       if (source.includes(obsolete))
         throw new Error(`Obsolete asset reference in ${file}: ${obsolete}`);
     }
+    // Names of the retired village game must not creep back into the engine.
+    if (!file.startsWith('tools/'))
+      for (const name of contract.forbiddenIdentifiers || [])
+        if (new RegExp(`\\b${name}\\b`).test(source))
+          throw new Error(`Obsolete identifier in ${file}: ${name}`);
   }
   for (const file of [
     ...fs.readdirSync(root),
@@ -77,7 +67,10 @@ function checkStructure({
     if (/\.(png|jpe?g|webp|gif|mp3|ogg|wav)$/i.test(file))
       throw new Error(`Media outside assets: ${file}`);
   }
-  return { assets: assets.length, characters: Object.keys(frames.characters).length };
+  return {
+    assets: assets.length,
+    published: inventory.groups.flatMap((group) => group.files).length,
+  };
 }
 
 if (require.main === module) console.log('Structure contract OK:', checkStructure());

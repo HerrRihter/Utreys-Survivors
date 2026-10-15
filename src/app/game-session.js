@@ -13,9 +13,7 @@ import { Simulation } from '../systems/simulation.js';
 import { SceneRenderer } from '../rendering/scene-renderer.js';
 import { AbilitySystem } from '../systems/abilities.js';
 import { GameLoop } from '../core/game-loop.js';
-export let GameSession;
-('use strict');
-GameSession = {
+export const GameSession = {
   create({
     document,
     window,
@@ -24,10 +22,10 @@ GameSession = {
     requestAnimationFrame,
     cancelAnimationFrame,
     Math,
-    Villagers,
+    Heroes,
     Progression,
     UpgradeSystem: UpgradeSystemFactory,
-    Legion,
+    Enemies,
     Corpses,
     MenuPortraits,
   }) {
@@ -36,6 +34,8 @@ GameSession = {
     const UpgradeSystem = UpgradeSystemFactory.create(Progression);
     const arenas = createArenas();
     let selectedMap = 'empty';
+    // Resolved once per map change: the simulation reads it hundreds of times per frame.
+    let arena = arenas.get(selectedMap);
     let audioController = null;
     const sessionContext = {
       get abilities() {
@@ -68,8 +68,8 @@ GameSession = {
       get Math() {
         return Math;
       },
-      get Villagers() {
-        return Villagers;
+      get Heroes() {
+        return Heroes;
       },
       get Progression() {
         return Progression;
@@ -77,11 +77,11 @@ GameSession = {
       get UpgradeSystem() {
         return UpgradeSystem;
       },
-      get Village() {
-        return arenas.get(selectedMap);
+      get Arena() {
+        return arena;
       },
-      get Legion() {
-        return Legion;
+      get Enemies() {
+        return Enemies;
       },
       get Corpses() {
         return Corpses;
@@ -111,7 +111,7 @@ GameSession = {
         H = value;
       },
       get WORLD() {
-        return arenas.get(selectedMap).size;
+        return arena.size;
       },
       get resizeCanvas() {
         return resizeCanvas;
@@ -289,9 +289,6 @@ GameSession = {
       get damage() {
         return damage;
       },
-      get throwStones() {
-        return throwStones;
-      },
       get beginAction() {
         return beginAction;
       },
@@ -396,10 +393,15 @@ GameSession = {
         .map(([id, map]) => `<option value="${id}">${map.name}</option>`)
         .join('');
       mapSelect.value = selectedMap;
+      // A single arena is shown for context but cannot be switched.
+      mapSelect.disabled = Object.keys(arenaDefinitions).length < 2;
+      const description = $('mapDescription');
+      if (description) description.textContent = arenaDefinitions[selectedMap].description;
     }
     if (mapSelect)
       mapSelect.onchange = () => {
         selectedMap = arenaDefinitions[mapSelect.value] ? mapSelect.value : 'empty';
+        arena = arenas.get(selectedMap);
         $('mapDescription').textContent = arenaDefinitions[selectedMap].description;
       };
     const startBtn = $('start');
@@ -463,7 +465,7 @@ GameSession = {
     bindInput();
 
     const { spawn, updateSpawning } = EnemySpawning.create(sessionContext);
-    const { damage, throwStones, beginAction, advanceAction, hurtPlayer, heroImpact } =
+    const { damage, beginAction, advanceAction, hurtPlayer, heroImpact } =
       CombatSystem.create(sessionContext);
 
     const { update } = Simulation.create(sessionContext);
@@ -549,6 +551,7 @@ GameSession = {
       selectMap(id) {
         if (!arenaDefinitions[id]) throw new Error('Unknown map: ' + id);
         selectedMap = id;
+        arena = arenas.get(selectedMap);
         if (mapSelect) mapSelect.value = id;
       },
       select(hero) {

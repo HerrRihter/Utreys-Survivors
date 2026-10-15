@@ -1,7 +1,4 @@
-export let MenuPortraits;
-('use strict');
-
-MenuPortraits = {
+export const MenuPortraits = {
   create({ document, sprite, artStatus }) {
     const cache = new Map();
 
