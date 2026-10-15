@@ -1,0 +1,32 @@
+{
+  "ram": {
+    "cornerAlpha": 0,
+    "width": 1536,
+    "stride": 6144,
+    "height": 1024
+  },
+  "turtle": {
+    "cornerAlpha": 0,
+    "width": 1536,
+    "stride": 6144,
+    "height": 1024
+  },
+  "pilum": {
+    "cornerAlpha": 0,
+    "width": 1448,
+    "stride": 5792,
+    "height": 1086
+  },
+  "spear": {
+    "cornerAlpha": 0,
+    "width": 1536,
+    "stride": 6144,
+    "height": 1024
+  },
+  "veteran": {
+    "cornerAlpha": 0,
+    "width": 1536,
+    "stride": 6144,
+    "height": 1024
+  }
+}

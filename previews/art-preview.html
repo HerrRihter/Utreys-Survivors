@@ -1,0 +1,15 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Римский легион — новые персонажи</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#111c19;color:#efe8d1;font-family:Consolas,monospace;padding:40px}main{max-width:1160px;margin:auto}small{letter-spacing:3px;color:#c9af76}h1{font-size:34px;margin:16px 0}p{color:#a9bbaf;line-height:1.7}section{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}article{background:#253a30;border:1px solid #53634b;padding:20px 10px;text-align:center;flex:1;min-width:210px}canvas{width:192px;height:256px;image-rendering:pixelated}h2{font-size:17px;color:#e7cb8b;margin:14px 0 8px}.desc{font-size:12px;color:#b4c6b7;line-height:1.6;margin:0}a{color:#e7cb8b}.source{font-size:12px}#loading{font-size:12px;color:#c9af76}</style>
+<main><small>ГАЛЛЫ: ПОСЛЕДНИЙ ПИР / РИМСКИЙ ЛЕГИОН</small><h1>Четыре характера. Четыре силуэта.</h1><p>По образам классической рисованной анимации: купольные шлемы, длинные нащёчники,<br>выразительные лица и разные пропорции тела. Игровые спрайты — 96 × 128 пикселей.</p><div id="loading">Загрузка рисунков…</div>
+<section><article><canvas id="a" width="96" height="128"></canvas><h2>Худой легионер</h2><p class="desc">Длинное лицо, опущенные веки,<br>узкие плечи и тонкие ноги.</p></article><article><canvas id="b" width="96" height="128"></canvas><h2>Полный солдат</h2><p class="desc">Круглые щёки, короткий нос,<br>широкий живот и короткие ноги.</p></article><article><canvas id="c" width="96" height="128"></canvas><h2>Суровый ветеран</h2><p class="desc">Массивная челюсть, щетина,<br>нахмуренные брови и сильные руки.</p></article><article><canvas id="d" width="96" height="128"></canvas><h2>Центурион</h2><p class="desc">Золотой шлем, красный гребень,<br>чёрные усы и офицерский плащ.</p></article></section>
+<p class="source">Референс: <a href="https://www.listal.com/viewimage/19351457" target="_blank" rel="noopener">кадр из «Двенадцати подвигов Астерикса» (1976)</a>.<br>Новая графика создана по референсу. <a href="animation-preview.html">Ходьба и атаки — отдельные кадры анимации.</a></p><p><a href="../index.html">← Вернуться в игру</a></p></main>
+<script data-entry="art-preview.js" data-file-bundle="../runtime/previews/art-preview.js">
+(function(){
+  const launcher = document.currentScript;
+  const script = document.createElement('script');
+  const localFile = location.protocol === 'file:';
+  if (!localFile) script.type = 'module';
+  script.src = localFile ? launcher.dataset.fileBundle : launcher.dataset.entry;
+  document.body.appendChild(script);
+})();
+</script></html>

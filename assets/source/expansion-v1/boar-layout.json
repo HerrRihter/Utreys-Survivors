@@ -1,0 +1,174 @@
+{
+  "source": "assets\\source\\expansion-v1\\boar.png",
+  "scale": 0.21894736842105264,
+  "metrics": [
+    {
+      "action": "walk",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 364,
+        "height": 245
+      },
+      "width": 80,
+      "height": 54,
+      "left": 96,
+      "top": 182
+    },
+    {
+      "action": "walk",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 325,
+        "height": 230
+      },
+      "width": 71,
+      "height": 50,
+      "left": 95,
+      "top": 186
+    },
+    {
+      "action": "walk",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 377,
+        "height": 236
+      },
+      "width": 83,
+      "height": 52,
+      "left": 74,
+      "top": 184
+    },
+    {
+      "action": "walk",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 360,
+        "height": 239
+      },
+      "width": 79,
+      "height": 52,
+      "left": 80,
+      "top": 184
+    },
+    {
+      "action": "attack",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 344,
+        "height": 248
+      },
+      "width": 75,
+      "height": 54,
+      "left": 92,
+      "top": 182
+    },
+    {
+      "action": "attack",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 342,
+        "height": 270
+      },
+      "width": 75,
+      "height": 59,
+      "left": 79,
+      "top": 177
+    },
+    {
+      "action": "attack",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 421,
+        "height": 238
+      },
+      "width": 92,
+      "height": 52,
+      "left": 54,
+      "top": 184
+    },
+    {
+      "action": "attack",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 318,
+        "height": 273
+      },
+      "width": 70,
+      "height": 60,
+      "left": 99,
+      "top": 176
+    },
+    {
+      "action": "hurt",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 301,
+        "height": 290
+      },
+      "width": 66,
+      "height": 63,
+      "left": 92,
+      "top": 173
+    },
+    {
+      "action": "hurt",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 334,
+        "height": 258
+      },
+      "width": 73,
+      "height": 56,
+      "left": 95,
+      "top": 180
+    },
+    {
+      "action": "hurt",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 332,
+        "height": 264
+      },
+      "width": 73,
+      "height": 58,
+      "left": 85,
+      "top": 178
+    },
+    {
+      "action": "hurt",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 346,
+        "height": 251
+      },
+      "width": 76,
+      "height": 55,
+      "left": 97,
+      "top": 181
+    }
+  ]
+}

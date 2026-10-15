@@ -1,0 +1,17 @@
+[
+  {
+    "json": "data/animations/villager-layout.json",
+    "module": "data/animations/villager-layout.js",
+    "name": "VillagerLayout"
+  },
+  {
+    "json": "data/animations/menhir-layout.json",
+    "module": "data/animations/menhir-layout.js",
+    "name": "MenhirBounds"
+  },
+  {
+    "json": "data/animations/character-frames.json",
+    "module": "data/animations/character-frames.js",
+    "name": "CharacterFrameManifest"
+  }
+]

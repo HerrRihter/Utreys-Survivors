@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Utreys Survivors</title>
+<meta name="description" content="Прототип игры в жанре survival arena. Исследуй пустую арену, проверяй персонажа и игровые системы.">
+<meta property="og:title" content="Utreys Survivors">
+<meta property="og:description" content="Прототип игры в жанре survival arena на пустой арене.">
+<link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+<canvas id="game" aria-label="Пустая игровая арена"></canvas>
+<div id="hud" class="hud hidden">
+  <div class="hudbox"><div class="label" id="heroLabel">ПЕРСОНАЖ-ЗАГЛУШКА</div><div class="bar"><i id="health"></i></div><div class="bar xp"><i id="xp"></i></div><div style="font-size:10px;margin-top:8px" id="levelText"></div></div>
+  <div class="topcenter"><div class="clock" id="time">00:00</div><div class="label">ВРЕМЯ ЗАБЕГА · 05:00</div></div>
+  <div class="hudbox hudright"><div id="kills"></div><div id="weapon"></div><div id="helmets" style="color:#f6cb72"></div></div>
+</div>
+<div id="hint" class="controls hidden">WASD / СТРЕЛКИ — ДВИЖЕНИЕ &nbsp; · &nbsp; АТАКИ — АВТОМАТИЧЕСКИ &nbsp; · &nbsp; Q / E — УМЕНИЯ &nbsp; · &nbsp; ESC — ПАУЗА</div>
+<div id="actions" class="actions"><button id="sound" class="small" aria-label="Переключить звук">ЗВУК: ВКЛ</button><button id="pause" class="small hidden" aria-label="Пауза">Ⅱ ПАУЗА</button></div>
+<div id="toast" style="opacity:0"></div>
+<div id="bossbar" class="hidden"><span id="bossname">СТРАЖ АРЕНЫ</span><div class="bossfill"><i id="bosshealth"></i></div></div>
+<div id="abilities" class="ability-controls hidden" aria-label="Умения персонажа"><button id="ability0" type="button"></button><button id="ability1" type="button"></button></div>
+<div id="stick" class="touch hidden"><i id="knob"></i></div>
+
+<div id="menu" class="overlay">
+  <main class="menu">
+    <div class="eyebrow">ПРОТОТИП ИГРОВОЙ АРЕНЫ</div>
+    <h1 class="title">UTREYS<br><span>SURVIVORS</span></h1>
+    <p class="intro">Тестовая сборка с одним персонажем-заглушкой и пустой ареной. Перемещайся, проверяй управление, атаки и игровые системы.</p>
+    <div class="rule"><span>1 ПЕРСОНАЖ · 1 ПУСТАЯ АРЕНА</span></div>
+    <div class="startline">
+      <button id="shopOpen" class="small">УЛУЧШЕНИЯ</button>
+      <button id="achievementsOpen" class="small">ДОСТИЖЕНИЯ</button>
+      <button id="settingsOpen" class="small">НАСТРОЙКИ</button>
+      <span id="wallet"></span>
+      <button id="start" class="primary">НАЧАТЬ ЗАБЕГ →</button>
+      <a class="small" href="village-preview.html" style="color:#f6cb72;text-decoration:none">АРЕНА</a>
+      <div class="record" id="record"></div>
+    </div>
+    <div id="menuHint" class="footer">WASD или стрелки — двигаться · атаки выполняются автоматически · на телефоне — веди пальцем</div>
+  </main>
+</div>
+
+<div id="runHeroSelect" class="overlay hidden" style="z-index:40">
+  <section class="run-hero-select" role="dialog" aria-modal="true" aria-labelledby="runHeroTitle">
+    <header class="run-hero-head"><div><h2 id="runHeroTitle">Выбор персонажа</h2><p>В этой сборке доступен один персонаж.</p></div><button id="runHeroBack" class="small">← НАЗАД</button></header>
+    <div class="map-select"><label for="runMap">АРЕНА</label><select id="runMap"></select><p id="mapDescription">Открытая площадка для тестирования персонажа и игровых систем.</p></div>
+    <div id="runHeroes" class="run-heroes"></div>
+    <footer class="run-hero-foot"><div id="runHeroStats" class="run-hero-stats"></div><div class="run-hero-actions"><button id="runHeroStart" class="primary">НАЧАТЬ →</button></div></footer>
+  </section>
+</div>
+
+<div id="levelup" class="overlay hidden" style="z-index:40"><div class="modal"><div class="eyebrow">РАЗВИТИЕ ПЕРСОНАЖА</div><h2>Выбери улучшение</h2><p>Усиль персонажа и проверь результат.</p><div id="cards" class="cards"></div><div id="levelupHint" class="footer">Нажми 1, 2, 3 или 4 для выбора</div></div></div>
+<div id="paused" class="overlay hidden" style="z-index:40"><div class="modal"><div class="eyebrow">ПАУЗА</div><h2>Забег приостановлен</h2><p>Продолжи, когда будешь готов.</p><button id="resume" class="primary">ПРОДОЛЖИТЬ →</button><button id="pauseSound" class="small" aria-label="Переключить звук">ЗВУК: ВКЛ</button><button id="pauseSettings" class="small">НАСТРОЙКИ</button><button id="quit" class="small">В МЕНЮ</button></div></div>
+<div id="end" class="overlay hidden" style="z-index:40"><div class="modal"><div id="endTag" class="eyebrow"></div><h2 id="endTitle"></h2><p id="endText"></p><div id="endStats" class="stats"></div><button id="again" class="primary">ЕЩЁ ОДИН ЗАБЕГ →</button><button id="back" class="small">В МЕНЮ</button></div></div>
+
+<div id="shop" class="overlay hidden" style="z-index:40">
+  <section class="shop-panel" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+    <button id="shopClose" class="small" style="float:right">← В МЕНЮ</button>
+    <h2 id="shopTitle">Улучшения</h2>
+    <p>Постоянные улучшения персонажа за жетоны.</p>
+    <p id="shopWallet"></p>
+    <p style="font-size:12px;line-height:1.7">Жетоны и прогресс сохраняются между забегами.</p>
+    <h3>Персонаж</h3><div id="shopHeroes" class="shopgrid"></div>
+    <h3>Постоянные усиления</h3><p style="font-size:12px">Усиления применяются со следующего забега.</p>
+    <div id="shopUpgrades"></div>
+  </section>
+</div>
+
+<div id="achievements" class="overlay hidden" style="z-index:40">
+  <section class="achievements-panel" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
+    <button id="achievementsClose" class="small" style="float:right">← В МЕНЮ</button>
+    <h2 id="achievementsTitle">Достижения</h2>
+    <p>Выполняй задания, проверяй игровые системы и получай жетоны.</p>
+    <div id="achievementsSummary" class="achievements-summary"></div><div id="achievementsList" class="achievements-grid"></div>
+  </section>
+</div>
+
+<div id="settings" class="overlay hidden" style="z-index:40">
+  <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="settings-head"><div><div class="eyebrow">ПАРАМЕТРЫ ИГРЫ</div><h2 id="settingsTitle">Настройки</h2></div><button id="settingsClose" class="small">← НАЗАД</button></div>
+    <p>Настройки звука и игрового процесса.</p>
+    <div class="settings-grid">
+      <div class="settings-card"><h3>♫ Звук</h3><div class="settings-row"><span>Звуковые эффекты и музыка</span><button id="settingsSound" class="small" type="button" aria-label="Переключить звук">ЗВУК: ВКЛ</button></div>
+        <div class="settings-slider-row"><div class="settings-slider-label"><span>Музыка</span><span id="musicVolumeVal" class="settings-val">30%</span></div><input id="musicVolume" type="range" min="0" max="100" value="30" aria-label="Громкость музыки"></div>
+        <div class="settings-slider-row"><div class="settings-slider-label"><span>Эффекты</span><span id="effectsVolumeVal" class="settings-val">65%</span></div><input id="effectsVolume" type="range" min="0" max="100" value="65" aria-label="Громкость эффектов"></div>
+      </div>
+      <div class="settings-card"><h3>Игровой процесс</h3>
+        <div class="settings-row"><div><strong>Тряска экрана</strong><small style="display:block;color:#a9b8a5;font-size:11px">Сотрясение камеры при ударах</small></div><button id="settingShake" class="small" type="button">ВКЛ</button></div>
+        <div class="settings-row"><div><strong>Подсказки управления</strong><small style="display:block;color:#a9b8a5;font-size:11px">Показывать клавиши внизу экрана</small></div><button id="settingHints" class="small" type="button">ВКЛ</button></div>
+      </div>
+    </div>
+    <div style="margin-top:24px;text-align:right"><button id="settingsBack" class="primary">ГОТОВО →</button></div>
+  </section>
+</div>
+
+<script data-entry="src/main.js" data-file-bundle="runtime/src/main.js">
+(function(){
+  const launcher = document.currentScript;
+  const script = document.createElement('script');
+  const localFile = location.protocol === 'file:';
+  if (!localFile) script.type = 'module';
+  script.src = localFile ? launcher.dataset.fileBundle : launcher.dataset.entry;
+  document.body.appendChild(script);
+})();
+</script>
+</body>
+</html>

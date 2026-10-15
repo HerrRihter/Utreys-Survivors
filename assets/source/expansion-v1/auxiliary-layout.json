@@ -1,0 +1,174 @@
+{
+  "source": "assets\\source\\expansion-v1\\auxiliary.png",
+  "scale": 0.26299694189602446,
+  "metrics": [
+    {
+      "action": "walk",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 217,
+        "height": 327
+      },
+      "width": 57,
+      "height": 86,
+      "left": 102,
+      "top": 150
+    },
+    {
+      "action": "walk",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 228,
+        "height": 327
+      },
+      "width": 60,
+      "height": 86,
+      "left": 102,
+      "top": 150
+    },
+    {
+      "action": "walk",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 235,
+        "height": 330
+      },
+      "width": 62,
+      "height": 87,
+      "left": 100,
+      "top": 149
+    },
+    {
+      "action": "walk",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 217,
+        "height": 327
+      },
+      "width": 57,
+      "height": 86,
+      "left": 102,
+      "top": 150
+    },
+    {
+      "action": "attack",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 228,
+        "height": 315
+      },
+      "width": 60,
+      "height": 83,
+      "left": 102,
+      "top": 153
+    },
+    {
+      "action": "attack",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 354,
+        "height": 276
+      },
+      "width": 93,
+      "height": 73,
+      "left": 87,
+      "top": 163
+    },
+    {
+      "action": "attack",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 453,
+        "height": 259
+      },
+      "width": 119,
+      "height": 68,
+      "left": 89,
+      "top": 168
+    },
+    {
+      "action": "attack",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 240,
+        "height": 313
+      },
+      "width": 63,
+      "height": 82,
+      "left": 102,
+      "top": 154
+    },
+    {
+      "action": "hurt",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 244,
+        "height": 318
+      },
+      "width": 64,
+      "height": 84,
+      "left": 93,
+      "top": 152
+    },
+    {
+      "action": "hurt",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 281,
+        "height": 320
+      },
+      "width": 74,
+      "height": 84,
+      "left": 92,
+      "top": 152
+    },
+    {
+      "action": "hurt",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 245,
+        "height": 321
+      },
+      "width": 64,
+      "height": 84,
+      "left": 100,
+      "top": 152
+    },
+    {
+      "action": "hurt",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 230,
+        "height": 320
+      },
+      "width": 60,
+      "height": 84,
+      "left": 102,
+      "top": 152
+    }
+  ]
+}

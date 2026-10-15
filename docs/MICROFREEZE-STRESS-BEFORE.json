@@ -1,0 +1,534 @@
+{
+  "browser": "155.0.4283.45",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "enemyCount": 120,
+  "cpuRate": 4,
+  "note": "Headless Edge, real RAF loop, seeded random, mixed enemies, moving player and active abilities, 600 frames per map; CPU sampling and DOM/layout counters enabled.",
+  "reports": [
+    {
+      "map": "village",
+      "hero": "asterix",
+      "hudMutations": 1307,
+      "renderingMetrics": {
+        "LayoutCount": 86,
+        "RecalcStyleCount": 96,
+        "LayoutDuration": 0.110054,
+        "RecalcStyleDuration": 0.013027
+      },
+      "frames": 599,
+      "interval": {
+        "p50": 16.700000000000728,
+        "p95": 33.400000000000546,
+        "p99": 50,
+        "max": 63.5,
+        "over33": 35
+      },
+      "update": {
+        "p50": 3.2999999970197678,
+        "p95": 17,
+        "p99": 19.100000001490116,
+        "max": 35,
+        "over33": 1
+      },
+      "draw": {
+        "p50": 7,
+        "p95": 19.299999997019768,
+        "p99": 23.69999999552965,
+        "max": 24.5,
+        "over33": 0
+      },
+      "slowest": [
+        {
+          "kind": "update",
+          "start": 3544.9000000059605,
+          "ms": 35,
+          "enemies": 120,
+          "x": 1280.0000000000014,
+          "y": 1047.7623999999998
+        },
+        {
+          "kind": "update",
+          "start": 6523.60000000149,
+          "ms": 27.399999998509884,
+          "enemies": 120,
+          "x": 1065.1616000000015,
+          "y": 925.0343999999999
+        },
+        {
+          "kind": "draw",
+          "start": 8812.10000000149,
+          "ms": 24.5,
+          "enemies": 120,
+          "x": 933.1784000000017,
+          "y": 1124.4903999999992
+        },
+        {
+          "kind": "draw",
+          "start": 7554.20000000298,
+          "ms": 24.399999998509884,
+          "enemies": 120,
+          "x": 933.1784000000017,
+          "y": 925.0343999999999
+        },
+        {
+          "kind": "draw",
+          "start": 11325.80000000447,
+          "ms": 24.399999998509884,
+          "enemies": 120,
+          "x": 1125.2424000000026,
+          "y": 1337.959199999997
+        },
+        {
+          "kind": "draw",
+          "start": 12791.40000000596,
+          "ms": 24.399999998509884,
+          "enemies": 120,
+          "x": 1312.0904000000025,
+          "y": 1292.6311999999973
+        },
+        {
+          "kind": "draw",
+          "start": 9367.90000000596,
+          "ms": 24.099999994039536,
+          "enemies": 120,
+          "x": 933.1784000000017,
+          "y": 1215.1111999999991
+        },
+        {
+          "kind": "draw",
+          "start": 8670.40000000596,
+          "ms": 23.69999999552965,
+          "enemies": 120,
+          "x": 933.1784000000017,
+          "y": 1096.8719999999994
+        }
+      ],
+      "hot": [
+        {
+          "ms": 2105,
+          "functionName": "(program)",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 885,
+          "functionName": "update",
+          "scriptId": "20",
+          "url": "http://127.0.0.1:54583/src/systems/simulation.js",
+          "lineNumber": 4,
+          "columnNumber": 15
+        },
+        {
+          "ms": 763,
+          "functionName": "(idle)",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 639,
+          "functionName": "restore",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 561,
+          "functionName": "restore",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 510,
+          "functionName": "drawImage",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 440,
+          "functionName": "api.update",
+          "scriptId": "20",
+          "url": "http://127.0.0.1:54583/src/systems/simulation.js",
+          "lineNumber": 233,
+          "columnNumber": 130
+        },
+        {
+          "ms": 385,
+          "functionName": "draw",
+          "scriptId": "21",
+          "url": "http://127.0.0.1:54583/src/rendering/scene-renderer.js",
+          "lineNumber": 22,
+          "columnNumber": 13
+        },
+        {
+          "ms": 293,
+          "functionName": "clear",
+          "scriptId": "42",
+          "url": "http://127.0.0.1:54583/src/world/village/collision.js",
+          "lineNumber": 55,
+          "columnNumber": 16
+        },
+        {
+          "ms": 272,
+          "functionName": "draw",
+          "scriptId": "13",
+          "url": "http://127.0.0.1:54583/src/entities/legion.js",
+          "lineNumber": 19,
+          "columnNumber": 14
+        },
+        {
+          "ms": 266,
+          "functionName": "direction",
+          "scriptId": "44",
+          "url": "http://127.0.0.1:54583/src/world/village/navigation.js",
+          "lineNumber": 61,
+          "columnNumber": 19
+        },
+        {
+          "ms": 255,
+          "functionName": "candidates",
+          "scriptId": "42",
+          "url": "http://127.0.0.1:54583/src/world/village/collision.js",
+          "lineNumber": 36,
+          "columnNumber": 21
+        },
+        {
+          "ms": 254,
+          "functionName": "fillText",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 233,
+          "functionName": "(garbage collector)",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 205,
+          "functionName": "distance2",
+          "scriptId": "42",
+          "url": "http://127.0.0.1:54583/src/world/village/collision.js",
+          "lineNumber": 51,
+          "columnNumber": 20
+        },
+        {
+          "ms": 158,
+          "functionName": "updateExpansion",
+          "scriptId": "53",
+          "url": "http://127.0.0.1:54583/src/systems/expansion.js",
+          "lineNumber": 48,
+          "columnNumber": 31
+        },
+        {
+          "ms": 153,
+          "functionName": "fill",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 143,
+          "functionName": "api.draw",
+          "scriptId": "21",
+          "url": "http://127.0.0.1:54583/src/rendering/scene-renderer.js",
+          "lineNumber": 154,
+          "columnNumber": 132
+        },
+        {
+          "ms": 140,
+          "functionName": "save",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 129,
+          "functionName": "computeField",
+          "scriptId": "44",
+          "url": "http://127.0.0.1:54583/src/world/village/navigation.js",
+          "lineNumber": 40,
+          "columnNumber": 22
+        }
+      ]
+    },
+    {
+      "map": "lutetia",
+      "hero": "asterix",
+      "hudMutations": 1309,
+      "renderingMetrics": {
+        "LayoutCount": 87,
+        "RecalcStyleCount": 108,
+        "LayoutDuration": 0.082591,
+        "RecalcStyleDuration": 0.014832
+      },
+      "frames": 599,
+      "interval": {
+        "p50": 16.700000000000728,
+        "p95": 33.5,
+        "p99": 50.100000000000364,
+        "max": 83.40000000000055,
+        "over33": 51
+      },
+      "update": {
+        "p50": 3.600000001490116,
+        "p95": 17.600000001490116,
+        "p99": 19.600000001490116,
+        "max": 41,
+        "over33": 1
+      },
+      "draw": {
+        "p50": 7.700000002980232,
+        "p95": 18.299999997019768,
+        "p99": 24.099999994039536,
+        "max": 26.200000002980232,
+        "over33": 0
+      },
+      "slowest": [
+        {
+          "kind": "update",
+          "start": 13073.39999999851,
+          "ms": 41,
+          "enemies": 154,
+          "x": 1269.6128000000017,
+          "y": 1127.3839999999998
+        },
+        {
+          "kind": "draw",
+          "start": 12481.79999999702,
+          "ms": 26.200000002980232,
+          "enemies": 153,
+          "x": 1224.2368000000015,
+          "y": 1178.0879999999997
+        },
+        {
+          "kind": "draw",
+          "start": 13174.5,
+          "ms": 26.200000002980232,
+          "enemies": 154,
+          "x": 1269.6128000000017,
+          "y": 1114.0399999999997
+        },
+        {
+          "kind": "draw",
+          "start": 13213.10000000149,
+          "ms": 25.799999997019768,
+          "enemies": 154,
+          "x": 1269.6128000000017,
+          "y": 1108.6959999999997
+        },
+        {
+          "kind": "draw",
+          "start": 13311.79999999702,
+          "ms": 25.200000002980232,
+          "enemies": 154,
+          "x": 1269.6128000000017,
+          "y": 1092.6959999999997
+        },
+        {
+          "kind": "draw",
+          "start": 13920.39999999851,
+          "ms": 24.100000001490116,
+          "enemies": 154,
+          "x": 1269.6128000000017,
+          "y": 996.6159999999999
+        },
+        {
+          "kind": "draw",
+          "start": 13345.70000000298,
+          "ms": 24.099999994039536,
+          "enemies": 154,
+          "x": 1269.6128000000017,
+          "y": 1087.3519999999996
+        },
+        {
+          "kind": "draw",
+          "start": 8161.5,
+          "ms": 23.100000001490116,
+          "enemies": 152,
+          "x": 853.3408000000022,
+          "y": 832.9424000000013
+        }
+      ],
+      "hot": [
+        {
+          "ms": 3171,
+          "functionName": "(program)",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 720,
+          "functionName": "update",
+          "scriptId": "20",
+          "url": "http://127.0.0.1:54583/src/systems/simulation.js",
+          "lineNumber": 4,
+          "columnNumber": 15
+        },
+        {
+          "ms": 560,
+          "functionName": "drawImage",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 477,
+          "functionName": "draw",
+          "scriptId": "21",
+          "url": "http://127.0.0.1:54583/src/rendering/scene-renderer.js",
+          "lineNumber": 22,
+          "columnNumber": 13
+        },
+        {
+          "ms": 430,
+          "functionName": "(idle)",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 421,
+          "functionName": "restore",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 373,
+          "functionName": "draw",
+          "scriptId": "13",
+          "url": "http://127.0.0.1:54583/src/entities/legion.js",
+          "lineNumber": 19,
+          "columnNumber": 14
+        },
+        {
+          "ms": 353,
+          "functionName": "api.update",
+          "scriptId": "20",
+          "url": "http://127.0.0.1:54583/src/systems/simulation.js",
+          "lineNumber": 233,
+          "columnNumber": 130
+        },
+        {
+          "ms": 307,
+          "functionName": "fillText",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 259,
+          "functionName": "direction",
+          "scriptId": "46",
+          "url": "http://127.0.0.1:54583/src/world/village/navigation.js",
+          "lineNumber": 61,
+          "columnNumber": 19
+        },
+        {
+          "ms": 228,
+          "functionName": "save",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 208,
+          "functionName": "fill",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 198,
+          "functionName": "clear",
+          "scriptId": "48",
+          "url": "http://127.0.0.1:54583/src/world/village/collision.js",
+          "lineNumber": 55,
+          "columnNumber": 16
+        },
+        {
+          "ms": 195,
+          "functionName": "restore",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 188,
+          "functionName": "candidates",
+          "scriptId": "48",
+          "url": "http://127.0.0.1:54583/src/world/village/collision.js",
+          "lineNumber": 36,
+          "columnNumber": 21
+        },
+        {
+          "ms": 185,
+          "functionName": "(garbage collector)",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 160,
+          "functionName": "drawHazards",
+          "scriptId": "43",
+          "url": "http://127.0.0.1:54583/src/rendering/art/expansion-art.js",
+          "lineNumber": 59,
+          "columnNumber": 27
+        },
+        {
+          "ms": 145,
+          "functionName": "ellipse",
+          "scriptId": "0",
+          "url": "",
+          "lineNumber": -1,
+          "columnNumber": -1
+        },
+        {
+          "ms": 143,
+          "functionName": "distance2",
+          "scriptId": "48",
+          "url": "http://127.0.0.1:54583/src/world/village/collision.js",
+          "lineNumber": 51,
+          "columnNumber": 20
+        },
+        {
+          "ms": 143,
+          "functionName": "api.draw",
+          "scriptId": "21",
+          "url": "http://127.0.0.1:54583/src/rendering/scene-renderer.js",
+          "lineNumber": 154,
+          "columnNumber": 132
+        }
+      ]
+    }
+  ]
+}

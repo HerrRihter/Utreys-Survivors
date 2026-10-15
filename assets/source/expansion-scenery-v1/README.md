@@ -1,0 +1,3 @@
+Generated with imagegen using assets/runtime/world/village/village-asterix.png as a style reference. Transparent atlas: ivory/red Roman tent and mossy boulders, gouache texture and brown ink outlines. Components separated by alpha connected regions, resized to 600 and 280 pixels wide for runtime. Existing village trees, fences and ground are reused unchanged.
+
+Camp decor atlas: command pavilion, supply stack with barrels/crates/blankets/shield, cooking fire and log seats, eagle standard. Same Asterix-house style reference; transparent 2x2 atlas. Import: SHARP_MODULE=<sharp package> node tools/import-scenery.cjs assets/source/expansion-scenery-v1/camp-decor.png command supplies fire standard. All runtime assets remain standalone alpha PNGs.

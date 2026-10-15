@@ -1,0 +1,14 @@
+{
+  "name": "utreys-survivors",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/server.cjs",
+    "test": "node tests/test-utreys-variant.cjs",
+    "check:structure": "node tools/check-structure.cjs",
+    "check:contracts": "node tools/check-game-contracts.cjs",
+    "generate": "node tools/generate-layouts.cjs && node tools/generate-file-bundles.cjs",
+    "build": "node tools/build-site.cjs",
+    "start": "node tools/server.cjs"
+  }
+}

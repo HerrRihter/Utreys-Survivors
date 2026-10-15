@@ -1,0 +1,91 @@
+{
+  "browser": "155.0.4283.45",
+  "viewport": [
+    1280,
+    720
+  ],
+  "results": [
+    {
+      "map": "lutetia",
+      "startMs": 56.69999998807907,
+      "enemies": 213,
+      "update": {
+        "p50": 0.7000000178813934,
+        "p95": 1.199999988079071,
+        "max": 2
+      },
+      "draw": {
+        "p50": 0.800000011920929,
+        "p95": 1.300000011920929,
+        "max": 9.300000011920929
+      },
+      "interval": {
+        "p50": 16.699999999999818,
+        "p95": 17.09999999999991,
+        "max": 19.199999999999818
+      },
+      "hot": [
+        {
+          "name": "(idle)",
+          "url": "",
+          "samples": 3112
+        },
+        {
+          "name": "(program)",
+          "url": "",
+          "samples": 227
+        },
+        {
+          "name": "drawImage",
+          "url": "",
+          "samples": 104
+        },
+        {
+          "name": "drawImage",
+          "url": "",
+          "samples": 55
+        },
+        {
+          "name": "update",
+          "url": "systems/simulation.js",
+          "samples": 37
+        },
+        {
+          "name": "draw",
+          "url": "rendering/scene-renderer.js",
+          "samples": 33
+        },
+        {
+          "name": "grid",
+          "url": "village/navigation.js",
+          "samples": 31
+        },
+        {
+          "name": "(garbage collector)",
+          "url": "",
+          "samples": 29
+        },
+        {
+          "name": "distance2",
+          "url": "village/collision.js",
+          "samples": 25
+        },
+        {
+          "name": "clear",
+          "url": "village/collision.js",
+          "samples": 20
+        },
+        {
+          "name": "direction",
+          "url": "village/navigation.js",
+          "samples": 18
+        },
+        {
+          "name": "",
+          "url": "",
+          "samples": 16
+        }
+      ]
+    }
+  ]
+}

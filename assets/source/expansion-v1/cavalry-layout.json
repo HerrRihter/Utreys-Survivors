@@ -1,0 +1,174 @@
+{
+  "source": "assets\\source\\expansion-v1\\cavalry.png",
+  "scale": 0.36817472698907955,
+  "metrics": [
+    {
+      "action": "walk",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 358,
+        "height": 295
+      },
+      "width": 132,
+      "height": 109,
+      "left": 72,
+      "top": 127
+    },
+    {
+      "action": "walk",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 401,
+        "height": 279
+      },
+      "width": 148,
+      "height": 103,
+      "left": 10,
+      "top": 133
+    },
+    {
+      "action": "walk",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 377,
+        "height": 268
+      },
+      "width": 139,
+      "height": 99,
+      "left": 59,
+      "top": 137
+    },
+    {
+      "action": "walk",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 375,
+        "height": 280
+      },
+      "width": 138,
+      "height": 103,
+      "left": 65,
+      "top": 133
+    },
+    {
+      "action": "attack",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 332,
+        "height": 318
+      },
+      "width": 122,
+      "height": 117,
+      "left": 63,
+      "top": 119
+    },
+    {
+      "action": "attack",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 418,
+        "height": 255
+      },
+      "width": 154,
+      "height": 94,
+      "left": 61,
+      "top": 142
+    },
+    {
+      "action": "attack",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 489,
+        "height": 262
+      },
+      "width": 180,
+      "height": 96,
+      "left": 61,
+      "top": 140
+    },
+    {
+      "action": "attack",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 347,
+        "height": 284
+      },
+      "width": 128,
+      "height": 105,
+      "left": 59,
+      "top": 131
+    },
+    {
+      "action": "hurt",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 331,
+        "height": 312
+      },
+      "width": 122,
+      "height": 115,
+      "left": 50,
+      "top": 121
+    },
+    {
+      "action": "hurt",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 329,
+        "height": 305
+      },
+      "width": 121,
+      "height": 112,
+      "left": 57,
+      "top": 124
+    },
+    {
+      "action": "hurt",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 371,
+        "height": 286
+      },
+      "width": 137,
+      "height": 105,
+      "left": 54,
+      "top": 131
+    },
+    {
+      "action": "hurt",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 357,
+        "height": 284
+      },
+      "width": 131,
+      "height": 105,
+      "left": 54,
+      "top": 131
+    }
+  ]
+}

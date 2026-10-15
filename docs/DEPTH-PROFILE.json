@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-10",
+  "node": "v22.23.2",
+  "staticObjects": 31,
+  "enemies": 120,
+  "method": "50 batches of 100 orders after 300 warmup iterations; same deterministic scene",
+  "before": {
+    "p50Ms": 0.026372910000000048,
+    "p95Ms": 0.04766902000000002
+  },
+  "after": {
+    "p50Ms": 0.018275730000000295,
+    "p95Ms": 0.024895919999999593
+  },
+  "p50ReductionPercent": 30.70264146049768,
+  "limits": "CPU ordering microbenchmark only; not total browser frame time or mobile performance"
+}

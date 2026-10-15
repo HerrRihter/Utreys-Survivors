@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>Animation audit</title>
+<style>body{background:#24382e;color:#eee;font:12px monospace;margin:20px}section{display:grid;grid-template-columns:repeat(12,90px);gap:4px;margin-bottom:12px}canvas{width:90px;height:100px;background:#38503e}h2{font-size:14px}#status{position:sticky;top:0;background:#111;padding:10px}</style>
+<div id="status">Loading</div><main id="frames"></main>
+<script data-entry="animation-audit.js" data-file-bundle="../runtime/previews/animation-audit.js">
+(function(){
+  const launcher = document.currentScript;
+  const script = document.createElement('script');
+  const localFile = location.protocol === 'file:';
+  if (!localFile) script.type = 'module';
+  script.src = localFile ? launcher.dataset.fileBundle : launcher.dataset.entry;
+  document.body.appendChild(script);
+})();
+</script>

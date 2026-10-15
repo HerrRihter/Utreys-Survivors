@@ -1,0 +1,3 @@
+import {RomanArt} from '../src/rendering/art/roman-art.js';
+import {HeroArt} from '../src/rendering/art/hero-art.js';
+function draw(){['asterix','obelix','roman'].forEach(name=>{const g=document.getElementById(name).getContext('2d');g.clearRect(0,0,128,128);g.imageSmoothingEnabled=false;const art=name==='roman'?RomanArt.get(0):HeroArt.get(name);if(art){if(name==='roman')g.drawImage(art,24,21,80,107);else g.drawImage(art,0,0,128,128);}});document.getElementById('status').textContent=HeroArt.status==='ready'?'Новая графика загружена · портреты и герои в игре обновлены':'Загрузка рисунков…';}document.addEventListener('hero-art-ready',draw);document.addEventListener('roman-art-ready',draw);draw();

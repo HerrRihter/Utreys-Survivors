@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Галлы: последний пир</title>
+
+
+
+<link rel="stylesheet" href="../styles/game.css"></head>
+<body>
+<canvas id="game" aria-label="Игровая арена"></canvas>
+<div id="hud" class="hud hidden"><div class="hudbox"><div class="label" id="heroLabel">АСТЕРИКС</div><div class="bar"><i id="health"></i></div><div class="bar xp"><i id="xp"></i></div><div style="font-size:10px;margin-top:8px" id="levelText"></div></div><div class="topcenter"><div class="clock" id="time">00:00</div><div class="label">ДО ПИРА · 05:00</div></div><div class="hudbox hudright"><div id="kills"></div><div id="weapon"></div><div id="helmets" style="color:#f6cb72"></div></div></div>
+<div id="hint" class="controls hidden">WASD / СТРЕЛКИ — ДВИЖЕНИЕ &nbsp; · &nbsp; АТАКИ — ПО ПОСЛЕДНЕМУ ШАГУ &nbsp; · &nbsp; ESC — ПАУЗА</div>
+<div class="actions"><button id="sound" class="small" aria-label="Переключить звук">ЗВУК: ВЫКЛ</button><button id="pause" class="small hidden">Ⅱ ПАУЗА</button></div>
+<div id="toast" style="opacity:0"></div><div id="bossbar" class="hidden">ЦЕНТУРИОН МАКСИМУС<div class="bossfill"><i id="bosshealth"></i></div></div>
+<div id="stick" class="touch hidden"><i id="knob"></i></div>
+<div id="menu" class="overlay"><main class="menu"><div class="eyebrow">МАЛЕНЬКАЯ ДЕРЕВНЯ. БОЛЬШАЯ ДРАКА.</div><h1 class="title">ГАЛЛЫ:<br><span>ПОСЛЕДНИЙ ПИР</span></h1><p class="intro">Римляне снова испортили вечер. Продержись до пира, собирай волшебные кристаллы и объясни легиону, почему эту деревню обходят стороной.</p><div class="rule"><span>ЛОКАЦИЯ 01 · ДЕРЕВНЯ</span></div><div class="startline"><button id="shopOpen" class="small">ЛАВКА</button><span id="wallet"></span><button id="start" class="primary">НАЧАТЬ ЗАБЕГ →</button><a class="small" href="../legion-preview.html" style="color:#f6cb72;text-decoration:none">РАЗВЕДДАННЫЕ</a><a class="small" href="../village-preview.html" style="color:#f6cb72;text-decoration:none">КАРТА</a><div class="record" id="record"></div></div><div class="footer">WASD или стрелки — двигаться · атаки автоматически по направлению последнего шага · на телефоне — веди пальцем</div></main></div>
+<div id="runHeroSelect" class="overlay hidden" style="z-index:4"><section class="run-hero-select" role="dialog" aria-modal="true" aria-labelledby="runHeroTitle"><header class="run-hero-head"><div><h2 id="runHeroTitle">Выбери героя</h2><p>Кто отправится защищать деревню?</p></div><button id="runHeroBack" class="small">← НАЗАД</button></header><div id="runHeroes" class="run-heroes"></div><footer class="run-hero-foot"><div id="runHeroStats" class="run-hero-stats"></div><div class="run-hero-actions"><button id="runHeroStart" class="primary">В БОЙ →</button></div></footer></section></div>
+<div id="levelup" class="overlay hidden"><div class="modal"><div class="eyebrow">СИЛА ДЕРЕВНИ</div><h2>Ещё глоток волшебства</h2><p>Выбери общее усиление или улучшение оружия героя. Действует до конца забега.</p><div id="cards" class="cards"></div><div class="footer">Нажми 1, 2 или 3 для выбора</div></div></div>
+<div id="paused" class="overlay hidden"><div class="modal"><div class="eyebrow">ЛЕГИОН НА ПЕРЕКУРЕ</div><h2>Небольшой привал</h2><p>Драка продолжится, когда ты будешь готов.</p><button id="resume" class="primary">ПРОДОЛЖИТЬ →</button><button id="quit" class="small">В МЕНЮ</button></div></div>
+<div id="end" class="overlay hidden"><div class="modal"><div id="endTag" class="eyebrow"></div><h2 id="endTitle"></h2><p id="endText"></p><div id="endStats" class="stats"></div><button id="again" class="primary">ЕЩЁ ОДИН ЗАБЕГ →</button><button id="back" class="small">ВЫБРАТЬ ГЕРОЯ</button></div></div>
+<div id="shop" class="overlay hidden" style="z-index:5"><section class="shop-panel" role="dialog" aria-modal="true" aria-labelledby="shopTitle"><button id="shopClose" class="small" style="float:right">← В МЕНЮ</button><h2 id="shopTitle">Лавка</h2><p>Новые герои и постоянные усиления за римские шлемы.</p><p id="shopWallet"></p><p style="font-size:12px;line-height:1.7">1 шлем за каждые 10 убийств. С солдат с вероятностью 5% выпадает ещё 3 шлема — подбери их на поле. Собранные шлемы остаются у тебя после поражения.</p><h3>Герои</h3><div id="shopHeroes" class="shopgrid"></div><h3>Постоянные усиления</h3><p style="font-size:12px">Общие усиления действуют на всех. Личные — только на указанного героя. Покупки сохраняются и применяются со следующего забега.</p><div id="shopUpgrades"></div></section></div>
+
+
+
+
+
+<aside style="position:fixed;left:12px;bottom:12px;z-index:1000;background:#17231f;padding:12px;max-width:90vw;max-height:70vh;overflow:auto"><button id="benchmark">Измерить 120 врагов</button><pre id="profileReport">Измерение ещё не запущено</pre></aside><script data-entry="performance.js" data-file-bundle="../runtime/previews/performance.js">
+(function(){
+  const launcher = document.currentScript;
+  const script = document.createElement('script');
+  const localFile = location.protocol === 'file:';
+  if (!localFile) script.type = 'module';
+  script.src = localFile ? launcher.dataset.fileBundle : launcher.dataset.entry;
+  document.body.appendChild(script);
+})();
+</script></body></html>

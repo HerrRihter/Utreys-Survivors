@@ -1,0 +1,2 @@
+import {RomanArt} from '../src/rendering/art/roman-art.js';
+function draw(){['a','b','c','d'].forEach((id,i)=>{const g=document.getElementById(id).getContext('2d');g.clearRect(0,0,96,128);g.imageSmoothingEnabled=false;g.drawImage(RomanArt.get(i%3,0,i===3),0,0,96,128);});document.getElementById('loading').textContent=RomanArt.status==='ready'?'Графика загружена · используется в игре':RomanArt.status==='fallback'?'Не удалось загрузить рисунки · резервная графика':'Загрузка рисунков…';}document.addEventListener('roman-art-ready',draw);draw();

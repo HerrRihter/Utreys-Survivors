@@ -1,0 +1,337 @@
+{
+  "browser": "155.0.4283.45",
+  "viewport": [
+    1280,
+    720
+  ],
+  "results": [
+    {
+      "map": "village",
+      "startMs": 45.5,
+      "enemies": 180,
+      "update": {
+        "p50": 0.4000000059604645,
+        "p95": 0.7000000178813934,
+        "max": 1
+      },
+      "draw": {
+        "p50": 0.6000000238418579,
+        "p95": 1.100000023841858,
+        "max": 8.099999994039536
+      },
+      "interval": {
+        "p50": 16.699999999999818,
+        "p95": 16.800000000000182,
+        "max": 17.399999999999636
+      },
+      "hot": [
+        {
+          "name": "(idle)",
+          "url": "",
+          "samples": 3350
+        },
+        {
+          "name": "(program)",
+          "url": "",
+          "samples": 200
+        },
+        {
+          "name": "drawImage",
+          "url": "",
+          "samples": 33
+        },
+        {
+          "name": "grid",
+          "url": "village/navigation.js",
+          "samples": 30
+        },
+        {
+          "name": "save",
+          "url": "",
+          "samples": 26
+        },
+        {
+          "name": "fill",
+          "url": "",
+          "samples": 22
+        },
+        {
+          "name": "update",
+          "url": "systems/simulation.js",
+          "samples": 21
+        },
+        {
+          "name": "direction",
+          "url": "village/navigation.js",
+          "samples": 19
+        },
+        {
+          "name": "(garbage collector)",
+          "url": "",
+          "samples": 18
+        },
+        {
+          "name": "draw",
+          "url": "rendering/scene-renderer.js",
+          "samples": 17
+        },
+        {
+          "name": "clear",
+          "url": "village/collision.js",
+          "samples": 12
+        },
+        {
+          "name": "ellipse",
+          "url": "",
+          "samples": 11
+        }
+      ]
+    },
+    {
+      "map": "forest",
+      "startMs": 40.099999994039536,
+      "enemies": 180,
+      "update": {
+        "p50": 0.5,
+        "p95": 0.7999999821186066,
+        "max": 2.0999999940395355
+      },
+      "draw": {
+        "p50": 0.6000000238418579,
+        "p95": 1,
+        "max": 2.2000000178813934
+      },
+      "interval": {
+        "p50": 16.699999999999818,
+        "p95": 16.800000000000182,
+        "max": 17.100000000000364
+      },
+      "hot": [
+        {
+          "name": "(idle)",
+          "url": "",
+          "samples": 3404
+        },
+        {
+          "name": "(program)",
+          "url": "",
+          "samples": 151
+        },
+        {
+          "name": "update",
+          "url": "systems/simulation.js",
+          "samples": 30
+        },
+        {
+          "name": "drawImage",
+          "url": "",
+          "samples": 27
+        },
+        {
+          "name": "grid",
+          "url": "village/navigation.js",
+          "samples": 26
+        },
+        {
+          "name": "clear",
+          "url": "village/collision.js",
+          "samples": 21
+        },
+        {
+          "name": "(garbage collector)",
+          "url": "",
+          "samples": 20
+        },
+        {
+          "name": "candidates",
+          "url": "village/collision.js",
+          "samples": 19
+        },
+        {
+          "name": "direction",
+          "url": "village/navigation.js",
+          "samples": 18
+        },
+        {
+          "name": "draw",
+          "url": "rendering/scene-renderer.js",
+          "samples": 17
+        },
+        {
+          "name": "fill",
+          "url": "",
+          "samples": 13
+        },
+        {
+          "name": "sprite",
+          "url": "rendering/sprite-renderer.js",
+          "samples": 11
+        }
+      ]
+    },
+    {
+      "map": "camp",
+      "startMs": 29.19999998807907,
+      "enemies": 180,
+      "update": {
+        "p50": 0.5,
+        "p95": 0.800000011920929,
+        "max": 3.4000000059604645
+      },
+      "draw": {
+        "p50": 0.800000011920929,
+        "p95": 6.0999999940395355,
+        "max": 8.799999982118607
+      },
+      "interval": {
+        "p50": 16.699999999999818,
+        "p95": 16.800000000000182,
+        "max": 17
+      },
+      "hot": [
+        {
+          "name": "(idle)",
+          "url": "",
+          "samples": 3060
+        },
+        {
+          "name": "(program)",
+          "url": "",
+          "samples": 380
+        },
+        {
+          "name": "drawImage",
+          "url": "",
+          "samples": 68
+        },
+        {
+          "name": "direction",
+          "url": "village/navigation.js",
+          "samples": 33
+        },
+        {
+          "name": "save",
+          "url": "",
+          "samples": 31
+        },
+        {
+          "name": "draw",
+          "url": "rendering/scene-renderer.js",
+          "samples": 30
+        },
+        {
+          "name": "update",
+          "url": "systems/simulation.js",
+          "samples": 29
+        },
+        {
+          "name": "candidates",
+          "url": "village/collision.js",
+          "samples": 26
+        },
+        {
+          "name": "(garbage collector)",
+          "url": "",
+          "samples": 23
+        },
+        {
+          "name": "ellipse",
+          "url": "",
+          "samples": 22
+        },
+        {
+          "name": "fill",
+          "url": "",
+          "samples": 20
+        },
+        {
+          "name": "restore",
+          "url": "",
+          "samples": 17
+        }
+      ]
+    },
+    {
+      "map": "lutetia",
+      "startMs": 33.19999998807907,
+      "enemies": 213,
+      "update": {
+        "p50": 0.7000000178813934,
+        "p95": 1.399999976158142,
+        "max": 4.699999988079071
+      },
+      "draw": {
+        "p50": 1.5,
+        "p95": 10.599999994039536,
+        "max": 14.099999994039536
+      },
+      "interval": {
+        "p50": 16.699999999999818,
+        "p95": 16.800000000000182,
+        "max": 17.100000000000364
+      },
+      "hot": [
+        {
+          "name": "(idle)",
+          "url": "",
+          "samples": 2856
+        },
+        {
+          "name": "restore",
+          "url": "",
+          "samples": 255
+        },
+        {
+          "name": "(program)",
+          "url": "",
+          "samples": 173
+        },
+        {
+          "name": "drawImage",
+          "url": "",
+          "samples": 75
+        },
+        {
+          "name": "save",
+          "url": "",
+          "samples": 39
+        },
+        {
+          "name": "distance2",
+          "url": "village/collision.js",
+          "samples": 37
+        },
+        {
+          "name": "draw",
+          "url": "rendering/scene-renderer.js",
+          "samples": 35
+        },
+        {
+          "name": "update",
+          "url": "systems/simulation.js",
+          "samples": 31
+        },
+        {
+          "name": "(garbage collector)",
+          "url": "",
+          "samples": 31
+        },
+        {
+          "name": "grid",
+          "url": "village/navigation.js",
+          "samples": 29
+        },
+        {
+          "name": "measureText",
+          "url": "",
+          "samples": 27
+        },
+        {
+          "name": "fill",
+          "url": "",
+          "samples": 27
+        }
+      ]
+    }
+  ]
+}

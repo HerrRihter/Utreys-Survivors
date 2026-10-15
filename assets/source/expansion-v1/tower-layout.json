@@ -1,0 +1,174 @@
+{
+  "source": "assets\\source\\expansion-v1\\tower.png",
+  "scale": 0.4945226917057903,
+  "metrics": [
+    {
+      "action": "walk",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 260,
+        "height": 321
+      },
+      "width": 129,
+      "height": 159,
+      "left": 64,
+      "top": 77
+    },
+    {
+      "action": "walk",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 263,
+        "height": 318
+      },
+      "width": 130,
+      "height": 157,
+      "left": 63,
+      "top": 79
+    },
+    {
+      "action": "walk",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 262,
+        "height": 322
+      },
+      "width": 130,
+      "height": 159,
+      "left": 63,
+      "top": 77
+    },
+    {
+      "action": "walk",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 252,
+        "height": 318
+      },
+      "width": 125,
+      "height": 157,
+      "left": 66,
+      "top": 79
+    },
+    {
+      "action": "attack",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 266,
+        "height": 317
+      },
+      "width": 132,
+      "height": 157,
+      "left": 62,
+      "top": 79
+    },
+    {
+      "action": "attack",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 277,
+        "height": 319
+      },
+      "width": 137,
+      "height": 158,
+      "left": 63,
+      "top": 78
+    },
+    {
+      "action": "attack",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 310,
+        "height": 317
+      },
+      "width": 153,
+      "height": 157,
+      "left": 63,
+      "top": 79
+    },
+    {
+      "action": "attack",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 261,
+        "height": 316
+      },
+      "width": 129,
+      "height": 156,
+      "left": 64,
+      "top": 80
+    },
+    {
+      "action": "hurt",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 268,
+        "height": 315
+      },
+      "width": 133,
+      "height": 156,
+      "left": 62,
+      "top": 80
+    },
+    {
+      "action": "hurt",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 268,
+        "height": 301
+      },
+      "width": 133,
+      "height": 149,
+      "left": 62,
+      "top": 87
+    },
+    {
+      "action": "hurt",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 270,
+        "height": 317
+      },
+      "width": 134,
+      "height": 157,
+      "left": 61,
+      "top": 79
+    },
+    {
+      "action": "hurt",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 263,
+        "height": 315
+      },
+      "width": 130,
+      "height": 156,
+      "left": 63,
+      "top": 80
+    }
+  ]
+}

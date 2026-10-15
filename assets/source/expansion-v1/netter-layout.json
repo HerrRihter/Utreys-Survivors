@@ -1,0 +1,174 @@
+{
+  "source": "assets\\source\\expansion-v1\\netter.png",
+  "scale": 0.2302439024390244,
+  "metrics": [
+    {
+      "action": "walk",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 258,
+        "height": 313
+      },
+      "width": 59,
+      "height": 72,
+      "left": 101,
+      "top": 164
+    },
+    {
+      "action": "walk",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 243,
+        "height": 303
+      },
+      "width": 56,
+      "height": 70,
+      "left": 105,
+      "top": 166
+    },
+    {
+      "action": "walk",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 270,
+        "height": 291
+      },
+      "width": 62,
+      "height": 67,
+      "left": 100,
+      "top": 169
+    },
+    {
+      "action": "walk",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 264,
+        "height": 291
+      },
+      "width": 61,
+      "height": 67,
+      "left": 100,
+      "top": 169
+    },
+    {
+      "action": "attack",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 233,
+        "height": 306
+      },
+      "width": 54,
+      "height": 70,
+      "left": 100,
+      "top": 166
+    },
+    {
+      "action": "attack",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 280,
+        "height": 323
+      },
+      "width": 64,
+      "height": 74,
+      "left": 93,
+      "top": 162
+    },
+    {
+      "action": "attack",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 635,
+        "height": 272
+      },
+      "width": 146,
+      "height": 63,
+      "left": 100,
+      "top": 173
+    },
+    {
+      "action": "attack",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 234,
+        "height": 304
+      },
+      "width": 54,
+      "height": 70,
+      "left": 101,
+      "top": 166
+    },
+    {
+      "action": "hurt",
+      "frame": 0,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 295,
+        "height": 322
+      },
+      "width": 68,
+      "height": 74,
+      "left": 79,
+      "top": 162
+    },
+    {
+      "action": "hurt",
+      "frame": 1,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 346,
+        "height": 262
+      },
+      "width": 80,
+      "height": 60,
+      "left": 105,
+      "top": 176
+    },
+    {
+      "action": "hurt",
+      "frame": 2,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 379,
+        "height": 230
+      },
+      "width": 87,
+      "height": 53,
+      "left": 88,
+      "top": 183
+    },
+    {
+      "action": "hurt",
+      "frame": 3,
+      "source": {
+        "left": 2,
+        "top": 2,
+        "width": 241,
+        "height": 296
+      },
+      "width": 55,
+      "height": 68,
+      "left": 99,
+      "top": 168
+    }
+  ]
+}

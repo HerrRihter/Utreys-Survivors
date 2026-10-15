@@ -1,0 +1,727 @@
+[
+  {
+    "from": "roman-atlas-v2.png",
+    "to": "assets/runtime/characters/enemies/shared/roman-atlas-v2.png",
+    "sha256": "5daf5230beaad51a2639f836ec0ca2cd2c85c907ed4ffca5028d0f224542d996"
+  },
+  {
+    "from": "heroes-animation.png",
+    "to": "assets/source/atlases/heroes-animation.png",
+    "sha256": "7db9d9814c3d21e644264bb15eadab32f427f194fdbd0a984b0f3e5578d6161f"
+  },
+  {
+    "from": "legion-animation.png",
+    "to": "assets/runtime/characters/enemies/shared/legion-animation.png",
+    "sha256": "795dcbca0c8ee85175e773a8343ad5ee2a5fe5b0bf9d778a1dffe8eafb51b2dd"
+  },
+  {
+    "from": "centurion-animation.png",
+    "to": "assets/runtime/characters/enemies/shared/centurion-animation.png",
+    "sha256": "735348424e162b5fd4d472bf65aea6806335aa02b0851bff3fa8eda7db417c40"
+  },
+  {
+    "from": "legion-hurt.png",
+    "to": "assets/runtime/characters/enemies/shared/legion-hurt.png",
+    "sha256": "d1364866d9a4c793b1010f19cf68026b958a0aa9ebb1d3a5599de452cd18f22c"
+  },
+  {
+    "from": "unit-spear-v1.png",
+    "to": "assets/runtime/characters/enemies/spear/unit-spear-v1.png",
+    "sha256": "d6f98b3d3848d11e6f0b7b9331379c5d173fa640fe34c56fffd4f442f04fab9a"
+  },
+  {
+    "from": "unit-pilum-v1.png",
+    "to": "assets/runtime/characters/enemies/pilum/unit-pilum-v1.png",
+    "sha256": "4d01ae828195f03445aa5ea47744dcacc62162c4a75e22128143f142ac31d016"
+  },
+  {
+    "from": "unit-veteran-v1.png",
+    "to": "assets/runtime/characters/enemies/veteran/unit-veteran-v1.png",
+    "sha256": "8b530654bffcfea5258fac9e886c47c7f61b40eea3c4f56ad230d568cccf62f2"
+  },
+  {
+    "from": "unit-turtle-v1.png",
+    "to": "assets/runtime/characters/enemies/turtle/unit-turtle-v1.png",
+    "sha256": "b2ca9ba4d4c97de3f93733bcb0280eb1a32a9c38d918ae9a60ec60dbecf673a6"
+  },
+  {
+    "from": "unit-ram-v1.png",
+    "to": "assets/runtime/characters/enemies/ram/unit-ram-v1.png",
+    "sha256": "2c977b0a105d7ca8d17ccca39eae9a4a9cb676f9548058ca700180c3061e3746"
+  },
+  {
+    "from": "village-chief.png",
+    "to": "assets/runtime/world/village/village-chief.png",
+    "sha256": "e1dd14a3523e74307699393d64071ddaa7a80a905fc54bc9f69da5e08aca7f94"
+  },
+  {
+    "from": "village-asterix.png",
+    "to": "assets/runtime/world/village/village-asterix.png",
+    "sha256": "3a0a908ad3621c38d1f743c3fa44ba4e866f9b5efe923de6b85206ff75baa2dd"
+  },
+  {
+    "from": "village-obelix.png",
+    "to": "assets/runtime/world/village/village-obelix.png",
+    "sha256": "096c2b380fb2c265dc37610bbfcf9ee4ec600810241aadf090ad6e70b316e369"
+  },
+  {
+    "from": "village-bard.png",
+    "to": "assets/runtime/world/village/village-bard.png",
+    "sha256": "3f2c09dc98889535967da43e267ad222991581c8591f2dab8713974aed7a9e37"
+  },
+  {
+    "from": "village-forge.png",
+    "to": "assets/runtime/world/village/village-forge.png",
+    "sha256": "6895e044ab7b0e47fd84974a7173647f1a44a2a491eb47225d18b1c2b27f7af8"
+  },
+  {
+    "from": "village-fish.png",
+    "to": "assets/runtime/world/village/village-fish.png",
+    "sha256": "b0fe076eb5f7bfb116a8a6cc0eca6096dcfc339fc02b3ced5a24168baefad9b7"
+  },
+  {
+    "from": "village-gate.png",
+    "to": "assets/runtime/world/village/village-gate.png",
+    "sha256": "73c58fa5f2d612ed3face8a66e2bd5165465a043bbe8d35fce735fdd9d69ac6b"
+  },
+  {
+    "from": "village-trees.png",
+    "to": "assets/runtime/world/village/village-trees.png",
+    "sha256": "369cdd91f6633b2fc67b65a22103847ae7d91ee4b20fc41be47bfd96c8833db7"
+  },
+  {
+    "from": "village-fence.png",
+    "to": "assets/runtime/world/village/village-fence.png",
+    "sha256": "4d8987d396a589c98a8d0e024ef9b9cff98a6a014c75e1de18b1aa7974d2a6b3"
+  },
+  {
+    "from": "village-ground-v1.png",
+    "to": "assets/runtime/world/village/village-ground-v1.png",
+    "sha256": "969581107ffe6c6415e268a962f364bc1bf17af015488b87a3b6aa4f0b94f2f6"
+  },
+  {
+    "from": "hero-atlas-v2.png",
+    "to": "assets/source/atlases/hero-atlas-v2.png",
+    "sha256": "04f4821d86c0522a1c6c5694384824dd410a8e8906d83e69fe4666257acf19df"
+  },
+  {
+    "from": "projectiles-v2.png",
+    "to": "assets/runtime/projectiles/projectiles-v2.png",
+    "sha256": "0a586b43fa6433de0da34f3a0d984bce0593f8faff4141b0b7cf26188e197ccd"
+  },
+  {
+    "from": "menhir-flight-v2.png",
+    "to": "assets/runtime/projectiles/menhir-flight-v2.png",
+    "sha256": "fc6d5ca35c8110d6db1e2b6dadd7c7b6e16a9550fa4aebb53dfe2b533b5d9644"
+  },
+  {
+    "from": "roman-helmet-v1.png",
+    "to": "assets/runtime/ui/roman-helmet-v1.png",
+    "sha256": "9e857e3bd520fd8738356579aa6a34e3b4249ee0e0d87972cad96e7052af5b43"
+  },
+  {
+    "from": "hero-antisanitarix-walk-v2.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/hero-antisanitarix-walk-v2.png",
+    "sha256": "93a1295ba95f1e914a44eebe22ef0bee730ad8f93b50166914ccebb6ddb2d9a1"
+  },
+  {
+    "from": "hero-automatix-walk-v2.png",
+    "to": "assets/runtime/characters/heroes/automatix/hero-automatix-walk-v2.png",
+    "sha256": "d121e7b2f6c97eaba65d079ed3ac5d899cdd483028bd5df86ca2e6ffaca38935"
+  },
+  {
+    "from": "hero-panoramix-walk-v2.png",
+    "to": "assets/runtime/characters/heroes/panoramix/hero-panoramix-walk-v2.png",
+    "sha256": "0ad435f2f0cc076ce0751f590ef4f276109bc279061ff9655b476a14fa76aef2"
+  },
+  {
+    "from": "hero-frames/cacofonix-0.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-0.png",
+    "sha256": "9913244dd0cbbc0208d317ffe28a4d1bfe01b0d05ee89b4fce2153e7af57418b"
+  },
+  {
+    "from": "hero-frames/cacofonix-1.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-1.png",
+    "sha256": "27127a53c1a9213cdc473d2ec2354c71d532cafc9772c175f851d06ceaf9886e"
+  },
+  {
+    "from": "hero-frames/cacofonix-2.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-2.png",
+    "sha256": "96432cd34f5b71ae947de50e0bd00fc0b423b9ead24a01558119e6af9acb0cfc"
+  },
+  {
+    "from": "hero-frames/cacofonix-3.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-3.png",
+    "sha256": "defaaee42c0d0e8798092257effbd7310b52ab899767efae23c7496d088270bf"
+  },
+  {
+    "from": "hero-frames/cacofonix-4.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-4.png",
+    "sha256": "e57f234dcc1493adf845adc5ca3ec6e11282d4ffd7d2e5855503cc8c81b4db45"
+  },
+  {
+    "from": "hero-frames/cacofonix-5.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-5.png",
+    "sha256": "6687597f96a02b5a9d1506b29c5bcac04d695238564b16bb95f9b2e53be55f4a"
+  },
+  {
+    "from": "hero-frames/cacofonix-6.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-6.png",
+    "sha256": "4f1899ece8da2c4a6d0cc587c75da9c853eee827fd34aceb0f21cf80bf600458"
+  },
+  {
+    "from": "hero-frames/cacofonix-7.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-7.png",
+    "sha256": "39774514d9201638a603cafaa3936d6acbc387e242e9301d422aa8a3ede1d111"
+  },
+  {
+    "from": "hero-frames/cacofonix-8.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-8.png",
+    "sha256": "2f2646c804b047a112aa38d674d7774d4295ea6f99da14f2dc2fc478fb9a8f41"
+  },
+  {
+    "from": "hero-frames/cacofonix-9.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-9.png",
+    "sha256": "5a64289544fa54bba75ac8c35e28f8eb6607ff5a5b84c14dcccc811f4255c007"
+  },
+  {
+    "from": "hero-frames/cacofonix-10.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-10.png",
+    "sha256": "359c3f70bc027592336ac0541d44135f80e5c640af5f88d208cfd6a451f0172b"
+  },
+  {
+    "from": "hero-frames/cacofonix-11.png",
+    "to": "assets/runtime/characters/heroes/cacofonix/animations/cacofonix-11.png",
+    "sha256": "14011ad83488f18c31002892c56ff1b132843ee496c22cc0c416055157735e19"
+  },
+  {
+    "from": "hero-frames/antisanitarix-0.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-0.png",
+    "sha256": "285ae3b5066f46a196bd49e4a247730bc78d71b8fd3c6bb18eef42aa2c7fcf78"
+  },
+  {
+    "from": "hero-frames/antisanitarix-1.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-1.png",
+    "sha256": "27f5baef42ca8375fc0dc880bc238caaffed578ae0977039e24879c5e0b9c85e"
+  },
+  {
+    "from": "hero-frames/antisanitarix-2.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-2.png",
+    "sha256": "b43a32a76131826834a716f1ddbe3a9f4dd83092a2302924edf6b1ef33962ac6"
+  },
+  {
+    "from": "hero-frames/antisanitarix-3.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-3.png",
+    "sha256": "454105604b7ed201ea3e7c0895d636a547829cc9eabe8a2337e33f711e9a966b"
+  },
+  {
+    "from": "hero-frames/antisanitarix-4.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-4.png",
+    "sha256": "74c3e87d2e0fd3d90efc1495ab430569124c512582ba3d465eb7bde12c51c869"
+  },
+  {
+    "from": "hero-frames/antisanitarix-5.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-5.png",
+    "sha256": "cbe500d818da2659c36f0e4174a6ab94c6999e196064d0c8925f5b81ca17e8f7"
+  },
+  {
+    "from": "hero-frames/antisanitarix-6.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-6.png",
+    "sha256": "3d276db2f3fe5513065d1d417a92ae4f86df24f0d0f3c90e112e50a9ce3f1942"
+  },
+  {
+    "from": "hero-frames/antisanitarix-7.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-7.png",
+    "sha256": "b01e9d3018c9f5f84595fcf15ebfa74f3105212983e7c0325aa67c7aed93b519"
+  },
+  {
+    "from": "hero-frames/antisanitarix-8.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-8.png",
+    "sha256": "c48a94caf97dfcde7af0d9a619da11f91be323dd259a72b5983499034cf2a63c"
+  },
+  {
+    "from": "hero-frames/antisanitarix-9.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-9.png",
+    "sha256": "471afb97814b3832d6f6da1e0f52634abb556e952a3c99ab2f025f9edfbcd092"
+  },
+  {
+    "from": "hero-frames/antisanitarix-10.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-10.png",
+    "sha256": "a235f047bbe374ccc783322c140d00475af897c3b65cbe7373069664a88c5e16"
+  },
+  {
+    "from": "hero-frames/antisanitarix-11.png",
+    "to": "assets/runtime/characters/heroes/antisanitarix/animations/antisanitarix-11.png",
+    "sha256": "5fe73234c683c149a22dcfe8c4df9faa795d1f66132401615ee813a9759cf461"
+  },
+  {
+    "from": "hero-frames/automatix-0.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-0.png",
+    "sha256": "ed76d70d2c25b6c231525badf2bc18ea67c5a829b31bbd70d6610b7373fd1de0"
+  },
+  {
+    "from": "hero-frames/automatix-1.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-1.png",
+    "sha256": "db9b2f23f84349a1e1246a78b8cee5cae3401a96904a42da87ecae1a17143bf2"
+  },
+  {
+    "from": "hero-frames/automatix-2.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-2.png",
+    "sha256": "0b638a8cae8b7b3a877f8e4c548c29d444dc022bd4d698c5468d030ea1b59ae6"
+  },
+  {
+    "from": "hero-frames/automatix-3.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-3.png",
+    "sha256": "dbf9732b58bb95c5bc45185c25e8b874fef3f7d128f99918d349fa59a7f6c6fe"
+  },
+  {
+    "from": "hero-frames/automatix-4.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-4.png",
+    "sha256": "e152343ff31d1ccfc5407553403e3152939f73198606fef0c42a344bd9451f1e"
+  },
+  {
+    "from": "hero-frames/automatix-5.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-5.png",
+    "sha256": "e1be0327a9bbf3b088b06cc0db11a84fba7ca0509a66d8d63414d29eec8a4fd9"
+  },
+  {
+    "from": "hero-frames/automatix-6.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-6.png",
+    "sha256": "307dc4007a28478087386d383bbc757b8ea0bb97886d5a57fb21080676892da2"
+  },
+  {
+    "from": "hero-frames/automatix-7.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-7.png",
+    "sha256": "eb7351bf5d3cab573baa64b4c69f8bf0c5b40db5768b2e1d4d740179cf2f29be"
+  },
+  {
+    "from": "hero-frames/automatix-8.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-8.png",
+    "sha256": "dddd30e388bc24d955ca1146becf45b6cef29b4ce3b177f50677fe7ad63bf8c1"
+  },
+  {
+    "from": "hero-frames/automatix-9.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-9.png",
+    "sha256": "005197a00a6340f1af9b2191462e1a0c689ca5f9c6f6d155311cfb76b1d776fb"
+  },
+  {
+    "from": "hero-frames/automatix-10.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-10.png",
+    "sha256": "1eccc2eb5282b513046591e24091901a90c4a32d7252155f0ec572305b247c2c"
+  },
+  {
+    "from": "hero-frames/automatix-11.png",
+    "to": "assets/runtime/characters/heroes/automatix/animations/automatix-11.png",
+    "sha256": "8d4bff3d8449701d97e98145807a39d3c5c8c25d232decc1207bfb81b334e962"
+  },
+  {
+    "from": "hero-frames/panoramix-0.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-0.png",
+    "sha256": "e018aa3426320729f4bca76c55ae8c1b839c0a07807ea26c0dfd88864eca2a7e"
+  },
+  {
+    "from": "hero-frames/panoramix-1.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-1.png",
+    "sha256": "9109152870d612a27d8c17121ba6f51bb53754b3379ab566d5978287959ea9eb"
+  },
+  {
+    "from": "hero-frames/panoramix-2.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-2.png",
+    "sha256": "3a1e59a47a58a5431b21035d6e5468c287052f9c558262ad9cf5de025b3cb78e"
+  },
+  {
+    "from": "hero-frames/panoramix-3.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-3.png",
+    "sha256": "9fba042c94e0f1ac3f462b2226c2abc55a47b9bdf6cdc56ca64018495f860d86"
+  },
+  {
+    "from": "hero-frames/panoramix-4.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-4.png",
+    "sha256": "66667abc38fc02b3ca6b588df1879635235cfe5757b47f70964c83f2aac8007b"
+  },
+  {
+    "from": "hero-frames/panoramix-5.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-5.png",
+    "sha256": "792ca9597f342d166ece20d77a29e0ab0687de9ef1b91a9734f4a2e2e4f908cd"
+  },
+  {
+    "from": "hero-frames/panoramix-6.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-6.png",
+    "sha256": "56bb14cf67f679202e89d4127758a25f6a72d74fcb083b21bb3431f5c8b4cfd6"
+  },
+  {
+    "from": "hero-frames/panoramix-7.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-7.png",
+    "sha256": "1992d0933583aede8f6cf654580dc031ad6d178125963de09af389a07ffd766f"
+  },
+  {
+    "from": "hero-frames/panoramix-8.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-8.png",
+    "sha256": "6e70a8dc5954fdf500500db91d15b45130f59b84d56e57a548e3831a03911f92"
+  },
+  {
+    "from": "hero-frames/panoramix-9.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-9.png",
+    "sha256": "ad71ab61adc51288d2c14c5f7e9df0b535b47c30e131b41d94a59ba44230d78d"
+  },
+  {
+    "from": "hero-frames/panoramix-10.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-10.png",
+    "sha256": "d9a854349af125129c908b238609ee90315ca273c6e4c387cde5f840da437ade"
+  },
+  {
+    "from": "hero-frames/panoramix-11.png",
+    "to": "assets/runtime/characters/heroes/panoramix/animations/panoramix-11.png",
+    "sha256": "b879759604fc2f49dad0c4683b5c726cc1a27619f2f931e7a15211f8c26aa630"
+  },
+  {
+    "from": "animation-audit.html",
+    "to": "previews/animation-audit.html",
+    "sha256": "4b3fd75fd0f5ba692d225cd18a44fdaf9e912e1783a77721586e141b3deda1bf"
+  },
+  {
+    "from": "animation-bounds.json",
+    "to": "assets/source/metadata/animation-bounds.json",
+    "sha256": "e0ce29bcc7fb3d90649fd462241fe47637f3aeb34a229b2b6109c2fcfb21a668"
+  },
+  {
+    "from": "animation-preview.html",
+    "to": "previews/animation-preview.html",
+    "sha256": "028e8ddbc5eec4b19005fb6456ef36b25f62116cbfc1e0290ee58f66cae3a2fa"
+  },
+  {
+    "from": "animation-preview.jpg",
+    "to": "assets/source/references/animation-preview.jpg",
+    "sha256": "97031fbff3fa71e184a855e79522827ee069e3717f30a3d79bbea588fbc307a3"
+  },
+  {
+    "from": "animation-reference.jpg",
+    "to": "assets/source/references/animation-reference.jpg",
+    "sha256": "774351959f6986f666263a509f186862157b4a9b0594ac461adcdf8a65b678b4"
+  },
+  {
+    "from": "art-preview.html",
+    "to": "previews/art-preview.html",
+    "sha256": "760c4ed518327e123230b4e8fecf61248a5934ac74ead432a86d64bb2f2c5a32"
+  },
+  {
+    "from": "atlas-dimensions.json",
+    "to": "assets/source/metadata/atlas-dimensions.json",
+    "sha256": "9ca0b008e3805f330fa0b784e45d48d7405ea99a858e22453bc96d5435154018"
+  },
+  {
+    "from": "corpses-preview.jpg",
+    "to": "assets/source/references/corpses-preview.jpg",
+    "sha256": "10f4fa82a85b62cefba7cd443129a56bdbe7a38c22ba60786771f3ff08ad17cd"
+  },
+  {
+    "from": "directional-attacks.png",
+    "to": "assets/source/atlases/directional-attacks.png",
+    "sha256": "6d14bb5312e661a74945ba4c64d0e6f0be599fb63020a992095a697b9efcce21"
+  },
+  {
+    "from": "helmet-shop.png",
+    "to": "assets/source/references/helmet-shop.png",
+    "sha256": "36dd0aec17218bdde2fe944e6fdacb4e92848af54382c150e55aee90a593ec96"
+  },
+  {
+    "from": "hero-antisanitarix-v1.png",
+    "to": "assets/source/atlases/hero-antisanitarix-v1.png",
+    "sha256": "a3d51252c5bce489dbc2a281dad864d79f17abbdd0d4e2892ef7c41e2c02d231"
+  },
+  {
+    "from": "hero-automatix-v1.png",
+    "to": "assets/source/atlases/hero-automatix-v1.png",
+    "sha256": "b9db93a7c582fb8067b9be12f6ef6d6105823e7226c8c42a9d61b7a72f8258d7"
+  },
+  {
+    "from": "hero-cacofonix-v1.png",
+    "to": "assets/source/atlases/hero-cacofonix-v1.png",
+    "sha256": "6eadeedcab6bbe3211adbe46727476bef3459af67dbc4525e900203c584c7871"
+  },
+  {
+    "from": "hero-dimensions.json",
+    "to": "assets/source/metadata/hero-dimensions.json",
+    "sha256": "9d348636f7ca3ee89ce606cc5d05150d9065fbf3aead0b8b823a3abe65aa6bea"
+  },
+  {
+    "from": "hero-frame-exports.json",
+    "to": "assets/source/metadata/hero-frame-exports.json",
+    "sha256": "593f92918ed6ea18a88bf0d6c4544dc33c03ca4fd622958a18b0c8114a9536e3"
+  },
+  {
+    "from": "hero-panoramix-v1.png",
+    "to": "assets/source/atlases/hero-panoramix-v1.png",
+    "sha256": "dc97253bdb7bf6a6cf2389205400f09fba28d9b0f2ceac67acd6ccecfe2cdb9c"
+  },
+  {
+    "from": "hero-preview.html",
+    "to": "previews/hero-preview.html",
+    "sha256": "b5513386c93a13eab247d1ed614040cc27f79bb4fcbe3d15903525e985272c1f"
+  },
+  {
+    "from": "heroes-preview.jpg",
+    "to": "assets/source/references/heroes-preview.jpg",
+    "sha256": "3b29593690f000d87bb09638bfbe77b0439d623ca155cc3563ad8e869dc59ac0"
+  },
+  {
+    "from": "heroes-reference.jpg",
+    "to": "assets/source/references/heroes-reference.jpg",
+    "sha256": "cdf972aed2d8374ea0cddcf7c008ea673a939f65fcee7b34f2262f1ddbce0798"
+  },
+  {
+    "from": "hurt-dimensions.json",
+    "to": "assets/source/metadata/hurt-dimensions.json",
+    "sha256": "b4ca5975bdbe97635f60647c427fd107e6bb160718b4265bdb374db967feadbc"
+  },
+  {
+    "from": "hurt-menhir-preview.jpg",
+    "to": "assets/source/references/hurt-menhir-preview.jpg",
+    "sha256": "455f7ff6eca18ad4c7e8a514d0ca7f38267bf1d136d9b4a07e045502f398b3f5"
+  },
+  {
+    "from": "menhir-dimensions.json",
+    "to": "assets/source/metadata/menhir-dimensions.json",
+    "sha256": "875d4f73fc3d55f2c7eb6f36ab3c284dff16174b40593266552c4f9c9f336fc6"
+  },
+  {
+    "from": "menhir-flight.png",
+    "to": "assets/source/atlases/menhir-flight.png",
+    "sha256": "66fbbfeefa7f2a936514defeac8545a1740c32d5ca0523bb4fcb08f34da13048"
+  },
+  {
+    "from": "menhir-match-preview.jpg",
+    "to": "assets/source/references/menhir-match-preview.jpg",
+    "sha256": "506acf19d5565908adbe9e9807a6fa2dc3972339a452bf7acac5801418e14806"
+  },
+  {
+    "from": "menhir-match-prompt.txt",
+    "to": "assets/source/prompts/menhir-match-prompt.txt",
+    "sha256": "86959503844ce816dc45ce6fc3f39750ddf390e6b5088dc6eca0d06fa0ae3f17"
+  },
+  {
+    "from": "menu-restored.png",
+    "to": "assets/source/references/menu-restored.png",
+    "sha256": "852b2e656b707f9b71e059393a60aaa5f067763740f7a63237455e8fc5335df1"
+  },
+  {
+    "from": "motion-v2-layout.json",
+    "to": "assets/source/metadata/motion-v2-layout.json",
+    "sha256": "c8608310ba867a3a74922379889741a46d2a53f039432cf097a90a328956b3ee"
+  },
+  {
+    "from": "motion-v2-prompts.json",
+    "to": "assets/source/prompts/motion-v2-prompts.json",
+    "sha256": "ab388cf5c0c0bd2330705dc16a615e93ec60aae5b7e154540e8a1f22f967d21a"
+  },
+  {
+    "from": "motion-v2-result.png",
+    "to": "assets/source/references/motion-v2-result.png",
+    "sha256": "4dfe07405bb77ab2a468ff3fb1af45d19bf64aae321de2dc4725e5202808c970"
+  },
+  {
+    "from": "new-heroes-animation-prompts.json",
+    "to": "assets/source/prompts/new-heroes-animation-prompts.json",
+    "sha256": "e15f036e43e2d5b2da39af7e9d9d369917ba04668be483c4db3371bbb20cf627"
+  },
+  {
+    "from": "new-heroes-animation-result.png",
+    "to": "assets/source/references/new-heroes-animation-result.png",
+    "sha256": "b28654511585ffaf8589049abf4799f3534e55255d588bc2ae3bba0baca9a716"
+  },
+  {
+    "from": "new-heroes-prompts.json",
+    "to": "assets/source/prompts/new-heroes-prompts.json",
+    "sha256": "00fee815ee02bc663de2cd595fd7e54419855b84b5baab9eb39556a62d296e2a"
+  },
+  {
+    "from": "new-legion-art-preview.jpg",
+    "to": "assets/source/references/new-legion-art-preview.jpg",
+    "sha256": "995d8adaf99918cf399298d51112cfcf78feba45a091120f50f72358a19e03d9"
+  },
+  {
+    "from": "preview.jpg",
+    "to": "assets/source/references/preview.jpg",
+    "sha256": "3a332d0effcf9e4e4c304617e052721d7348fcadc9e423e6eef30a665dbe3b68"
+  },
+  {
+    "from": "roman-faces-preview.jpg",
+    "to": "assets/source/references/roman-faces-preview.jpg",
+    "sha256": "772f3e8412bc438e99884ad8d6494b35ec0ac675f2ba34d3467271d039a39129"
+  },
+  {
+    "from": "roman-preview.jpg",
+    "to": "assets/source/references/roman-preview.jpg",
+    "sha256": "416cf6380c1ce49852896d3d9d978b8e2c449e4f1d6cf6f749e4f80c033acbb3"
+  },
+  {
+    "from": "roman-reference-preview.jpg",
+    "to": "assets/source/references/roman-reference-preview.jpg",
+    "sha256": "508003fa9a9b6f194c0255b6d18e6cd2e02c6b8b4894da81ad2751ab6e8a8e74"
+  },
+  {
+    "from": "run-selection-result.png",
+    "to": "assets/source/references/run-selection-result.png",
+    "sha256": "853eb7d1e9803aca45723c9ea3b713c734531ad30aac546eea4fd32d6a6792d6"
+  },
+  {
+    "from": "shop-open-fixed.png",
+    "to": "assets/source/references/shop-open-fixed.png",
+    "sha256": "b9ff270a4fcf450a4b2734a70cc77741d6831937815119020a67d1bc60c983be"
+  },
+  {
+    "from": "test-animation.cjs",
+    "to": "tests/test-animation.cjs",
+    "sha256": "08d434b993ce2e1ea602b78c7757f2db78acdf443d1d04d633732417e2c80546"
+  },
+  {
+    "from": "test-menu-portraits.cjs",
+    "to": "tests/test-menu-portraits.cjs",
+    "sha256": "94fde343d2f690d23b05e0697942be737a524d6caed9d0ab38146b644dc4cf58"
+  },
+  {
+    "from": "test-progression.cjs",
+    "to": "tests/test-progression.cjs",
+    "sha256": "82bc7c30e0b4ce619b374919c718971a64a717ea6b06c45c9b7b5612f9e03df8"
+  },
+  {
+    "from": "test-projectile-art.cjs",
+    "to": "tests/test-projectile-art.cjs",
+    "sha256": "65c054644b33a16c4e34c6ebb570f5406022a764502169dcd3337ed2553ab25b"
+  },
+  {
+    "from": "test-site.cjs",
+    "to": "tests/test-site.cjs",
+    "sha256": "960cb88b6d9fd396b4b88582b647816375a23b9d540be16b7ddc41ee89c97a2a"
+  },
+  {
+    "from": "test-unit-art.cjs",
+    "to": "tests/test-unit-art.cjs",
+    "sha256": "8244646962ef8e328156b8ab2aac5ac6788e46bda58c82dcc3380da2a95e17a0"
+  },
+  {
+    "from": "test-upgrades.cjs",
+    "to": "tests/test-upgrades.cjs",
+    "sha256": "7962a7ff153821c58dbd00b0677668d4d0054901906807f060a3a1dbef3e7b0a"
+  },
+  {
+    "from": "test-village-collision.cjs",
+    "to": "tests/test-village-collision.cjs",
+    "sha256": "58ed9f69f20ae6065ba10dd114f6200400a2c180dc771724ba2efe084d6c1262"
+  },
+  {
+    "from": "test-villager-art.cjs",
+    "to": "tests/test-villager-art.cjs",
+    "sha256": "357c05c2114957fd96bfe157e390afca0d90bfb49389a38618cfe6e4151f15b2"
+  },
+  {
+    "from": "test.cjs",
+    "to": "tests/test.cjs",
+    "sha256": "468ce3bfc678593272c161ade17a18160191a85be6d9429e2aa211560faf9eaf"
+  },
+  {
+    "from": "ui-clean-menu.png",
+    "to": "assets/source/references/ui-clean-menu.png",
+    "sha256": "26bd93743120e24acf0497cc8cbb63a39c8901b6486a20bce53e4c132517a7f7"
+  },
+  {
+    "from": "ui-clean-shop.png",
+    "to": "assets/source/references/ui-clean-shop.png",
+    "sha256": "45339e6b2372a3852b7980823a6c492683a539572ad2c3e9c34b701841afe2d3"
+  },
+  {
+    "from": "unit-art-prompts.json",
+    "to": "assets/source/prompts/unit-art-prompts.json",
+    "sha256": "a3c5cf3e0f568d99ca726a4989f0afb75c8ac9dbb5705c05ae12fbb1b40c0f02"
+  },
+  {
+    "from": "unit-components.json",
+    "to": "assets/source/metadata/unit-components.json",
+    "sha256": "62a8bdc807afef5b67983920875de7910adf937f5b3ab41d807be33a5765043c"
+  },
+  {
+    "from": "unit-dimensions.json",
+    "to": "assets/source/metadata/unit-dimensions.json",
+    "sha256": "b57d12c7a8e01f42d400727220c3c2531a300d045aa5bed055fb2e0db54b04de"
+  },
+  {
+    "from": "upgrades-result.png",
+    "to": "assets/source/references/upgrades-result.png",
+    "sha256": "80b61008f0ad84a14849349c0f8c5212e716fcc1a14cc072cae12323bbdbcdf7"
+  },
+  {
+    "from": "village-art-prompts.json",
+    "to": "assets/source/prompts/village-art-prompts.json",
+    "sha256": "21e1891b5ea8123e367dc6896e254ac8eb93f7db7e1beb9a17db3e8c74bc1b44"
+  },
+  {
+    "from": "village-buildings-v1.png",
+    "to": "assets/source/atlases/village-buildings-v1.png",
+    "sha256": "572bb626d63f274de8f784c8f6ebe682b1e6b8c545a617d7fae4c8a80356fdff"
+  },
+  {
+    "from": "village-collision-audit.png",
+    "to": "assets/source/atlases/village-collision-audit.png",
+    "sha256": "19dd93ebd28bbbdd76d9c5f0ac648dd95ae61e87b116252513ba21163e00e566"
+  },
+  {
+    "from": "village-crops.json",
+    "to": "assets/source/metadata/village-crops.json",
+    "sha256": "c2802f7ad7d66815939dc5908ee5b45d4e2ffc5f52464b1f5417de8ce4b39951"
+  },
+  {
+    "from": "village-legion-preview.jpg",
+    "to": "assets/source/references/village-legion-preview.jpg",
+    "sha256": "34f7007c873c51ffdbebb4d0d09bee189c45726b4220373e96e3f589f39b08d0"
+  },
+  {
+    "from": "village-preview-result.png",
+    "to": "assets/source/references/village-preview-result.png",
+    "sha256": "67f8c96ba292f95a1f78a61a7085d4d298beb527f68e896092ee2c644abfa81f"
+  },
+  {
+    "from": "village-props-v1.png",
+    "to": "assets/source/atlases/village-props-v1.png",
+    "sha256": "47aec38a4cf60d5909e2e08b0d6b5ff2552089cd873b035d247039a2dfd580d5"
+  },
+  {
+    "from": "references/village-bard-1976.jpg",
+    "to": "assets/source/references/village-bard-1976.jpg",
+    "sha256": "544752ed433641451f552752a339a0a5f220472733dd2319b1966dcb5d47097a"
+  },
+  {
+    "from": "references/village-chief-1976.jpg",
+    "to": "assets/source/references/village-chief-1976.jpg",
+    "sha256": "1081f4c5da10e019297ed1639beac92165adc4d842873f45f07b17e577079be1"
+  },
+  {
+    "from": "references/village-street-1976.jpg",
+    "to": "assets/source/references/village-street-1976.jpg",
+    "sha256": "61e7ffe1d26aa6b7951e8501d979ba8d1d598258e627c265c9af889b35bb06de"
+  },
+  {
+    "from": "ART-SOURCES.md",
+    "to": "docs/ART-SOURCES.md",
+    "sha256": "5d91798f578f53aa7a0336a7b88124831716a66b9e231f11a583b2d24cc2e536"
+  },
+  {
+    "from": "PROJECT-STRUCTURE-AUDIT.md",
+    "to": "docs/PROJECT-STRUCTURE-AUDIT.md",
+    "sha256": "94155cf14da4b750cea93f0e7bf6851003c739bc323adb8cddaffade148eab96"
+  },
+  {
+    "from": "IMPLEMENTATION-PLAN.md",
+    "to": "docs/IMPLEMENTATION-PLAN.md",
+    "sha256": "d965f3b224c9857c7c1c6b3fe2bd0f2e4710d9809a477380deab53b1da7ce646"
+  },
+  {
+    "from": "build-site.cjs",
+    "to": "tools/build-site.cjs",
+    "sha256": "2abac318df08d50a28bae7acd0b77ae23e327e9c6bdb3b2f20618db8dce9c099"
+  },
+  {
+    "from": "server.cjs",
+    "to": "tools/server.cjs",
+    "sha256": "d877201fc3bc316557c941cb8c3787ede67cc1ef935b6c27097d4257d965ee0f"
+  }
+]

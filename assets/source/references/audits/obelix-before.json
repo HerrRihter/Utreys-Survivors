@@ -1,0 +1,85 @@
+{
+  "bounds": [
+    {
+      "action": "walk",
+      "index": 0,
+      "top": 146,
+      "bottom": 235,
+      "left": 88,
+      "right": 167,
+      "height": 90,
+      "width": 80
+    },
+    {
+      "action": "walk",
+      "index": 1,
+      "top": 146,
+      "bottom": 235,
+      "left": 91,
+      "right": 164,
+      "height": 90,
+      "width": 74
+    },
+    {
+      "action": "walk",
+      "index": 2,
+      "top": 147,
+      "bottom": 235,
+      "left": 87,
+      "right": 168,
+      "height": 89,
+      "width": 82
+    },
+    {
+      "action": "walk",
+      "index": 3,
+      "top": 146,
+      "bottom": 235,
+      "left": 89,
+      "right": 166,
+      "height": 90,
+      "width": 78
+    },
+    {
+      "action": "attack",
+      "index": 0,
+      "top": 167,
+      "bottom": 235,
+      "left": 94,
+      "right": 175,
+      "height": 69,
+      "width": 82
+    },
+    {
+      "action": "attack",
+      "index": 1,
+      "top": 147,
+      "bottom": 235,
+      "left": 82,
+      "right": 170,
+      "height": 89,
+      "width": 89
+    },
+    {
+      "action": "attack",
+      "index": 2,
+      "top": 158,
+      "bottom": 235,
+      "left": 79,
+      "right": 182,
+      "height": 78,
+      "width": 104
+    },
+    {
+      "action": "attack",
+      "index": 3,
+      "top": 159,
+      "bottom": 235,
+      "left": 102,
+      "right": 164,
+      "height": 77,
+      "width": 63
+    }
+  ],
+  "errors": []
+}

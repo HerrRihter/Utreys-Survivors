@@ -1,0 +1,344 @@
+[
+  {
+    "name": "Scheduler::RunTask",
+    "ms": 1718.761,
+    "ts": 9727580506,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "GpuChannel::ExecuteDeferredRequest",
+    "ms": 1718.757,
+    "ts": 9727580509,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "RendererMainThread",
+    "ms": 1718.739,
+    "ts": 9727580522,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "CommandBuffer::Flush",
+    "ms": 1718.736,
+    "ts": 9727580524,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "CommandBufferStub::OnAsyncFlush",
+    "ms": 1718.735,
+    "ts": 9727580525,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "put_offset": 26403
+    }
+  },
+  {
+    "name": "CommandBufferService:PutChanged",
+    "ms": 1718.727,
+    "ts": 9727580530,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "handler": ".RendererMainThread-0x305400aa2100",
+      "put_offset": 26403
+    }
+  },
+  {
+    "name": "RasterDecoderImpl::DoRasterCHROMIUM",
+    "ms": 1525.257,
+    "ts": 9727580571,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "raster_id": 4
+    }
+  },
+  {
+    "name": "RasterDecoderImpl::DoRasterCHROMIUM::Deserializing",
+    "ms": 1525.239,
+    "ts": 9727580573,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "RasterDecoderImpl::DoEndRasterCHROMIUM",
+    "ms": 193.406,
+    "ts": 9729105830,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "RasterDecoderImpl::DoEndRasterCHROMIUM::Flush",
+    "ms": 192.282,
+    "ts": 9729105831,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "ProxyMain::BeginMainFrame",
+    "ms": 55.728,
+    "ts": 9727549538,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "begin_frame_id": 53,
+      "main_frame_pipeline": {
+        "main_frame_id": 14221861467632636000,
+        "step": "BEGIN_MAIN_FRAME"
+      }
+    }
+  },
+  {
+    "name": "WebFrameWidgetImpl::BeginMainFrame",
+    "ms": 32.85,
+    "ts": 9727549560,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "frameTime": 9727513235
+    }
+  },
+  {
+    "name": "Blink.Animate.UpdateTime",
+    "ms": 32.649,
+    "ts": 9727549761,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "preFCP": false
+    }
+  },
+  {
+    "name": "PageAnimator::serviceScriptedAnimations",
+    "ms": 32.644,
+    "ts": 9727549764,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {}
+  },
+  {
+    "name": "FrameRequestCallbackCollection::ExecuteFrameCallbacks",
+    "ms": 32.612,
+    "ts": 9727549785,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {}
+  },
+  {
+    "name": "FireAnimationFrame",
+    "ms": 32.607,
+    "ts": 9727549789,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "data": {
+        "frame": "40D6C25E2B88F34128BF054719C7920A",
+        "id": 24
+      }
+    }
+  },
+  {
+    "name": "AsyncTask Run",
+    "ms": 32.6,
+    "ts": 9727549795,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {}
+  },
+  {
+    "name": "v8.callFunction",
+    "ms": 32.588,
+    "ts": 9727549801,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {}
+  },
+  {
+    "name": "FunctionCall",
+    "ms": 32.585,
+    "ts": 9727549803,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "data": {
+        "columnNumber": 15,
+        "frame": "40D6C25E2B88F34128BF054719C7920A",
+        "functionName": "frame",
+        "isolate": "4337106802526814920",
+        "lineNumber": 4,
+        "sampleTraceId": 8501043651349958,
+        "scriptId": "33",
+        "url": "http://127.0.0.1:53130/src/core/game-loop.js"
+      }
+    }
+  },
+  {
+    "name": "Scheduler::RunTask",
+    "ms": 24.919,
+    "ts": 9730563040,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "DXGISwapChainImageBacking::Present",
+    "ms": 24.735,
+    "ts": 9730563151,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "dirty_rect": "4,80 1896x988",
+      "has_alpha": false
+    }
+  },
+  {
+    "name": "LayerTreeHost::DoUpdateLayers",
+    "ms": 22.372,
+    "ts": 9727582824,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "source_frame_number": 20
+    }
+  },
+  {
+    "name": "RasterImplementation::RasterCHROMIUM",
+    "ms": 21.975,
+    "ts": 9727582995,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "raster_chromium_id": 5
+    }
+  },
+  {
+    "name": "Scheduler::RunTask",
+    "ms": 12.556,
+    "ts": 9730599408,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "DXGISwapChainImageBacking::Present",
+    "ms": 12.396,
+    "ts": 9730599511,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "dirty_rect": "4,80 1896x988",
+      "has_alpha": false
+    }
+  },
+  {
+    "name": "MajorGC",
+    "ms": 9.828,
+    "ts": 9727606478,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "type": "finalize incremental marking via task",
+      "usedHeapSizeAfter": 3804444,
+      "usedHeapSizeBefore": 8818600
+    }
+  },
+  {
+    "name": "V8.GCFinalizeMC",
+    "ms": 9.792,
+    "ts": 9727606483,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {}
+  },
+  {
+    "name": "V8.GC_MARK_COMPACTOR",
+    "ms": 9.781,
+    "ts": 9727606488,
+    "pid": 25596,
+    "tid": 9708,
+    "args": {
+      "epoch": 22
+    }
+  },
+  {
+    "name": "Scheduler::RunTask",
+    "ms": 9.301,
+    "ts": 9729302063,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "GpuChannel::ExecuteDeferredRequest",
+    "ms": 9.297,
+    "ts": 9729302064,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "BrowserRasterWorker",
+    "ms": 9.294,
+    "ts": 9729302065,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "CommandBuffer::Flush",
+    "ms": 9.293,
+    "ts": 9729302066,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "CommandBufferStub::OnAsyncFlush",
+    "ms": 9.292,
+    "ts": 9729302067,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "put_offset": 724
+    }
+  },
+  {
+    "name": "CommandBufferService:PutChanged",
+    "ms": 9.288,
+    "ts": 9729302068,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {
+      "handler": ".BrowserRasterWorker-0x152402325a00",
+      "put_offset": 724
+    }
+  },
+  {
+    "name": "RasterDecoderImpl::DoEndRasterCHROMIUM",
+    "ms": 8.653,
+    "ts": 9729302695,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  },
+  {
+    "name": "RasterDecoderImpl::DoEndRasterCHROMIUM::Flush",
+    "ms": 8.647,
+    "ts": 9729302696,
+    "pid": 25080,
+    "tid": 2052,
+    "args": {}
+  }
+]

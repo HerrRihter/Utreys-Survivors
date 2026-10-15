@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Пустая арена · Utreys Survivors</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#18251e;color:#f2ead0;font:15px/1.6 Georgia,serif}
+main{max-width:1220px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:20px}
+h1{margin:0;font-size:32px}
+a{color:#f6cb72}
+p{color:#bcc5af;max-width:880px}
+canvas{display:block;width:100%;border:1px solid #67784c;background:#89954e}
+nav{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}
+button{font:inherit;color:#f2ead0;background:#304332;border:1px solid #67784c;padding:6px 14px;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Пустая арена</h1><a href="index.html">Играть →</a></header>
+  <p>Ровная открытая площадка без декораций и препятствий. Здесь можно проверить передвижение и границы игрового мира.</p>
+  <nav><label>Арена <select id="arena"></select></label><button id="overview">Вся арена</button><button id="square">Центр</button><label><input id="labels" type="checkbox" checked> Названия</label><label><input id="bounds" type="checkbox"> Границы объектов</label></nav>
+  <canvas id="map" width="1320" height="1000" aria-label="План пустой арены"></canvas>
+</main>
+<script data-entry="src/pages/village-preview.js" data-file-bundle="runtime/src/pages/village-preview.js">
+(function(){
+  const launcher = document.currentScript;
+  const script = document.createElement('script');
+  const localFile = location.protocol === 'file:';
+  if (!localFile) script.type = 'module';
+  script.src = localFile ? launcher.dataset.fileBundle : launcher.dataset.entry;
+  document.body.appendChild(script);
+})();
+</script>
+</body>
+</html>

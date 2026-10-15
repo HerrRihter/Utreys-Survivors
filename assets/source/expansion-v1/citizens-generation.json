@@ -1,0 +1,17 @@
+{
+  "tool": "Built-in image_gen",
+  "prompt": "Create production sprite sheet for existing game. Match supplied Roman and courtesan sprite references EXACTLY: flat comic cels, black outlines, simple 2-tone coloring, large rounded noses, same humorous ancient Roman cartoon proportions. Not painterly, not realistic. Actual transparent alpha background, no painted backdrop, no shadows, no ground, no text or grid lines. 1536x1536 square sheet, exactly FOUR ROWS and FOUR COLUMNS of equal square cells, 16 isolated full-body poses. Each row is ONE DIFFERENT ADULT CIVILIAN in 4 distinct running cycle poses facing RIGHT. All sprites centered in cells, generous transparent margins, feet same baseline per row. No weapons or armor, no attack gestures. Row1: plump Roman BAKER male, white short tunic, cream cap, red belt, sandals, carrying little round loaf. Row2: lanky male PORTER, brown short tunic, green sash, leather sandals, holding small cloth sack over shoulder. Row3: adult Roman MATRON woman, teal ankle-length stola and cream shawl, dark hair bun, little basket, sandals, running with short busy steps. Row4: thin older male SCRIBE in pale yellow knee-length tunic and burgundy mantle, balding grey hair, scroll tucked under arm, sandals. Four varied running phases per person, feet visibly change and arms swing. Distinct silhouettes and colors but same line weight and rendering as game references. Keep carried objects connected to the character. Leave generous empty gutters; no part crosses cell boundaries.",
+  "source": "assets/source/expansion-v1/civilians.png",
+  "exportedRows": [
+    0,
+    1,
+    3
+  ],
+  "note": "Only baker, porter and scribe are exported. The unused third row is not included in game assets.",
+  "runtimeFrames": [
+    "assets/runtime/characters/frames/citizen-0/walk/",
+    "assets/runtime/characters/frames/citizen-1/walk/",
+    "assets/runtime/characters/frames/citizen-2/walk/"
+  ],
+  "gameplayUnit": "citizen"
+}
