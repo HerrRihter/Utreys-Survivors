@@ -4,8 +4,8 @@ const clock = seconds => Math.floor(seconds / 60) + ':' + String(seconds % 60).p
 
 export function waveTiming(schedule, unit) {
   const entry = waveRoster(schedule).find(entry => entry.unit === unit);
-  if (!entry) throw new Error('Unit absent from schedule: ' + unit);
-  if (schedule.residents.includes(unit)) return 'На карте изначально';
+  if (!entry) return 'Резервный поток кодов';
+  if (schedule.residents?.includes(unit)) return 'На карте изначально';
   if (schedule.population?.unit === unit) {
     return 'С начала боя · население ' + schedule.population.initial + '–' + schedule.population.maximum;
   }

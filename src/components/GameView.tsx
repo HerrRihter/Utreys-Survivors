@@ -327,7 +327,7 @@ export const GameView: React.FC<GameViewProps> = ({ onNavigateToArena, onNavigat
               <div className="settings-row">
                 <div>
                   <strong>Тряска экрана</strong>
-                  <small style={{ display: 'block', color: '#a9b8a5', fontSize: '11px' }}>
+                  <small style={{ display: 'block', color: '#7e9fa8', fontSize: '11px' }}>
                     Сотрясение камеры при критических перегрузках
                   </small>
                 </div>
@@ -338,7 +338,7 @@ export const GameView: React.FC<GameViewProps> = ({ onNavigateToArena, onNavigat
               <div className="settings-row">
                 <div>
                   <strong>Подсказки управления</strong>
-                  <small style={{ display: 'block', color: '#a9b8a5', fontSize: '11px' }}>
+                  <small style={{ display: 'block', color: '#7e9fa8', fontSize: '11px' }}>
                     Показывать горячие клавиши внизу экрана
                   </small>
                 </div>

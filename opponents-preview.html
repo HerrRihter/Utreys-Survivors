@@ -3,62 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Противники · Utreys Survivors</title>
+<title>Враги и клиенты · Utreys Survivors</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#101b17;color:#eee9d4;font:15px/1.65 Consolas,monospace}
-main{max-width:1180px;margin:40px auto;padding:0 24px}
-a{color:#f6cb72}
-h1{font-size:38px;line-height:1.15;margin:12px 0}
-h2{font-size:19px;margin:0;color:#f6cb72}
-.eyebrow{color:#a3b899;letter-spacing:3px;font-size:12px}
-.intro{max-width:850px;color:#bac5b6}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin:28px 0}
-.card{min-width:0;background:#1c2c23;border:1px solid #415943;padding:18px}
-.card canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;image-rendering:pixelated;background:#304331;border-bottom:1px solid #546a48;margin-bottom:14px}
-.stats{font-size:13px;color:#a9d4c6}
-.card p{font-size:13px;color:#c3c9ba;margin-bottom:0}
-#map{width:100%;max-width:560px;image-rendering:pixelated;border:1px solid #546a48}
+body{margin:0;background:#081215;color:#f0f8f8;font:15px/1.65 Consolas,'Courier New',monospace}
+main{max-width:1180px;margin:30px auto;padding:0 24px}
+a{color:#00e5ff;text-decoration:none}
+a:hover{text-decoration:underline}
+h1{font-size:38px;line-height:1.15;margin:12px 0;color:#00e5ff}
+h2{font-size:19px;margin:0;color:#00e5ff}
+.eyebrow{color:#00e5ff;letter-spacing:3px;font-size:12px}
+.intro{max-width:850px;color:#9bb8bf}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:28px 0}
+.card{min-width:0;background:#0a191d;border:1px solid #1a5763;padding:18px;border-radius:8px}
+.card canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;image-rendering:pixelated;background:#08171a;border-bottom:1px solid #1a5763;margin-bottom:14px;border-radius:4px}
+.stats{font-size:13px;color:#64ffda;font-weight:bold}
+.card p{font-size:13px;color:#a4c1c9;margin-bottom:0}
+#map{width:100%;max-width:560px;image-rendering:pixelated;border:1px solid #1a5763;border-radius:6px}
 .layout{display:flex;gap:30px;align-items:center;flex-wrap:wrap}
-.layout p{max-width:430px}
-footer{margin:30px 0;color:#94a68f;font-size:12px}
+.layout p{max-width:430px;color:#8fb1b9}
+footer{margin:30px 0;color:#6f949f;font-size:12px}
 .locations{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
-.locations a{padding:10px 18px;border:1px solid #546a48;background:#1c2c23;text-decoration:none}
-.locations a[aria-current="page"]{background:#f6cb72;color:#17271c;border-color:#f6cb72}
-.locations a:hover{border-color:#f6cb72}
-.locations a:focus-visible{outline:2px solid #eee9d4;outline-offset:4px}
-#rosterCount{color:#a9d4c6}
-@media(max-width:600px){main{margin:24px auto;padding:0 16px}h1{font-size:30px}.card{padding:14px}.grid{gap:14px}}
+.locations a{padding:10px 18px;border:1px solid #1a5763;background:#0a191d;border-radius:4px}
+.locations a[aria-current="page"]{background:#00e5ff;color:#041724;border-color:#00e5ff;font-weight:bold}
+.locations a:hover{border-color:#00e5ff}
+.locations a:focus-visible{outline:2px solid #00e5ff;outline-offset:4px}
+#rosterCount{color:#64ffda}
+select,button{font:inherit;padding:8px 12px;background:#0e252b;color:#00e5ff;border:1px solid #1a5763;border-radius:4px;cursor:pointer}
+button:hover,select:hover{border-color:#00e5ff}
+@media(max-width:600px){main{margin:20px auto;padding:0 16px}h1{font-size:30px}.card{padding:14px}.grid{gap:14px}}
 </style>
 </head>
 <body>
 <main>
-  <a href="index.html">← В игру</a>
-  <div class="eyebrow" style="margin-top:28px">СПРАВОЧНИК ПРОТИВНИКОВ</div>
-  <nav id="locations" class="locations" aria-label="Арены"></nav>
-  <h1 id="locationTitle">Пустая арена · Противники</h1>
-  <p class="intro" id="locationIntro">Противники и их поведение в тестовой сборке.</p>
+  <a href="/">← В игру</a>
+  <div class="eyebrow" style="margin-top:24px">РЕЕСТР КОНТУРОВ И КЛИЕНТОВ</div>
+  <nav id="locations" class="locations" aria-label="Контуры"></nav>
+  <h1 id="locationTitle">Дата-центр Utrace · Враги и клиенты</h1>
+  <p class="intro" id="locationIntro">Реестр входящих потоков данных: L3, ЦРПТ, Пепси, Инбев, Марс.</p>
   <p id="rosterCount" role="status"></p>
   <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:24px 0">
-    <label>Анимация <select id="motion" style="font:inherit;padding:9px;background:#253b2c;color:#f6cb72"><option value="walk">Движение</option><option value="attack">Атака</option><option value="hurt">Получение урона</option><option value="idle">Стойка</option></select></label>
-    <button id="freeze" style="font:inherit;padding:9px;background:#253b2c;color:#f6cb72">Пауза анимации</button>
+    <label>Анимация <select id="motion"><option value="walk">Движение</option><option value="attack">Атака / Запрос</option><option value="hurt">Получение урона</option></select></label>
+    <button id="freeze">Пауза анимации</button>
     <label><input type="checkbox" id="reverse"> Влево</label>
-    <span id="artStatus" style="color:#b1c4a4">Загрузка…</span>
+    <span id="artStatus" style="color:#00e5ff">Загрузка…</span>
   </div>
   <div class="grid" id="cards"></div>
-  <h2 id="mapTitle">Карта: Пустая арена</h2>
-  <div class="layout"><canvas id="map" width="550" height="550" aria-label="План пустой арены"></canvas><p id="mapNotes"></p></div>
-  <footer>Справочные значения показывают характеристики и поведение противников в тестовой сборке.</footer>
+  <h2 id="mapTitle">Карта: Дата-центр Utrace</h2>
+  <div class="layout"><canvas id="map" width="550" height="550" aria-label="План дата-центра"></canvas><p id="mapNotes"></p></div>
+  <footer>Реестр сущностей высоконагруженного контура тестирования Utrace.</footer>
 </main>
-<script data-entry="src/pages/opponents-preview.js" data-file-bundle="runtime/src/pages/opponents-preview.js">
-(function(){
-  const launcher = document.currentScript;
-  const script = document.createElement('script');
-  const localFile = location.protocol === 'file:';
-  if (!localFile) script.type = 'module';
-  script.src = localFile ? launcher.dataset.fileBundle : launcher.dataset.entry;
-  document.body.appendChild(script);
-})();
-</script>
+<script type="module" src="/src/pages/opponents-preview.js"></script>
 </body>
 </html>

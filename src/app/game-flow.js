@@ -123,7 +123,7 @@ function levelUp(){
       sessionContext.choice.forEach((u,i)=>{
         const b=sessionContext.document.createElement('button');
         b.className='upgrade';
-        b.innerHTML=`<em>${u.icon}</em><strong>${u.name}</strong><span>${u.group}${u.max?` · Ранг ${(sessionContext.state.upgradeRanks?.[u.id]||0)+1}/${u.max}`:``}</span><span>${u.desc}</span><span style="margin-top:16px;color:#788e77">[ ${i+1} ]</span>`;
+        b.innerHTML=`<em>${u.icon}</em><strong>${u.name}</strong><span>${u.group}${u.max?` · Ранг ${(sessionContext.state.upgradeRanks?.[u.id]||0)+1}/${u.max}`:``}</span><span>${u.desc}</span><span style="margin-top:16px;color:#00e5ff">[ ${i+1} ]</span>`;
         b.onclick=()=>pickUpgrade(i);
         sessionContext.$('cards').append(b);
       });

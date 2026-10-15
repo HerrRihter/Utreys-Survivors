@@ -90,18 +90,39 @@ function update(dt){
         }
         sessionContext.advanceAction(e,dt,a=>{
           const angle=sessionContext.Math.atan2(a.aim.y-e.y,a.aim.x-e.x),ax=sessionContext.Math.cos(angle),ay=sessionContext.Math.sin(angle),px=p.x-e.x,py=p.y-e.y,along=px*ax+py*ay,across=sessionContext.Math.abs(px*ay-py*ax);
-          if(e.unit==='pilum'){
-            s.enemyShots.push({x:e.x,y:e.y,vx:ax*235,vy:ay*235,life:2,damage:e.damage});
+          if(e.unit==='mars'||e.unit==='pilum'){
+            s.enemyShots.push({x:e.x,y:e.y,vx:ax*235,vy:ay*235,life:2,damage:e.damage,kind:e.unit});
             sessionContext.soundEffect('throw');
           }
-  else if(e.unit==='ram'){
+          else if(e.unit==='crpt'){
+            if(sessionContext.dist(e,p)<u.range+20){
+              sessionContext.hurtPlayer(e);
+            }
+            s.fx.push({kind:'ring',x:e.x,y:e.y,r:u.range,life:.5,max:.5,color:'#ffd600'});
+            sessionContext.soundEffect('boss');
+          }
+          else if(e.unit==='l3'){
+            if(sessionContext.dist(e,p)<u.range+16){
+              sessionContext.hurtPlayer(e);
+            }
+            s.fx.push({kind:'ring',x:e.x,y:e.y,r:25,life:.25,max:.25,color:'#00e676'});
+            sessionContext.soundEffect('hit');
+          }
+          else if(e.unit==='pepsi'){
+            if(sessionContext.dist(e,p)<u.range+16){
+              sessionContext.hurtPlayer(e);
+            }
+            s.fx.push({kind:'ring',x:e.x,y:e.y,r:30,life:.25,max:.25,color:'#00e5ff'});
+            sessionContext.soundEffect('punch');
+          }
+          else if(e.unit==='ram'){
             e.charge={x:ax,y:ay,left:1.3};
             e.heading=angle;
           }
-  else if(e.unit==='spear'){
+          else if(e.unit==='spear'){
             if(along>=-8&&along<u.range+14&&across<24&&sessionContext.Village.clear(e,p,2))sessionContext.hurtPlayer(e);
           }
-  else if(sessionContext.dist(e,p)<u.range+8&&along>=-8&&sessionContext.Village.clear(e,p,2))sessionContext.hurtPlayer(e);
+          else if(sessionContext.dist(e,p)<u.range+8&&along>=-8&&sessionContext.Village.clear(e,p,2))sessionContext.hurtPlayer(e);
         });
         if(e.charge){
           const q=e.charge,ox=e.x,oy=e.y,chargeSpeed=320*(1-(e.abilitySlow||0));
@@ -123,7 +144,7 @@ function update(dt){
           e.cd=u.cooldown;
           e.heading=sessionContext.Math.atan2(p.y-e.y,p.x-e.x);
         }
-        const moving=!e.action&&!e.hurt&&d>(e.unit==='pilum'?220:e.r+10),speed=e.speed*(1+s.t/1800)*(1-(e.abilitySlow||0)),dir=moving?sessionContext.Village.direction(e,p,e.r):null,ox=e.x,oy=e.y;
+        const moving=!e.action&&!e.hurt&&d>(e.unit==='mars'||e.unit==='pilum'?220:e.r+10),speed=e.speed*(1+s.t/1800)*(1-(e.abilitySlow||0)),dir=moving?sessionContext.Village.direction(e,p,e.r):null,ox=e.x,oy=e.y;
         sessionContext.Village.move(e,(moving?dir.x*speed*dt:0)+e.vx*dt,(moving?dir.y*speed*dt:0)+e.vy*dt,e.r);
         const travel=sessionContext.Math.hypot(e.x-ox,e.y-oy);
         e.moving=travel>.01;
@@ -168,7 +189,7 @@ function update(dt){
         if(sessionContext.dist(helmet,p)<20){
           s.earned+=sessionContext.Progression.earn(helmet.value);
           helmet.dead=true;
-          s.texts.push({x:p.x,y:p.y-30,v:'+'+helmet.value+' шлема',life:1});
+          s.texts.push({x:p.x,y:p.y-30,v:'+'+helmet.value+' кодов',life:1});
         }
       }
       s.helmets=s.helmets.filter(h=>!h.dead);

@@ -43,12 +43,12 @@ function damage(e,n,dx=0,dy=0,source=sessionContext.state.p){
           vy:sessionContext.rand(-70,20),
           life:.3,
           max:.3,
-          color:e.type==='monster'?'#9dad67':'#e4c787'
+          color:i%2===0?'#00e5ff':'#64ffda'
         });
         if(sessionContext.Math.random()<.025)sessionContext.state.pickups.push({x:e.x,y:e.y,type:'food'});
         if(e.boss){
           sessionContext.state.bossDead=true;
-          sessionContext.toast(sessionContext.Legion.units[e.unit].name+' повержен! Продержись до пира.');
+          sessionContext.toast(sessionContext.Legion.units[e.unit].name+' повержен! Заверши валидацию контура!');
           sessionContext.soundEffect('boss');
           sessionContext.Progression?.recordBossKill?.();
         }

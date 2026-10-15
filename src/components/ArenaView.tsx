@@ -67,7 +67,7 @@ export const ArenaView: React.FC<ArenaViewProps> = ({ onBackToGame }) => {
   };
 
   return (
-    <div className="overlay" style={{ alignItems: 'flex-start', display: 'flex', flexDirection: 'column', width: '100%', height: '100%', overflowY: 'auto', background: '#0a1619', color: '#f2ead0', padding: '24px' }}>
+    <div className="overlay" style={{ alignItems: 'flex-start', display: 'flex', flexDirection: 'column', width: '100%', height: '100%', overflowY: 'auto', background: '#0a1619', color: '#f0f8f8', padding: '24px' }}>
       <main style={{ maxWidth: '1220px', margin: '0 auto', width: '100%' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
           <div>

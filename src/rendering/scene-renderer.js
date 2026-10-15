@@ -55,12 +55,13 @@ function draw(){
         }
         for(const a of s.pickups){
           if(a.x<minX||a.x>maxX||a.y<minY||a.y>maxY)continue;
-          sessionContext.ctx.fillStyle='#603b26';
+          // Futuristic data/energy recovery capsule
+          sessionContext.ctx.fillStyle='#00e5ff';
           sessionContext.ctx.fillRect(a.x-7,a.y-5,14,10);
-          sessionContext.ctx.fillStyle='#dc9c5e';
-          sessionContext.ctx.fillRect(a.x-5,a.y-7,10,9);
-          sessionContext.ctx.fillStyle='#efdcab';
-          sessionContext.ctx.fillRect(a.x+5,a.y-2,5,3);
+          sessionContext.ctx.fillStyle='#0a192f';
+          sessionContext.ctx.fillRect(a.x-5,a.y-3,10,6);
+          sessionContext.ctx.fillStyle='#64ffda';
+          sessionContext.ctx.fillRect(a.x-3,a.y-1,6,2);
         }
         for(const e of s.enemies){
           if(e.x<minX-70||e.x>maxX+70||e.y<minY-70||e.y>maxY+70)continue;
@@ -86,7 +87,7 @@ function draw(){
             sessionContext.ctx.save();
             sessionContext.ctx.translate(e.x,e.y);
             sessionContext.ctx.rotate(sessionContext.Math.atan2(aim.y,aim.x));
-            sessionContext.ctx.fillStyle='#f6cb72bb';
+            sessionContext.ctx.fillStyle='#00e5ff88';
             sessionContext.ctx.beginPath();
             sessionContext.ctx.moveTo(35,0);
             sessionContext.ctx.lineTo(26,-5);
@@ -94,13 +95,14 @@ function draw(){
             sessionContext.ctx.closePath();
             sessionContext.ctx.fill();
             sessionContext.ctx.restore();
-            sessionContext.ctx.fillStyle='#f6cb72';
-            sessionContext.ctx.fillRect(e.x-3,e.y-(typeof sessionContext.HeroArt!=='undefined'&&sessionContext.HeroArt.get(e.type)?(e.type==='obelix'?94:67):15*size+6),6,2);
+            sessionContext.ctx.fillStyle='#00e5ff';
+            sessionContext.ctx.fillRect(e.x-3,e.y-45,6,2);
           }else if(e.hp<e.max&&!e.boss){
-            sessionContext.ctx.fillStyle='#233429';
-            sessionContext.ctx.fillRect(e.x-12,e.y-(sessionContext.Legion.units[e.unit].labelHeight?sessionContext.Legion.units[e.unit].labelHeight-12:e.unit==='ram'?132:e.unit==='turtle'?116:84),24,3);
-            sessionContext.ctx.fillStyle='#c4956d';
-            sessionContext.ctx.fillRect(e.x-12,e.y-(sessionContext.Legion.units[e.unit].labelHeight?sessionContext.Legion.units[e.unit].labelHeight-12:e.unit==='ram'?132:e.unit==='turtle'?116:84),24*e.hp/e.max,3);
+            const unitR=sessionContext.Legion.units[e.unit]?.r||18;
+            sessionContext.ctx.fillStyle='#08171a';
+            sessionContext.ctx.fillRect(e.x-13,e.y-(unitR+22),26,4);
+            sessionContext.ctx.fillStyle='#ff5252';
+            sessionContext.ctx.fillRect(e.x-12,e.y-(unitR+21),24*Math.max(0,e.hp)/e.max,2);
           }
         }
         for(const b of s.enemyShots)sessionContext.Legion.projectile(sessionContext.ctx,b);
@@ -112,10 +114,10 @@ function draw(){
           sessionContext.ctx.save();
           sessionContext.ctx.globalAlpha=f.life/f.max;
           if(f.kind==='spark'){
-            sessionContext.ctx.fillStyle=f.color;
+            sessionContext.ctx.fillStyle=f.color||'#00e5ff';
             sessionContext.ctx.fillRect(f.x,f.y,3,3);
           }else{
-            sessionContext.ctx.strokeStyle=f.kind==='slash'?'#f8dfa0':f.kind==='ring'?'#a9c7e0':'#e97451';
+            sessionContext.ctx.strokeStyle=f.kind==='slash'?'#00e5ff':f.kind==='ring'?'#64ffda':'#ff5252';
             sessionContext.ctx.lineWidth=f.kind==='slash'?7:3;
             sessionContext.ctx.beginPath();
             const r=f.r*(1-(f.life/f.max)*.3);
@@ -135,9 +137,9 @@ function draw(){
         for(const t of s.texts){
           if(t.x<minX||t.x>maxX||t.y<minY||t.y>maxY)continue;
           sessionContext.ctx.globalAlpha=sessionContext.Math.min(1,t.life*3);
-          sessionContext.ctx.fillStyle='#111f18';
+          sessionContext.ctx.fillStyle='#08171a';
           sessionContext.ctx.fillText(t.v,t.x+1,t.y+1);
-          sessionContext.ctx.fillStyle=typeof t.v==='string'?'#bfe7a3':'#fff1c6';
+          sessionContext.ctx.fillStyle=typeof t.v==='string'?'#64ffda':'#00e5ff';
           sessionContext.ctx.fillText(t.v,t.x,t.y);
         }
         sessionContext.ctx.globalAlpha=1;

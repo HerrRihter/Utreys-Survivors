@@ -53,10 +53,16 @@ Legion = (() => {
     g.save();
     g.translate(e.x, e.y);
     g.rotate(angle);
-    g.fillStyle = 'rgba(232, 119, 66, 0.28)';
+    g.fillStyle = e.unit === 'crpt' ? 'rgba(255, 214, 0, 0.25)' : e.unit === 'l3' ? 'rgba(0, 230, 118, 0.22)' : e.unit === 'pepsi' ? 'rgba(0, 140, 255, 0.22)' : e.unit === 'mars' ? 'rgba(211, 47, 47, 0.25)' : 'rgba(212, 175, 55, 0.25)';
     g.strokeStyle = u.color;
     g.lineWidth = 2;
-    if (e.unit === 'mars') {
+    if (e.unit === 'crpt') {
+      // 360 degree regulatory shockwave zone
+      g.beginPath();
+      g.arc(0, 0, u.range, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+    } else if (e.unit === 'mars') {
       g.fillRect(0, -12, u.range, 24);
       g.strokeRect(0, -12, u.range, 24);
     } else {
@@ -73,13 +79,41 @@ Legion = (() => {
   function projectile(g, b) {
     g.save();
     g.translate(b.x, b.y);
-    g.fillStyle = '#ff5252';
-    g.beginPath();
-    g.arc(0, 0, 5, 0, Math.PI * 2);
-    g.fill();
-    g.strokeStyle = '#ffffff';
-    g.lineWidth = 1.5;
-    g.stroke();
+    if (b.kind === 'l3') {
+      g.fillStyle = '#00e676';
+      g.fillRect(-5, -5, 10, 10);
+      g.strokeStyle = '#ffffff';
+      g.lineWidth = 1.5;
+      g.strokeRect(-5, -5, 10, 10);
+      g.fillStyle = '#ffffff';
+      g.fillRect(-2, -2, 4, 4);
+    } else if (b.kind === 'pepsi') {
+      g.fillStyle = '#00e5ff';
+      g.beginPath();
+      g.arc(0, 0, 6, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = '#ffffff';
+      g.lineWidth = 2;
+      g.stroke();
+      g.fillStyle = '#ffffff';
+      g.fillRect(-2, -2, 4, 4);
+    } else if (b.kind === 'crpt') {
+      g.fillStyle = '#ffd600';
+      g.beginPath();
+      g.arc(0, 0, 12, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = '#ffffff';
+      g.lineWidth = 2;
+      g.stroke();
+    } else {
+      g.fillStyle = '#ff5252';
+      g.beginPath();
+      g.arc(0, 0, 6, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = '#ffeb3b';
+      g.lineWidth = 2;
+      g.stroke();
+    }
     g.restore();
   }
 
@@ -91,9 +125,9 @@ Legion = (() => {
     g.translate(Math.round(e.x), Math.round(e.y));
 
     // Shadow
-    g.fillStyle = 'rgba(0,0,0,0.35)';
+    g.fillStyle = 'rgba(0,0,0,0.45)';
     g.beginPath();
-    g.ellipse(0, 4, u.r, u.r * 0.4, 0, 0, Math.PI * 2);
+    g.ellipse(0, 4, u.r, u.r * 0.45, 0, 0, Math.PI * 2);
     g.fill();
 
     const hitFlash = e.hit > 0;
@@ -103,40 +137,49 @@ Legion = (() => {
 
     if (e.unit === 'crpt') {
       // ЦРПТ — Large Regulatory Emblem / Fortress Boss
-      const size = 34;
+      const size = 36;
       g.fillStyle = hitFlash ? '#ffffff' : '#ffd600';
       g.beginPath();
       // Hexagonal regulatory seal
       for (let i = 0; i < 6; i++) {
         const rad = (i * Math.PI) / 3;
         const hx = Math.cos(rad) * size;
-        const hy = Math.sin(rad) * size - 15;
+        const hy = Math.sin(rad) * size - 16;
         if (i === 0) g.moveTo(hx, hy);
         else g.lineTo(hx, hy);
       }
       g.closePath();
       g.fill();
       g.lineWidth = 4;
-      g.strokeStyle = '#212121';
+      g.strokeStyle = '#102026';
       g.stroke();
 
+      // Outer validation pulse ring if attacking
+      if (e.action) {
+        g.strokeStyle = '#ffd600bb';
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, -16, size + 10, 0, Math.PI * 2);
+        g.stroke();
+      }
+
       // Inner seal
-      g.fillStyle = '#212121';
+      g.fillStyle = '#102026';
       g.beginPath();
-      g.arc(0, -15, size * 0.65, 0, Math.PI * 2);
+      g.arc(0, -16, size * 0.68, 0, Math.PI * 2);
       g.fill();
 
-      // Yellow checkmark / CRPT mark
+      // CRPT emblem mark
       g.fillStyle = '#ffd600';
-      g.font = 'bold 15px sans-serif';
+      g.font = 'bold 16px Consolas, monospace';
       g.textAlign = 'center';
       g.textBaseline = 'middle';
-      g.fillText('ЦРПТ', 0, -15);
+      g.fillText('ЦРПТ', 0, -16);
     } else if (e.unit === 'pepsi') {
       // Пепси — Iconic Blue / White / Red Client Sphere
-      const r = 20;
+      const r = 21;
       g.save();
-      g.translate(0, -16);
+      g.translate(0, -17);
       // Outer border
       g.fillStyle = hitFlash ? '#ffffff' : '#004b93';
       g.beginPath();
@@ -163,23 +206,28 @@ Legion = (() => {
       // White wave in middle
       g.fillStyle = '#ffffff';
       g.beginPath();
-      g.ellipse(0, 0, r - 2, 5, 0.2, 0, Math.PI * 2);
+      g.ellipse(0, 0, r - 2, 5.5, 0.2, 0, Math.PI * 2);
       g.fill();
+
+      // Bubbles & data sparkles
+      g.fillStyle = '#ffffffaa';
+      g.fillRect(-5, -9, 2.5, 2.5);
+      g.fillRect(4, 5, 2.5, 2.5);
 
       g.restore();
     } else if (e.unit === 'inbev') {
       // Инбев — Heavy Industrial Brewery Tanker
-      const w = 36, h = 28;
-      g.fillStyle = hitFlash ? '#ffffff' : '#2b1b17';
+      const w = 38, h = 30;
+      g.fillStyle = hitFlash ? '#ffffff' : '#1c1512';
       g.fillRect(-w / 2 - 2, -h - 4, w + 4, h + 8);
       g.fillStyle = hitFlash ? '#ffffff' : '#d4af37';
       g.fillRect(-w / 2, -h - 2, w, h + 4);
       g.lineWidth = 2;
-      g.strokeStyle = '#8b0000';
+      g.strokeStyle = '#660000';
       g.strokeRect(-w / 2, -h - 2, w, h + 4);
 
       // Gold badge & label
-      g.fillStyle = '#8b0000';
+      g.fillStyle = '#660000';
       g.fillRect(-w / 2 + 4, -h + 2, w - 8, h - 4);
       g.fillStyle = '#ffd700';
       g.font = 'bold 9px sans-serif';
@@ -187,7 +235,7 @@ Legion = (() => {
       g.fillText('INBEV', 0, -h / 2);
     } else if (e.unit === 'mars') {
       // Марс — Red Bold Confectionery / FMCG Box
-      const size = 22;
+      const size = 23;
       g.fillStyle = hitFlash ? '#ffffff' : '#d32f2f';
       g.fillRect(-size, -size * 1.5, size * 2, size * 1.5);
       g.lineWidth = 2;
@@ -196,28 +244,47 @@ Legion = (() => {
 
       // Mars Gold Text
       g.fillStyle = '#ffeb3b';
-      g.font = 'italic 900 12px sans-serif';
+      g.font = 'italic 900 13px sans-serif';
       g.textAlign = 'center';
       g.fillText('MARS', 0, -size * 0.7);
-    } else {
+    } else if (e.unit === 'l3') {
       // L3 — Green High-Tech Gateway Server Node
-      const w = 22, h = 26;
-      g.fillStyle = hitFlash ? '#ffffff' : '#0a2318';
+      const w = 24, h = 28;
+      g.fillStyle = hitFlash ? '#ffffff' : '#081c13';
       g.fillRect(-w / 2, -h, w, h);
       g.lineWidth = 2;
       g.strokeStyle = '#00e676';
       g.strokeRect(-w / 2, -h, w, h);
 
-      // Server LEDs
-      g.fillStyle = '#00e676';
+      // Server LEDs (blinking activity indicators)
+      const tick = Math.floor(Date.now() / 180);
+      g.fillStyle = tick % 2 === 0 ? '#00e676' : '#69f0ae';
       g.fillRect(-w / 2 + 4, -h + 4, 3, 3);
-      g.fillRect(-w / 2 + 9, -h + 4, 3, 3);
-      g.fillRect(-w / 2 + 14, -h + 4, 3, 3);
+      g.fillStyle = tick % 3 === 0 ? '#00e676' : '#69f0ae';
+      g.fillRect(-w / 2 + 10, -h + 4, 3, 3);
+      g.fillStyle = tick % 4 === 0 ? '#00e676' : '#69f0ae';
+      g.fillRect(-w / 2 + 16, -h + 4, 3, 3);
+
+      // Status bar line
+      g.fillStyle = '#00e67688';
+      g.fillRect(-w / 2 + 3, -h + 10, w - 6, 2);
 
       g.fillStyle = '#69f0ae';
-      g.font = 'bold 11px monospace';
+      g.font = 'bold 12px monospace';
       g.textAlign = 'center';
-      g.fillText('L3', 0, -h + 17);
+      g.fillText('L3', 0, -h + 21);
+    } else {
+      // Generic fallback data node
+      const w = 22, h = 24;
+      g.fillStyle = hitFlash ? '#ffffff' : '#0f272d';
+      g.fillRect(-w / 2, -h, w, h);
+      g.strokeStyle = '#00e5ff';
+      g.lineWidth = 1.5;
+      g.strokeRect(-w / 2, -h, w, h);
+      g.fillStyle = '#00e5ff';
+      g.font = 'bold 10px monospace';
+      g.textAlign = 'center';
+      g.fillText(u.mark || 'NODE', 0, -h / 2);
     }
 
     g.restore();

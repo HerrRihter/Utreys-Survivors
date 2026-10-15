@@ -4,7 +4,7 @@
     "assets/runtime": ["characters", "world", "projectiles", "effects", "ui", "audio"],
     "assets/runtime/characters": ["heroes", "enemies", "civilians"],
     "assets/runtime/world": ["village", "lutetia", "scenery"],
-    "src": ["app", "core", "entities", "systems", "world", "rendering", "ui", "pages"],
+    "src": ["app", "core", "entities", "systems", "world", "rendering", "ui", "pages", "components"],
     "data": ["animations", "characters", "enemies", "projectiles", "maps"],
     "runtime": ["src", "previews"]
   },

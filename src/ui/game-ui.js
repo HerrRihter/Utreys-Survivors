@@ -95,7 +95,7 @@ function renderShop(){
         card.append(info);
         const button=sessionContext.document.createElement('button'),owned=sessionContext.Progression.owned(id);
         button.className='small';
-        button.textContent=owned?'Доступен для забега':'Купить · '+sessionContext.Progression.prices[id]+' жетонов';
+        button.textContent=owned?'Доступен для забега':'Купить · '+sessionContext.Progression.prices[id]+' кодов';
         button.disabled=owned||sessionContext.Progression.data.helmets<sessionContext.Progression.prices[id];
         button.onclick=()=>{
           if(!sessionContext.Progression.owned(id)&&sessionContext.Progression.buyHero(id))renderShop();
@@ -115,7 +115,7 @@ function renderShop(){
         }
         const level=sessionContext.Progression.data.levels[id],b=sessionContext.document.createElement('button');
         b.className='small';
-        b.textContent=(u.hero?sessionContext.Villagers.defs[u.hero].name+' · ':'')+u.name+' '+level+'/'+u.max+' · '+u.desc+' · '+(level>=u.max?'Максимум':sessionContext.Progression.cost(id)+' жетонов');
+        b.textContent=(u.hero?sessionContext.Villagers.defs[u.hero].name+' · ':'')+u.name+' '+level+'/'+u.max+' · '+u.desc+' · '+(level>=u.max?'Максимум':sessionContext.Progression.cost(id)+' кодов');
         b.disabled=(u.hero&&!sessionContext.Progression.owned(u.hero))||level>=u.max||sessionContext.Progression.data.helmets<sessionContext.Progression.cost(id);
         if(u.hero&&!sessionContext.Progression.owned(u.hero))b.textContent+=' · Сначала открой героя';
         b.onclick=()=>{
@@ -123,7 +123,7 @@ function renderShop(){
         };
         sessionContext.$('shopUpgrades').append(b);
       }
-      sessionContext.$('shopWallet').textContent='У вас '+sessionContext.Progression.data.helmets+' жетонов · до следующей награды: '+(10-sessionContext.Progression.data.kills%10)+' побед'+(sessionContext.Progression.persistent?'':' · Не удалось сохранить прогресс. Не закрывай игру.');
+      sessionContext.$('shopWallet').textContent='У вас '+sessionContext.Progression.data.helmets+' кодов · до следующей награды: '+(10-sessionContext.Progression.data.kills%10)+' побед'+(sessionContext.Progression.persistent?'':' · Не удалось сохранить прогресс. Не закрывай игру.');
     }
 function closeShop(){
       show('shop',false);

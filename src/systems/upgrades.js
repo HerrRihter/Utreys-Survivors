@@ -13,7 +13,7 @@ UpgradeSystem={create(Progression){
   {id:'vitality',name:'Запас здоровья',desc:'+20 к максимуму здоровья и восстановление 30 HP.',icon:'♥',max:5,apply:s=>{s.p.max+=20;s.p.hp=Math.min(s.p.max,s.p.hp+30);}},
   item('recovery','Восстановление','Восстановление ещё 0,5 HP в секунду.','regen',.5,5),
   item('armor','Защита','На 1 меньше урона от каждого попадания; минимум 1.','armor',1,5),
-  item('magnet','Притяжение предметов','+30 к радиусу притяжения опыта и жетонов.','magnet',30,5)
+  item('magnet','Притяжение предметов','+30 к радиусу притяжения кодов маркировки и опыта.','magnet',30,5)
  ];
  const heroes={
   utrace:[item('punchTempo','Быстрая трассировка','+15% к темпу обработки кодов.','punchTempo',.15),item('punchReach','Широкий луч','+12 к дальности сканирования.','punchReach',12),item('punchForce','Импульс верификации','+55 к силе отталкивания запросов.','punchForce',55)]
@@ -23,7 +23,7 @@ UpgradeSystem={create(Progression){
   available:()=>a.id!=='forge'||Progression.armorRank<Progression.upgrades.armor.max,
   apply:s=>{if(a.id==='forge'){const slot=s.abilities?.find(x=>x.id==='forge');if(slot)slot.cd=Math.max(0,slot.cd-(slot.cooldownPerRank||0));}}
  }))]));
- const fallback=[{id:'herbs',name:'Восстановление',desc:'+0,1 HP регенерации в секунду.',icon:'♥',apply:add('regen',.1)},{id:'food',name:'Передышка',desc:'Восстановить всё здоровье.',icon:'♥',apply:s=>s.p.hp=s.p.max},{id:'loot',name:'Найденные жетоны',desc:'Получить 3 жетона.',icon:'◈',apply:s=>{Progression.earn(3);s.earned+=3;}},{id:'reserve',name:'Запас сил',desc:'+5 к максимуму и текущему здоровью.',icon:'♥',apply:s=>{s.p.max+=5;s.p.hp+=5;}}];
+ const fallback=[{id:'herbs',name:'Восстановление',desc:'+0,1 HP регенерации в секунду.',icon:'♥',apply:add('regen',.1)},{id:'food',name:'Передышка',desc:'Восстановить всё здоровье.',icon:'♥',apply:s=>s.p.hp=s.p.max},{id:'loot',name:'Бонусные коды',desc:'Получить 3 кода маркировки.',icon:'◈',apply:s=>{Progression.earn(3);s.earned+=3;}},{id:'reserve',name:'Запас сил',desc:'+5 к максимуму и текущему здоровью.',icon:'♥',apply:s=>{s.p.max+=5;s.p.hp+=5;}}];
  function pool(hero,s){return [...common.map(u=>({...u,group:'Общее'})),...(heroes[hero]||[]).map(u=>({...u,group:'Оружие героя'})),...(abilities[hero]||[]).map(u=>({...u,group:'Активное умение'}))].filter(u=>(s.upgradeRanks?.[u.id]||0)<u.max&&(!u.available||u.available(s)));}
  function offer(hero,s,random=Math.random){const all=pool(hero,s),special=all.filter(u=>u.group==='Оружие героя'),result=[];
   if(special.length)result.push(special[Math.floor(random()*special.length)]);
