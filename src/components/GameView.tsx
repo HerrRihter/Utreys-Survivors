@@ -1,3 +1,4 @@
+import { hudScale } from '../app/run-state.js';
 import { useEffect, useRef } from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { GameHud } from './GameHud';
@@ -55,7 +56,16 @@ function GameScreens({
     document.body.classList.toggle('hide-hints', !settings.hints);
   }, [mode, settings.hints]);
   useEffect(() => {
-    document.documentElement.style.setProperty('--ui-scale', String(settings.uiScale));
+    const root = document.documentElement;
+    root.style.setProperty('--ui-scale', String(settings.uiScale));
+    const fit = () =>
+      root.style.setProperty(
+        '--hud-scale',
+        String(hudScale(settings.uiScale, window.innerWidth, window.innerHeight)),
+      );
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
   }, [settings.uiScale]);
 
   return (

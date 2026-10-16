@@ -87,6 +87,15 @@ export const bindingLabels = {
 };
 export const uiScales = [0.8, 0.9, 1, 1.15, 1.3];
 
+// The in-run HUD on a small screen grows less than menus do (menus scroll, the arena does
+// not): at most 100% on short landscape phones and small portrait ones, 115% on other
+// narrow portrait phones.
+export function hudScale(uiScale, width, height) {
+  if (height <= 500 || width <= 370) return Math.min(uiScale, 1);
+  if (width <= 480) return Math.min(uiScale, 1.15);
+  return uiScale;
+}
+
 // Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings),
 // persisted separately from progress.
 export function createGameSettings({ storage }) {

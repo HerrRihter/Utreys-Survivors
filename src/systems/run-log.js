@@ -62,6 +62,8 @@ export function logEntry({ s, hero, win, build, date = new Date() }) {
 }
 
 export function createRunLog({ storage }) {
+  // Settings read the count on every render; keep it without parsing the journal each time.
+  let count = null;
   function entries() {
     try {
       const saved = JSON.parse(storage.getItem(RUN_LOG_KEY));
@@ -72,12 +74,14 @@ export function createRunLog({ storage }) {
   }
   return {
     entries,
-    count: () => entries().length,
+    count: () => (count ??= entries().length),
     record(entry) {
       const list = entries();
       list.push(entry);
       try {
-        storage.setItem(RUN_LOG_KEY, JSON.stringify(list.slice(-MAX_ENTRIES)));
+        const kept = list.slice(-MAX_ENTRIES);
+        storage.setItem(RUN_LOG_KEY, JSON.stringify(kept));
+        count = kept.length;
         return true;
       } catch {
         return false;
@@ -86,6 +90,7 @@ export function createRunLog({ storage }) {
     clear() {
       try {
         storage.setItem(RUN_LOG_KEY, '[]');
+        count = 0;
       } catch {}
     },
     // The export file's content.

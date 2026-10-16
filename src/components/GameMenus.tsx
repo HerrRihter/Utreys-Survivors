@@ -295,13 +295,17 @@ export function Shop() {
               <h3>{hero.name}</h3>
               <p>{hero.desc}</p>
               <small>{hero.info}</small>
-              <button
-                className="small"
-                disabled={hero.disabled}
-                onClick={() => commands.buyHero(hero.id)}
-              >
-                {hero.label}
-              </button>
+              {hero.owned ? (
+                <span className="owned-badge">✓ {hero.label}</span>
+              ) : (
+                <button
+                  className="small"
+                  disabled={hero.disabled}
+                  onClick={() => commands.buyHero(hero.id)}
+                >
+                  {hero.label}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -510,6 +514,7 @@ export function Achievements() {
                 ) : card.done ? (
                   <button
                     className="primary ach-claim"
+                    aria-label={`Забрать награду «${card.title}»: +${card.reward}`}
                     onClick={() => commands.claimAchievement(card.id)}
                   >
                     <span>ЗАБРАТЬ +{card.reward}</span>
@@ -527,12 +532,24 @@ export function Achievements() {
   );
 }
 
-function Toggle({ id, on, onClick }: { id: string; on: boolean; onClick: () => void }) {
+function Toggle({
+  id,
+  on,
+  onClick,
+  label,
+}: {
+  id: string;
+  on: boolean;
+  onClick: () => void;
+  label: string;
+}) {
   return (
     <button
       id={id}
       className="small"
       type="button"
+      aria-pressed={on}
+      aria-label={`${label}: ${on ? 'включено' : 'выключено'}`}
       style={{ color: on ? 'var(--gold)' : '#99a896' }}
       onClick={onClick}
     >
@@ -615,7 +632,7 @@ function SettingRow({
         <strong>{title}</strong>
         <small className="settings-note">{note}</small>
       </div>
-      <Toggle id={id} on={on} onClick={onClick} />
+      <Toggle id={id} on={on} onClick={onClick} label={title} />
     </div>
   );
 }

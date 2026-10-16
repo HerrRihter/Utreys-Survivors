@@ -12,6 +12,7 @@
     "format:check": "prettier --check src data styles tools tests vite.config.ts",
     "test": "node tools/test-all.cjs",
     "test:browser": "node tools/smoke-browser.cjs",
+    "test:layout": "node tools/layout-check.cjs",
     "check:structure": "node tools/check-structure.cjs",
     "check:contracts": "node tools/check-game-contracts.cjs",
     "check": "npm run lint && npm run format:check && npm test && npm run build",
