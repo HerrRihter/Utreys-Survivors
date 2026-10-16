@@ -16,6 +16,11 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
   return (
     <>
       <div id="hud" className={hidden(!!hud, 'hud')}>
+        {hud?.event && (
+          <div id="runEvent" className="run-event">
+            {hud.event}
+          </div>
+        )}
         <div id="nodeProgress" className="node-progress">
           {hud?.progress}
         </div>

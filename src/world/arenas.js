@@ -11,19 +11,26 @@ export function createArenas({ createCanvas = browserCanvas } = {}) {
   return {
     get(id) {
       if (!Object.hasOwn(arenaDefinitions, id)) id = 'empty';
-      return cache[id] || (cache[id] = createDatacenterArena(createCanvas));
+      return cache[id] || (cache[id] = createDatacenterArena(createCanvas, arenaDefinitions[id]));
     },
   };
 }
 
-function createDatacenterArena(createCanvas) {
+// Both arenas share the datacenter floor; a map's `racks` become solid server racks.
+function createDatacenterArena(createCanvas, map = arenaDefinitions.empty) {
   const size = 2200,
     cell = 25,
     cols = 88,
-    // Datacenter floor has no obstacles yet; collision/navigation stay ready for maps that do.
-    objects = [];
+    racks = map.racks || [],
+    objects = racks.map(([x, y, w, h]) => ({ x, y, footprint: [0, 0, w, h] }));
   const collision = ArenaCollision.create(objects, size);
-  const navigation = ArenaNavigation.create({ size, cell, cols, ...collision });
+  const navigation = ArenaNavigation.create({
+    size,
+    cell,
+    cols,
+    ...collision,
+    open: !objects.length,
+  });
 
   // Floor + grid + data buses repeat every 400 px: one tile, drawn once per device ratio.
   const tileSize = 400;
@@ -113,7 +120,27 @@ function createDatacenterArena(createCanvas) {
     drawCore(g);
   }
 
+  function drawRacks(g) {
+    for (const [x, y, w, h] of racks) {
+      g.fillStyle = '#0d2128';
+      g.fillRect(x, y, w, h);
+      g.fillStyle = '#163640';
+      const horizontal = w >= h;
+      for (let i = 8; i < (horizontal ? w : h) - 6; i += 18)
+        if (horizontal) g.fillRect(x + i, y + 6, 10, h - 12);
+        else g.fillRect(x + 6, y + i, w - 12, 10);
+      g.fillStyle = '#64ffda';
+      for (let i = 14; i < (horizontal ? w : h) - 6; i += 36)
+        if (horizontal) g.fillRect(x + i, y + 4, 3, 3);
+        else g.fillRect(x + 4, y + i, 3, 3);
+      g.beginPath();
+      g.rect(x, y, w, h);
+      neonStroke(g, '#00e5ff99', 1.5, 6);
+    }
+  }
+
   function drawCore(g) {
+    drawRacks(g);
     // Central Data Processing Core Ring
     g.strokeStyle = '#00e5ff88';
     g.lineWidth = 3;

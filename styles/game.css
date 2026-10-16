@@ -2365,3 +2365,43 @@ button:disabled {
 .codex-evo.found b {
   color: #f7ce70;
 }
+
+/* Run seed */
+.seed-input {
+  width: 9em;
+  margin: 4px 0 6px;
+  padding: 6px 8px;
+  border: 1px solid #1a5763;
+  background: #071a20;
+  color: var(--cyan);
+  font:
+    700 14px Consolas,
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.end-seed {
+  font-size: 12px;
+  color: #9fc3c7;
+}
+.end-seed b {
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+}
+
+/* Running mid-run event under the node progress line */
+.run-event {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(420px, 92vw);
+  padding: 6px 10px;
+  border: 1px solid #ff8a65;
+  border-radius: 6px;
+  background: #2a1209dd;
+  color: #ffd54f;
+  font-size: 12px;
+  font-weight: 700;
+}

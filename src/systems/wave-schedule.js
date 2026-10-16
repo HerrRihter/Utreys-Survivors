@@ -39,6 +39,7 @@ export function createWaveState(schedule) {
     spawn: schedule.normal.firstDelay,
     waveNext: Object.fromEntries(schedule.recurring.map((spec) => [spec.unit, spec.first])),
     bossSpawned: false,
+    eliteNext: schedule.elites?.first ?? Infinity,
   };
 }
 

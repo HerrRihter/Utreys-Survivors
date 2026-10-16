@@ -6,6 +6,8 @@ import { arenaDefinitions } from '../world/arenas.js';
 import { weaponDefinitions } from '../../data/weapons.js';
 import { restoreRun } from '../systems/run-snapshot.js';
 import { nearestGoals, newlyDone } from './unlocks.js';
+import { layoutNodes, planEvents } from '../systems/run-layout.js';
+import { randomSeed, parseSeed, seedText } from '../core/rng.js';
 import { maxLoad, rewardPerLevel, production, loadModifiers } from '../../data/difficulty.js';
 import { workaroundSeconds } from '../../data/enemies/nodes.js';
 
@@ -77,10 +79,21 @@ export const GameFlow = {
     }
     const clampLoad = (hero, level) =>
       Math.max(1, Math.min(progression.loadAvailable(hero), Math.floor(level) || 1));
+    // Maps with `unlock: 'win'` open after the first victory.
+    const mapOpen = (id) =>
+      !!arenaDefinitions[id] && (!arenaDefinitions[id].unlock || progression.data.stats.wins > 0);
     function start() {
       recordRun();
       snapshots?.clear();
       if (!progression.owned(run.selected)) run.selected = 'utrace';
+      if (!mapOpen(run.selectedMap)) {
+        run.selectedMap = 'empty';
+        world.select('empty');
+      }
+      // The seed fixes the node layout, bug placement and event order of this run.
+      const seed = run.nextSeed ?? randomSeed(math.random);
+      run.nextSeed = null;
+      const schedule = getWaveSchedule(run.selectedMap);
       const hero = heroes.defs[run.selected],
         levels = progression.data.levels,
         health = hero.hp + levels.health * permanentUpgradeDefinitions.health.factor;
@@ -93,14 +106,21 @@ export const GameFlow = {
         load,
         healFactor: Math.max(0, 1 + mods.heal),
         map: run.selectedMap,
-        ...createWaveState(getWaveSchedule(run.selectedMap)),
+        seed,
+        eventPlan: planEvents(schedule, seed),
+        eventIndex: 0,
+        event: null,
+        ...createWaveState(schedule),
         kills: 0,
         level: 1,
         xp: 0,
         need: 8,
         attack: 0.2,
         enemies: [],
-        nodes: createNodeState(workaroundSeconds * (1 + mods.workaround)),
+        nodes: createNodeState(
+          workaroundSeconds * (1 + mods.workaround),
+          layoutNodes(run.selectedMap, seed),
+        ),
         corpses: [],
         enemyShots: [],
         shots: [],
@@ -355,6 +375,7 @@ export const GameFlow = {
         ],
         damage: damageReport(s),
         build: upgrades.build(run.selected, s),
+        seed: seedText(s.seed),
         unlocked: newlyDone(progression, run.best, s.doneBefore),
         goals: nearestGoals(progression, run.best, 2),
       };
@@ -366,6 +387,43 @@ export const GameFlow = {
         storage.setItem('utreys-best', JSON.stringify(run.best));
       } catch {}
       changed();
+    }
+
+    // An update bundle from an elite or an event: one to three item upgrades without a choice,
+    // owned items first, then anything the level-up could offer.
+    function openBundle() {
+      const s = run.state;
+      if (!s) return [];
+      const count = 1 + Math.floor(math.random() * 3),
+        names = [];
+      for (let i = 0; i < count; i++) {
+        const pool = upgrades.pool(run.selected, s).filter((u) => u.max);
+        const owned = pool.filter((u) => !u.isNew && u.kind !== 'ability');
+        const list = owned.length ? owned : pool;
+        if (!list.length) break;
+        const card = list[Math.floor(math.random() * list.length)];
+        if (upgrades.apply(card, s)) names.push(card.name);
+      }
+      if (!names.length) {
+        s.earned += progression.earn(10);
+        names.push('+10 кодов');
+      }
+      s.fx.push({
+        kind: 'ring',
+        x: s.p.x,
+        y: s.p.y - 10,
+        r: 90,
+        life: 0.7,
+        max: 0.7,
+        color: '#ffd54f',
+      });
+      names.forEach((name, i) =>
+        s.texts.push({ x: s.p.x, y: s.p.y - 50 - i * 16, v: '▲ ' + name, life: 1.6 }),
+      );
+      toast('Пакет обновлений: ' + names.join(', '));
+      audio.effect('level');
+      hud.emit();
+      return names;
     }
 
     // After a win: keep playing the same run in the endless production mode.
@@ -405,6 +463,7 @@ export const GameFlow = {
       world.select(run.selectedMap);
       if (snapshot.baClient) run.baClient = snapshot.baClient;
       run.selectedLoad = snapshot.state.load || 1;
+      run.nextSeed = snapshot.state.seed ?? null;
       start();
       restoreRun(run.state, snapshot, spawning.spawn);
       if (snapshot.pendingLevel) {
@@ -463,13 +522,24 @@ export const GameFlow = {
       ui.emit();
     }
     function chooseMap(id) {
-      if (!arenaDefinitions[id]) return;
+      if (!mapOpen(id)) return;
       run.selectedMap = id;
       world.select(id);
       ui.emit();
     }
     function startSelected() {
       run.selected = run.pendingHero;
+      run.nextSeed = parseSeed(run.seedInput);
+      start();
+    }
+    function chooseSeed(text) {
+      run.seedInput = String(text).slice(0, 7);
+      ui.emit();
+    }
+    // Same layout and events again: restart with the finished run's seed.
+    function restartSameSeed() {
+      if (!run.state) return;
+      run.nextSeed = run.state.seed;
       start();
     }
     function openMenuScreen(screen) {
@@ -538,11 +608,14 @@ export const GameFlow = {
       finish,
       continueProduction,
       chooseLoad,
+      openBundle,
       openHeroSelect,
       closeHeroSelect: () => show('menu'),
       chooseHero,
       chooseBaClient,
       chooseMap,
+      chooseSeed,
+      restartSameSeed,
       startSelected,
       openShop: () => openMenuScreen('shop'),
       openAchievements: () => openMenuScreen('achievements'),

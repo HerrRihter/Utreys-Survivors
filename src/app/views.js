@@ -8,6 +8,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { heroPassives } from '../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
 import { productionMinutes } from '../systems/difficulty.js';
+import { eventLabel } from '../systems/run-events.js';
 import { effectiveStats } from '../systems/ability-state.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
@@ -71,11 +72,20 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
     showBaClients: run.pendingHero === 'ba',
     baClients: baClientIds.map((id) => ({ id, name: enemies.units[id].name })),
     baClient: run.baClient,
-    maps: Object.entries(arenaDefinitions).map(([id, map]) => ({ id, name: map.name })),
+    maps: Object.entries(arenaDefinitions).map(([id, map]) => ({
+      id,
+      name: map.name,
+      locked: map.unlock === 'win' && !(progression.data.stats.wins > 0),
+    })),
     map: run.selectedMap,
+    seed: run.seedInput,
     mapDescription: arenaDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.
     mapLocked: Object.keys(arenaDefinitions).length < 2,
+    mapHint:
+      arenaDefinitions.serverRoom && !(progression.data.stats.wins > 0)
+        ? 'Серверный зал откроется после первой победы.'
+        : '',
   };
 }
 
@@ -398,6 +408,7 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
       (ba ? ` · Клиент: ${enemies.units[ba.client].name} · +${ba.bonus} HP` : ''),
     codes: `КОДЫ: ${progression.codes} (+${s.earned})`,
     progress: nodeProgress(s),
+    event: eventLabel(s),
     boss: boss
       ? { name: boss.name || 'ШЛЮЗ ЦРПТ', pct: Math.round((boss.hp / boss.max) * 1000) / 10 }
       : null,

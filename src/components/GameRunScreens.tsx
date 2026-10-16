@@ -264,6 +264,12 @@ export function EndScreen() {
             ПРОДОЛЖИТЬ В ПРОДАКШЕНЕ →
           </button>
         )}
+        <p id="endSeed" className="end-seed">
+          Сид забега: <b>{result.seed}</b> · узлы, баги и события повторятся с тем же сидом
+        </p>
+        <button id="againSeed" className="small" onClick={session.commands.restartSameSeed}>
+          ТОТ ЖЕ СИД
+        </button>
         <button id="again" className="primary" style={primary} onClick={session.commands.restart}>
           ПОВТОРИТЬ СЕССИЮ →
         </button>

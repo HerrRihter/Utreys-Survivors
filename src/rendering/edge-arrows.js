@@ -37,6 +37,14 @@ export function edgeTargets(s) {
     }
   }
   if (node) out.push({ x: node.x, y: node.y, label: node.id, color: '#ffd54f', distance: best });
+  if (s.event?.type === 'incident')
+    out.push({
+      x: s.event.x,
+      y: s.event.y,
+      label: 'ИНЦИДЕНТ',
+      color: '#ff8a65',
+      distance: Math.hypot(s.event.x - s.p.x, s.event.y - s.p.y),
+    });
   for (const e of s.enemies)
     if (e.boss && e.hp > 0)
       out.push({

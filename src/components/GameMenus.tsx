@@ -170,12 +170,23 @@ export function HeroSelect() {
             onChange={(event) => commands.chooseMap(event.target.value)}
           >
             {view.maps.map((map) => (
-              <option key={map.id} value={map.id}>
+              <option key={map.id} value={map.id} disabled={map.locked}>
                 {map.name}
+                {map.locked ? ' · закрыто' : ''}
               </option>
             ))}
           </select>
           <p id="mapDescription">{view.mapDescription}</p>
+          {view.mapHint && <p>{view.mapHint}</p>}
+          <label htmlFor="runSeed">СИД ЗАБЕГА</label>
+          <input
+            id="runSeed"
+            className="seed-input"
+            value={view.seed}
+            maxLength={7}
+            placeholder="случайный"
+            onChange={(event) => commands.chooseSeed(event.target.value)}
+          />
         </div>
         <div className="map-select">
           <label htmlFor="runLoad">НАГРУЗКА</label>

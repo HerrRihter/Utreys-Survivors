@@ -1,8 +1,8 @@
 import { nodeDefinitions, workaroundSeconds, workaroundRadius } from '../../data/enemies/nodes.js';
 
-// `seconds` is the workaround time on this run's load level.
-export function createNodeState(seconds = workaroundSeconds) {
-  return nodeDefinitions.map((node) => ({
+// `seconds` is the workaround time on this run's load level; `layout` gives positions and bugs.
+export function createNodeState(seconds = workaroundSeconds, layout = nodeDefinitions) {
+  return layout.map((node) => ({
     ...node,
     need: seconds,
     status: 'guarded',

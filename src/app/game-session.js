@@ -16,6 +16,7 @@ import { EnemySpawning } from '../systems/enemy-spawning.js';
 import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
 import { AbilitySystem } from '../systems/abilities.js';
+import { RunEvents } from '../systems/run-events.js';
 import { UpgradeSystem } from '../systems/upgrades.js';
 import { WeaponSystem } from '../systems/weapons.js';
 import { createCorpses } from '../systems/corpses.js';
@@ -102,6 +103,7 @@ export const GameSession = {
       units: enemies.units,
     });
     const spawning = EnemySpawning.create({ run, enemies, world, math, toast, audio });
+    const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio, math });
     function activateAbility(slot) {
       const cast = abilities.activate(slot);
       if (cast) hud.emit();
@@ -160,8 +162,9 @@ export const GameSession = {
       combat,
       spawning,
       weapons,
+      runEvents,
       settings,
-      events: { finish: flow.finish, levelUp: flow.levelUp },
+      events: { finish: flow.finish, levelUp: flow.levelUp, openBundle: flow.openBundle },
     });
     const { sprite } = SpriteRenderer.create({ run, heroes });
     const renderer = SceneRenderer.create({
@@ -315,6 +318,8 @@ export const GameSession = {
         chooseBaClient: flow.chooseBaClient,
         chooseMap: flow.chooseMap,
         chooseLoad: flow.chooseLoad,
+        chooseSeed: flow.chooseSeed,
+        restartSameSeed: flow.restartSameSeed,
         continueProduction: flow.continueProduction,
         startSelected: flow.startSelected,
         restart: flow.start,
