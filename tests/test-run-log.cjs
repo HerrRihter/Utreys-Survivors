@@ -45,7 +45,8 @@ const { computeStats, report } = require('../tools/run-stats.cjs');
   // Death by a client's hit is the cause.
   s.lastHitBy = 'pepsi';
   s.damageBy = { hero: 120.4, mine: 40 };
-  s.p.hp = 0;
+  // Far below zero: a regeneration card picked above cannot bring the hero back in one step.
+  s.p.hp = -1e6;
   game.update(0.01);
   assert.equal(game.mode, 'end');
   let entries = JSON.parse(store.get(RUN_LOG_KEY));
@@ -65,7 +66,7 @@ const { computeStats, report } = require('../tools/run-stats.cjs');
   game.pickUpgrade(0);
   game.finish(true);
   game.continueProduction();
-  game.state.p.hp = 0;
+  game.state.p.hp = -1e6;
   game.update(0.01);
   entries = JSON.parse(store.get(RUN_LOG_KEY));
   assert.equal(entries.length, 3);
