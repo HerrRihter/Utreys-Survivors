@@ -104,7 +104,7 @@ function useSubmit(onClose: () => void) {
   return { error, busy, submit };
 }
 
-function AuthDialog({ account, onClose }: { account: Account; onClose: () => void }) {
+export function AuthDialog({ account, onClose }: { account: Account; onClose: () => void }) {
   const [tab, setTab] = useState<'signIn' | 'register'>('signIn');
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');

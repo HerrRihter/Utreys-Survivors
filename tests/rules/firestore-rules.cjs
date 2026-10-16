@@ -16,6 +16,8 @@ const {
   query,
   orderBy,
   limit,
+  where,
+  getCountFromServer,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -264,6 +266,17 @@ test('tables can be listed only with a limit', async () => {
   await assertSucceeds(getDocs(query(table, orderBy('maps.empty.totalKills', 'desc'), limit(50))));
   await assertFails(getDocs(query(table, orderBy('all.games', 'desc'))));
   await assertFails(deleteDoc(statsRef(as('u1'))));
+});
+
+test('a place in a table is counted with a limit', async () => {
+  await withProfile();
+  await seed({ 'stats/u1': { ...first(), updatedAt: 1 } });
+  const table = collection(guest(), 'stats');
+  const better = where('all.bestTime', '>', 100);
+  const counted = await assertSucceeds(getCountFromServer(query(table, better, limit(1000))));
+  assert.equal(counted.data().count, 1);
+  await assertFails(getCountFromServer(query(table, better)));
+  await assertFails(getDocs(query(table, better, limit(1001))));
 });
 
 test('everything else is closed', async () => {

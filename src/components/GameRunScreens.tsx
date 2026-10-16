@@ -1,5 +1,6 @@
 import { Overlay } from './Overlay';
 import { GoalList } from './GameMenus';
+import { RunRecords } from './LeaderboardView';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
@@ -204,9 +205,11 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
 
 export function EndScreen() {
   const session = useSession();
-  const result = session.views.run().result;
+  const run = session.views.run();
+  const result = run.result;
   if (!result) return null;
   const top = result.damage.slice(0, 6);
+  const runId: string = run.state?.runId ?? '';
   return (
     <Overlay id="end">
       <div className="modal end-modal" role="dialog" aria-modal="true" aria-labelledby="endTitle">
@@ -255,6 +258,7 @@ export function EndScreen() {
             ))}
           </div>
         )}
+        {runId && <RunRecords runId={runId} />}
         <GoalList goals={result.goals} title="Ближе всего к открытию" />
         {result.canContinue && (
           <button

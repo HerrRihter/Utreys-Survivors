@@ -1,9 +1,10 @@
 import { hudScale } from '../app/run-state.js';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { createAccount } from '../services/auth.js';
 import { ConflictDialog, type Account } from './Account';
 import type { CloudProgress } from '../app/useGameSession';
+import { CloudContext } from './cloud-context';
 import { GameHud } from './GameHud';
 import {
   Achievements,
@@ -27,7 +28,11 @@ interface GameViewProps {
 export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: GameViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const account = useAccount();
-  const { session, cloud } = useGameSession(canvasRef, active, account);
+  const { session, cloud, runStats, leaderboard } = useGameSession(canvasRef, active, account);
+  const services = useMemo(
+    () => ({ account, cloud, runStats, leaderboard }),
+    [account, cloud, runStats, leaderboard],
+  );
   return (
     <>
       <canvas
@@ -38,14 +43,16 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
       />
       {session && (
         <SessionContext.Provider value={session}>
-          <GameScreens
-            session={session}
-            account={account}
-            cloud={cloud}
-            active={active}
-            onNavigateToArena={onNavigateToArena}
-            onNavigateToOpponents={onNavigateToOpponents}
-          />
+          <CloudContext.Provider value={services}>
+            <GameScreens
+              session={session}
+              account={account}
+              cloud={cloud}
+              active={active}
+              onNavigateToArena={onNavigateToArena}
+              onNavigateToOpponents={onNavigateToOpponents}
+            />
+          </CloudContext.Provider>
         </SessionContext.Provider>
       )}
     </>

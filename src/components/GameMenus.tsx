@@ -4,6 +4,8 @@ import { AccountPanel, type Account } from './Account';
 import type { CloudProgress } from '../app/useGameSession';
 import { Overlay } from './Overlay';
 import { StatsDialog } from './StatsView';
+import { LeaderboardDialog } from './LeaderboardView';
+import { useStore } from './cloud-context';
 import { Portrait } from './Portrait';
 import { useSession } from './session';
 
@@ -60,6 +62,8 @@ export function MainMenu({
   const view = session.views.menu();
   const { commands } = session;
   const [statsOpen, setStatsOpen] = useState(false);
+  const [leadersOpen, setLeadersOpen] = useState(false);
+  useStore(account);
   return (
     <Overlay id="menu" modal={false}>
       <main className="menu">
@@ -95,6 +99,11 @@ export function MainMenu({
           <button id="statsOpen" className="small" onClick={() => setStatsOpen(true)}>
             СТАТИСТИКА
           </button>
+          {account.state.status !== 'disabled' && (
+            <button id="leadersOpen" className="small" onClick={() => setLeadersOpen(true)}>
+              ЛИДЕРЫ
+            </button>
+          )}
           <button id="settingsOpen" className="small" onClick={() => commands.openSettings('menu')}>
             НАСТРОЙКИ
           </button>
@@ -140,6 +149,7 @@ export function MainMenu({
         </div>
         <GoalList goals={view.goals} title="Ближайшие открытия" />
         {statsOpen && <StatsDialog onClose={() => setStatsOpen(false)} />}
+        {leadersOpen && <LeaderboardDialog onClose={() => setLeadersOpen(false)} />}
         {hints && (
           <div id="menuHint" className="footer">
             {view.hint}

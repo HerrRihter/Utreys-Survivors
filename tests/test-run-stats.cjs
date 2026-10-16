@@ -206,13 +206,21 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
     for (let i = 0; i < 20; i++) await new Promise((resolve) => setTimeout(resolve, 0));
   };
 
-  // Signed out: the run stays local.
-  local.recordRunResult(entry({ runId: 'guest' }));
+  // Signed out: runs stay local; only the latest one waits for a sign-in.
+  local.recordRunResult(entry({ runId: 'old-guest', map: 'serverRoom' }));
+  local.recordRunResult(entry({ runId: 'guest', time: 30 }));
   await settle();
   assert.equal(docs.has('stats/u1'), false);
   assert.equal(sender.queued, 0);
+  assert.equal(sender.state.guestRun, 'guest');
 
+  // Signing in sends that run, then later ones as they end.
   signIn('u1');
+  await settle();
+  assert.equal(docs.get('stats/u1').all.games, 1, 'only the latest guest run');
+  assert.deepEqual(docs.get('stats/u1').lastRun, { map: 'empty', runId: 'guest' });
+  assert.equal(sender.state.guestRun, '');
+  docs.delete('stats/u1');
   local.recordRunResult(entry());
   await settle();
   const doc = docs.get('stats/u1');
@@ -222,6 +230,8 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
   assert.deepEqual(doc.lastRun, { map: 'empty', runId: 'r1' });
   assert.equal(sender.queued, 0);
   assert.ok(sender.state.last.improved.map.includes('bestTime'));
+  assert.equal(sender.state.last.all.bestTime, 120);
+  assert.equal(sender.state.last.map, 'empty');
 
   // A second map adds its own scope and grows the overall one.
   local.recordRunResult(entry({ runId: 'r2', map: 'serverRoom', kills: 9, addKills: 9 }));

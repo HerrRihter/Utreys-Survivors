@@ -3,10 +3,12 @@ import { applyRun, normalizeRunEntry, normalizeScope } from '../systems/run-reco
 
 // Sends counted runs of a signed-in player to stats/{uid}, the document the leaderboards
 // read. Runs wait in a queue in localStorage until they are written, so a run finished
-// offline goes up later. Runs played signed out stay local («Моя статистика» only).
+// offline goes up later. Runs played signed out stay local («Моя статистика» only), except
+// the latest one: signing in from its results screen sends it too.
 //
 // status: 'idle' | 'sending' | 'offline'
-// last: { runId, improved: { all: string[], map: string[] } } for the latest written run.
+// last: the latest written run: its id, map, the records it improved and the new values.
+// guestRun: id of the latest run played signed out, until the player signs in.
 
 export const STATS_QUEUE_KEY = 'utreys-stats-queue-v1';
 const MAX_QUEUE = 50;
@@ -19,8 +21,14 @@ export function createRunStats({
   retry = 60000,
 }) {
   const store = createStore();
-  /** @type {{ status: string, last: null | { runId: string, improved: { all: string[], map: string[] } } }} */
-  let state = { status: 'idle', last: null };
+  /**
+   * @typedef {{ all: string[], map: string[] }} Improved
+   * @typedef {{ runId: string, map: string, improved: Improved, all: any, mapScope: any }} Written
+   * @type {{ status: string, last: null | Written, guestRun: string }}
+   */
+  let state = { status: 'idle', last: null, guestRun: '' };
+  // Endings of the latest guest run, sent if the player signs in.
+  let guestEntries = [];
   let uid = '',
     running = null,
     again = false,
@@ -69,6 +77,13 @@ export function createRunStats({
       if (prev?.lastRun?.runId === entry.runId && entry.newGame) return null;
       const all = applyRun(normalizeScope(prev?.all), entry),
         map = applyRun(normalizeScope(prev?.maps?.[entry.map]), entry);
+      const written = {
+        runId: entry.runId,
+        map: entry.map,
+        improved: { all: all.improved, map: map.improved },
+        all: all.scope,
+        mapScope: map.scope,
+      };
       tx.set(ref, {
         login: user.data().login,
         all: all.scope,
@@ -76,7 +91,7 @@ export function createRunStats({
         lastRun: { map: entry.map, runId: entry.runId },
         updatedAt: serverTimestamp(),
       });
-      return { all: all.improved, map: map.improved };
+      return written;
     });
   }
 
@@ -94,8 +109,8 @@ export function createRunStats({
       const entry = normalizeRunEntry(saved);
       if (entry) {
         try {
-          const improved = await write(sdk, owner, entry);
-          if (improved) set({ last: { runId: entry.runId, improved } });
+          const written = await write(sdk, owner, entry);
+          if (written) set({ last: written });
         } catch (e) {
           // Refused by the rules: it would be refused forever, so it is dropped.
           if (e?.code !== 'permission-denied') throw e;
@@ -146,12 +161,20 @@ export function createRunStats({
     const next = account.state.status === 'signedIn' ? account.state.uid : '';
     if (next === uid) return;
     uid = next;
-    set({ status: 'idle', last: null });
+    if (uid && guestEntries.length) for (const entry of guestEntries) enqueue(uid, entry);
+    if (uid) guestEntries = [];
+    set({ status: 'idle', last: null, guestRun: '' });
     if (uid) send();
   }
   const offAccount = account.subscribe(onAccount);
   const offChange = progression.onChange((reason, entry) => {
-    if (reason !== 'run' || !uid) return;
+    if (reason !== 'run') return;
+    if (!uid) {
+      if (guestEntries[0]?.runId !== entry.runId) guestEntries = [];
+      guestEntries.push(entry);
+      set({ guestRun: entry.runId });
+      return;
+    }
     enqueue(uid, entry);
     send();
   });

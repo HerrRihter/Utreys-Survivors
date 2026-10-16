@@ -2810,3 +2810,63 @@ button:disabled {
   font-size: 10px;
   color: var(--muted);
 }
+.leaders-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.leaders-choices [aria-pressed='true'] {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.leaders-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  border-top: 1px solid var(--panel-border);
+}
+.leaders-list li {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+}
+.leaders-list li.mine {
+  background: #00e5ff14;
+  color: var(--cyan);
+}
+.leaders-list .leaders-note {
+  display: block;
+  color: var(--muted);
+}
+.leaders-place {
+  color: var(--muted);
+  text-align: right;
+}
+.leaders-login {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leaders-value {
+  text-align: right;
+  white-space: nowrap;
+}
+.leaders-value small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.leaders-own {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cyan);
+}
+.run-records {
+  margin: 12px 0;
+}

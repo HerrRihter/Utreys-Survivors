@@ -3,6 +3,7 @@ import { GameSession } from './game-session.js';
 import { createProgression } from '../systems/persistence.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
 import { createRunStats } from '../services/run-stats.js';
+import { createLeaderboard } from '../services/leaderboard.js';
 import type { Session } from '../components/session';
 import type { Account } from '../components/Account';
 
@@ -19,6 +20,7 @@ export function useGameSession(
   const [session, setSession] = useState<Session | null>(null);
   const [cloud, setCloud] = useState<CloudProgress | null>(null);
   const [runStats, setRunStats] = useState<RunStats | null>(null);
+  const [leaderboard] = useState(() => createLeaderboard({ account }));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -49,10 +51,13 @@ export function useGameSession(
       onReplace: () => created.ui.emit(),
     });
     const stats = createRunStats({ account, progression, storage });
+    // A written run changes the tables: drop cached answers.
+    const offStats = stats.subscribe(leaderboard.invalidate);
     setSession(created);
     setCloud(synced);
     setRunStats(stats);
     return () => {
+      offStats();
       stats.dispose();
       synced.dispose();
       created.dispose();
@@ -61,7 +66,7 @@ export function useGameSession(
       setCloud(null);
       setRunStats(null);
     };
-  }, [canvasRef, account]);
+  }, [canvasRef, account, leaderboard]);
 
   useEffect(() => {
     if (!session) return;
@@ -69,5 +74,5 @@ export function useGameSession(
     else session.sleep();
   }, [active, session]);
 
-  return { session, cloud, runStats };
+  return { session, cloud, runStats, leaderboard };
 }

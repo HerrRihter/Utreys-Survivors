@@ -137,7 +137,8 @@ service cloud.firestore {
           && next.login == get(userDoc(uid)).data.login;
       }
       allow get: if true;
-      allow list: if request.query.limit <= 100;
+      // Tables read 50 rows; a player's place is a count query, exact up to 1000.
+      allow list: if request.query.limit <= 1000;
       allow create: if owner(uid) && statsOk(request.resource.data, {});
       allow update: if owner(uid) && statsOk(request.resource.data, resource.data);
       allow delete: if false;
