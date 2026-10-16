@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Stage 1 of docs/FIREBASE-PLAN.md: logins and profiles. Progress and statistics come next.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    // Mirrors loginKey() in src/services/login.js.
+    function keyOf(login) {
+      return login.lower().replace('ё', 'е');
+    }
+    function validKey(key) {
+      return key.matches('^[a-z0-9_-]{3,16}$') || key.matches('^[а-я0-9_-]{3,16}$');
+    }
+
+    // logins/{key}: who owns a login. Created together with users/{uid}, never changed.
+    match /logins/{key} {
+      allow get: if signedIn();
+      allow create: if signedIn()
+        && validKey(key)
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.loginKey == key;
+      allow update, delete: if false;
+    }
+
+    // users/{uid}: the login as typed. Public, because tables show it.
+    match /users/{uid} {
+      allow get: if true;
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['login', 'loginKey', 'createdAt'])
+        && request.resource.data.login is string
+        && keyOf(request.resource.data.login) == request.resource.data.loginKey
+        && validKey(request.resource.data.loginKey)
+        && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/logins/$(request.resource.data.loginKey)).data.uid == uid;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

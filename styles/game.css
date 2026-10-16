@@ -2664,3 +2664,77 @@ button:disabled {
     padding-bottom: 76px;
   }
 }
+
+/* Account row in the main menu and the sign-in / password dialogs. */
+.account-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.account-status strong {
+  color: var(--cyan);
+}
+.account-form {
+  display: grid;
+  gap: 10px;
+  width: min(400px, calc(100vw - 32px));
+  padding: 24px;
+}
+.account-form h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--cyan);
+}
+.account-tabs {
+  display: flex;
+  gap: 8px;
+}
+.account-tabs [aria-selected='true'] {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.account-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: #d0e7eb;
+}
+.account-form input {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #06141a;
+  border: 1px solid var(--panel-border);
+  border-radius: 0;
+  min-width: 0;
+}
+.account-form input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 0;
+  border-color: var(--cyan);
+}
+.account-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.account-error {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 12px;
+  color: #ff6b81;
+}
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.account-actions .primary {
+  padding: 12px 20px;
+}

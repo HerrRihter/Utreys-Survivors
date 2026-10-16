@@ -97,6 +97,8 @@ const browser = readonly([
   'PointerEvent',
   'matchMedia',
   'structuredClone',
+  'TextEncoder',
+  'TextDecoder',
 ]);
 const node = readonly([
   'require',
@@ -113,6 +115,8 @@ const node = readonly([
   'clearInterval',
   'URL',
   'structuredClone',
+  'TextEncoder',
+  'TextDecoder',
 ]);
 const shared = {
   ...recommended,

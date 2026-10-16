@@ -1,6 +1,8 @@
 import { hudScale } from '../app/run-state.js';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
+import { createAccount } from '../services/auth.js';
+import type { Account } from './Account';
 import { GameHud } from './GameHud';
 import {
   Achievements,
@@ -24,6 +26,7 @@ interface GameViewProps {
 export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: GameViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const session = useGameSession(canvasRef, active);
+  const account = useAccount();
   return (
     <>
       <canvas
@@ -36,6 +39,7 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
         <SessionContext.Provider value={session}>
           <GameScreens
             session={session}
+            account={account}
             active={active}
             onNavigateToArena={onNavigateToArena}
             onNavigateToOpponents={onNavigateToOpponents}
@@ -46,14 +50,32 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
   );
 }
 
+// The account lives as long as the game view; the Firebase SDK loads once the menu is idle.
+function useAccount() {
+  const [account] = useState(() => createAccount());
+  useEffect(() => {
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => account.start(), { timeout: 3000 })
+      : window.setTimeout(() => account.start(), 1000);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+      account.dispose();
+    };
+  }, [account]);
+  return account;
+}
+
 // Which panel is open follows the run state: mode (menu/play/pause/level/end) and screen.
 function GameScreens({
   session,
+  account,
   active,
   onNavigateToArena,
   onNavigateToOpponents,
 }: {
   session: Session;
+  account: Account;
   active: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
@@ -93,6 +115,7 @@ function GameScreens({
         )}
       {mode === 'menu' && screen === 'menu' && (
         <MainMenu
+          account={account}
           hints={settings.hints}
           onNavigateToArena={onNavigateToArena}
           onNavigateToOpponents={onNavigateToOpponents}
