@@ -2,10 +2,12 @@ import { useEffect, useState, type RefObject } from 'react';
 import { GameSession } from './game-session.js';
 import { createProgression } from '../systems/persistence.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
+import { createRunStats } from '../services/run-stats.js';
 import type { Session } from '../components/session';
 import type { Account } from '../components/Account';
 
 export type CloudProgress = ReturnType<typeof createCloudProgress>;
+export type RunStats = ReturnType<typeof createRunStats>;
 
 // Mounts one game session on the canvas and keeps it running only while the game view is shown.
 // The saved progression follows the account's cloud copy while a player is signed in.
@@ -16,6 +18,7 @@ export function useGameSession(
 ) {
   const [session, setSession] = useState<Session | null>(null);
   const [cloud, setCloud] = useState<CloudProgress | null>(null);
+  const [runStats, setRunStats] = useState<RunStats | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -45,14 +48,18 @@ export function useGameSession(
       storage,
       onReplace: () => created.ui.emit(),
     });
+    const stats = createRunStats({ account, progression, storage });
     setSession(created);
     setCloud(synced);
+    setRunStats(stats);
     return () => {
+      stats.dispose();
       synced.dispose();
       created.dispose();
       progression.dispose();
       setSession(null);
       setCloud(null);
+      setRunStats(null);
     };
   }, [canvasRef, account]);
 
@@ -62,5 +69,5 @@ export function useGameSession(
     else session.sleep();
   }, [active, session]);
 
-  return { session, cloud };
+  return { session, cloud, runStats };
 }

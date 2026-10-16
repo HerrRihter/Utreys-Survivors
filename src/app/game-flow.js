@@ -46,6 +46,30 @@ export const GameFlow = {
       ui.emit();
       hud.emit();
     }
+    // Run statistics (src/systems/run-records.js): every ending adds what is new since the
+    // previous ending of the same run. Win, death, quitting to the menu and restarting all end
+    // a run; a run continued in production ends again later. `victory` only from finish().
+    function countRun(victory = false) {
+      const s = run.state;
+      if (!s?.runId) return null;
+      const counted = s.statsCounted || { kills: 0, codes: 0 };
+      const improved = progression.recordRunResult?.({
+        runId: s.runId,
+        map: s.map,
+        hero: run.selected,
+        load: s.load,
+        newGame: !s.statsCounted,
+        addKills: s.kills - counted.kills,
+        addCodes: s.earned - counted.codes,
+        time: s.t,
+        kills: s.kills,
+        codes: s.earned,
+        victory,
+        production: s.endless ? s.t - s.endlessStart : 0,
+      });
+      if (improved) s.statsCounted = { kills: s.kills, codes: s.earned };
+      return improved;
+    }
     // Time, level and the production record; once per ending (a continued run records again).
     // Mastery stats are recorded once per run, at its first ending.
     function recordRun(win = false) {
@@ -97,6 +121,7 @@ export const GameFlow = {
       !!arenaDefinitions[id] && (!arenaDefinitions[id].unlock || progression.data.stats.wins > 0);
     function start() {
       recordRun();
+      countRun();
       snapshots?.clear();
       if (!progression.owned(run.selected)) run.selected = 'utrace';
       if (!mapOpen(run.selectedMap)) {
@@ -116,6 +141,8 @@ export const GameFlow = {
       run.selectedLoad = load;
       run.state = {
         t: 0,
+        // Identifies the run in the statistics, so a second ending never adds a game.
+        runId: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
         load,
         healFactor: Math.max(0, 1 + mods.heal),
         map: run.selectedMap,
@@ -203,6 +230,7 @@ export const GameFlow = {
     }
     function menu() {
       recordRun();
+      countRun();
       snapshots?.clear();
       progression.flush();
       setMode('menu');
@@ -337,6 +365,8 @@ export const GameFlow = {
       );
       s.earned += greed;
       s.earnedPaid = s.earned;
+      // After the bonuses: the codes of this ending are final.
+      s.recordsImproved = countRun(win && !endless);
       snapshots?.clear();
       progression.flush();
       audio.finish(win);

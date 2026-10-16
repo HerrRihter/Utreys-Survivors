@@ -343,6 +343,8 @@ export const GameSession = {
         levelControls: () => views.levelControlsView(read),
         hud: () => views.hudView(read),
         settings: () => views.settingsView({ run, settings, audio, runLog }),
+        // Totals and records per map for «Моя статистика».
+        runStats: () => progression.data.runStats,
       },
       commands: {
         openHeroSelect: flow.openHeroSelect,

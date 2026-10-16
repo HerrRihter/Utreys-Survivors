@@ -1,6 +1,7 @@
 import { heroUnlockPrices, permanentUpgrades } from '../../data/upgrades.js';
 import { achievementDefinitions } from '../../data/achievements.js';
 import { maxLoad } from '../../data/difficulty.js';
+import { addRunToStats, normalizeRunEntry, normalizeRunStats } from './run-records.js';
 const prices = heroUnlockPrices,
   upgrades = permanentUpgrades;
 const integer = (v, max = 1e9) => (Number.isSafeInteger(v) && v >= 0 ? Math.min(max, v) : 0);
@@ -37,10 +38,13 @@ export function normalizeProgression(saved) {
     // Highest load level won per hero, and production records per hero and level.
     loads: {},
     production: {},
+    // Totals and records per map for «Моя статистика» (src/systems/run-records.js).
+    runStats: normalizeRunStats(null),
   };
   for (const id of Object.keys(upgrades)) data.levels[id] = 0;
   try {
     if (saved && typeof saved === 'object') {
+      data.runStats = normalizeRunStats(saved.runStats);
       data.codes = integer(saved.codes ?? saved.helmets ?? 0);
       data.kills = integer(saved.kills);
       if (Array.isArray(saved.unlocked))
@@ -157,11 +161,12 @@ export function createProgression({
       persistent = false;
     }
   }
-  // Listeners hear about saves worth syncing elsewhere: purchases, run results ('save') and
-  // the page going away ('hidden'). Combat income alone does not notify.
+  // Listeners hear about saves worth syncing elsewhere: purchases, run results ('save'), a
+  // counted run ending ('run', with the entry) and the page going away ('hidden'). Combat
+  // income alone does not notify.
   const listeners = new Set();
-  const notify = (reason) => {
-    for (const listener of [...listeners]) listener(reason);
+  const notify = (reason, payload) => {
+    for (const listener of [...listeners]) listener(reason, payload);
   };
   function onChange(listener) {
     listeners.add(listener);
@@ -318,6 +323,17 @@ export function createProgression({
     }
     save();
   }
+  // A run ending for the statistics; returns the records it improved, or null when the
+  // ending does not count (too short, nothing new since the last ending of this run).
+  function recordRunResult(entry) {
+    const clean = normalizeRunEntry(entry);
+    if (!clean) return null;
+    const { stats, improved } = addRunToStats(data.runStats, clean);
+    data.runStats = stats;
+    save();
+    notify('run', clean);
+    return improved;
+  }
   const evolutionSeen = (id) => data.evolutionsSeen.includes(id);
   function recordEvolution(id) {
     if (typeof id !== 'string' || !/^[a-z_]+$/.test(id) || evolutionSeen(id)) return false;
@@ -388,6 +404,7 @@ export function createProgression({
     upgradeSpent,
     respec,
     recordRunStats,
+    recordRunResult,
     achievementDone,
     weaponUnlocked,
     evolutionSeen,

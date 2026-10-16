@@ -2769,3 +2769,44 @@ button:disabled {
   color: var(--cyan);
   font-size: 11px;
 }
+/* The statistics table needs more room than other dialogs; only the table scrolls. */
+.detail-dialog:has(.stats-form) {
+  max-width: min(760px, calc(100vw - 32px));
+  overflow-x: hidden;
+}
+.stats-form {
+  width: min(760px, calc(100vw - 34px));
+  min-width: 0;
+}
+.stats-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.stats-table th,
+.stats-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--panel-border);
+  text-align: right;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.stats-table tbody th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: normal;
+}
+.stats-table thead th {
+  color: var(--cyan);
+  font-size: 11px;
+  white-space: normal;
+}
+.stats-table td small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}

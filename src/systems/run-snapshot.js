@@ -57,6 +57,8 @@ export function snapshotRun(run) {
         'eventIndex',
         'event',
         'statsRecorded',
+        'runId',
+        'statsCounted',
         'earnedPaid',
         'firstHurtAt',
         'foodTaken',
