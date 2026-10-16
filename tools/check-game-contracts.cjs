@@ -50,7 +50,17 @@ function validateSchedules(schedules, maps, units) {
     );
     if (Object.hasOwn(schedule, 'active'))
       fail(typeof schedule.active === 'boolean', id + '.active must be boolean');
-    shape(schedule.normal, ['firstDelay', 'stages'], id + '.normal');
+    shape(
+      schedule.normal,
+      inactive ? ['firstDelay', 'stages'] : ['firstDelay', 'shares', 'stages'],
+      id + '.normal',
+    );
+    if (!inactive)
+      for (const [role, share] of Object.entries(schedule.normal.shares || {}))
+        fail(
+          ['shooter', 'tank', 'light'].includes(role) && share > 0 && share <= 1,
+          id + '.normal.shares.' + role,
+        );
     number(schedule.normal.firstDelay, 0, id + '.firstDelay');
     fail(Array.isArray(schedule.normal.stages), id + '.normal.stages must be an array');
     if (inactive)
@@ -62,10 +72,21 @@ function validateSchedules(schedules, maps, units) {
     for (const stage of schedule.normal.stages) {
       shape(
         stage,
-        ['time', 'interval', 'minInterval', 'timeFactor', 'batch', 'batchEvery', 'cap', 'weights'],
+        [
+          'time',
+          'interval',
+          'minInterval',
+          'timeFactor',
+          'batch',
+          'batchEvery',
+          'cap',
+          'strength',
+          'weights',
+        ],
         id + '.stage',
       );
       positive(stage.interval, 'interval');
+      positive(stage.strength, 'strength');
       positive(stage.minInterval, 'minInterval');
       fail(stage.minInterval <= stage.interval, 'minInterval exceeds interval');
       number(stage.timeFactor, 0, 'timeFactor');
@@ -151,10 +172,13 @@ function validateSchedules(schedules, maps, units) {
           'message',
           'sound',
           ...('hpScale' in schedule.boss ? ['hpScale'] : []),
+          ...('heal' in schedule.boss ? ['heal'] : []),
         ],
         id + '.boss',
       );
       if ('hpScale' in schedule.boss) positive(schedule.boss.hpScale, 'boss.hpScale');
+      if ('heal' in schedule.boss)
+        fail(schedule.boss.heal > 0 && schedule.boss.heal <= 1, 'boss.heal must be a share');
       unit(schedule.boss.unit);
       fail(schedule.boss.condition === 'all-nodes-resolved', 'boss condition');
       fail(
@@ -244,7 +268,7 @@ function validateUnits(units) {
       );
     assert(/^#[0-9a-f]{6}$/i.test(unit.color), `Unit contract: ${id}.color`);
     assert(
-      ['melee', 'projectile', 'pulse'].includes(unit.attack ?? 'melee'),
+      ['melee', 'projectile', 'pulse', 'mortar'].includes(unit.attack ?? 'melee'),
       `Unit contract: ${id}.attack`,
     );
     if (unit.frontDamageMultiplier != null)
@@ -253,6 +277,47 @@ function validateUnits(units) {
         `Unit contract: ${id}.armor`,
       );
     if (unit.attack === 'projectile') assert(unit.range > 20, `Unit contract: ${id}.range`);
+    if (unit.attack === 'mortar') assert(unit.mortar, `Unit contract: ${id}.mortar`);
+    if (unit.shots != null) {
+      assert(unit.attack === 'projectile', `Unit contract: ${id}.shots needs projectile`);
+      assert(
+        Number.isInteger(unit.shots.count) && unit.shots.count > 0,
+        `Unit contract: ${id}.shots`,
+      );
+    }
+    // Optional role fields: every number they hold is finite and positive (shares up to 1).
+    const role = {
+      dash: ['trigger', 'wind', 'speed', 'time', 'cooldown'],
+      mortar: ['radius', 'delay', 'count'],
+      heal: ['every', 'radius', 'amount'],
+      aura: ['radius', 'reduction'],
+      deathBlast: ['radius', 'delay', 'damage'],
+      enrage: ['below', 'speed', 'cooldown'],
+      slow: ['amount', 'duration'],
+      summon: ['count', 'every', 'max'],
+      pools: ['every', 'count', 'radius', 'life', 'damage', 'reach'],
+    };
+    for (const [field, keys] of Object.entries(role)) {
+      if (unit[field] == null) continue;
+      for (const key of keys)
+        assert(
+          Number.isFinite(unit[field][key]) && unit[field][key] > 0,
+          `Unit contract: ${id}.${field}.${key}`,
+        );
+    }
+    for (const share of [unit.aura?.reduction, unit.heal?.amount, unit.slow?.amount])
+      if (share != null) assert(share < 1, `Unit contract: ${id} share below 1`);
+    for (const list of [unit.summon?.units, ...(unit.phases || []).map((p) => p.summon?.units)])
+      if (list)
+        for (const other of list)
+          assert(units[other] && !units[other].boss, `Unit contract: ${id} summons ${other}`);
+    if (unit.phases != null) {
+      assert(unit.boss, `Unit contract: ${id}.phases needs a boss`);
+      unit.phases.forEach((phase, i) => {
+        assert(phase.at > 0 && phase.at < 1, `Unit contract: ${id}.phases.at`);
+        if (i) assert(phase.at < unit.phases[i - 1].at, `Unit contract: ${id}.phases order`);
+      });
+    }
     if (unit.burst != null) {
       const { reach, ring, sound } = unit.burst;
       assert((unit.attack ?? 'melee') === 'melee', `Unit contract: ${id}.burst needs melee`);

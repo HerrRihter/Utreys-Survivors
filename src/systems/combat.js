@@ -5,6 +5,7 @@ import { protectedMove, effectiveStats } from './ability-state.js';
 import { passiveDamage } from './hero-passives.js';
 import { production } from '../../data/difficulty.js';
 import { elite } from './difficulty.js';
+import { auraFactor, deathBlast } from './enemy-behaviors.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
@@ -13,7 +14,7 @@ export const CombatSystem = {
     function damage(e, n, dx = 0, dy = 0, source = run.state.p, tag = 'hero') {
       if (e.hp <= 0 || n <= 0) return;
       const st = run.state;
-      n *= enemies.mitigation(e, source);
+      n *= enemies.mitigation(e, source) * auraFactor(st, e, enemies.units);
       if (e.markedUntil > st.t) n *= 1.3;
       const passive = passiveDamage(st, e, n, tag, math.random);
       n = passive.n;
@@ -22,7 +23,13 @@ export const CombatSystem = {
       e.hp -= n;
       audio.effect('hit');
       e.hit = 0.12;
-      if (e.hp > 0 && e.type === 'enemy') {
+      // A hit interrupts light enemies (a charger loses its lunge too); heavy units (tanks,
+      // the boss) keep their attacks going, and bugs shrug off hits for `poise` seconds after
+      // each interruption.
+      const u = enemies.units[e.unit];
+      if (e.hp > 0 && e.type === 'enemy' && !u?.heavy && !(e.poiseUntil > st.t)) {
+        if (u?.poise) e.poiseUntil = st.t + u.poise;
+        if (e.dash?.phase === 'wind') e.dash = null;
         e.hurt = {
           elapsed: 0,
           duration: 0.34,
@@ -47,6 +54,7 @@ export const CombatSystem = {
         });
       if (e.hp <= 0) {
         audio.effect('death');
+        if (u?.deathBlast) deathBlast(st, e, u);
         corpses.add(
           run.state.corpses,
           e,
@@ -125,8 +133,13 @@ export const CombatSystem = {
     }
     function hurtPlayer(e) {
       const p = run.state.p;
-      if (p.hp <= 0 || p.inv > 0 || protectedMove(run.state)) return;
+      if (p.hp <= 0 || p.inv > 0 || protectedMove(run.state)) return false;
       p.hp -= Math.max(1, e.damage - run.state.stats.armor);
+      const slow = !e.kind && enemies.units[e.unit]?.slow;
+      if (slow) {
+        p.slowUntil = run.state.t + slow.duration;
+        p.slowAmount = slow.amount;
+      }
       run.state.firstHurtAt ??= run.state.t;
       run.state.lastHitBy = e.unit || e.kind || 'unknown';
       p.inv = 0.7;

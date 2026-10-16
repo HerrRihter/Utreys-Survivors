@@ -194,7 +194,7 @@ export const GameSession = {
       weapons,
       runEvents,
       settings,
-      events: { finish: flow.finish, levelUp: flow.levelUp, openBundle: flow.openBundle },
+      events: { finish: flow.finish, levelUp: flow.levelUp, openBundle: flow.openBundle, toast },
     });
     const { sprite } = SpriteRenderer.create({ run, heroes });
     const renderer = SceneRenderer.create({

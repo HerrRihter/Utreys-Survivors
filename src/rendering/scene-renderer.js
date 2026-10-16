@@ -70,6 +70,11 @@ export const SceneRenderer = {
           maxY = cy + view.H + 50;
         drawNodes(ctx, s.nodes);
         drawEvent(ctx, s);
+        for (const h of s.hazards || []) {
+          if (h.x < minX - h.r || h.x > maxX + h.r || h.y < minY - h.r || h.y > maxY + h.r)
+            continue;
+          enemies.hazard(ctx, h);
+        }
         corpses.draw(ctx, s.corpses, cx, cy, view.W, view.H);
         for (const h of s.codes) {
           if (h.x < minX || h.x > maxX || h.y < minY || h.y > maxY) continue;

@@ -163,6 +163,7 @@ export const GameFlow = {
         ),
         corpses: [],
         enemyShots: [],
+        hazards: [],
         shots: [],
         codes: [],
         earned: 0,
