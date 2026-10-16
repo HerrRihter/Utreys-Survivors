@@ -33,7 +33,9 @@ export function useOpponentPreview({
     let lastTime = performance.now();
 
     const loop = (t: number) => {
-      const dt = Math.min(0.05, (t - lastTime) / 1000 || 0);
+      // The first frame's timestamp can predate lastTime, so never let the clock run backwards:
+      // a negative phase makes phase % delay negative and the blast preview's arc radius with it.
+      const dt = Math.min(0.05, Math.max(0, (t - lastTime) / 1000 || 0));
       lastTime = t;
       if (!frozen) phase += dt;
       phaseRef.current = phase;
