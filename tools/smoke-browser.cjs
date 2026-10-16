@@ -2,14 +2,15 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 fs.mkdirSync('test-results', { recursive: true });
-const { chromium } = require('playwright');
+const { chromium, firefox } = require('playwright');
 const { createServer } = require('./server.cjs');
 const assets = require('./active-assets.json');
 
 (async () => {
-  const browser = await chromium.launch({
+  const isFirefox = process.env.BROWSER === 'firefox';
+  const browser = await (isFirefox ? firefox : chromium).launch({
     headless: true,
-    ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}),
+    ...(!isFirefox && process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}),
   });
   try {
     for (const prefix of ['/', '/utreys-survivors/']) {
