@@ -1,3 +1,5 @@
+import { heroPassives } from './characters/hero-passives.js';
+
 export const heroUnlockPrices = { traceability: 80, serialization: 100, ba: 120, qa: 140 };
 
 export const permanentUpgradeDefinitions = {
@@ -57,45 +59,38 @@ export const permanentUpgradeDefinitions = {
     stat: 'regen',
     factor: 0.15,
   },
+  // Level-up controls: every run starts with one of each, ranks add more.
+  rerolls: {
+    name: 'Перегенерация',
+    desc: '+1 реролл карточек за забег',
+    max: 3,
+    stat: 'rerolls',
+    factor: 1,
+  },
+  skips: {
+    name: 'Отложенный релиз',
+    desc: '+1 пропуск левелапа за забег',
+    max: 3,
+    stat: 'skips',
+    factor: 1,
+  },
+  banishes: {
+    name: 'Чёрный список',
+    desc: '+1 бан карточки за забег',
+    max: 3,
+    stat: 'banishes',
+    factor: 1,
+  },
 };
+export const levelUpControls = ['rerolls', 'skips', 'banishes'];
 
-export const heroTrainingDefinitions = {
-  traceability: {
-    name: 'Оптимизация: Полная прослеживаемость',
-    desc: '+6% к темпу основной атаки',
-    max: 3,
-    stat: 'punchTempo',
-    factor: 0.06,
-  },
-  serialization: {
-    name: 'Оптимизация: Сериализация',
-    desc: '+6% к темпу основной атаки',
-    max: 3,
-    stat: 'punchTempo',
-    factor: 0.06,
-  },
-  ba: {
-    name: 'Оптимизация: БА',
-    desc: '+6% к темпу основной атаки',
-    max: 3,
-    stat: 'punchTempo',
-    factor: 0.06,
-  },
-  qa: {
-    name: 'Оптимизация: QA',
-    desc: '+6% к темпу основной атаки',
-    max: 3,
-    stat: 'punchTempo',
-    factor: 0.06,
-  },
-  utrace: {
-    name: 'Оптимизация Utrace',
-    desc: '+6% к темпу обработки запросов',
-    max: 3,
-    stat: 'punchTempo',
-    factor: 0.06,
-  },
-};
+// Hero trainings strengthen the hero's own passive (see data/characters/hero-passives.js).
+export const heroTrainingDefinitions = Object.fromEntries(
+  ['traceability', 'serialization', 'ba', 'qa', 'utrace'].map((hero) => [
+    hero,
+    { ...heroPassives[hero].training, max: 3 },
+  ]),
+);
 
 export const permanentUpgrades = {
   ...permanentUpgradeDefinitions,

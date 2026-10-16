@@ -1,11 +1,15 @@
 import { createNodeState } from '../systems/node-objectives.js';
 import { getWaveSchedule, createWaveState } from '../systems/wave-schedule.js';
-import { permanentUpgradeDefinitions } from '../../data/upgrades.js';
+import { permanentUpgradeDefinitions, levelUpControls } from '../../data/upgrades.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { arenaDefinitions } from '../world/arenas.js';
+import { weaponDefinitions } from '../../data/weapons.js';
+import { restoreRun } from '../systems/run-snapshot.js';
 
 // Run lifecycle (start, pause, level-up, finish) and menu navigation. Only changes state:
 // React reads `run` through the session's stores, `ui.emit()` / `hud.emit()` announce changes.
+export const LEVEL_LOCK = 0.4;
+
 export const GameFlow = {
   create({
     run,
@@ -16,6 +20,9 @@ export const GameFlow = {
     upgrades,
     world,
     abilities,
+    weapons,
+    spawning,
+    snapshots,
     audio,
     input,
     math,
@@ -41,6 +48,7 @@ export const GameFlow = {
     }
     function start() {
       recordRun();
+      snapshots?.clear();
       if (!progression.owned(run.selected)) run.selected = 'utrace';
       const hero = heroes.defs[run.selected],
         levels = progression.data.levels,
@@ -90,6 +98,12 @@ export const GameFlow = {
         },
       };
       abilities.init();
+      weapons.init();
+      run.state.heroWeaponName = hero.weapon;
+      run.state.damageBy = {};
+      run.state.upgradeRanks = {};
+      run.state.banned = [];
+      for (const key of levelUpControls) run.state[key] = 1 + (levels[key] || 0);
       if (run.selected === 'ba')
         run.state.baSpecialization = {
           client: baClientIds.includes(run.baClient) ? run.baClient : baClientIds[0],
@@ -102,6 +116,7 @@ export const GameFlow = {
       );
       run.screen = null;
       run.result = null;
+      run.tip = { text: '', left: 0 };
       setMode('play');
       const map = arenaDefinitions[run.selectedMap];
       toast(map.name.toUpperCase() + ' · ' + map.description);
@@ -110,6 +125,7 @@ export const GameFlow = {
     }
     function menu() {
       recordRun();
+      snapshots?.clear();
       progression.flush();
       setMode('menu');
       run.state = null;
@@ -123,11 +139,16 @@ export const GameFlow = {
         progression.flush();
         setMode('pause');
         input.resetInput();
+        snapshots?.save(run);
       } else if (run.mode === 'pause') {
         setMode('play');
       } else return;
       if (run.screen === 'settings') run.screen = null;
       changed();
+    }
+    function offerCards() {
+      run.choice = upgrades.offer(run.selected, run.state);
+      run.banishArmed = false;
     }
     function levelUp() {
       const s = run.state;
@@ -136,38 +157,113 @@ export const GameFlow = {
       s.need = Math.floor(s.need * 1.23 + 3);
       setMode('level');
       input.resetInput();
-      run.choice = upgrades.offer(run.selected, s);
+      // A short lock stops a held key or a stray tap from picking a card the player never saw.
+      run.levelLock = LEVEL_LOCK;
+      offerCards();
       audio.effect('level');
       changed();
     }
     function pickUpgrade(i) {
       if (run.mode !== 'level' || !run.choice[i]) return;
+      if (run.banishArmed) return banish(i);
       upgrades.apply(run.choice[i], run.state);
+      closeLevel();
+    }
+    function closeLevel() {
+      run.banishArmed = false;
       setMode('play');
       audio.effect('ui');
       if (run.state.xp >= run.state.need) levelUp();
       else changed();
     }
+    // Player input (keys 1-4, clicks) honours the opening lock; tools call pickUpgrade directly.
+    function chooseCard(i) {
+      if (run.levelLock > 0) return;
+      pickUpgrade(i);
+    }
+    const levelReady = () => run.mode === 'level' && run.levelLock <= 0;
+    // New cards for one reroll.
+    function reroll() {
+      if (!levelReady() || !(run.state.rerolls > 0)) return;
+      run.state.rerolls--;
+      offerCards();
+      audio.effect('ui');
+      ui.emit();
+    }
+    // Leave the level-up without taking anything.
+    function skip() {
+      if (!levelReady() || !(run.state.skips > 0)) return;
+      run.state.skips--;
+      closeLevel();
+    }
+    // Ban mode: the next card picked is removed from this run's offers.
+    function armBanish() {
+      if (!levelReady() || !(run.state.banishes > 0)) return;
+      run.banishArmed = !run.banishArmed;
+      ui.emit();
+    }
+    function banish(i) {
+      const card = run.choice[i];
+      if (!card?.max || !(run.state.banishes > 0)) {
+        run.banishArmed = false;
+        ui.emit();
+        return;
+      }
+      run.state.banishes--;
+      run.state.banned.push(card.id);
+      offerCards();
+      audio.effect('ui');
+      ui.emit();
+    }
+    // Key rebinding: the settings screen arms an action, the next key press is taken.
+    function startCapture(action) {
+      run.capture = action;
+      ui.emit();
+    }
+    function captureKey(code) {
+      if (!run.capture) return false;
+      if (code !== 'Escape') settings.bind(run.capture, code);
+      run.capture = null;
+      ui.emit();
+      return true;
+    }
+    function resetBindings() {
+      settings.resetBindings();
+      ui.emit();
+    }
+    function setUiScale(value) {
+      settings.setUiScale(value);
+      ui.emit();
+    }
     function finish(win) {
       const s = run.state;
       if (!s || s.resultRecorded) return;
       recordRun();
+      snapshots?.clear();
       progression.flush();
       audio.finish(win);
       setMode('end');
       input.resetInput();
+      const previousBest = { ...run.best };
       run.result = {
+        win,
         tag: win ? arenaDefinitions[run.selectedMap].victoryTag : 'ЗАБЕГ ОКОНЧЕН',
-        title: win ? 'Забег завершён' : 'Попробовать ещё раз?',
+        title: win ? 'Забег завершён' : 'Контур перегружен',
         text: win
-          ? 'Отличный результат. Можно начать новый забег или проверить улучшения.'
-          : 'Даже героям нужен привал. Попробуй другую сборку и вернись в игру.',
+          ? 'Шлюз ЦРПТ пройден. Можно начать новый забег или проверить улучшения.'
+          : 'Попробуй другую сборку: другое оружие и пассивки меняют забег.',
         stats: [
-          { value: math.clock(s.t), label: 'ВРЕМЯ' },
-          { value: String(s.kills), label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО' },
+          { value: math.clock(s.t), label: 'ВРЕМЯ', best: s.t > (previousBest.time || 0) },
+          {
+            value: String(s.kills),
+            label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО',
+            best: s.kills > (previousBest.kills || 0),
+          },
           { value: String(s.level), label: 'УРОВЕНЬ' },
-          { value: '+' + s.earned, label: 'ЖЕТОНОВ' },
+          { value: '+' + s.earned, label: 'КОДОВ' },
         ],
+        damage: damageReport(s),
+        build: upgrades.build(run.selected, s),
       };
       run.best = {
         kills: Math.max(run.best.kills || 0, s.kills),
@@ -177,6 +273,53 @@ export const GameFlow = {
         storage.setItem('utreys-best', JSON.stringify(run.best));
       } catch {}
       changed();
+    }
+
+    // Continues a saved run: a fresh start with the saved data put back, paused.
+    function resume() {
+      const snapshot = snapshots?.load();
+      if (!snapshot || run.mode !== 'menu') return false;
+      if (!heroes.defs[snapshot.hero] || !progression.owned(snapshot.hero)) {
+        snapshots.clear();
+        ui.emit();
+        return false;
+      }
+      run.selected = run.pendingHero = snapshot.hero;
+      if (arenaDefinitions[snapshot.map]) run.selectedMap = snapshot.map;
+      world.select(run.selectedMap);
+      if (snapshot.baClient) run.baClient = snapshot.baClient;
+      start();
+      restoreRun(run.state, snapshot, spawning.spawn);
+      if (snapshot.pendingLevel) {
+        setMode('level');
+        run.levelLock = LEVEL_LOCK;
+        offerCards();
+        audio.effect('level');
+      } else setMode('pause');
+      snapshots.save(run);
+      changed();
+      return true;
+    }
+
+    // Damage per source, largest first, with display names.
+    function damageReport(s) {
+      const total = Object.values(s.damageBy || {}).reduce((sum, n) => sum + n, 0) || 1;
+      return Object.entries(s.damageBy || {})
+        .map(([tag, amount]) => ({
+          tag,
+          name: sourceName(tag),
+          amount: Math.round(amount),
+          share: Math.round((amount / total) * 100),
+        }))
+        .sort((a, b) => b.amount - a.amount);
+    }
+    function sourceName(tag) {
+      if (tag === 'hero') return heroes.defs[run.selected].weapon;
+      const ability = run.state.abilities?.find((a) => a.id === tag);
+      if (ability) return `${ability.name} (${run.state.abilities.indexOf(ability) ? 'E' : 'Q'})`;
+      const w = run.state.weapons?.find((item) => item.id === tag);
+      const def = weaponDefinitions[tag];
+      return def ? (w?.evolved ? def.evolution.name : def.name) : tag;
     }
 
     // Menu screens. Each returns nothing and announces the change.
@@ -256,6 +399,15 @@ export const GameFlow = {
       pause,
       levelUp,
       pickUpgrade,
+      chooseCard,
+      resume,
+      reroll,
+      skip,
+      armBanish,
+      startCapture,
+      captureKey,
+      resetBindings,
+      setUiScale,
       finish,
       openHeroSelect,
       closeHeroSelect: () => show('menu'),

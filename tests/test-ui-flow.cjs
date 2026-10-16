@@ -61,12 +61,24 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   s.update(0.01);
   assert.equal(s.mode, 'level');
   assert.equal(s.views.levelUp().length, run.choice.length);
+  assert(
+    run.choice.some((card) => card.kind === 'weapon' || card.kind === 'hero'),
+    'every level-up offers a weapon',
+  );
+  commands.pickUpgrade(0);
+  assert.equal(s.mode, 'level', 'a card cannot be picked during the opening lock');
+  for (let t = 1016; t <= 1500; t += 16) h.tick(t);
   commands.pickUpgrade(0);
   assert.equal(s.mode, 'play');
 
   s.finish(true);
   assert.equal(s.mode, 'end');
   assert.equal(run.result.title, 'Забег завершён');
+  assert(Array.isArray(run.result.damage) && run.result.build.weapons[0].id === 'hero');
+  assert(
+    run.result.stats.every((stat) => !/ЖЕТОН/.test(stat.label)),
+    'codes, not tokens',
+  );
   assert.equal(s.views.hud().showPause, false, 'pause button hidden after the run');
   commands.menu();
   assert.equal(s.mode, 'menu');

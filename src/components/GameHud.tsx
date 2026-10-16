@@ -1,4 +1,5 @@
 import { SoundButton } from './GameMenus';
+import { BuildPanel } from './GameRunScreens';
 import { useHudVersion, useSession } from './session';
 
 const hidden = (visible: boolean, className = '') =>
@@ -31,6 +32,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
           <div style={{ fontSize: '10px', marginTop: '8px' }} id="levelText">
             {hud?.levelText}
           </div>
+          <BuildPanel build={hud?.build ?? null} detailed={false} />
         </div>
         <div className="topcenter">
           <div className="clock" id="time">
@@ -48,8 +50,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
       </div>
 
       <div id="hint" className={hidden(!!hud?.showHint, 'controls')}>
-        WASD / СТРЕЛКИ — ПЕРЕМЕЩЕНИЕ &nbsp; · &nbsp; ТРАССИРОВКА — АВТОМАТИЧЕСКИ &nbsp; · &nbsp; Q /
-        E — УМЕНИЯ &nbsp; · &nbsp; ESC — ПАУЗА · УЗЛЫ: УНИЧТОЖЬТЕ БАГ ИЛИ СТОЙТЕ В КРУГЕ 6 С
+        {hud?.hint}
       </div>
 
       <div id="actions" className="actions">
@@ -62,6 +63,10 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
         >
           Ⅱ ПАУЗА
         </button>
+      </div>
+
+      <div id="tip" className="tip" role="status" style={{ opacity: hud?.tip ? 1 : 0 }}>
+        {hud?.tip}
       </div>
 
       <div id="toast" style={{ opacity: run.toast.left > 0 ? 1 : 0 }}>
