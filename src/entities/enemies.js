@@ -59,9 +59,34 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
   }
 
   function telegraph(g, e) {
-    if (!e.action || e.action.hit) return;
     const u = units[e.unit];
     if (!u) return;
+    if (u.aura) {
+      // A guard's cover zone is always visible.
+      g.save();
+      g.strokeStyle = u.color + '55';
+      g.setLineDash?.([6, 6]);
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(e.x, e.y, u.aura.radius, 0, Math.PI * 2);
+      g.stroke();
+      g.restore();
+    }
+    if (e.dash?.phase === 'wind') {
+      // The lunge line: where the charger will run.
+      const length = u.dash.speed * u.dash.time;
+      g.save();
+      g.translate(e.x, e.y);
+      g.rotate(Math.atan2(e.dash.dy, e.dash.dx));
+      g.fillStyle = u.color + '40';
+      g.strokeStyle = '#00e5ff';
+      g.lineWidth = 2;
+      g.fillRect(0, -14, length, 28);
+      g.strokeRect(0, -14, length, 28);
+      g.restore();
+      return;
+    }
+    if (!e.action || e.action.hit) return;
     const a = e.action,
       angle = Math.atan2(a.aim.y - e.y, a.aim.x - e.x);
     g.save();
@@ -70,15 +95,37 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     g.fillStyle = u.color + '40';
     g.strokeStyle = u.color;
     g.lineWidth = 2;
-    if (u.attack === 'pulse') {
+    if (u.attack === 'mortar') {
+      // Aiming: a thin line toward the target; the mark itself appears on release.
+      g.setLineDash?.([4, 8]);
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(Math.hypot(a.aim.x - e.x, a.aim.y - e.y), 0);
+      g.stroke();
+    } else if (u.attack === 'pulse') {
       // 360 degree regulatory shockwave zone
       g.beginPath();
       g.arc(0, 0, u.range, 0, Math.PI * 2);
       g.fill();
       g.stroke();
+    } else if (u.attack === 'projectile' && u.shots?.radial) {
+      for (let i = 0; i < u.shots.count; i++) {
+        const turn = (i * Math.PI * 2) / u.shots.count;
+        g.beginPath();
+        g.moveTo(Math.cos(turn) * 30, Math.sin(turn) * 30);
+        g.lineTo(Math.cos(turn) * 90, Math.sin(turn) * 90);
+        g.stroke();
+      }
     } else if (u.attack === 'projectile') {
-      g.fillRect(0, -12, u.range, 24);
-      g.strokeRect(0, -12, u.range, 24);
+      const count = u.shots?.count || 1,
+        spread = u.shots?.spread || 0;
+      for (let i = 0; i < (spread ? count : 1); i++) {
+        g.save();
+        g.rotate((i - (count - 1) / 2) * spread);
+        g.fillRect(0, -12, u.range, 24);
+        g.strokeRect(0, -12, u.range, 24);
+        g.restore();
+      }
     } else {
       g.beginPath();
       g.arc(0, 0, u.range, -0.9, 0.9);
@@ -90,7 +137,37 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     g.restore();
   }
 
+  // Ground marks: a blast fills up until it goes off; a pool glows while it lasts.
+  function hazard(g, h) {
+    g.save();
+    g.strokeStyle = h.color;
+    g.lineWidth = 2;
+    if (h.kind === 'blast') {
+      const k = Math.min(1, h.t / h.delay);
+      g.fillStyle = h.color + '30';
+      g.beginPath();
+      g.arc(h.x, h.y, h.r, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+      g.fillStyle = h.color + '70';
+      g.beginPath();
+      g.arc(h.x, h.y, h.r * k, 0, Math.PI * 2);
+      g.fill();
+    } else {
+      const fade = Math.min(1, (h.life - h.t) / 0.5);
+      g.globalAlpha = Math.max(0.2, fade) * (h.t < h.arm ? 0.5 : 1);
+      g.fillStyle = h.color + '45';
+      g.beginPath();
+      g.arc(h.x, h.y, h.r, 0, Math.PI * 2);
+      g.fill();
+      g.setLineDash?.([5, 5]);
+      g.stroke();
+    }
+    g.restore();
+  }
+
   function projectile(g, b) {
+    if (b.wait > 0) return;
     g.save();
     g.translate(b.x, b.y);
     g.fillStyle = units[b.kind]?.color || '#ff5252';
@@ -203,7 +280,7 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     drawLabel(g, u, e.x, e.y - labelOffset, ratio || 2);
   }
 
-  return { units, mitigation, telegraph, draw, projectile };
+  return { units, mitigation, telegraph, draw, projectile, hazard };
 }
 
 // Shared instance for React previews (bestiary, arena view); the game session makes its own.

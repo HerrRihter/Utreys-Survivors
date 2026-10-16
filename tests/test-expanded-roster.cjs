@@ -48,7 +48,9 @@ const { createHarness } = require('./helpers/game-harness.cjs');
     e.cd = 9999;
     e.action = { elapsed: 0, duration: u.wind, hit: false, aim: { x: p.x, y: p.y } };
     const hp = p.hp;
-    for (let i = 0; i < Math.ceil((u.wind + 0.4) / 0.05); i++) s.update(0.05);
+    // A mortar mark goes off after its own delay.
+    const settle = u.wind + (u.mortar?.delay || 0) + 0.4;
+    for (let i = 0; i < Math.ceil(settle / 0.05); i++) s.update(0.05);
     assert(p.hp < hp, `${id} actual attack damages player`);
     assert.equal(s.state.bossSpawned, false, `${id} does not trigger boss progression`);
     h.env.Enemies.draw(h.context, e);

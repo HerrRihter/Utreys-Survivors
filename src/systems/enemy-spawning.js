@@ -1,5 +1,11 @@
 import { updateNodes, allNodesResolved } from './node-objectives.js';
-import { getWaveSchedule, normalWave, selectWaveUnit, scheduleStage } from './wave-schedule.js';
+import {
+  getWaveSchedule,
+  normalWave,
+  selectWaveUnit,
+  scheduleStage,
+  unitRole,
+} from './wave-schedule.js';
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
@@ -41,7 +47,14 @@ export const EnemySpawning = {
         vy: 0,
         heading: Math.atan2(p.y - y, p.x - x),
       };
-      if (boss) e.hp = e.max = Math.round(u.hp * (getWaveSchedule(s.map).boss?.hpScale || 1));
+      const schedule = getWaveSchedule(s.map);
+      if (boss) e.hp = e.max = Math.round(u.hp * (schedule.boss?.hpScale || 1));
+      else if (!u.miniboss) {
+        // The whole roster is there from the start; the stage's strength ramps it up.
+        const k = scheduleStage(schedule.normal.stages, s.t)?.strength ?? 1;
+        e.hp = e.max = Math.max(1, Math.round(e.hp * k));
+        e.damage = Math.max(1, Math.round(e.damage * k));
+      }
       scaleEnemy(e, runModifiers(s), boss ? s.productionBosses || 0 : 0);
       s.enemies.push(e);
       return e;
@@ -85,8 +98,34 @@ export const EnemySpawning = {
         const wave = scaleWave(normalWave(schedule, s.t), runModifiers(s));
         s.spawn = wave.interval;
         count();
-        for (let i = 0; i < wave.batch && combat < wave.cap; i++)
-          track(spawn(selectWaveUnit(schedule, s.t, math.random())));
+        // Shooters and tanks outlive the light crowd: their share of the wave limit is capped
+        // so they do not pile up into an unescapable wall.
+        const shares = schedule.normal.shares || {},
+          roles = { shooter: 0, tank: 0, light: 0 },
+          full = new Set();
+        for (const e of s.enemies) if (e.hp > 0) roles[unitRole(enemies.units[e.unit])]++;
+        const check = () => {
+          for (const [role, share] of Object.entries(shares))
+            if (roles[role] >= Math.ceil(wave.cap * share)) full.add(role);
+        };
+        check();
+        for (let i = 0; i < wave.batch && combat < wave.cap; i++) {
+          const unit = selectWaveUnit(schedule, s.t, math.random(), enemies.units, full),
+            leader = track(spawn(unit)),
+            pack = enemies.units[unit].pack || 1;
+          if (leader) {
+            roles[unitRole(enemies.units[unit])]++;
+            check();
+          }
+          // Swarm units arrive as a pack around the first one.
+          for (let k = 1; leader && k < pack; k++)
+            track(
+              spawn(unit, false, {
+                x: leader.x + math.rand(-45, 45),
+                y: leader.y + math.rand(-45, 45),
+              }),
+            );
+        }
       }
       // Elites: a stronger copy of a unit from the current stage, on the schedule's timer.
       if (schedule.elites && s.t >= (s.eliteNext ?? schedule.elites.first)) {
@@ -102,6 +141,16 @@ export const EnemySpawning = {
       const boss = schedule.boss;
       if (boss && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
         s.bossSpawned = true;
+        if (boss.heal) {
+          const gain = Math.round(s.p.max * boss.heal * (s.healFactor ?? 1));
+          s.p.hp = Math.min(s.p.max, s.p.hp + gain);
+          s.texts.push({
+            x: s.p.x,
+            y: s.p.y - 40,
+            v: '+' + gain + ' ♥ резервная копия',
+            life: 1.6,
+          });
+        }
         if (boss.message) toast(boss.message);
         if (boss.sound) audio.effect(boss.sound);
       }

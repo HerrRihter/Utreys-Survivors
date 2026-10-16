@@ -23,8 +23,21 @@ export function normalWave(schedule, time) {
   };
 }
 
-export function selectWaveUnit(schedule, time, roll = Math.random()) {
-  const { weights } = scheduleStage(schedule.normal.stages, time);
+// Wave roles with a limited share of the field: shooters keep their distance and tanks
+// shrug off hits, so both outlive the light crowd and would otherwise pile up.
+export function unitRole(u) {
+  if (u?.attack === 'projectile' || u?.attack === 'mortar') return 'shooter';
+  if (!u?.miniboss && (u?.poise || u?.heavy || u?.frontDamageMultiplier)) return 'tank';
+  return 'light';
+}
+
+// `units` + `full`: a set of roles whose share is used up; those are skipped.
+export function selectWaveUnit(schedule, time, roll = Math.random(), units = null, full = null) {
+  let { weights } = scheduleStage(schedule.normal.stages, time);
+  if (full?.size && units) {
+    const open = weights.filter(([id]) => !full.has(unitRole(units[id])));
+    if (open.length) weights = open;
+  }
   const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
   let cumulative = 0;
   for (const [unit, weight] of weights) {

@@ -1,6 +1,15 @@
 import { updateEnemySpeech } from './enemy-speech.js';
 import { compact } from '../core/compact.js';
 import { resolveEnemyStrike } from './enemy-attacks.js';
+import {
+  moveGoal,
+  goalDirection,
+  updateDash,
+  updateTraits,
+  updateHazards,
+  speedFactor,
+  cooldownFactor,
+} from './enemy-behaviors.js';
 import { advanceAction } from '../core/action-timeline.js';
 import { protectedMove, blocksAttack, effectiveStats, pacified } from './ability-state.js';
 import { countCrowd } from './hero-passives.js';
@@ -38,7 +47,13 @@ export const Simulation = {
       },
       effect: (name) => audio.effect(name),
       hurtPlayer: (e) => combat.hurtPlayer(e),
+      spawn: (...args) => spawning.spawn(...args),
+      toast: (message) => events.toast?.(message),
+      random: () => math.random(),
+      units: enemies.units,
     };
+    // Enemy speed grows with time, up to this multiplier.
+    const timeSpeedCap = 1.2;
     // Map pickups: food heals, an update bundle upgrades items, magnet / bomb / freeze act at once.
     function pickUp(s, item, st) {
       const p = s.p;
@@ -112,7 +127,14 @@ export const Simulation = {
       }
       const oldX = p.x,
         oldY = p.y;
-      world.arena.move(p, mx * p.speed * st.speed * dt, my * p.speed * st.speed * dt, 14);
+      // Inspectors' waves slow the player for a moment.
+      const slowed = p.slowUntil > s.t ? 1 - (p.slowAmount || 0) : 1;
+      world.arena.move(
+        p,
+        mx * p.speed * st.speed * slowed * dt,
+        my * p.speed * st.speed * slowed * dt,
+        14,
+      );
       p.x = math.clamp(p.x, 52, world.arena.size - 52);
       p.y = math.clamp(p.y, 100, world.arena.size - 12);
       const travel = Math.hypot(p.x - oldX, p.y - oldY);
@@ -145,6 +167,9 @@ export const Simulation = {
         p.action.direction = dir;
         p.action.flip = Math.abs(dir.x) > 0.01 ? dir.x < 0 : p.flip;
       }
+      s.hazards ??= [];
+      // Guards whose aura covers their neighbours, found once per step for combat.
+      s.guards = s.enemies.filter((e) => e.hp > 0 && enemies.units[e.unit]?.aura);
       for (const e of s.enemies) {
         if (e.hp <= 0 || e.abilityStun > 0) continue;
         const u = enemies.units[e.unit],
@@ -161,7 +186,16 @@ export const Simulation = {
         }
         e.vx *= Math.exp(-9 * dt);
         e.vy *= Math.exp(-9 * dt);
-        if (!e.action && !e.charge) {
+        updateTraits(strike, s, e, u, dt);
+        const canAct = !e.hurt && !pacified(s, e);
+        if (updateDash(strike, s, e, u, dt, d, canAct)) {
+          e.animationTime = s.t;
+          const travel = e.dash?.phase === 'go' ? 1 : 0;
+          e.moving = travel > 0;
+          e.walk = (e.walk || e.phase / 6) + travel / 10;
+          continue;
+        }
+        if (!e.action) {
           const target = Math.atan2(p.y - e.y, p.x - e.x),
             delta = Math.atan2(Math.sin(target - e.heading), Math.cos(target - e.heading));
           e.heading += math.clamp(delta, -dt * (e.r > 30 ? 0.8 : 6), dt * (e.r > 30 ? 0.8 : 6));
@@ -177,17 +211,18 @@ export const Simulation = {
           world.arena.clear(e, p, 2)
         ) {
           combat.beginAction(e, u.wind, p);
-          e.cd = u.cooldown;
+          e.cd = u.cooldown * cooldownFactor(e, u);
           e.heading = Math.atan2(p.y - e.y, p.x - e.x);
         }
-        const moving =
-            !e.action && !e.hurt && d > (u.attack === 'projectile' ? u.range - 20 : e.r + 10),
+        const goal = !e.action && !e.hurt ? moveGoal(strike, s, e, u, d) : null,
+          moving = !!goal,
           speed =
             e.speed *
-            (1 + s.t / 1800) *
+            speedFactor(e, u) *
+            Math.min(timeSpeedCap, 1 + s.t / 1800) *
             (1 - (e.abilitySlow || 0)) *
             (e.weaponSlowUntil > s.t ? 0.65 : 1),
-          dir = moving ? world.arena.direction(e, p, e.r) : null,
+          dir = moving ? goalDirection(world.arena, e, goal, p) : null,
           ox = e.x,
           oy = e.y;
         world.arena.move(
@@ -200,7 +235,13 @@ export const Simulation = {
         e.moving = travel > 0.01;
         e.walk = (e.walk || e.phase / 6) + travel / 50;
       }
+      updateHazards(strike, s, dt);
       for (const b of s.enemyShots) {
+        // Later shots of a burst wait at the muzzle.
+        if (b.wait > 0) {
+          b.wait -= dt;
+          continue;
+        }
         b.age = (b.age || 0) + dt;
         const n = Math.max(1, Math.ceil((Math.hypot(b.vx, b.vy) * dt) / 8));
         for (let i = 0; i < n && b.life > 0; i++) {

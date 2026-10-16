@@ -97,7 +97,24 @@ export function useOpponentPreview({
         };
 
         if (effectiveMotion === 'attack') {
-          Enemies.telegraph(g, mockEnemy);
+          // Role previews: the charger's lunge line and the artillery mark.
+          if ('dash' in u && u.dash)
+            Enemies.telegraph(g, {
+              ...mockEnemy,
+              action: null,
+              dash: { phase: 'wind', dx: reverse ? -1 : 1, dy: 0 },
+            });
+          else Enemies.telegraph(g, mockEnemy);
+          if ('mortar' in u && u.mortar)
+            Enemies.hazard(g, {
+              kind: 'blast',
+              x: aimX,
+              y: cy,
+              r: u.mortar.radius,
+              t: phase % u.mortar.delay,
+              delay: u.mortar.delay,
+              color: u.color,
+            });
 
           // Unique functioning attack actions and projectiles
           if ('burst' in u && u.burst) {

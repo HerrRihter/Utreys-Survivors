@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const { createHarness } = require('./helpers/game-harness.cjs');
+const { unitDefinitions } = require('../data/enemies/units.js');
 
 (async () => {
   const h = await createHarness();
@@ -21,9 +22,10 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   enemy.heading = 0;
   const hp = enemy.hp;
   s.damage(enemy, 100, 0, 0, { x: enemy.x + 10, y: enemy.y });
-  assert.equal(enemy.hp, hp - 45, 'front armor blocks 55%');
-  s.damage(enemy, 100, 0, 0, { x: enemy.x - 10, y: enemy.y });
-  assert.equal(enemy.hp, hp - 145, 'rear receives full damage');
+  const front = 100 * unitDefinitions.inbev.frontDamageMultiplier;
+  assert.equal(enemy.hp, hp - front, 'front armor blocks part of the hit');
+  s.damage(enemy, 40, 0, 0, { x: enemy.x - 10, y: enemy.y });
+  assert.equal(enemy.hp, hp - front - 40, 'rear receives full damage');
   s.state.t = 120;
   s.update(0.01);
   const boss = s.state.enemies.find((e) => e.unit === 'crpt');
