@@ -49,7 +49,7 @@ export const Simulation = {
       s.corpses = corpses.update(s.corpses, dt);
       s.shake = Math.max(0, s.shake - dt * 20);
       p.inv = Math.max(0, p.inv - dt);
-      p.hp = Math.min(p.max, p.hp + st.regen * dt);
+      p.hp = Math.min(p.max, p.hp + st.regen * (s.healFactor ?? 1) * dt);
       const keys = settings?.bindings || defaultBindings,
         held = (action, arrow) => (run.keys.has(keys[action]) || run.keys.has(arrow) ? 1 : 0);
       let mx = held('right', 'ArrowRight') - held('left', 'ArrowLeft') + run.stick.x,
@@ -265,9 +265,10 @@ export const Simulation = {
       }
       for (const item of s.pickups)
         if (!item.dead && dist(item, p) < 25) {
-          p.hp = Math.min(p.max, p.hp + 25);
+          const heal = Math.round(25 * (s.healFactor ?? 1));
+          p.hp = Math.min(p.max, p.hp + heal);
           item.dead = true;
-          s.texts.push({ x: p.x, y: p.y - 30, v: '+25 ♥', life: 1 });
+          s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });
           audio.effect('heal');
         }
       compact(s.pickups, isPresent);

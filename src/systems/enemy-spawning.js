@@ -1,5 +1,7 @@
 import { updateNodes, allNodesResolved } from './node-objectives.js';
 import { getWaveSchedule, normalWave, selectWaveUnit, scheduleStage } from './wave-schedule.js';
+import { runModifiers, scaleEnemy, scaleWave } from './difficulty.js';
+import { production } from '../../data/difficulty.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
   create({ run, enemies, world, math, toast, audio }) {
@@ -39,6 +41,7 @@ export const EnemySpawning = {
         vy: 0,
         heading: Math.atan2(p.y - y, p.x - x),
       };
+      scaleEnemy(e, runModifiers(s), boss ? s.productionBosses || 0 : 0);
       s.enemies.push(e);
       return e;
     }
@@ -78,7 +81,7 @@ export const EnemySpawning = {
       }
       s.spawn -= dt;
       if (s.spawn <= 0) {
-        const wave = normalWave(schedule, s.t);
+        const wave = scaleWave(normalWave(schedule, s.t), runModifiers(s));
         s.spawn = wave.interval;
         count();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++)
@@ -89,6 +92,15 @@ export const EnemySpawning = {
         s.bossSpawned = true;
         if (boss.message) toast(boss.message);
         if (boss.sound) audio.effect(boss.sound);
+      }
+      // Production: a stronger CRPT every few minutes; its kill pays codes instead of ending.
+      if (boss && s.endless && s.t >= s.productionBossNext) {
+        s.productionBossNext += production.bossEvery;
+        if (spawn(boss.unit, true)) {
+          s.productionBosses = (s.productionBosses || 0) + 1;
+          toast('ПРОДАКШЕН: усиленный ЦРПТ №' + s.productionBosses);
+          if (boss.sound) audio.effect(boss.sound);
+        }
       }
       for (const spec of schedule.notifications) {
         if (s.t >= spec.time && s.t - dt < spec.time) toast(spec.message);

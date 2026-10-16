@@ -3,6 +3,7 @@ import { advanceAction } from '../core/action-timeline.js';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
 import { protectedMove, effectiveStats } from './ability-state.js';
 import { passiveDamage } from './hero-passives.js';
+import { production } from '../../data/difficulty.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
@@ -85,7 +86,15 @@ export const CombatSystem = {
           run.state.evoTokens = (run.state.evoTokens || 0) + 1;
           toast('Архив бага получен: эволюция готового оружия');
         }
-        if (e.boss) {
+        if (e.boss && run.state.endless) {
+          // Production CRPTs pay codes; the run goes on.
+          run.state.earned += progression.earn(production.bossReward);
+          toast(
+            `${enemies.units[e.unit].name} повержен в продакшене! +${production.bossReward} кодов`,
+          );
+          audio.effect('boss');
+          progression.recordBossKill?.();
+        } else if (e.boss) {
           run.state.bossDead = true;
           toast(enemies.units[e.unit].name + ' повержен! Заверши валидацию контура!');
           audio.effect('boss');

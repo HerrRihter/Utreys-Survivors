@@ -1,5 +1,6 @@
 import { heroUnlockPrices, permanentUpgrades } from '../../data/upgrades.js';
 import { achievementDefinitions } from '../../data/achievements.js';
+import { maxLoad } from '../../data/difficulty.js';
 // Saved meta-progression (codes, heroes, upgrades, achievements). Nothing runs at import:
 // the session creates one per mount with its storage and page-lifecycle event targets.
 /**
@@ -24,6 +25,9 @@ export function createProgression({
       levels: { health: 0, power: 0, speed: 0 },
       stats: { totalTime: 0, maxTime: 0, bossKills: 0, abilitiesUsed: 0, maxLevel: 0 },
       claimedAchievements: [],
+      // Highest load level won per hero, and production records per hero and level.
+      loads: {},
+      production: {},
     },
     persistent = true;
   for (const id of Object.keys(upgrades)) data.levels[id] = 0;
@@ -52,6 +56,18 @@ export function createProgression({
         data.stats.abilitiesUsed = integer(saved.stats.abilitiesUsed);
         data.stats.maxLevel = integer(saved.stats.maxLevel);
       }
+      if (saved.loads && typeof saved.loads === 'object')
+        for (const [hero, level] of Object.entries(saved.loads))
+          if (integer(level, maxLoad) > 0) data.loads[hero] = integer(level, maxLoad);
+      if (saved.production && typeof saved.production === 'object')
+        for (const [hero, levels] of Object.entries(saved.production)) {
+          if (!levels || typeof levels !== 'object') continue;
+          for (const [level, record] of Object.entries(levels)) {
+            const time = typeof record?.time === 'number' && record.time > 0 ? record.time : 0;
+            if (!time || !(integer(Number(level), maxLoad) > 0)) continue;
+            (data.production[hero] ||= {})[level] = { time, kills: integer(record.kills) };
+          }
+        }
       if (Array.isArray(saved.claimedAchievements))
         data.claimedAchievements = [
           ...new Set(
@@ -158,9 +174,10 @@ export function createProgression({
     save();
     return true;
   }
-  function recordTime(t) {
+  // `counted` is the part of `t` already added to the total (a run continued in production).
+  function recordTime(t, counted = 0) {
     if (typeof t === 'number' && t > 0) {
-      data.stats.totalTime += t;
+      data.stats.totalTime += Math.max(0, t - counted);
       data.stats.maxTime = Math.max(data.stats.maxTime, t);
       deferSave();
     }
@@ -178,6 +195,31 @@ export function createProgression({
       data.stats.maxLevel = Math.max(data.stats.maxLevel, lvl);
       deferSave();
     }
+  }
+  const loadCleared = (hero) => data.loads[hero] || 0;
+  // Highest level this hero may start: one above the best win.
+  const loadAvailable = (hero) => Math.min(maxLoad, loadCleared(hero) + 1);
+  function recordLoadWin(hero, level) {
+    if (!Number.isSafeInteger(level) || level < 1 || level > maxLoad) return false;
+    if (level <= loadCleared(hero)) return false;
+    data.loads[hero] = level;
+    save();
+    return true;
+  }
+  const productionRecord = (hero, level) => data.production[hero]?.[level] || null;
+  // Keeps the longer production time and the larger kill count separately.
+  function recordProduction(hero, level, time, kills) {
+    if (!(time > 0)) return { time: false, kills: false };
+    const old = productionRecord(hero, level) || { time: 0, kills: 0 };
+    const better = { time: time > old.time, kills: kills > old.kills };
+    if (better.time || better.kills) {
+      (data.production[hero] ||= {})[level] = {
+        time: Math.max(old.time, time),
+        kills: Math.max(old.kills, kills),
+      };
+      save();
+    }
+    return better;
   }
   function claimAchievement(id, best) {
     const a = achievementDefinitions.find((x) => x.id === id);
@@ -205,6 +247,11 @@ export function createProgression({
     recordBossKill,
     recordAbility,
     recordLevel,
+    loadCleared,
+    loadAvailable,
+    recordLoadWin,
+    productionRecord,
+    recordProduction,
     claimAchievement,
     isClaimed,
     get achievements() {

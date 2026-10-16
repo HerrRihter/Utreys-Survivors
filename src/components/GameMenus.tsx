@@ -138,6 +138,23 @@ export function HeroSelect() {
           </select>
           <p id="mapDescription">{view.mapDescription}</p>
         </div>
+        <div className="map-select">
+          <label htmlFor="runLoad">НАГРУЗКА</label>
+          <select
+            id="runLoad"
+            value={view.load}
+            onChange={(event) => commands.chooseLoad(Number(event.target.value))}
+          >
+            {view.loads.map((entry) => (
+              <option key={entry.level} value={entry.level} disabled={entry.locked}>
+                {entry.label}
+                {entry.locked ? ' · закрыто' : ''}
+              </option>
+            ))}
+          </select>
+          <p id="loadDescription">{view.loadDescription}</p>
+          <p id="loadProgress">{view.loadProgress}</p>
+        </div>
         <div id="runHeroes" className="run-heroes">
           {view.heroes.map((hero) => (
             <button

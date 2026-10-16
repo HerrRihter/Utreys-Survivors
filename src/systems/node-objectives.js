@@ -1,8 +1,10 @@
 import { nodeDefinitions, workaroundSeconds, workaroundRadius } from '../../data/enemies/nodes.js';
 
-export function createNodeState() {
+// `seconds` is the workaround time on this run's load level.
+export function createNodeState(seconds = workaroundSeconds) {
   return nodeDefinitions.map((node) => ({
     ...node,
+    need: seconds,
     status: 'guarded',
     progress: 0,
     guardian: null,
@@ -33,8 +35,9 @@ export function updateNodes(context, dt) {
     }
     // Standing at a component researches a workaround on both desktop and touch devices.
     const near = Math.hypot(s.p.x - node.x, s.p.y - node.y) <= workaroundRadius;
-    node.progress = near && !s.p.hurt ? Math.min(workaroundSeconds, node.progress + dt) : 0;
-    if (node.progress >= workaroundSeconds) {
+    const need = node.need ?? workaroundSeconds;
+    node.progress = near && !s.p.hurt ? Math.min(need, node.progress + dt) : 0;
+    if (node.progress >= need) {
       node.status = 'workaround';
       // Bypassing a bug grants no kill, XP, boss reward or corpse.
       s.enemies = s.enemies.filter((enemy) => enemy !== node.guardian);

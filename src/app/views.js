@@ -6,6 +6,8 @@ import {
 } from '../../data/characters/abilities.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { heroPassives } from '../../data/characters/hero-passives.js';
+import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
+import { productionMinutes } from '../systems/difficulty.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
 
@@ -61,6 +63,7 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
         )
         .join('\n') +
       (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
+    ...loadView(run, progression),
     showBaClients: run.pendingHero === 'ba',
     baClients: baClientIds.map((id) => ({ id, name: enemies.units[id].name })),
     baClient: run.baClient,
@@ -69,6 +72,32 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
     mapDescription: arenaDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.
     mapLocked: Object.keys(arenaDefinitions).length < 2,
+  };
+}
+
+// Load level picker for the pending hero: open levels, what the chosen one adds, records.
+function loadView(run, progression) {
+  const hero = run.pendingHero,
+    available = progression.loadAvailable(hero),
+    cleared = progression.loadCleared(hero),
+    load = Math.min(Math.max(1, run.selectedLoad || 1), available),
+    record = progression.productionRecord(hero, load);
+  return {
+    loads: loadLevels.map((entry) => ({
+      level: entry.level,
+      label: `Нагрузка ${entry.level}` + (entry.level <= cleared ? ' ✓' : ''),
+      locked: entry.level > available,
+    })),
+    load,
+    loadDescription:
+      loadLevels
+        .filter((entry) => entry.level > 1 && entry.level <= load)
+        .map((entry) => entry.desc)
+        .join(' ') || loadLevels[0].desc,
+    loadProgress:
+      (cleared ? `Пройдено: нагрузка ${cleared}.` : 'Побед ещё нет.') +
+      (load > 1 ? ` Награда в кодах +${Math.round((load - 1) * rewardPerLevel * 100)}%.` : '') +
+      (record ? ` Рекорд продакшена: ${clock(record.time)}, ${record.kills} побеждено.` : ''),
   };
 }
 
@@ -263,6 +292,8 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
       hero.weapon +
       ' · ' +
       arenaDefinitions[s.map]?.name +
+      ` · Нагрузка ${s.load || 1}` +
+      (s.endless ? ` · Продакшен ${productionMinutes(s)} мин` : '') +
       (ba ? ` · Клиент: ${enemies.units[ba.client].name} · +${ba.bonus} HP` : ''),
     codes: `КОДЫ: ${progression.codes} (+${s.earned})`,
     progress: nodeProgress(s),

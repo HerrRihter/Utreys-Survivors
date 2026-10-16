@@ -228,6 +228,16 @@ export function EndScreen() {
           build={{ ...result.build, emptyWeapons: 0, emptyPassives: 0, archives: 0 }}
           detailed={false}
         />
+        {result.canContinue && (
+          <button
+            id="production"
+            className="primary"
+            style={primary}
+            onClick={session.commands.continueProduction}
+          >
+            ПРОДОЛЖИТЬ В ПРОДАКШЕНЕ →
+          </button>
+        )}
         <button id="again" className="primary" style={primary} onClick={session.commands.restart}>
           ПОВТОРИТЬ СЕССИЮ →
         </button>

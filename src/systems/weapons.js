@@ -438,7 +438,7 @@ export const WeaponSystem = {
             hitArea(s, f.x, f.y, f.radius, f.damage, 0, f.tag);
           }
           if (f.heal && Math.hypot(s.p.x - f.x, s.p.y - f.y) < f.radius)
-            s.p.hp = Math.min(s.p.max, s.p.hp + f.heal * dt);
+            s.p.hp = Math.min(s.p.max, s.p.hp + f.heal * (s.healFactor ?? 1) * dt);
         }
       }
       for (const f of spawned) s.wfx.push(f);
