@@ -77,17 +77,24 @@ firebase login
 Вход открывает браузер и привязывает CLI к вашему Google-аккаунту. Этот шаг за вас сделать
 нельзя.
 
-Для эмулятора Firestore (тесты правил, этап 2) нужна Java 21 LTS: https://adoptium.net. На
-Java 26 эмулятор на Windows падает с «Unable to establish loopback connection». Без Java не
-будет работать только `npm run test:rules`; сама игра и обычные тесты Java не требуют.
+Для эмулятора Firestore (`npm.cmd run test:rules`) нужна Java 21 или новее; установленная у
+вас Java 26 подходит. Если эмулятор падает с «Unable to establish loopback connection»,
+укажите Java отдельную папку для служебных сокетов и запустите снова:
+
+```powershell
+New-Item -ItemType Directory -Force C:\Temp | Out-Null; $env:JAVA_TOOL_OPTIONS='-Djdk.net.unixdomain.tmpdir=C:\Temp'; npm.cmd run test:rules
+```
+
+Если после теста эмулятор остался висеть и следующий запуск пишет «port taken», завершите
+процесс `java.exe` в диспетчере задач. Сама игра и `npm test` Java не требуют.
 
 ## 7. Выкатить правила
 
-Сразу после шага 4: без правил база закрыта и регистрация не работает. Если Project ID не
-`utreys-survivors`, поменяйте его в `.firebaserc`. Запустите из корня репозитория:
+Сразу после шага 4: без правил база закрыта и регистрация не работает. Проект `utrace-survivors`
+уже указан в `.firebaserc`. Запустите из корня репозитория:
 
 ```bash
-firebase deploy --only firestore:rules,firestore:indexes --project utreys-survivors
+firebase deploy --only firestore:rules,firestore:indexes --project utrace-survivors
 ```
 
 Подставьте свой Project ID, если он другой. Составных индексов таблицам не нужно: Firestore
@@ -145,7 +152,6 @@ $env:GOOGLE_APPLICATION_CREDENTIALS='C:\keys\utreys-admin.json'; npm run admin:r
 ## Что прислать мне
 
 - `firebaseConfig` (или подтверждение, что `.env.local` создан).
-- Project ID, если он не `utreys-survivors`.
 
 ## Принятые решения
 

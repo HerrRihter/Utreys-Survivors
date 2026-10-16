@@ -1,17 +1,32 @@
 rules_version = '2';
 
-// Stage 1 of docs/FIREBASE-PLAN.md: logins and profiles. Progress and statistics come next.
+// Logins, profiles, cloud progress and run statistics: docs/FIREBASE-PLAN.md.
+// Tested on the emulator by `npm run test:rules` (tests/rules/firestore-rules.cjs).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
       return request.auth != null;
     }
-    // Mirrors loginKey() in src/services/login.js.
+    function owner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    // Mirrors loginKey() in src/services/login.js. lower() in rules changes only Latin
+    // letters, so Cyrillic capitals are replaced one by one.
     function keyOf(login) {
-      return login.lower().replace('ё', 'е');
+      return login.lower()
+        .replace('А', 'а').replace('Б', 'б').replace('В', 'в').replace('Г', 'г').replace('Д', 'д').replace('Е', 'е')
+        .replace('Ж', 'ж').replace('З', 'з').replace('И', 'и').replace('Й', 'й').replace('К', 'к').replace('Л', 'л')
+        .replace('М', 'м').replace('Н', 'н').replace('О', 'о').replace('П', 'п').replace('Р', 'р').replace('С', 'с')
+        .replace('Т', 'т').replace('У', 'у').replace('Ф', 'ф').replace('Х', 'х').replace('Ц', 'ц').replace('Ч', 'ч')
+        .replace('Ш', 'ш').replace('Щ', 'щ').replace('Ъ', 'ъ').replace('Ы', 'ы').replace('Ь', 'ь').replace('Э', 'э')
+        .replace('Ю', 'ю').replace('Я', 'я')
+        .replace('Ё', 'е').replace('ё', 'е');
     }
     function validKey(key) {
       return key.matches('^[a-z0-9_-]{3,16}$') || key.matches('^[а-я0-9_-]{3,16}$');
+    }
+    function userDoc(uid) {
+      return /databases/$(database)/documents/users/$(uid);
     }
 
     // logins/{key}: who owns a login. Created together with users/{uid}, never changed.
@@ -21,15 +36,14 @@ service cloud.firestore {
         && validKey(key)
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == request.auth.uid
-        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.loginKey == key;
+        && getAfter(userDoc(request.auth.uid)).data.loginKey == key;
       allow update, delete: if false;
     }
 
     // users/{uid}: the login as typed. Public, because tables show it.
     match /users/{uid} {
       allow get: if true;
-      allow create: if signedIn()
-        && request.auth.uid == uid
+      allow create: if owner(uid)
         && request.resource.data.keys().hasOnly(['login', 'loginKey', 'createdAt'])
         && request.resource.data.login is string
         && keyOf(request.resource.data.login) == request.resource.data.loginKey
@@ -37,6 +51,96 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && getAfter(/databases/$(database)/documents/logins/$(request.resource.data.loginKey)).data.uid == uid;
       allow update, delete: if false;
+    }
+
+    // progress/{uid}: the saved meta-progression; every write bumps `rev` by one.
+    match /progress/{uid} {
+      function progressOk(next) {
+        return next.keys().hasOnly(['data', 'schema', 'rev', 'device', 'updatedAt'])
+          && next.data is map
+          && next.data.keys().size() <= 40
+          && next.schema == 1
+          && next.device is string
+          && next.device.size() <= 64
+          && next.updatedAt == request.time;
+      }
+      allow get: if owner(uid);
+      allow create: if owner(uid) && progressOk(request.resource.data)
+        && request.resource.data.rev == 1;
+      allow update: if owner(uid) && progressOk(request.resource.data)
+        && request.resource.data.rev == resource.data.rev + 1;
+      allow delete: if false;
+    }
+
+    // stats/{uid}: run statistics for the leaderboards, overall (`all`) and per map.
+    // One write per run ending; the client sends grown totals and improved records.
+    match /stats/{uid} {
+      // Keep in step with data/maps/maps.js (checked by tests/test-firestore-rules.cjs).
+      function knownMaps() {
+        return ['empty', 'serverRoom'];
+      }
+      // Numbers checked on every write; the client always sends all of them.
+      function statNumbers() {
+        return [
+          'games', 'totalKills', 'totalCodes', 'bestTime', 'bestKills', 'bestCodes',
+          'victoryScore', 'productionTime'
+        ];
+      }
+      // Hero ids and load levels next to records: shown only if the client knows them.
+      function statLabels() {
+        return [
+          'bestTimeHero', 'bestTimeLoad', 'bestKillsHero', 'bestKillsLoad',
+          'bestCodesHero', 'bestCodesLoad', 'victoryHero', 'productionHero', 'productionLoad'
+        ];
+      }
+      // Totals only grow and a run adds at most so much; records never drop. Kept short:
+      // a request may evaluate at most 1000 expressions.
+      function scopeOk(next, prev) {
+        return next.keys().hasAll(statNumbers())
+          && next.keys().hasOnly(statNumbers().concat(statLabels()))
+          && next.games is int && next.totalKills is int && next.totalCodes is int
+          && (next.games == prev.get('games', 0) || next.games == prev.get('games', 0) + 1)
+          && next.totalKills >= prev.get('totalKills', 0)
+          && next.totalKills - prev.get('totalKills', 0) <= 200000
+          && next.totalCodes >= prev.get('totalCodes', 0)
+          && next.totalCodes - prev.get('totalCodes', 0) <= 1000000
+          && next.bestTime >= prev.get('bestTime', 0) && next.bestTime <= 21600
+          && next.bestKills >= prev.get('bestKills', 0) && next.bestKills <= 200000
+          && next.bestCodes >= prev.get('bestCodes', 0) && next.bestCodes <= 1000000
+          && next.victoryScore >= prev.get('victoryScore', 0) && next.victoryScore <= 1000000
+          && next.productionTime >= prev.get('productionTime', 0)
+          && next.productionTime <= 21600;
+      }
+      // The run's map grew by exactly as much as the overall totals.
+      function sameGrowth(all, prevAll, map, prevMap) {
+        return all.games - prevAll.get('games', 0) == map.games - prevMap.get('games', 0)
+          && all.totalKills - prevAll.get('totalKills', 0) == map.totalKills - prevMap.get('totalKills', 0)
+          && all.totalCodes - prevAll.get('totalCodes', 0) == map.totalCodes - prevMap.get('totalCodes', 0);
+      }
+      function statsOk(next, prev) {
+        let m = next.lastRun.map;
+        let prevAll = prev.get('all', {});
+        let prevMap = prev.get('maps', {}).get(m, {});
+        return next.keys().hasOnly(['login', 'all', 'maps', 'lastRun', 'updatedAt'])
+          && next.updatedAt == request.time
+          && next.lastRun.keys().hasOnly(['map', 'runId'])
+          && next.lastRun.runId is string
+          && next.lastRun.runId.size() > 0 && next.lastRun.runId.size() <= 40
+          && m in knownMaps()
+          && next.maps.diff(prev.get('maps', {})).affectedKeys().hasOnly([m])
+          && scopeOk(next.all, prevAll)
+          && scopeOk(next.maps[m], prevMap)
+          && sameGrowth(next.all, prevAll, next.maps[m], prevMap)
+          // Sending the same run again may add kills and codes (Production), never a game.
+          && (next.lastRun.runId != prev.get('lastRun', {}).get('runId', '')
+            || next.all.games == prevAll.get('games', 0))
+          && next.login == get(userDoc(uid)).data.login;
+      }
+      allow get: if true;
+      allow list: if request.query.limit <= 100;
+      allow create: if owner(uid) && statsOk(request.resource.data, {});
+      allow update: if owner(uid) && statsOk(request.resource.data, resource.data);
+      allow delete: if false;
     }
 
     match /{document=**} {
