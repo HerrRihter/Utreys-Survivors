@@ -266,6 +266,7 @@ export const Simulation = {
       for (const item of s.pickups)
         if (!item.dead && dist(item, p) < 25) {
           const heal = Math.round(25 * (s.healFactor ?? 1));
+          s.foodTaken = (s.foodTaken || 0) + 1;
           p.hp = Math.min(p.max, p.hp + heal);
           item.dead = true;
           s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });

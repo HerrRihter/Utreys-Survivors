@@ -8,7 +8,9 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  * @typedef {{ win: boolean, tag: string, title: string, text: string,
  *   stats: { value: string, label: string, best?: boolean }[],
  *   damage: { tag: string, name: string, amount: number, share: number }[],
- *   build: RunBuild, canContinue?: boolean }} RunResult
+ *   build: RunBuild, canContinue?: boolean,
+ *   unlocked: { id: string, title: string, unlock: string }[],
+ *   goals: import('./unlocks.js').UnlockGoal[] }} RunResult
  * @typedef {{ id: string, name: string, desc: string, icon: string, group: string,
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView

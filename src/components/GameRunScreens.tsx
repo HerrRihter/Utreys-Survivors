@@ -1,5 +1,5 @@
 import { Overlay } from './Overlay';
-import { SoundButton } from './GameMenus';
+import { SoundButton, GoalList } from './GameMenus';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
@@ -228,6 +228,18 @@ export function EndScreen() {
           build={{ ...result.build, emptyWeapons: 0, emptyPassives: 0, archives: 0 }}
           detailed={false}
         />
+        {result.unlocked.length > 0 && (
+          <div id="endUnlocked" className="goal-list">
+            <h3>Новое за забег</h3>
+            {result.unlocked.map((item) => (
+              <div key={item.id} className="goal done">
+                <strong>✓ {item.title}</strong>
+                {item.unlock && <small>Открыто: {item.unlock}</small>}
+              </div>
+            ))}
+          </div>
+        )}
+        <GoalList goals={result.goals} title="Ближе всего к открытию" />
         {result.canContinue && (
           <button
             id="production"

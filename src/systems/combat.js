@@ -62,8 +62,9 @@ export const CombatSystem = {
             s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${gain} HP`, life: 0.8 });
         }
         run.state.kills++;
-        run.state.earned += progression.kill();
-        if (math.random() < 0.05) run.state.codes.push({ x: e.x, y: e.y, value: 3 });
+        run.state.earned += progression.kill(tag);
+        const luck = run.state.stats.luck || 0;
+        if (math.random() < 0.05 + luck) run.state.codes.push({ x: e.x, y: e.y, value: 3 });
         run.state.gems.push({
           x: e.x,
           y: e.y,
@@ -80,7 +81,8 @@ export const CombatSystem = {
             max: 0.3,
             color: i % 2 === 0 ? '#00e5ff' : '#64ffda',
           });
-        if (math.random() < 0.025) run.state.pickups.push({ x: e.x, y: e.y, type: 'food' });
+        if (math.random() < 0.025 + luck / 2)
+          run.state.pickups.push({ x: e.x, y: e.y, type: 'food' });
         // A node guardian leaves a bug archive: it evolves a ready weapon now or later.
         if (enemies.units[e.unit]?.miniboss) {
           run.state.evoTokens = (run.state.evoTokens || 0) + 1;
@@ -116,6 +118,7 @@ export const CombatSystem = {
       const p = run.state.p;
       if (p.hp <= 0 || p.inv > 0 || protectedMove(run.state)) return;
       p.hp -= Math.max(1, e.damage - run.state.stats.armor);
+      run.state.firstHurtAt ??= run.state.t;
       p.inv = 0.7;
       p.hurt = { elapsed: 0, duration: 0.34, flip: p.flip };
       run.state.shake = 4;

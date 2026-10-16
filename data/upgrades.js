@@ -59,13 +59,36 @@ export const permanentUpgradeDefinitions = {
     stat: 'regen',
     factor: 0.15,
   },
-  // Level-up controls: every run starts with one of each, ranks add more.
+  greed: {
+    name: 'Монетизация',
+    desc: '+5% кодов в конце забега',
+    max: 5,
+    stat: 'greed',
+    factor: 0.05,
+  },
+  luck: {
+    name: 'Удачный парсинг',
+    desc: '+1% шанс кода и +0,5% шанс еды с врага',
+    max: 5,
+    stat: 'luck',
+    factor: 0.01,
+  },
+  headStart: {
+    name: 'Предзагрузка',
+    desc: 'Забег начинается с левелапа',
+    max: 2,
+    stat: 'headStart',
+    factor: 1,
+  },
+  // Level-up controls: every run starts with one of each, ranks add more. They are sold only
+  // after the first win (`requires: 'win'`).
   rerolls: {
     name: 'Перегенерация',
     desc: '+1 реролл карточек за забег',
     max: 3,
     stat: 'rerolls',
     factor: 1,
+    requires: 'win',
   },
   skips: {
     name: 'Отложенный релиз',
@@ -73,6 +96,7 @@ export const permanentUpgradeDefinitions = {
     max: 3,
     stat: 'skips',
     factor: 1,
+    requires: 'win',
   },
   banishes: {
     name: 'Чёрный список',
@@ -80,6 +104,7 @@ export const permanentUpgradeDefinitions = {
     max: 3,
     stat: 'banishes',
     factor: 1,
+    requires: 'win',
   },
 };
 export const levelUpControls = ['rerolls', 'skips', 'banishes'];

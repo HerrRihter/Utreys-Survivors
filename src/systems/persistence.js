@@ -23,7 +23,24 @@ export function createProgression({
       kills: 0,
       unlocked: ['utrace'],
       levels: { health: 0, power: 0, speed: 0 },
-      stats: { totalTime: 0, maxTime: 0, bossKills: 0, abilitiesUsed: 0, maxLevel: 0 },
+      stats: {
+        totalTime: 0,
+        maxTime: 0,
+        bossKills: 0,
+        abilitiesUsed: 0,
+        maxLevel: 0,
+        // Mastery, recorded once per run by recordRunStats.
+        wins: 0,
+        heroWins: {},
+        bestWinTime: 0,
+        untouchedRuns: 0,
+        cleanSweeps: 0,
+        workaroundWins: 0,
+        noFoodWins: 0,
+        maxEvolutions: 0,
+      },
+      // Kills per damage source (hero attack, ability or weapon id).
+      weaponKills: {},
       claimedAchievements: [],
       // Highest load level won per hero, and production records per hero and level.
       loads: {},
@@ -55,7 +72,26 @@ export function createProgression({
         data.stats.bossKills = integer(saved.stats.bossKills);
         data.stats.abilitiesUsed = integer(saved.stats.abilitiesUsed);
         data.stats.maxLevel = integer(saved.stats.maxLevel);
+        for (const key of [
+          'untouchedRuns',
+          'cleanSweeps',
+          'workaroundWins',
+          'noFoodWins',
+          'maxEvolutions',
+        ])
+          data.stats[key] = integer(saved.stats[key]);
+        // Before wins were counted, every boss kill was a win.
+        data.stats.wins =
+          saved.stats.wins === undefined ? data.stats.bossKills : integer(saved.stats.wins);
+        const best = saved.stats.bestWinTime;
+        data.stats.bestWinTime = typeof best === 'number' && best > 0 ? best : 0;
+        if (saved.stats.heroWins && typeof saved.stats.heroWins === 'object')
+          for (const [hero, n] of Object.entries(saved.stats.heroWins))
+            if (integer(n) > 0) data.stats.heroWins[hero] = integer(n);
       }
+      if (saved.weaponKills && typeof saved.weaponKills === 'object')
+        for (const [tag, n] of Object.entries(saved.weaponKills))
+          if (/^[a-z_]+$/.test(tag) && integer(n) > 0) data.weaponKills[tag] = integer(n);
       if (saved.loads && typeof saved.loads === 'object')
         for (const [hero, level] of Object.entries(saved.loads))
           if (integer(level, maxLoad) > 0) data.loads[hero] = integer(level, maxLoad);
@@ -142,8 +178,10 @@ export function createProgression({
     deferSave();
     return amount;
   }
-  function kill() {
+  function kill(tag) {
     data.kills++;
+    if (typeof tag === 'string' && /^[a-z_]+$/.test(tag))
+      data.weaponKills[tag] = (data.weaponKills[tag] || 0) + 1;
     const reward = data.kills % 10 === 0 ? 1 : 0;
     data.codes += reward;
     deferSave();
@@ -161,10 +199,18 @@ export function createProgression({
     save();
     return true;
   }
+  const hasWon = () => data.stats.wins > 0;
+  // Why an upgrade cannot be bought yet, or '' when it can be (prices aside).
+  function upgradeLock(id) {
+    const u = upgrades[id];
+    if (u?.hero && !owned(u.hero)) return 'hero';
+    if (u?.requires === 'win' && !hasWon()) return 'win';
+    return '';
+  }
   function buyUpgrade(id) {
     if (
       !Object.hasOwn(upgrades, id) ||
-      (upgrades[id].hero && !owned(upgrades[id].hero)) ||
+      upgradeLock(id) ||
       data.levels[id] >= upgrades[id].max ||
       data.codes < cost(id)
     )
@@ -195,6 +241,44 @@ export function createProgression({
       data.stats.maxLevel = Math.max(data.stats.maxLevel, lvl);
       deferSave();
     }
+  }
+  // Codes spent on permanent upgrades: ranks 1..n cost base, 2·base, ..., n·base.
+  function upgradeSpent() {
+    let total = 0;
+    for (const [id, level] of Object.entries(data.levels))
+      if (Object.hasOwn(upgrades, id))
+        total += ((upgrades[id].hero ? 50 : 30) * level * (level + 1)) / 2;
+    return total;
+  }
+  // Returns every code spent on permanent upgrades and resets their ranks.
+  function respec() {
+    const refund = upgradeSpent();
+    if (!refund) return 0;
+    for (const id of Object.keys(data.levels)) data.levels[id] = 0;
+    data.codes += refund;
+    save();
+    return refund;
+  }
+  // One run's mastery facts; called once per run when it ends.
+  function recordRunStats(run) {
+    const st = data.stats;
+    if (run.untouched) st.untouchedRuns++;
+    st.maxEvolutions = Math.max(st.maxEvolutions, integer(run.evolutions));
+    if (run.win) {
+      st.wins++;
+      st.heroWins[run.hero] = (st.heroWins[run.hero] || 0) + 1;
+      if (run.time > 0 && (!st.bestWinTime || run.time < st.bestWinTime)) st.bestWinTime = run.time;
+      if (run.cleanSweep) st.cleanSweeps++;
+      if (run.allWorkaround) st.workaroundWins++;
+      if (run.noFood) st.noFoodWins++;
+    }
+    save();
+  }
+  const achievementDone = (a, best) => a.getProgress(data, best) >= a.target;
+  // Content opened by achievements; anything no achievement names is open from the start.
+  function weaponUnlocked(id) {
+    const gate = achievementDefinitions.find((a) => a.unlocks?.weapon === id);
+    return !gate || achievementDone(gate);
   }
   const loadCleared = (hero) => data.loads[hero] || 0;
   // Highest level this hero may start: one above the best win.
@@ -247,6 +331,12 @@ export function createProgression({
     recordBossKill,
     recordAbility,
     recordLevel,
+    upgradeLock,
+    upgradeSpent,
+    respec,
+    recordRunStats,
+    achievementDone,
+    weaponUnlocked,
     loadCleared,
     loadAvailable,
     recordLoadWin,

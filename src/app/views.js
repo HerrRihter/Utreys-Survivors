@@ -10,6 +10,7 @@ import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
 import { productionMinutes } from '../systems/difficulty.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
+import { nearestGoals, unlockText } from './unlocks.js';
 
 // Pure read models for the React screens. Each takes the explicit pieces it reads and
 // returns plain data; React renders it, the session's commands change the underlying state.
@@ -37,6 +38,7 @@ export function menuView({ run, progression, heroes, snapshot = null }) {
       ? `ЛУЧШЕЕ ВРЕМЯ: ${clock(run.best.time)}`
       : 'Лучшее время появится после первого забега.',
     achievementsLabel: unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ',
+    goals: nearestGoals(progression, run.best, 3),
   };
 }
 
@@ -128,20 +130,25 @@ export function shopView({ progression, heroes }) {
     const title = u.hero ? 'Личные усиления' : 'Общие усиления';
     if (groups.at(-1)?.title !== title) groups.push({ title, items: [] });
     const level = progression.data.levels[id],
-      locked = u.hero && !progression.owned(u.hero);
+      lock = progression.upgradeLock(id),
+      locked = !!lock;
     groups.at(-1).items.push({
       id,
       label:
         (u.hero ? heroes.defs[u.hero].name + ' · ' : '') +
         `${u.name} ${level}/${u.max} · ${u.desc} · ` +
         (level >= u.max ? 'Максимум' : progression.cost(id) + ' кодов') +
-        (locked ? ' · Сначала открой героя' : ''),
+        (lock === 'hero' ? ' · Сначала открой героя' : '') +
+        (lock === 'win' ? ' · Откроется после первой победы' : ''),
       disabled: locked || level >= u.max || codes < progression.cost(id),
     });
   }
+  const refund = progression.upgradeSpent();
   return {
     heroes: heroCards,
     groups,
+    refund,
+    refundLabel: refund ? `СБРОСИТЬ УЛУЧШЕНИЯ · +${refund} кодов` : 'Нечего сбрасывать',
     wallet:
       `У вас ${codes} кодов · до следующей награды: ${10 - (progression.data.kills % 10)} побед` +
       (progression.persistent ? '' : ' · Не удалось сохранить прогресс. Не закрывай игру.'),
@@ -150,7 +157,8 @@ export function shopView({ progression, heroes }) {
 
 /**
  * @typedef {{ id: string, title: string, desc: string, icon: string,
- *   progressText: string, percent: number, reward: number, rewardText: string, codeToken: boolean,
+ *   progressText: string, percent: number, reward: number, unlock: string, rewardText: string,
+ *   codeToken: boolean,
  *   done: boolean, claimed: boolean, order: number, ratio: number }} AchievementCard
  * @returns {{ cards: AchievementCard[], total: number, completed: number, claimed: number, percent: number }}
  */
@@ -171,6 +179,7 @@ export function achievementsView({ run, progression }) {
       progressText: `${time ? clock(progress) : progress} / ${time ? clock(ach.target) : `${ach.target}${ach.unit ? ' ' + ach.unit : ''}`}`,
       percent,
       reward: ach.reward,
+      unlock: unlockText(ach),
       rewardText: codeToken ? `+${ach.reward}` : `+${ach.reward} ${ach.rewardType}`,
       codeToken,
       done,

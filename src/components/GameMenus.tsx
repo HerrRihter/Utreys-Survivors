@@ -1,9 +1,44 @@
+import { useState } from 'react';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
 import { Overlay } from './Overlay';
 import { Portrait } from './Portrait';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
+
+type Goal = {
+  id: string;
+  title: string;
+  desc: string;
+  percent: number;
+  progressText: string;
+  unlock: string;
+};
+
+// The next achievements to finish, with what they open.
+export function GoalList({ goals, title }: { goals: Goal[]; title: string }) {
+  if (!goals.length) return null;
+  return (
+    <div className="goal-list" aria-label={title}>
+      <h3>{title}</h3>
+      {goals.map((goal) => (
+        <div key={goal.id} className="goal">
+          <div className="goal-head">
+            <strong>{goal.title}</strong>
+            <span>{goal.progressText}</span>
+          </div>
+          <small>
+            {goal.desc}
+            {goal.unlock ? ` · Открывает: ${goal.unlock}` : ''}
+          </small>
+          <div className="achievements-bar">
+            <i style={{ width: `${goal.percent}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function MainMenu({
   hints,
@@ -88,6 +123,7 @@ export function MainMenu({
             {view.record}
           </div>
         </div>
+        <GoalList goals={view.goals} title="Ближайшие открытия" />
         {hints && (
           <div id="menuHint" className="footer">
             WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · сенсорный
@@ -257,6 +293,7 @@ export function Shop() {
         </div>
         <h3>Постоянная оптимизация</h3>
         <p style={{ fontSize: '12px' }}>Улучшения применяются со следующей сессии.</p>
+        <RespecButton refund={view.refund} label={view.refundLabel} onConfirm={commands.respec} />
         <div id="shopUpgrades">
           {view.groups.map((group) => [
             <h4 key={group.title}>{group.title}</h4>,
@@ -274,6 +311,36 @@ export function Shop() {
         </div>
       </section>
     </Overlay>
+  );
+}
+
+// Two clicks: the first arms the reset, the second returns the codes.
+function RespecButton({
+  refund,
+  label,
+  onConfirm,
+}: {
+  refund: number;
+  label: string;
+  onConfirm: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+  return (
+    <p>
+      <button
+        id="respec"
+        className="small"
+        disabled={!refund}
+        onClick={() => {
+          if (!armed) return setArmed(true);
+          setArmed(false);
+          onConfirm();
+        }}
+        onBlur={() => setArmed(false)}
+      >
+        {armed ? `ТОЧНО СБРОСИТЬ? ВЕРНУТЬ ${refund} КОДОВ` : label}
+      </button>
+    </p>
   );
 }
 
@@ -325,6 +392,7 @@ export function Achievements() {
                 <div className="achievement-info">
                   <h3>{card.title}</h3>
                   <p>{card.desc}</p>
+                  {card.unlock && <p className="achievement-unlock">Открывает: {card.unlock}</p>}
                 </div>
               </div>
               <div className="achievement-progress">

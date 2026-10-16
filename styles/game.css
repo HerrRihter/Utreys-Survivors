@@ -2235,3 +2235,47 @@ button:disabled {
     bottom: 170px;
   }
 }
+
+/* Nearest unlocks (menu, result screen) */
+.goal-list {
+  max-width: 520px;
+  margin: 14px 0;
+  text-align: left;
+}
+.goal-list h3 {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.goal {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid #1a5763;
+  background: #071a20cc;
+}
+.goal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.goal small {
+  display: block;
+  margin-top: 3px;
+  color: #9fc3c7;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.goal.done strong {
+  color: #f7ce70;
+  font-size: 12px;
+}
+.goal .achievements-bar {
+  height: 5px;
+  margin-top: 6px;
+}
+.achievement-unlock {
+  color: #f7ce70;
+}

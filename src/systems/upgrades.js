@@ -247,9 +247,9 @@ export const UpgradeSystem = {
       return true;
     }
     function permanent(s, hero, levels) {
-      for (const key of ['haste', 'range', 'magnet', 'armor', 'regen']) {
+      for (const key of ['haste', 'range', 'magnet', 'armor', 'regen', 'greed', 'luck']) {
         const factor = permanentUpgradeDefinitions[key]?.factor;
-        if (factor !== undefined) s.stats[key] += (levels[key] || 0) * factor;
+        if (factor !== undefined) add(key, (levels[key] || 0) * factor)(s);
       }
       // The hero's innate passive, then its training on top.
       for (const [key, value] of Object.entries(heroPassives[hero]?.stats || {}))

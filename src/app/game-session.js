@@ -335,6 +335,7 @@ export const GameSession = {
         closeSettings: flow.closeSettings,
         buyHero: flow.buyHero,
         buyUpgrade: flow.buyUpgrade,
+        respec: flow.respec,
         claimAchievement: flow.claimAchievement,
         toggleSetting: flow.toggleSetting,
         toggleSound: audio.toggle,

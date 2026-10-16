@@ -5,6 +5,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { weaponDefinitions } from '../../data/weapons.js';
 import { restoreRun } from '../systems/run-snapshot.js';
+import { nearestGoals, newlyDone } from './unlocks.js';
 import { maxLoad, rewardPerLevel, production, loadModifiers } from '../../data/difficulty.js';
 import { workaroundSeconds } from '../../data/enemies/nodes.js';
 
@@ -42,13 +43,27 @@ export const GameFlow = {
       hud.emit();
     }
     // Time, level and the production record; once per ending (a continued run records again).
-    function recordRun() {
+    // Mastery stats are recorded once per run, at its first ending.
+    function recordRun(win = false) {
       const s = run.state;
       if (!s || s.resultRecorded) return null;
       progression.recordTime(s.t, s.recordedTime || 0);
       progression.recordLevel(s.level);
       s.resultRecorded = true;
       s.recordedTime = s.t;
+      if (!s.statsRecorded) {
+        s.statsRecorded = true;
+        progression.recordRunStats({
+          win,
+          hero: run.selected,
+          time: s.t,
+          untouched: (s.firstHurtAt ?? s.t) >= 180,
+          cleanSweep: s.nodes.every((n) => n.status === 'destroyed'),
+          allWorkaround: s.nodes.every((n) => n.status === 'workaround'),
+          noFood: !s.foodTaken,
+          evolutions: (s.evolutions || 0) + (s.stats.heroEvo ? 1 : 0),
+        });
+      }
       if (!s.endless) return null;
       return progression.recordProduction(
         run.selected,
@@ -128,6 +143,15 @@ export const GameFlow = {
           bonus: 0,
         };
       upgrades.permanent(run.state, run.selected, levels);
+      // Head start: enough experience for the first level-ups, taken one by one as usual.
+      for (let i = 0, need = run.state.need; i < (levels.headStart || 0); i++) {
+        run.state.xp += need;
+        need = Math.floor(need * 1.23 + 3);
+      }
+      // Achievements already done, to list what this run opens.
+      run.state.doneBefore = progression.achievements
+        .filter((a) => progression.achievementDone(a, run.best))
+        .map((a) => a.id);
       world.arena.prepare(
         Object.values(enemies.units).map((unit) => unit.r),
         run.state.p,
@@ -257,7 +281,7 @@ export const GameFlow = {
       const s = run.state;
       if (!s || s.resultRecorded) return;
       const endless = !!s.endless;
-      const records = recordRun() || { time: false, kills: false };
+      const records = recordRun(win && !endless) || { time: false, kills: false };
       // A first win on the load level opens the next one; higher levels pay more codes.
       let opened = false,
         bonus = 0;
@@ -266,6 +290,12 @@ export const GameFlow = {
         bonus = progression.earn(Math.floor(s.earned * rewardPerLevel * (s.load - 1)));
         s.earned += bonus;
       }
+      // Greed: a share of the codes earned since the last ending.
+      const greed = progression.earn(
+        Math.floor((s.earned - (s.earnedPaid || 0)) * (s.stats.greed || 0)),
+      );
+      s.earned += greed;
+      s.earnedPaid = s.earned;
       snapshots?.clear();
       progression.flush();
       audio.finish(win);
@@ -322,6 +352,8 @@ export const GameFlow = {
         ],
         damage: damageReport(s),
         build: upgrades.build(run.selected, s),
+        unlocked: newlyDone(progression, run.best, s.doneBefore),
+        goals: nearestGoals(progression, run.best, 2),
       };
       run.best = {
         kills: Math.max(run.best.kills || 0, s.kills),
@@ -465,6 +497,15 @@ export const GameFlow = {
     function buyUpgrade(id) {
       if (progression.buyUpgrade(id)) ui.emit();
     }
+    function respec() {
+      if (run.mode !== 'menu') return 0;
+      const refund = progression.respec();
+      if (refund) {
+        audio.effect('pickup');
+        ui.emit();
+      }
+      return refund;
+    }
     function claimAchievement(id) {
       if (progression.claimAchievement(id, run.best)) {
         audio.effect('pickup');
@@ -508,6 +549,7 @@ export const GameFlow = {
       closeScreen,
       buyHero,
       buyUpgrade,
+      respec,
       claimAchievement,
       toggleSetting,
     };
