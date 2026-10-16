@@ -39,7 +39,13 @@ function validateSchedules(schedules, maps, units) {
     const inactive = schedule.active === false;
     shape(
       schedule,
-      [...(inactive ? ['active'] : []), 'normal', 'recurring', 'boss', 'notifications'],
+      [
+        ...(inactive ? ['active'] : ['elites', 'events']),
+        'normal',
+        'recurring',
+        'boss',
+        'notifications',
+      ],
       id,
     );
     if (Object.hasOwn(schedule, 'active'))
@@ -106,8 +112,49 @@ function validateSchedules(schedules, maps, units) {
           id + ' inactive schedule must not define active content',
         );
     }
+    if (!inactive) {
+      shape(schedule.elites, ['first', 'every'], id + '.elites');
+      number(schedule.elites.first, 0, 'elites.first');
+      positive(schedule.elites.every, 'elites.every');
+      const events = schedule.events;
+      shape(events, ['times', 'types', 'friday', 'incident', 'rush'], id + '.events');
+      fail(Array.isArray(events.times) && events.times.length > 0, 'event times');
+      events.times.forEach((time, i) => {
+        positive(time, 'event time');
+        if (i) fail(time > events.times[i - 1], 'event times must be ordered');
+      });
+      fail(
+        Array.isArray(events.types) &&
+          events.types.length > 0 &&
+          events.types.every((type) => ['friday', 'incident', 'rush'].includes(type)),
+        'event types',
+      );
+      shape(events.friday, ['duration', 'count', 'message'], 'friday');
+      shape(events.incident, ['duration', 'hold', 'radius', 'distance', 'message'], 'incident');
+      shape(events.rush, ['duration', 'tokens', 'need', 'message'], 'rush');
+      positive(events.friday.duration, 'friday.duration');
+      integer(events.friday.count, 1, 'friday.count');
+      positive(events.incident.hold, 'incident.hold');
+      fail(events.incident.hold < events.incident.duration, 'incident hold fits its duration');
+      positive(events.incident.radius, 'incident.radius');
+      positive(events.incident.distance, 'incident.distance');
+      integer(events.rush.need, 1, 'rush.need');
+      fail(events.rush.tokens >= events.rush.need, 'rush has enough tokens');
+      positive(events.rush.duration, 'rush.duration');
+    }
     if (schedule.boss !== null) {
-      shape(schedule.boss, ['unit', 'condition', 'message', 'sound'], id + '.boss');
+      shape(
+        schedule.boss,
+        [
+          'unit',
+          'condition',
+          'message',
+          'sound',
+          ...('hpScale' in schedule.boss ? ['hpScale'] : []),
+        ],
+        id + '.boss',
+      );
+      if ('hpScale' in schedule.boss) positive(schedule.boss.hpScale, 'boss.hpScale');
       unit(schedule.boss.unit);
       fail(schedule.boss.condition === 'all-nodes-resolved', 'boss condition');
       fail(

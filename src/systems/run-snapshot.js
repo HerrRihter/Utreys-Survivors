@@ -1,3 +1,5 @@
+import { makeElite } from './difficulty.js';
+
 // A paused or interrupted run, kept in storage so a closed tab does not lose it.
 // Only plain data is stored: enemies come back at their saved positions and health, live
 // projectiles and effects are dropped. `version` guards the format.
@@ -29,6 +31,7 @@ export function snapshotRun(run) {
         'spawn',
         'waveNext',
         'bossSpawned',
+        'eliteNext',
         'step',
         'stats',
         'upgradeRanks',
@@ -47,6 +50,12 @@ export function snapshotRun(run) {
         'productionBossNext',
         'productionBosses',
         'recordedTime',
+        'seed',
+        'offers',
+        'offersLogged',
+        'lastHitBy',
+        'eventIndex',
+        'event',
         'statsRecorded',
         'earnedPaid',
         'firstHurtAt',
@@ -65,7 +74,14 @@ export function snapshotRun(run) {
       })),
       enemies: s.enemies
         .filter((e) => e.hp > 0 && !e.nodeId)
-        .map((e) => ({ unit: e.unit, x: round(e.x), y: round(e.y), hp: e.hp, boss: !!e.boss })),
+        .map((e) => ({
+          unit: e.unit,
+          x: round(e.x),
+          y: round(e.y),
+          hp: e.hp,
+          boss: !!e.boss,
+          elite: !!e.elite,
+        })),
       gems: s.gems.slice(0, MAX_GEMS).map((g) => ({ x: round(g.x), y: round(g.y), v: g.v })),
       codes: s.codes.map((c) => ({ x: round(c.x), y: round(c.y), value: c.value })),
       pickups: s.pickups.map((a) => ({ x: round(a.x), y: round(a.y), type: a.type })),
@@ -131,6 +147,7 @@ export function restoreRun(s, snapshot, spawn) {
   }
   for (const e of enemies) {
     const enemy = spawn(e.unit, e.boss, { x: e.x, y: e.y });
+    if (enemy && e.elite) makeElite(enemy);
     if (enemy) enemy.hp = Math.min(enemy.max, e.hp);
   }
   s.gems = gems.map((g) => ({ ...g }));

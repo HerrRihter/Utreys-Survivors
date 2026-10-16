@@ -381,6 +381,7 @@ export const OpponentsView: React.FC = () => {
                   <button
                     type="button"
                     className="small"
+                    aria-label={`Тест атаки: ${u.name}`}
                     onClick={() => triggerUnitAttack(unit)}
                     style={{
                       flex: 1,
@@ -396,6 +397,7 @@ export const OpponentsView: React.FC = () => {
                   <button
                     type="button"
                     className="small"
+                    aria-label={`Спецификация: ${u.name}`}
                     onClick={() => setInspectedUnit(unit)}
                     style={{
                       borderColor: 'var(--panel-border)',

@@ -40,7 +40,7 @@ export function useGameSession(canvasRef: RefObject<HTMLCanvasElement | null>, a
   useEffect(() => {
     if (!session) return;
     if (active) session.run();
-    else session.stop();
+    else session.sleep();
   }, [active, session]);
 
   return session;

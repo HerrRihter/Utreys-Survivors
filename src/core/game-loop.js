@@ -21,9 +21,10 @@ export const GameLoop = {
       freshFrame = true;
       frameId = requestAnimationFrame(tick);
     }
-    function stop() {
+    // `keepAudio`: the game view is hidden behind another page, but the menu music goes on.
+    function stop(keepAudio = false) {
       running = false;
-      audio.stop();
+      if (!keepAudio) audio.stop();
       if (frameId !== null) cancelAnimationFrame(frameId);
       frameId = null;
     }

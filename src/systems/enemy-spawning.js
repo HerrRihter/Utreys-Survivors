@@ -1,6 +1,6 @@
 import { updateNodes, allNodesResolved } from './node-objectives.js';
 import { getWaveSchedule, normalWave, selectWaveUnit, scheduleStage } from './wave-schedule.js';
-import { runModifiers, scaleEnemy, scaleWave } from './difficulty.js';
+import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
@@ -41,6 +41,7 @@ export const EnemySpawning = {
         vy: 0,
         heading: Math.atan2(p.y - y, p.x - x),
       };
+      if (boss) e.hp = e.max = Math.round(u.hp * (getWaveSchedule(s.map).boss?.hpScale || 1));
       scaleEnemy(e, runModifiers(s), boss ? s.productionBosses || 0 : 0);
       s.enemies.push(e);
       return e;
@@ -86,6 +87,17 @@ export const EnemySpawning = {
         count();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++)
           track(spawn(selectWaveUnit(schedule, s.t, math.random())));
+      }
+      // Elites: a stronger copy of a unit from the current stage, on the schedule's timer.
+      if (schedule.elites && s.t >= (s.eliteNext ?? schedule.elites.first)) {
+        s.eliteNext = (s.eliteNext ?? schedule.elites.first) + schedule.elites.every;
+        const e = spawn(selectWaveUnit(schedule, s.t, math.random()));
+        if (e) {
+          makeElite(e);
+          toast(
+            'Элитный клиент: ' + enemies.units[e.unit].name + '. С него падает пакет обновлений',
+          );
+        }
       }
       const boss = schedule.boss;
       if (boss && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {

@@ -2,10 +2,18 @@ const assert = require('node:assert/strict');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { edgeMarker, edgeTargets } = require('../src/rendering/edge-arrows.js');
 const { runStats } = require('../src/app/views.js');
+const { hudScale } = require('../src/app/run-state.js');
 
 // Stage 5 leftovers: final stats on pause, edge arrows to the next node and the boss, and
 // the encyclopedia of weapons, passives and evolutions.
 (async () => {
+  // The in-run HUD grows less than menus on small screens.
+  assert.equal(hudScale(1.3, 1920, 1080), 1.3);
+  assert.equal(hudScale(1.3, 844, 390), 1, 'short landscape phones cap at 100%');
+  assert.equal(hudScale(1.3, 360, 640), 1, 'small portrait phones cap at 100%');
+  assert.equal(hudScale(1.3, 412, 915), 1.15);
+  assert.equal(hudScale(0.8, 360, 640), 0.8, 'smaller scales pass through');
+
   // Edge markers: none on screen, clamped to the inner rectangle off screen.
   assert.equal(edgeMarker({ x: 150, y: 100 }, 100, 50, 800, 600), null);
   const right = edgeMarker({ x: 5000, y: 50 + 321 }, 100, 50, 800, 600, 30);

@@ -9,8 +9,9 @@ export function edgeMarker(target, cx, cy, width, height, margin = 30) {
   if (sx >= 0 && sx <= width && sy >= 0 && sy <= height) return null;
   const left = margin,
     right = width - margin,
-    top = Math.max(margin, height * 0.27),
-    bottom = height - Math.max(margin, height * 0.2);
+    top = Math.max(margin, height * 0.27, 105),
+    // On short screens the status lines sit at the bottom centre.
+    bottom = height - Math.max(margin, height * 0.2, height <= 500 ? 112 : 0);
   const mx = width / 2,
     my = (top + bottom) / 2,
     dx = sx - mx,
@@ -37,6 +38,14 @@ export function edgeTargets(s) {
     }
   }
   if (node) out.push({ x: node.x, y: node.y, label: node.id, color: '#ffd54f', distance: best });
+  if (s.event?.type === 'incident')
+    out.push({
+      x: s.event.x,
+      y: s.event.y,
+      label: 'ИНЦИДЕНТ',
+      color: '#ff8a65',
+      distance: Math.hypot(s.event.x - s.p.x, s.event.y - s.p.y),
+    });
   for (const e of s.enemies)
     if (e.boss && e.hp > 0)
       out.push({
@@ -70,10 +79,15 @@ export function drawEdgeArrows(g, s, cx, cy, width, height) {
     g.font = 'bold 10px monospace';
     g.textAlign = 'center';
     g.fillStyle = '#08171a';
-    const text = `${t.label} · ${Math.round(t.distance / 10) * 10}`;
-    g.fillText(text, 1, 21);
+    // Long node ids are shortened on small screens.
+    const label = width < 700 && t.label.length > 14 ? t.label.slice(0, 13) + '…' : t.label;
+    const text = `${label} · ${Math.round(t.distance / 10) * 10}`;
+    // Keep the whole label on screen next to a marker at the side.
+    const half = (g.measureText?.(text).width || 0) / 2 + 4;
+    const tx = Math.min(Math.max(0, half - m.x), width - half - m.x);
+    g.fillText(text, tx + 1, 21);
     g.fillStyle = t.color;
-    g.fillText(text, 0, 20);
+    g.fillText(text, tx, 20);
     g.restore();
   }
 }

@@ -4,6 +4,8 @@ import { neonStroke } from './neon.js';
 import { orderActors } from './depth-order.js';
 import { cameraOrigin } from './camera.js';
 import { drawEdgeArrows } from './edge-arrows.js';
+import { drawEvent } from '../systems/run-events.js';
+import { drawPickup, drawEliteAura } from './pickups.js';
 
 // The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
 const noScenery = [];
@@ -67,6 +69,7 @@ export const SceneRenderer = {
           minY = cy - 50,
           maxY = cy + view.H + 50;
         drawNodes(ctx, s.nodes);
+        drawEvent(ctx, s);
         corpses.draw(ctx, s.corpses, cx, cy, view.W, view.H);
         for (const h of s.codes) {
           if (h.x < minX || h.x > maxX || h.y < minY || h.y > maxY) continue;
@@ -88,16 +91,11 @@ export const SceneRenderer = {
         }
         for (const a of s.pickups) {
           if (a.x < minX || a.x > maxX || a.y < minY || a.y > maxY) continue;
-          // Futuristic data/energy recovery capsule
-          ctx.fillStyle = '#00e5ff';
-          ctx.fillRect(a.x - 7, a.y - 5, 14, 10);
-          ctx.fillStyle = '#0a192f';
-          ctx.fillRect(a.x - 5, a.y - 3, 10, 6);
-          ctx.fillStyle = '#64ffda';
-          ctx.fillRect(a.x - 3, a.y - 1, 6, 2);
+          drawPickup(ctx, a, s.t);
         }
         for (const e of s.enemies) {
           if (e.x < minX - 70 || e.x > maxX + 70 || e.y < minY - 70 || e.y > maxY + 70) continue;
+          if (e.elite) drawEliteAura(ctx, e, s.t);
           enemies.telegraph(ctx, e);
         }
         abilities.draw(ctx);
@@ -141,7 +139,15 @@ export const SceneRenderer = {
               e.phase || 0,
               e,
             );
-          else enemies.draw(ctx, e);
+          else if (e.elite) {
+            // Elites are drawn larger around their feet.
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            ctx.scale(1.3, 1.3);
+            ctx.translate(-e.x, -e.y);
+            enemies.draw(ctx, e);
+            ctx.restore();
+          } else enemies.draw(ctx, e);
           if (e.player) {
             const aim = p.action?.direction || p.facing;
             ctx.save();

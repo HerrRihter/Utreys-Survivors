@@ -1,5 +1,6 @@
 export const ArenaNavigation = {
-  create({ size, cell, cols, blocked, clear }) {
+  // `open`: an arena without obstacles, where enemies always head straight for the target.
+  create({ size, cell, cols, blocked, clear, open = false }) {
     const moveNext = { x: 0, y: 0 },
       moveNextX = { x: 0, y: 0 },
       moveNextY = { x: 0, y: 0 };
@@ -137,7 +138,7 @@ export const ArenaNavigation = {
     }
     function direction(a, p, r = 14) {
       const d = Math.hypot(p.x - a.x, p.y - a.y);
-      if (clear(a, p, r))
+      if (open || clear(a, p, r))
         return { x: (p.x - a.x) / Math.max(1, d), y: (p.y - a.y) / Math.max(1, d) };
       const flow = field(p, r);
       if (!flow) return { x: 0, y: 0 };

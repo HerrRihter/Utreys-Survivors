@@ -8,7 +8,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  * @typedef {{ win: boolean, tag: string, title: string, text: string,
  *   stats: { value: string, label: string, best?: boolean }[],
  *   damage: { tag: string, name: string, amount: number, share: number }[],
- *   build: RunBuild, canContinue?: boolean,
+ *   build: RunBuild, canContinue?: boolean, seed: string,
  *   unlocked: { id: string, title: string, unlock: string }[],
  *   goals: import('./unlocks.js').UnlockGoal[] }} RunResult
  * @typedef {{ id: string, name: string, desc: string, icon: string, group: string,
@@ -18,7 +18,8 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  *   state: any, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
- *   selectedMap: string, selectedLoad: number, choice: UpgradeChoice[], result: RunResult | null,
+ *   selectedMap: string, selectedLoad: number, seedInput: string,
+ *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], result: RunResult | null,
  *   best: { kills: number, time: number }, toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
@@ -44,6 +45,9 @@ export function createRunState({ storage }) {
     baClient: baClientIds[0],
     selectedMap: 'empty',
     selectedLoad: 1, // load level for the next run, clamped to what the hero has opened
+    seedInput: '', // seed typed in hero select; empty means a random one
+    touchOnly: false, // a touch device without mouse or keyboard (set by the session)
+    nextSeed: null, // seed for the next start (typed, repeated or resumed)
     choice: [],
     result: null, // { win, ... } after a run ends
     best,
@@ -83,6 +87,15 @@ export const bindingLabels = {
   banish: 'Бан карточки',
 };
 export const uiScales = [0.8, 0.9, 1, 1.15, 1.3];
+
+// The in-run HUD on a small screen grows less than menus do (menus scroll, the arena does
+// not): at most 100% on short landscape phones and small portrait ones, 115% on other
+// narrow portrait phones.
+export function hudScale(uiScale, width, height) {
+  if (height <= 500 || width <= 370) return Math.min(uiScale, 1);
+  if (width <= 480) return Math.min(uiScale, 1.15);
+  return uiScale;
+}
 
 // Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings),
 // persisted separately from progress.

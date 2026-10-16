@@ -13,9 +13,16 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
   const run = session.views.run();
   const { commands } = session;
   const stick = hud?.stick;
+  // The corner sound button stays above every screen; settings have their own sound toggle.
+  const ownSound = run.screen === 'settings';
   return (
     <>
       <div id="hud" className={hidden(!!hud, 'hud')}>
+        {hud?.event && (
+          <div id="runEvent" className="run-event">
+            {hud.event}
+          </div>
+        )}
         <div id="nodeProgress" className="node-progress">
           {hud?.progress}
         </div>
@@ -54,7 +61,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
       </div>
 
       <div id="actions" className="actions">
-        <SoundButton id="sound" enabled={soundEnabled} />
+        {!ownSound && <SoundButton id="sound" enabled={soundEnabled} />}
         <button
           id="pause"
           className={hidden(!!hud?.showPause, 'small')}

@@ -129,8 +129,7 @@ export function MainMenu({
         <GoalList goals={view.goals} title="Ближайшие открытия" />
         {hints && (
           <div id="menuHint" className="footer">
-            WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · сенсорный
-            джойстик на мобильных
+            {view.hint}
           </div>
         )}
       </main>
@@ -170,12 +169,23 @@ export function HeroSelect() {
             onChange={(event) => commands.chooseMap(event.target.value)}
           >
             {view.maps.map((map) => (
-              <option key={map.id} value={map.id}>
+              <option key={map.id} value={map.id} disabled={map.locked}>
                 {map.name}
+                {map.locked ? ' · закрыто' : ''}
               </option>
             ))}
           </select>
           <p id="mapDescription">{view.mapDescription}</p>
+          {view.mapHint && <p>{view.mapHint}</p>}
+          <label htmlFor="runSeed">СИД ЗАБЕГА</label>
+          <input
+            id="runSeed"
+            className="seed-input"
+            value={view.seed}
+            maxLength={7}
+            placeholder="случайный"
+            onChange={(event) => commands.chooseSeed(event.target.value)}
+          />
         </div>
         <div className="map-select">
           <label htmlFor="runLoad">НАГРУЗКА</label>
@@ -284,13 +294,17 @@ export function Shop() {
               <h3>{hero.name}</h3>
               <p>{hero.desc}</p>
               <small>{hero.info}</small>
-              <button
-                className="small"
-                disabled={hero.disabled}
-                onClick={() => commands.buyHero(hero.id)}
-              >
-                {hero.label}
-              </button>
+              {hero.owned ? (
+                <span className="owned-badge">✓ {hero.label}</span>
+              ) : (
+                <button
+                  className="small"
+                  disabled={hero.disabled}
+                  onClick={() => commands.buyHero(hero.id)}
+                >
+                  {hero.label}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -499,6 +513,7 @@ export function Achievements() {
                 ) : card.done ? (
                   <button
                     className="primary ach-claim"
+                    aria-label={`Забрать награду «${card.title}»: +${card.reward}`}
                     onClick={() => commands.claimAchievement(card.id)}
                   >
                     <span>ЗАБРАТЬ +{card.reward}</span>
@@ -516,12 +531,24 @@ export function Achievements() {
   );
 }
 
-function Toggle({ id, on, onClick }: { id: string; on: boolean; onClick: () => void }) {
+function Toggle({
+  id,
+  on,
+  onClick,
+  label,
+}: {
+  id: string;
+  on: boolean;
+  onClick: () => void;
+  label: string;
+}) {
   return (
     <button
       id={id}
       className="small"
       type="button"
+      aria-pressed={on}
+      aria-label={`${label}: ${on ? 'включено' : 'выключено'}`}
       style={{ color: on ? 'var(--gold)' : '#99a896' }}
       onClick={onClick}
     >
@@ -604,7 +631,7 @@ function SettingRow({
         <strong>{title}</strong>
         <small className="settings-note">{note}</small>
       </div>
-      <Toggle id={id} on={on} onClick={onClick} />
+      <Toggle id={id} on={on} onClick={onClick} label={title} />
     </div>
   );
 }
@@ -632,7 +659,7 @@ export function Settings() {
             ← НАЗАД
           </button>
         </div>
-        <p>Звук, интерфейс и клавиши.</p>
+        <p>{view.keyboard ? 'Звук, интерфейс и клавиши.' : 'Звук и интерфейс.'}</p>
         <div className="settings-grid">
           <div className="settings-card">
             <h3>♫ Звук</h3>
@@ -654,7 +681,11 @@ export function Settings() {
             />
             <SettingRow
               title="Подсказки управления"
-              note="Горячие клавиши внизу экрана и советы первого забега"
+              note={
+                view.keyboard
+                  ? 'Горячие клавиши внизу экрана и советы первого забега'
+                  : 'Советы первого забега и пояснения на экранах'
+              }
               id="settingHints"
               on={view.hints}
               onClick={() => commands.toggleSetting('hints')}
@@ -685,44 +716,71 @@ export function Settings() {
               </select>
             </div>
           </div>
-          <div className="settings-card settings-keys">
-            <h3>Управление</h3>
+          <div className="settings-card">
+            <h3>Журнал забегов</h3>
             <p className="settings-note">
-              Нажми на клавишу действия, затем новую клавишу. Esc отменяет. Стрелки всегда двигают
-              героя, Esc всегда ставит паузу.
+              Каждый забег записывается локально: герой, нагрузка, время, причина поражения,
+              предложенные и взятые карточки, урон по источникам. Файл читает{' '}
+              <code>node tools/run-stats.cjs</code>.
             </p>
-            {view.bindings.map((binding: { action: string; label: string; key: string }) => (
-              <div key={binding.action} className="settings-row">
-                <span>{binding.label}</span>
+            <div className="settings-row">
+              <span id="runLogCount">Записей: {view.runLogCount}</span>
+              <span>
                 <button
-                  id={'bind-' + binding.action}
-                  className={'small key-button' + (view.capture === binding.action ? ' armed' : '')}
+                  id="exportRunLog"
+                  className="small"
                   type="button"
-                  onClick={() => commands.startCapture(binding.action)}
+                  disabled={!view.runLogCount}
+                  onClick={commands.exportRunLog}
                 >
-                  {view.capture === binding.action ? 'НАЖМИТЕ КЛАВИШУ…' : binding.key}
+                  ЭКСПОРТ JSON
+                </button>{' '}
+                <button
+                  id="clearRunLog"
+                  className="small"
+                  type="button"
+                  disabled={!view.runLogCount}
+                  onClick={commands.clearRunLog}
+                >
+                  ОЧИСТИТЬ
                 </button>
-              </div>
-            ))}
-            <button
-              id="resetBindings"
-              className="small"
-              type="button"
-              onClick={commands.resetBindings}
-            >
-              СБРОСИТЬ КЛАВИШИ
-            </button>
+              </span>
+            </div>
           </div>
-        </div>
-        <div style={{ marginTop: '24px', textAlign: 'right' }}>
-          <button
-            id="settingsBack"
-            className="primary"
-            style={primary}
-            onClick={commands.closeSettings}
-          >
-            ГОТОВО →
-          </button>
+          {view.keyboard && (
+            <details className="settings-card settings-keys">
+              <summary>
+                <h3>Управление с клавиатуры</h3>
+              </summary>
+              <p className="settings-note">
+                Нажми на клавишу действия, затем новую клавишу. Esc отменяет. Стрелки всегда двигают
+                героя, Esc всегда ставит паузу.
+              </p>
+              {view.bindings.map((binding: { action: string; label: string; key: string }) => (
+                <div key={binding.action} className="settings-row">
+                  <span>{binding.label}</span>
+                  <button
+                    id={'bind-' + binding.action}
+                    className={
+                      'small key-button' + (view.capture === binding.action ? ' armed' : '')
+                    }
+                    type="button"
+                    onClick={() => commands.startCapture(binding.action)}
+                  >
+                    {view.capture === binding.action ? 'НАЖМИТЕ КЛАВИШУ…' : binding.key}
+                  </button>
+                </div>
+              ))}
+              <button
+                id="resetBindings"
+                className="small"
+                type="button"
+                onClick={commands.resetBindings}
+              >
+                СБРОСИТЬ КЛАВИШИ
+              </button>
+            </details>
+          )}
         </div>
       </section>
     </Overlay>

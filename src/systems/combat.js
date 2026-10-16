@@ -4,6 +4,7 @@ import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
 import { protectedMove, effectiveStats } from './ability-state.js';
 import { passiveDamage } from './hero-passives.js';
 import { production } from '../../data/difficulty.js';
+import { elite } from './difficulty.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
@@ -68,8 +69,16 @@ export const CombatSystem = {
         run.state.gems.push({
           x: e.x,
           y: e.y,
-          v: enemies.units[e.unit].xp,
+          v: enemies.units[e.unit].xp * (e.elite ? elite.xp : 1),
         });
+        // Elites leave an update bundle; ordinary kills rarely drop a map pickup.
+        if (e.elite) run.state.pickups.push({ x: e.x, y: e.y, type: 'bundle' });
+        else {
+          const roll = math.random();
+          const type =
+            roll < 0.004 ? 'magnet' : roll < 0.007 ? 'bomb' : roll < 0.01 ? 'freeze' : '';
+          if (type) run.state.pickups.push({ x: e.x + 12, y: e.y, type });
+        }
         for (let i = 0; i < 4; i++)
           run.state.fx.push({
             kind: 'spark',
@@ -119,6 +128,7 @@ export const CombatSystem = {
       if (p.hp <= 0 || p.inv > 0 || protectedMove(run.state)) return;
       p.hp -= Math.max(1, e.damage - run.state.stats.armor);
       run.state.firstHurtAt ??= run.state.t;
+      run.state.lastHitBy = e.unit || e.kind || 'unknown';
       p.inv = 0.7;
       p.hurt = { elapsed: 0, duration: 0.34, flip: p.flip };
       run.state.shake = 4;

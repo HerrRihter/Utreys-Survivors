@@ -10,7 +10,7 @@ const {
   createWaveState,
   waveRoster,
 } = require('../src/systems/wave-schedule.js');
-assert.equal(checkGameContracts(), 1);
+assert.equal(checkGameContracts(), 2);
 for (const mutate of [
   (s) => {
     delete s.empty;
@@ -32,6 +32,12 @@ for (const mutate of [
   },
   (s) => {
     s.empty.extra = true;
+  },
+  (s) => {
+    s.empty.events.types = ['party'];
+  },
+  (s) => {
+    s.serverRoom.elites.every = 0;
   },
 ]) {
   const s = structuredClone(waveSchedules);

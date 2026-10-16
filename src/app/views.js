@@ -8,6 +8,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { heroPassives } from '../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
 import { productionMinutes } from '../systems/difficulty.js';
+import { eventLabel } from '../systems/run-events.js';
 import { effectiveStats } from '../systems/ability-state.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
@@ -41,6 +42,9 @@ export function menuView({ run, progression, heroes, snapshot = null }) {
       : 'Лучшее время появится после первого забега.',
     achievementsLabel: unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ',
     goals: nearestGoals(progression, run.best, 3),
+    hint: run.touchOnly
+      ? 'Джойстик справа внизу — движение · атака и оружие срабатывают сами · умения — кнопки слева внизу'
+      : 'WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · Q / E — умения',
   };
 }
 
@@ -71,11 +75,20 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
     showBaClients: run.pendingHero === 'ba',
     baClients: baClientIds.map((id) => ({ id, name: enemies.units[id].name })),
     baClient: run.baClient,
-    maps: Object.entries(arenaDefinitions).map(([id, map]) => ({ id, name: map.name })),
+    maps: Object.entries(arenaDefinitions).map(([id, map]) => ({
+      id,
+      name: map.name,
+      locked: map.unlock === 'win' && !(progression.data.stats.wins > 0),
+    })),
     map: run.selectedMap,
+    seed: run.seedInput,
     mapDescription: arenaDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.
     mapLocked: Object.keys(arenaDefinitions).length < 2,
+    mapHint:
+      arenaDefinitions.serverRoom && !(progression.data.stats.wins > 0)
+        ? 'Серверный зал откроется после первой победы.'
+        : '',
   };
 }
 
@@ -356,7 +369,7 @@ function abilityButtons(run) {
   return (s.abilities || []).slice(0, 2).map((a, i) => {
     const status = a.left > 0 ? 'Активно' : a.cd > 0 ? Math.ceil(a.cd) + ' с' : 'Готово';
     return {
-      label: `${i ? 'E' : 'Q'} · ${a.name} · ${abilityRank(s, a.id)}/${abilityUpgradeMax}\n${
+      label: `${run.touchOnly ? '' : (i ? 'E' : 'Q') + ' · '}${a.name} · ${abilityRank(s, a.id)}/${abilityUpgradeMax}\n${
         a.left > 0 ? 'Активно ' + a.left.toFixed(1) + ' с' : status
       }`,
       name: a.name,
@@ -398,12 +411,14 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
       (ba ? ` · Клиент: ${enemies.units[ba.client].name} · +${ba.bonus} HP` : ''),
     codes: `КОДЫ: ${progression.codes} (+${s.earned})`,
     progress: nodeProgress(s),
+    event: eventLabel(s),
     boss: boss
       ? { name: boss.name || 'ШЛЮЗ ЦРПТ', pct: Math.round((boss.hp / boss.max) * 1000) / 10 }
       : null,
     abilities: abilityButtons(run),
     showAbilities: run.mode === 'play',
-    showPause: run.mode !== 'end',
+    // Pause only means something during play; the stick is shown with it.
+    showPause: run.mode === 'play',
     showHint: settings.hints,
     hint: controlsHint(settings.bindings),
     stick: run.stickView,
@@ -420,8 +435,11 @@ export const keyLabel = (code) =>
     .replace(/^Digit/, '')
     .replace(/^Numpad/, 'Num ');
 
-export function settingsView({ run, settings, audio }) {
+export function settingsView({ run, settings, audio, runLog = null }) {
   return {
+    // Key bindings and keyboard hints only make sense with a keyboard.
+    keyboard: !run.touchOnly,
+    runLogCount: runLog ? runLog.count() : 0,
     shake: settings.shake,
     hints: settings.hints,
     damageNumbers: settings.damageNumbers,
@@ -447,6 +465,9 @@ export function levelControlsView({ run, settings }) {
     skips: s.skips || 0,
     banishes: s.banishes || 0,
     banishArmed: !!run.banishArmed,
-    keys: { reroll: keyLabel(b.reroll), skip: keyLabel(b.skip), banish: keyLabel(b.banish) },
+    keyboard: !run.touchOnly,
+    keys: run.touchOnly
+      ? null
+      : { reroll: keyLabel(b.reroll), skip: keyLabel(b.skip), banish: keyLabel(b.banish) },
   };
 }

@@ -130,9 +130,7 @@ const assets = require('./active-assets.json');
           frozen,
           'freeze includes blinking LEDs',
         );
-        const specification = page
-          .getByRole('button', { name: 'Спецификация', exact: true })
-          .first();
+        const specification = page.getByRole('button', { name: /^Спецификация/ }).first();
         await specification.click();
         await page.getByRole('dialog').waitFor();
         await page.keyboard.press('Tab');
@@ -170,7 +168,10 @@ const assets = require('./active-assets.json');
           const nav = await page.locator('.view-navigation').boundingBox();
           assert(nav.x >= 0 && nav.x + nav.width <= 390, 'navigation fits mobile width');
           await page.screenshot({ path: 'test-results/opponents-mobile.png' });
-          await page.getByRole('button', { name: 'Спецификация', exact: true }).first().click();
+          await page
+            .getByRole('button', { name: /^Спецификация/ })
+            .first()
+            .click();
           await page.screenshot({ path: 'test-results/dialog-mobile.png' });
           await page.keyboard.press('Escape');
           await page.getByRole('button', { name: 'Дата-центр Utrace', exact: true }).click();

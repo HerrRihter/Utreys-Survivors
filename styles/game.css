@@ -38,7 +38,8 @@ button:focus-visible {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
+  /* `safe`: a panel taller than the screen starts at the top instead of losing it. */
+  align-items: safe center;
   justify-content: center;
   background: linear-gradient(90deg, rgba(5, 16, 20, 0.95), rgba(7, 20, 25, 0.82));
   padding: 28px;
@@ -231,7 +232,8 @@ button:focus-visible {
   bottom: 20px;
   display: flex;
   gap: 8px;
-  z-index: 35;
+  /* Above every screen: the sound toggle is always reachable. */
+  z-index: 55;
   align-items: center;
 }
 .small {
@@ -323,7 +325,8 @@ body.hide-hints #levelup .footer {
 }
 #toast {
   position: absolute;
-  top: 125px;
+  /* Below the node progress and the event line, which sit 20px lower inside #hud. */
+  top: 200px;
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 20px;
@@ -1965,22 +1968,26 @@ button:disabled {
     top: 78px;
     left: 0;
     transform: none;
-    width: calc(100% - 110px);
+    /* Leave room for the two corner buttons, which keep 44 px at any scale. */
+    width: calc(100% - 20px - 100px / var(--hud-scale, 1));
     box-sizing: border-box;
     font-size: 10px;
   }
 }
 
-/* Interface scale (settings): HUD, panels and controls grow or shrink together. */
+/* Interface scale (settings): menus follow it; the in-run HUD follows --hud-scale, which
+   GameView caps on small screens so the arena stays visible. */
+.overlay > * {
+  zoom: var(--ui-scale, 1);
+}
 #hud,
-.overlay > *,
 .controls,
 .ability-controls,
 .actions,
 #toast,
 .tip,
 #bossbar {
-  zoom: var(--ui-scale, 1);
+  zoom: var(--hud-scale, var(--ui-scale, 1));
 }
 
 /* Weapon and passive slots: compact in the HUD, with names on pause. */
@@ -2364,4 +2371,296 @@ button:disabled {
 }
 .codex-evo.found b {
   color: #f7ce70;
+}
+
+/* Run seed */
+.seed-input {
+  width: 9em;
+  margin: 4px 0 6px;
+  padding: 6px 8px;
+  border: 1px solid #1a5763;
+  background: #071a20;
+  color: var(--cyan);
+  font:
+    700 14px Consolas,
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.end-seed {
+  font-size: 12px;
+  color: #9fc3c7;
+}
+.end-seed b {
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+}
+
+/* Running mid-run event under the node progress line */
+.run-event {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(420px, 92vw);
+  padding: 6px 10px;
+  border: 1px solid #ff8a65;
+  border-radius: 6px;
+  background: #2a1209dd;
+  color: #ffd54f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Short landscape screens (phones): the middle of the screen belongs to the arena. Status
+   lines go to the bottom between the abilities and the stick, the HUD shows only weapon
+   slots in one row (passives are on the pause screen), messages stay small. */
+@media (max-height: 500px) {
+  /* Fixed: #hud is only as tall as its top row, so `bottom` must refer to the viewport. */
+  .node-progress {
+    position: fixed;
+    top: auto;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 4px);
+    max-width: 40vw;
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+  .run-event {
+    position: fixed;
+    top: auto;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 40px);
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  /* Centred between the ability buttons (left) and the stick (right). */
+  .node-progress,
+  .run-event {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(40vw, calc(100vw - 380px));
+    box-sizing: border-box;
+  }
+  .ability-controls button {
+    flex-basis: 78px;
+    width: 78px;
+    max-width: 78px;
+    height: 60px;
+    min-height: 60px;
+    padding: 6px 4px;
+  }
+  #toast {
+    top: 76px;
+    max-width: 50vw;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .tip {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 80px);
+    max-width: 44vw;
+    padding: 6px 10px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+/* Touch: corner buttons stay at least 44 CSS px whatever the interface scale. */
+@media (pointer: coarse) {
+  .actions #sound,
+  .actions #pause {
+    width: calc(44px / var(--hud-scale, 1));
+    min-width: calc(44px / var(--hud-scale, 1));
+    height: calc(44px / var(--hud-scale, 1));
+    min-height: calc(44px / var(--hud-scale, 1));
+  }
+}
+
+/* Touch: menu controls keep 44 CSS px at any interface scale (the panels are zoomed). */
+@media (pointer: coarse) {
+  .overlay button,
+  .overlay select,
+  .overlay input:not([type='range']) {
+    min-height: calc(44px / var(--ui-scale, 1));
+  }
+  .overlay button {
+    min-width: calc(44px / var(--ui-scale, 1));
+  }
+  .overlay input[type='range'] {
+    height: calc(28px / var(--ui-scale, 1));
+  }
+}
+.owned-badge {
+  display: inline-block;
+  padding: 8px 0;
+  color: #64ffda;
+  font-size: 12px;
+}
+@media (pointer: coarse) {
+  .overlay .startline #start {
+    min-height: calc(44px / var(--ui-scale, 1));
+  }
+}
+.run-hero-head > button {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* Touch devices and small screens: weapon slots in one compact row; passives are listed
+   on the pause screen. */
+@media (pointer: coarse), (max-width: 700px), (max-height: 500px) {
+  .hudbox .build-panel {
+    margin-top: 4px;
+  }
+  .hudbox .build-row {
+    flex-wrap: nowrap;
+  }
+  .hudbox .build-row + .build-row {
+    display: none;
+  }
+  .hudbox .build-slot {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+}
+/* Touch and narrow screens: the left HUD box grows to hold the slot row, so the status
+   lines and the toast start below it instead of on top of it. */
+@media (pointer: coarse), (max-width: 700px) {
+  .hudbox:not(.hudright) {
+    height: auto;
+    min-height: 76px;
+  }
+}
+@media ((pointer: coarse) or (max-width: 700px)) and (min-height: 501px) {
+  .node-progress {
+    top: 122px;
+  }
+  .run-event {
+    top: 176px;
+  }
+  #toast {
+    top: calc(max(8px, env(safe-area-inset-top)) + 244px);
+  }
+}
+/* Short landscape level-up: four compact cards in one row, no scrolling to see them. */
+@media (max-height: 500px) {
+  #levelup .modal {
+    padding: 10px 14px;
+  }
+  #levelup .eyebrow {
+    display: none;
+  }
+  #levelup h2 {
+    font-size: 18px;
+    margin: 0 0 6px;
+  }
+  #levelup .cards {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 6px;
+    margin: 6px 0;
+  }
+  #levelup .upgrade {
+    min-height: 0;
+    padding: 10px 8px;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  #levelup .upgrade h3,
+  #levelup .upgrade strong {
+    font-size: 12px;
+  }
+  #levelup .upgrade .upgrade-key,
+  #levelupHint {
+    display: none;
+  }
+}
+/* Narrow portrait phones: the top is full, so the toast shows above the ability buttons. */
+@media (max-width: 700px) and (min-height: 501px) {
+  #toast {
+    top: auto;
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 190px);
+  }
+}
+
+/* Sound toggle on the arena and bestiary pages, next to their navigation. */
+.view-sound {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 61;
+}
+/* The same speaker icon as the in-game corner button, on every device. */
+.view-sound #viewSound {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 0;
+  background: #0e252be6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  touch-action: manipulation;
+}
+.view-sound #viewSound::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9h4l5-4v14l-5-4H3z'/%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' d='M16 8q4 4 0 8M19 5q7 7 0 14'/%3E%3C/svg%3E")
+    center/contain no-repeat;
+}
+.view-sound #viewSound[aria-pressed='false'] {
+  color: #7e9fa8;
+}
+.view-sound #viewSound[aria-pressed='false']::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9h4l5-4v14l-5-4H3z'/%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' d='m16 9 6 6m0-6-6 6'/%3E%3C/svg%3E");
+}
+/* Collapsible keyboard settings */
+.settings-keys > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+.settings-keys > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-keys > summary h3 {
+  margin: 0;
+}
+.settings-keys > summary::after {
+  content: '▸ ПОКАЗАТЬ';
+  color: var(--cyan);
+  font-size: 11px;
+}
+.settings-keys[open] > summary::after {
+  content: '▾ СКРЫТЬ';
+}
+
+/* Media rules above lower .actions; the corner sound toggle must stay over every screen. */
+#actions.actions {
+  z-index: 55;
+}
+/* Room for the corner buttons: screens never put their own controls under them. */
+@media (pointer: coarse), (max-width: 700px) {
+  .overlay {
+    padding-top: max(64px, calc(env(safe-area-inset-top) + 56px));
+  }
+  .view-navigation {
+    max-width: calc(100vw - 32px - 56px);
+  }
+  label:has(> input[type='checkbox']) {
+    min-height: 44px;
+  }
+}
+@media (pointer: fine) and (min-width: 701px) {
+  .overlay {
+    padding-bottom: 76px;
+  }
 }

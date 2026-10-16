@@ -26,6 +26,7 @@ export const Simulation = {
     combat,
     spawning,
     weapons,
+    runEvents,
     settings,
     events,
   }) {
@@ -38,6 +39,45 @@ export const Simulation = {
       effect: (name) => audio.effect(name),
       hurtPlayer: (e) => combat.hurtPlayer(e),
     };
+    // Map pickups: food heals, an update bundle upgrades items, magnet / bomb / freeze act at once.
+    function pickUp(s, item, st) {
+      const p = s.p;
+      if (item.type === 'bundle') {
+        events.openBundle?.();
+        return;
+      }
+      if (item.type === 'magnet') {
+        for (const gem of s.gems) gem.pull = true;
+        s.texts.push({ x: p.x, y: p.y - 30, v: 'МАГНИТ', life: 1 });
+        audio.effect('pickup');
+        return;
+      }
+      if (item.type === 'bomb') {
+        for (const e of s.enemies)
+          if (e.hp > 0 && Math.abs(e.x - p.x) < 700 && Math.abs(e.y - p.y) < 520)
+            combat.damage(e, 120 * st.damage, 0, 0, p, 'bomb');
+        s.fx.push({ kind: 'ring', x: p.x, y: p.y, r: 520, life: 0.5, max: 0.5, color: '#ff8a65' });
+        s.shake = 8;
+        audio.effect('boss');
+        return;
+      }
+      if (item.type === 'freeze') {
+        for (const e of s.enemies)
+          if (e.hp > 0 && !e.boss && !enemies.units[e.unit]?.miniboss) {
+            e.abilityStun = Math.max(e.abilityStun || 0, 4);
+            e.action = null;
+          }
+        s.fx.push({ kind: 'ring', x: p.x, y: p.y, r: 600, life: 0.6, max: 0.6, color: '#80deea' });
+        s.texts.push({ x: p.x, y: p.y - 30, v: 'ЗАМОРОЗКА', life: 1 });
+        audio.effect('magic');
+        return;
+      }
+      const heal = Math.round(25 * (s.healFactor ?? 1));
+      s.foodTaken = (s.foodTaken || 0) + 1;
+      p.hp = Math.min(p.max, p.hp + heal);
+      s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });
+      audio.effect('heal');
+    }
     function update(dt) {
       const s = run.state,
         p = s.p;
@@ -79,6 +119,7 @@ export const Simulation = {
       p.moving = travel > 0.01;
       p.walk = (p.walk || 0) + travel / 55;
       spawning.updateSpawning(dt);
+      runEvents?.update(dt);
       s.crowd = countCrowd(s);
       if (p.hurt) {
         p.hurt.elapsed += dt;
@@ -227,6 +268,7 @@ export const Simulation = {
         if (dist(codeToken, p) < 20) {
           s.earned += progression.earn(codeToken.value);
           codeToken.dead = true;
+          if (codeToken.event && s.event?.type === 'rush') s.event.progress++;
           s.texts.push({ x: p.x, y: p.y - 30, v: '+' + codeToken.value + ' кодов', life: 1 });
         }
       }
@@ -236,10 +278,11 @@ export const Simulation = {
         if (gem.dead) continue;
         const dx = p.x - gem.x,
           dy = p.y - gem.y;
-        if (Math.abs(dx) > mag || Math.abs(dy) > mag) continue;
+        // A magnet pickup pulls every gem on the map (`pull`).
+        if (!gem.pull && (Math.abs(dx) > mag || Math.abs(dy) > mag)) continue;
         const d = Math.hypot(dx, dy);
-        if (d < mag) {
-          const speed = 270 + 200 * (1 - d / mag);
+        if (gem.pull || d < mag) {
+          const speed = gem.pull ? 900 : 270 + 200 * (1 - d / mag);
           const step = Math.min(d, speed * dt);
           const invD = 1 / Math.max(1, d);
           gem.x += dx * invD * step;
@@ -265,12 +308,8 @@ export const Simulation = {
       }
       for (const item of s.pickups)
         if (!item.dead && dist(item, p) < 25) {
-          const heal = Math.round(25 * (s.healFactor ?? 1));
-          s.foodTaken = (s.foodTaken || 0) + 1;
-          p.hp = Math.min(p.max, p.hp + heal);
           item.dead = true;
-          s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });
-          audio.effect('heal');
+          pickUp(s, item, st);
         }
       compact(s.pickups, isPresent);
       compact(s.enemies, isAlive);

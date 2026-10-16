@@ -16,6 +16,17 @@ export function scaleEnemy(e, m, bosses = 0) {
   return e;
 }
 
+// An elite copy of a unit: five times the health, bigger, harder hits, and an update bundle on death.
+export const elite = { hp: 5, size: 1.3, damage: 1.5, speed: 0.9, xp: 5 };
+export function makeElite(e) {
+  e.elite = true;
+  e.hp = e.max = Math.round(e.max * elite.hp);
+  e.r *= elite.size;
+  e.damage = Math.round(e.damage * elite.damage);
+  e.speed *= elite.speed;
+  return e;
+}
+
 // Normal wave numbers after load modifiers.
 export function scaleWave(wave, m) {
   return {
