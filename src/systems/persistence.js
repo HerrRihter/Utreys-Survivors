@@ -41,6 +41,8 @@ export function createProgression({
       },
       // Kills per damage source (hero attack, ability or weapon id).
       weaponKills: {},
+      // Evolutions ever assembled: weapon ids and 'hero_<id>' for hero attacks.
+      evolutionsSeen: [],
       claimedAchievements: [],
       // Highest load level won per hero, and production records per hero and level.
       loads: {},
@@ -89,6 +91,12 @@ export function createProgression({
           for (const [hero, n] of Object.entries(saved.stats.heroWins))
             if (integer(n) > 0) data.stats.heroWins[hero] = integer(n);
       }
+      if (Array.isArray(saved.evolutionsSeen))
+        data.evolutionsSeen = [
+          ...new Set(
+            saved.evolutionsSeen.filter((id) => typeof id === 'string' && /^[a-z_]+$/.test(id)),
+          ),
+        ];
       if (saved.weaponKills && typeof saved.weaponKills === 'object')
         for (const [tag, n] of Object.entries(saved.weaponKills))
           if (/^[a-z_]+$/.test(tag) && integer(n) > 0) data.weaponKills[tag] = integer(n);
@@ -274,6 +282,13 @@ export function createProgression({
     }
     save();
   }
+  const evolutionSeen = (id) => data.evolutionsSeen.includes(id);
+  function recordEvolution(id) {
+    if (typeof id !== 'string' || !/^[a-z_]+$/.test(id) || evolutionSeen(id)) return false;
+    data.evolutionsSeen.push(id);
+    deferSave();
+    return true;
+  }
   const achievementDone = (a, best) => a.getProgress(data, best) >= a.target;
   // Content opened by achievements; anything no achievement names is open from the start.
   function weaponUnlocked(id) {
@@ -337,6 +352,8 @@ export function createProgression({
     recordRunStats,
     achievementDone,
     weaponUnlocked,
+    evolutionSeen,
+    recordEvolution,
     loadCleared,
     loadAvailable,
     recordLoadWin,

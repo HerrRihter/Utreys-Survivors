@@ -20,6 +20,7 @@ type Build = {
   emptyWeapons: number;
   emptyPassives: number;
   archives: number;
+  stats?: { label: string; value: string }[];
 };
 
 // Weapons and passives of the current run with their levels; empty slots are shown too.
@@ -62,6 +63,19 @@ export function BuildPanel({ build, detailed }: { build: Build | null; detailed:
       {row(build.weapons, build.emptyWeapons, 'Оружие')}
       {detailed && <h3>Пассивки</h3>}
       {row(build.passives, build.emptyPassives, 'Пассивки')}
+      {detailed && build.stats && (
+        <>
+          <h3>Итоговые статы</h3>
+          <dl className="build-stats">
+            {build.stats.map((row) => (
+              <div key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
       {detailed && build.archives > 0 && (
         <p className="build-note">
           Архивов багов в запасе: {build.archives}. Они эволюционируют первое готовое оружие.

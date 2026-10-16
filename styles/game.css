@@ -2279,3 +2279,89 @@ button:disabled {
 .achievement-unlock {
   color: #f7ce70;
 }
+
+/* Final stats on the pause build panel */
+.build-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 4px 14px;
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+.build-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #1a5763;
+}
+.build-stats dt {
+  color: #9fc3c7;
+}
+.build-stats dd {
+  margin: 0;
+  color: var(--cyan);
+}
+
+/* Encyclopedia */
+.codex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.codex-card {
+  padding: 10px 12px;
+  border: 1px solid #1a5763;
+  background: #071a20cc;
+  font-size: 12px;
+}
+.codex-head {
+  display: flex;
+  gap: 10px;
+}
+.codex-head i {
+  flex: none;
+  width: 32px;
+  font-size: 24px;
+  font-style: normal;
+  color: var(--cyan);
+  text-align: center;
+}
+.codex-head h4 {
+  margin: 0 0 4px;
+  color: var(--cyan);
+}
+.codex-head p {
+  margin: 0;
+  color: #b2cbcf;
+  line-height: 1.5;
+}
+.codex-card.locked .codex-head i {
+  color: #0d2a31;
+  text-shadow: 0 0 0 #3d6870;
+  filter: brightness(0.4);
+}
+.codex-card.locked h4 {
+  color: #5d7d82;
+}
+.codex-condition,
+.codex-evo small {
+  display: block;
+  margin-top: 6px;
+  color: #9fc3c7;
+  line-height: 1.5;
+}
+.codex-condition {
+  color: #f7ce70;
+}
+.codex-evo {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #1a5763;
+}
+.codex-evo b {
+  color: #5d7d82;
+}
+.codex-evo.found b {
+  color: #f7ce70;
+}

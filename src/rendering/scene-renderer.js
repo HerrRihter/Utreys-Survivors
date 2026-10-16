@@ -3,6 +3,7 @@ import { drawEnemySpeech } from './enemy-speech.js';
 import { neonStroke } from './neon.js';
 import { orderActors } from './depth-order.js';
 import { cameraOrigin } from './camera.js';
+import { drawEdgeArrows } from './edge-arrows.js';
 
 // The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
 const noScenery = [];
@@ -297,6 +298,7 @@ export const SceneRenderer = {
       const vignette = getVignette(view.W, view.H);
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, view.W, view.H);
+      if (s) drawEdgeArrows(ctx, s, cx, cy, view.W, view.H);
       ctx.restore();
     }
     return { background, draw };

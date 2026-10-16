@@ -51,6 +51,9 @@ export const GameFlow = {
       progression.recordLevel(s.level);
       s.resultRecorded = true;
       s.recordedTime = s.t;
+      // Evolutions assembled in this run open their encyclopedia entries.
+      for (const w of s.weapons || []) if (w.evolved) progression.recordEvolution(w.id);
+      if (s.stats.heroEvo) progression.recordEvolution('hero_' + run.selected);
       if (!s.statsRecorded) {
         s.statsRecorded = true;
         progression.recordRunStats({
@@ -543,6 +546,7 @@ export const GameFlow = {
       startSelected,
       openShop: () => openMenuScreen('shop'),
       openAchievements: () => openMenuScreen('achievements'),
+      openEncyclopedia: () => openMenuScreen('encyclopedia'),
       backToMenu: () => show('menu'),
       openSettings,
       closeSettings,

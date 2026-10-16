@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { GameHud } from './GameHud';
-import { Achievements, HeroSelect, MainMenu, Settings, Shop } from './GameMenus';
+import { Achievements, Encyclopedia, HeroSelect, MainMenu, Settings, Shop } from './GameMenus';
 import { EndScreen, LevelUpScreen, PauseScreen } from './GameRunScreens';
 import { SessionContext, useUiVersion, type Session } from './session';
 
@@ -71,6 +71,7 @@ function GameScreens({
       {mode === 'menu' && screen === 'heroSelect' && <HeroSelect />}
       {mode === 'menu' && screen === 'shop' && <Shop />}
       {mode === 'menu' && screen === 'achievements' && <Achievements />}
+      {mode === 'menu' && screen === 'encyclopedia' && <Encyclopedia />}
       {mode === 'level' && <LevelUpScreen hints={settings.hints} />}
       {mode === 'pause' && screen !== 'settings' && <PauseScreen soundEnabled={settings.enabled} />}
       {mode === 'end' && <EndScreen />}

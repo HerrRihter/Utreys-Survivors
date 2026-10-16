@@ -16,7 +16,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
  *   state: any, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
- *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'settings' | null,
+ *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
  *   selectedMap: string, selectedLoad: number, choice: UpgradeChoice[], result: RunResult | null,
  *   best: { kills: number, time: number }, toast: { text: string, left: number },
