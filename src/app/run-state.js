@@ -8,15 +8,17 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  * @typedef {{ win: boolean, tag: string, title: string, text: string,
  *   stats: { value: string, label: string, best?: boolean }[],
  *   damage: { tag: string, name: string, amount: number, share: number }[],
- *   build: RunBuild }} RunResult
+ *   build: RunBuild, canContinue?: boolean,
+ *   unlocked: { id: string, title: string, unlock: string }[],
+ *   goals: import('./unlocks.js').UnlockGoal[] }} RunResult
  * @typedef {{ id: string, name: string, desc: string, icon: string, group: string,
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
  *   state: any, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
- *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'settings' | null,
+ *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
- *   selectedMap: string, choice: UpgradeChoice[], result: RunResult | null,
+ *   selectedMap: string, selectedLoad: number, choice: UpgradeChoice[], result: RunResult | null,
  *   best: { kills: number, time: number }, toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
@@ -41,6 +43,7 @@ export function createRunState({ storage }) {
     pendingHero: 'utrace',
     baClient: baClientIds[0],
     selectedMap: 'empty',
+    selectedLoad: 1, // load level for the next run, clamped to what the hero has opened
     choice: [],
     result: null, // { win, ... } after a run ends
     best,

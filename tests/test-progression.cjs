@@ -176,6 +176,13 @@ async function main() {
     rewards.recordLevel(100);
     for (let i = 0; i < 3000; i++) rewards.kill();
     for (let i = 0; i < 100; i++) rewards.recordBossKill();
+    for (let i = 0; i < 600; i++) rewards.kill('orbit');
+    for (let level = 1; level <= 10; level++) rewards.recordLoadWin('utrace', level);
+    rewards.recordProduction('utrace', 10, 400, 50);
+    for (const hero of ['utrace', 'traceability', 'serialization', 'ba', 'qa'])
+      rewards.recordRunStats({ win: true, hero, time: 300, cleanSweep: true, noFood: true });
+    rewards.recordRunStats({ win: true, hero: 'qa', untouched: true, allWorkaround: true });
+    rewards.recordRunStats({ win: false, hero: 'qa', evolutions: 3 });
     assert(achievement.getProgress(rewards.data) >= achievement.target, achievement.id);
     assert(rewards.claimAchievement(achievement.id), achievement.id);
     assert(!rewards.claimAchievement(achievement.id), 'duplicate claim ' + achievement.id);

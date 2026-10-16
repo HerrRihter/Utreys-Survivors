@@ -6,8 +6,13 @@ import {
 } from '../../data/characters/abilities.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { heroPassives } from '../../data/characters/hero-passives.js';
+import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
+import { productionMinutes } from '../systems/difficulty.js';
+import { effectiveStats } from '../systems/ability-state.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
+import { nearestGoals, unlockText } from './unlocks.js';
+import { weaponDefinitions, weaponMaxLevel, heroEvolutions } from '../../data/weapons.js';
 
 // Pure read models for the React screens. Each takes the explicit pieces it reads and
 // returns plain data; React renders it, the session's commands change the underlying state.
@@ -35,6 +40,7 @@ export function menuView({ run, progression, heroes, snapshot = null }) {
       ? `ЛУЧШЕЕ ВРЕМЯ: ${clock(run.best.time)}`
       : 'Лучшее время появится после первого забега.',
     achievementsLabel: unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ',
+    goals: nearestGoals(progression, run.best, 3),
   };
 }
 
@@ -61,6 +67,7 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
         )
         .join('\n') +
       (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
+    ...loadView(run, progression),
     showBaClients: run.pendingHero === 'ba',
     baClients: baClientIds.map((id) => ({ id, name: enemies.units[id].name })),
     baClient: run.baClient,
@@ -69,6 +76,32 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
     mapDescription: arenaDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.
     mapLocked: Object.keys(arenaDefinitions).length < 2,
+  };
+}
+
+// Load level picker for the pending hero: open levels, what the chosen one adds, records.
+function loadView(run, progression) {
+  const hero = run.pendingHero,
+    available = progression.loadAvailable(hero),
+    cleared = progression.loadCleared(hero),
+    load = Math.min(Math.max(1, run.selectedLoad || 1), available),
+    record = progression.productionRecord(hero, load);
+  return {
+    loads: loadLevels.map((entry) => ({
+      level: entry.level,
+      label: `Нагрузка ${entry.level}` + (entry.level <= cleared ? ' ✓' : ''),
+      locked: entry.level > available,
+    })),
+    load,
+    loadDescription:
+      loadLevels
+        .filter((entry) => entry.level > 1 && entry.level <= load)
+        .map((entry) => entry.desc)
+        .join(' ') || loadLevels[0].desc,
+    loadProgress:
+      (cleared ? `Пройдено: нагрузка ${cleared}.` : 'Побед ещё нет.') +
+      (load > 1 ? ` Награда в кодах +${Math.round((load - 1) * rewardPerLevel * 100)}%.` : '') +
+      (record ? ` Рекорд продакшена: ${clock(record.time)}, ${record.kills} побеждено.` : ''),
   };
 }
 
@@ -99,20 +132,25 @@ export function shopView({ progression, heroes }) {
     const title = u.hero ? 'Личные усиления' : 'Общие усиления';
     if (groups.at(-1)?.title !== title) groups.push({ title, items: [] });
     const level = progression.data.levels[id],
-      locked = u.hero && !progression.owned(u.hero);
+      lock = progression.upgradeLock(id),
+      locked = !!lock;
     groups.at(-1).items.push({
       id,
       label:
         (u.hero ? heroes.defs[u.hero].name + ' · ' : '') +
         `${u.name} ${level}/${u.max} · ${u.desc} · ` +
         (level >= u.max ? 'Максимум' : progression.cost(id) + ' кодов') +
-        (locked ? ' · Сначала открой героя' : ''),
+        (lock === 'hero' ? ' · Сначала открой героя' : '') +
+        (lock === 'win' ? ' · Откроется после первой победы' : ''),
       disabled: locked || level >= u.max || codes < progression.cost(id),
     });
   }
+  const refund = progression.upgradeSpent();
   return {
     heroes: heroCards,
     groups,
+    refund,
+    refundLabel: refund ? `СБРОСИТЬ УЛУЧШЕНИЯ · +${refund} кодов` : 'Нечего сбрасывать',
     wallet:
       `У вас ${codes} кодов · до следующей награды: ${10 - (progression.data.kills % 10)} побед` +
       (progression.persistent ? '' : ' · Не удалось сохранить прогресс. Не закрывай игру.'),
@@ -120,8 +158,77 @@ export function shopView({ progression, heroes }) {
 }
 
 /**
+ * @typedef {{ id: string, icon: string, name: string, desc: string, locked: boolean,
+ *   condition: string, evolution: { name: string, desc: string, recipe: string,
+ *   discovered: boolean } | null }} EncyclopediaEntry
+ * @returns {{ weapons: EncyclopediaEntry[], passives: EncyclopediaEntry[],
+ *   heroes: EncyclopediaEntry[], found: number, total: number }}
+ */
+// Weapons, passives and evolutions. Locked weapons show their condition; an evolution shows
+// its recipe until the player assembles it once, then its name and effect.
+export function encyclopediaView({ progression, heroes, upgrades }) {
+  const passiveName = Object.fromEntries(upgrades.common.map((u) => [u.id, u.name]));
+  const evolution = (id, evo, recipe) => {
+    const discovered = progression.evolutionSeen(id);
+    return {
+      name: discovered ? evo.name : '???',
+      desc: discovered ? evo.desc : 'Соберите эволюцию, чтобы узнать её эффект.',
+      recipe,
+      discovered,
+    };
+  };
+  const weapons = Object.entries(weaponDefinitions).map(([id, def]) => {
+    const locked = !progression.weaponUnlocked(id);
+    const gate = progression.achievements.find((a) => a.unlocks?.weapon === id);
+    return {
+      id,
+      icon: def.icon,
+      name: locked ? '???' : def.name,
+      desc: locked ? 'Оружие ещё не открыто.' : def.desc,
+      locked,
+      condition: locked && gate ? `${gate.title}: ${gate.desc}` : '',
+      evolution: evolution(
+        id,
+        def.evolution,
+        `ур. ${weaponMaxLevel} + ${passiveName[def.evolution.passive]} + архив бага`,
+      ),
+    };
+  });
+  const passives = upgrades.common.map((u) => {
+    const pairs = Object.values(weaponDefinitions).filter((d) => d.evolution.passive === u.id);
+    return {
+      id: u.id,
+      icon: u.icon,
+      name: u.name,
+      desc: u.desc + ` До ${u.max} рангов.`,
+      locked: false,
+      condition: pairs.length ? 'Нужна для эволюции: ' + pairs.map((d) => d.name).join(', ') : '',
+      evolution: null,
+    };
+  });
+  const heroCards = Object.entries(heroes.defs).map(([id, hero]) => ({
+    id,
+    icon: '⚔',
+    name: hero.weapon,
+    desc: hero.name,
+    locked: false,
+    condition: '',
+    evolution: evolution('hero_' + id, heroEvolutions[id], 'атака героя ур. 6'),
+  }));
+  const all = [...weapons, ...heroCards];
+  return {
+    weapons,
+    passives,
+    heroes: heroCards,
+    found: all.filter((e) => e.evolution.discovered).length,
+    total: all.length,
+  };
+}
+
+/**
  * @typedef {{ id: string, title: string, desc: string, icon: string,
- *   progressText: string, percent: number, reward: number, rewardText: string, codeToken: boolean,
+ *   progressText: string, percent: number, reward: number, unlock: string, rewardText: string,
+ *   codeToken: boolean,
  *   done: boolean, claimed: boolean, order: number, ratio: number }} AchievementCard
  * @returns {{ cards: AchievementCard[], total: number, completed: number, claimed: number, percent: number }}
  */
@@ -142,6 +249,7 @@ export function achievementsView({ run, progression }) {
       progressText: `${time ? clock(progress) : progress} / ${time ? clock(ach.target) : `${ach.target}${ach.unit ? ' ' + ach.unit : ''}`}`,
       percent,
       reward: ach.reward,
+      unlock: unlockText(ach),
       rewardText: codeToken ? `+${ach.reward}` : `+${ach.reward} ${ach.rewardType}`,
       codeToken,
       done,
@@ -181,12 +289,34 @@ export function levelUpView({ run }) {
 }
 
 // The run's weapons and passives with empty slots, for the HUD and the pause panel.
+const percent = (n) => Math.round(n * 100) + '%';
+const decimal = (n) => (Math.round(n * 10) / 10).toLocaleString('ru-RU');
+
+// Final numbers of the run's character with every bonus and active ability applied.
+export function runStats(s) {
+  const st = effectiveStats(s);
+  const rows = [
+    { label: 'Здоровье', value: `${Math.ceil(s.p.hp)} / ${decimal(s.p.max)}` },
+    { label: 'Урон', value: percent(st.damage) },
+    { label: 'Темп оружия', value: percent(st.haste) },
+    { label: 'Темп атаки героя', value: percent(st.haste * (1 + (st.punchTempo || 0))) },
+    { label: 'Область', value: percent(st.range) },
+    { label: 'Скорость', value: percent(st.speed) },
+    { label: 'Броня', value: String(st.armor || 0) },
+    { label: 'Реген', value: decimal((st.regen || 0) * (s.healFactor ?? 1)) + ' HP/с' },
+    { label: 'Притяжение', value: String(Math.round(st.magnet)) },
+  ];
+  if (st.crit) rows.push({ label: 'Крит', value: percent(st.crit) });
+  return rows;
+}
+
 export function buildView({ run, upgrades }) {
   const s = run.state;
   if (!s) return null;
   const build = upgrades.build(run.selected, s);
   return {
     ...build,
+    stats: runStats(s),
     emptyWeapons: Math.max(0, build.weaponSlots - build.weapons.length),
     emptyPassives: Math.max(0, build.passiveSlots - build.passives.length),
     archives: s.evoTokens || 0,
@@ -263,6 +393,8 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
       hero.weapon +
       ' · ' +
       arenaDefinitions[s.map]?.name +
+      ` · Нагрузка ${s.load || 1}` +
+      (s.endless ? ` · Продакшен ${productionMinutes(s)} мин` : '') +
       (ba ? ` · Клиент: ${enemies.units[ba.client].name} · +${ba.bonus} HP` : ''),
     codes: `КОДЫ: ${progression.codes} (+${s.earned})`,
     progress: nodeProgress(s),

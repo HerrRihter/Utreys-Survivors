@@ -18,6 +18,9 @@ async function main() {
     earned: 0,
   });
   const weaponIds = U.weapons.map((u) => u.id);
+  // Four weapons are open from the start; the rest come from achievements.
+  assert.equal(U.pool('utrace', state()).filter((u) => u.kind === 'weapon').length, 4);
+  P.weaponUnlocked = () => true;
   for (const hero of Object.keys(U.heroes)) {
     const s = state();
     assert.equal(U.pool(hero, s).length, 1 + 8 + 8 + 2, 'hero attack, weapons, passives, Q/E');

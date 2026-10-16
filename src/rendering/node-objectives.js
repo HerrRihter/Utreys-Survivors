@@ -31,7 +31,11 @@ export function drawNodes(g, nodes) {
       0,
       100,
     );
-    g.fillText(guarded ? Math.floor((node.progress / workaroundSeconds) * 100) + '%' : 'OK', 0, 4);
+    g.fillText(
+      guarded ? Math.floor((node.progress / (node.need ?? workaroundSeconds)) * 100) + '%' : 'OK',
+      0,
+      4,
+    );
     if (guarded && node.guardian) {
       g.fillStyle = '#ff5252';
       g.fillRect(75, -60, 70 * Math.max(0, node.guardian.hp / node.guardian.max), 5);

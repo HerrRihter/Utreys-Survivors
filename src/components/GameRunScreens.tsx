@@ -1,5 +1,5 @@
 import { Overlay } from './Overlay';
-import { SoundButton } from './GameMenus';
+import { SoundButton, GoalList } from './GameMenus';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
@@ -20,6 +20,7 @@ type Build = {
   emptyWeapons: number;
   emptyPassives: number;
   archives: number;
+  stats?: { label: string; value: string }[];
 };
 
 // Weapons and passives of the current run with their levels; empty slots are shown too.
@@ -62,6 +63,19 @@ export function BuildPanel({ build, detailed }: { build: Build | null; detailed:
       {row(build.weapons, build.emptyWeapons, 'Оружие')}
       {detailed && <h3>Пассивки</h3>}
       {row(build.passives, build.emptyPassives, 'Пассивки')}
+      {detailed && build.stats && (
+        <>
+          <h3>Итоговые статы</h3>
+          <dl className="build-stats">
+            {build.stats.map((row) => (
+              <div key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
       {detailed && build.archives > 0 && (
         <p className="build-note">
           Архивов багов в запасе: {build.archives}. Они эволюционируют первое готовое оружие.
@@ -228,6 +242,28 @@ export function EndScreen() {
           build={{ ...result.build, emptyWeapons: 0, emptyPassives: 0, archives: 0 }}
           detailed={false}
         />
+        {result.unlocked.length > 0 && (
+          <div id="endUnlocked" className="goal-list">
+            <h3>Новое за забег</h3>
+            {result.unlocked.map((item) => (
+              <div key={item.id} className="goal done">
+                <strong>✓ {item.title}</strong>
+                {item.unlock && <small>Открыто: {item.unlock}</small>}
+              </div>
+            ))}
+          </div>
+        )}
+        <GoalList goals={result.goals} title="Ближе всего к открытию" />
+        {result.canContinue && (
+          <button
+            id="production"
+            className="primary"
+            style={primary}
+            onClick={session.commands.continueProduction}
+          >
+            ПРОДОЛЖИТЬ В ПРОДАКШЕНЕ →
+          </button>
+        )}
         <button id="again" className="primary" style={primary} onClick={session.commands.restart}>
           ПОВТОРИТЬ СЕССИЮ →
         </button>

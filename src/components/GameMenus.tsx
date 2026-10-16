@@ -1,9 +1,44 @@
+import { useState } from 'react';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
 import { Overlay } from './Overlay';
 import { Portrait } from './Portrait';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
+
+type Goal = {
+  id: string;
+  title: string;
+  desc: string;
+  percent: number;
+  progressText: string;
+  unlock: string;
+};
+
+// The next achievements to finish, with what they open.
+export function GoalList({ goals, title }: { goals: Goal[]; title: string }) {
+  if (!goals.length) return null;
+  return (
+    <div className="goal-list" aria-label={title}>
+      <h3>{title}</h3>
+      {goals.map((goal) => (
+        <div key={goal.id} className="goal">
+          <div className="goal-head">
+            <strong>{goal.title}</strong>
+            <span>{goal.progressText}</span>
+          </div>
+          <small>
+            {goal.desc}
+            {goal.unlock ? ` · Открывает: ${goal.unlock}` : ''}
+          </small>
+          <div className="achievements-bar">
+            <i style={{ width: `${goal.percent}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function MainMenu({
   hints,
@@ -44,6 +79,9 @@ export function MainMenu({
           </button>
           <button id="achievementsOpen" className="small" onClick={commands.openAchievements}>
             {view.achievementsLabel}
+          </button>
+          <button id="encyclopediaOpen" className="small" onClick={commands.openEncyclopedia}>
+            ЭНЦИКЛОПЕДИЯ
           </button>
           <button id="settingsOpen" className="small" onClick={() => commands.openSettings('menu')}>
             НАСТРОЙКИ
@@ -88,6 +126,7 @@ export function MainMenu({
             {view.record}
           </div>
         </div>
+        <GoalList goals={view.goals} title="Ближайшие открытия" />
         {hints && (
           <div id="menuHint" className="footer">
             WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · сенсорный
@@ -137,6 +176,23 @@ export function HeroSelect() {
             ))}
           </select>
           <p id="mapDescription">{view.mapDescription}</p>
+        </div>
+        <div className="map-select">
+          <label htmlFor="runLoad">НАГРУЗКА</label>
+          <select
+            id="runLoad"
+            value={view.load}
+            onChange={(event) => commands.chooseLoad(Number(event.target.value))}
+          >
+            {view.loads.map((entry) => (
+              <option key={entry.level} value={entry.level} disabled={entry.locked}>
+                {entry.label}
+                {entry.locked ? ' · закрыто' : ''}
+              </option>
+            ))}
+          </select>
+          <p id="loadDescription">{view.loadDescription}</p>
+          <p id="loadProgress">{view.loadProgress}</p>
         </div>
         <div id="runHeroes" className="run-heroes">
           {view.heroes.map((hero) => (
@@ -240,6 +296,7 @@ export function Shop() {
         </div>
         <h3>Постоянная оптимизация</h3>
         <p style={{ fontSize: '12px' }}>Улучшения применяются со следующей сессии.</p>
+        <RespecButton refund={view.refund} label={view.refundLabel} onConfirm={commands.respec} />
         <div id="shopUpgrades">
           {view.groups.map((group) => [
             <h4 key={group.title}>{group.title}</h4>,
@@ -257,6 +314,118 @@ export function Shop() {
         </div>
       </section>
     </Overlay>
+  );
+}
+
+type Entry = {
+  id: string;
+  icon: string;
+  name: string;
+  desc: string;
+  locked: boolean;
+  condition: string;
+  evolution: { name: string; desc: string; recipe: string; discovered: boolean } | null;
+};
+
+function EntryCard({ entry }: { entry: Entry }) {
+  return (
+    <div className={'codex-card' + (entry.locked ? ' locked' : '')}>
+      <div className="codex-head">
+        <i aria-hidden="true">{entry.icon}</i>
+        <div>
+          <h4>{entry.name}</h4>
+          <p>{entry.desc}</p>
+        </div>
+      </div>
+      {entry.condition && <small className="codex-condition">{entry.condition}</small>}
+      {entry.evolution && (
+        <div className={'codex-evo' + (entry.evolution.discovered ? ' found' : '')}>
+          <b>Эволюция: {entry.evolution.name}</b>
+          <small>{entry.evolution.desc}</small>
+          <small>Рецепт: {entry.evolution.recipe}</small>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Weapons, passives and evolutions next to the bestiary.
+export function Encyclopedia() {
+  const session = useSession();
+  const view = session.views.encyclopedia();
+  return (
+    <Overlay id="encyclopedia">
+      <section
+        className="achievements-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="encyclopediaTitle"
+      >
+        <button
+          id="encyclopediaClose"
+          className="small"
+          style={{ float: 'right' }}
+          onClick={session.commands.backToMenu}
+        >
+          ← В МЕНЮ
+        </button>
+        <h2 id="encyclopediaTitle" style={{ color: 'var(--cyan)' }}>
+          Энциклопедия
+        </h2>
+        <p>
+          Эволюций открыто: {view.found} из {view.total}. Неоткрытое оружие показано силуэтом с
+          условием.
+        </p>
+        <h3>Оружие</h3>
+        <div className="codex-grid">
+          {view.weapons.map((entry) => (
+            <EntryCard key={entry.id} entry={entry} />
+          ))}
+        </div>
+        <h3>Атаки героев</h3>
+        <div className="codex-grid">
+          {view.heroes.map((entry) => (
+            <EntryCard key={entry.id} entry={entry} />
+          ))}
+        </div>
+        <h3>Пассивки</h3>
+        <div className="codex-grid">
+          {view.passives.map((entry) => (
+            <EntryCard key={entry.id} entry={entry} />
+          ))}
+        </div>
+      </section>
+    </Overlay>
+  );
+}
+
+// Two clicks: the first arms the reset, the second returns the codes.
+function RespecButton({
+  refund,
+  label,
+  onConfirm,
+}: {
+  refund: number;
+  label: string;
+  onConfirm: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+  return (
+    <p>
+      <button
+        id="respec"
+        className="small"
+        disabled={!refund}
+        onClick={() => {
+          if (!armed) return setArmed(true);
+          setArmed(false);
+          onConfirm();
+        }}
+        onBlur={() => setArmed(false)}
+      >
+        {armed ? `ТОЧНО СБРОСИТЬ? ВЕРНУТЬ ${refund} КОДОВ` : label}
+      </button>
+    </p>
   );
 }
 
@@ -308,6 +477,7 @@ export function Achievements() {
                 <div className="achievement-info">
                   <h3>{card.title}</h3>
                   <p>{card.desc}</p>
+                  {card.unlock && <p className="achievement-unlock">Открывает: {card.unlock}</p>}
                 </div>
               </div>
               <div className="achievement-progress">
