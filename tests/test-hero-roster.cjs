@@ -153,8 +153,9 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
     return e;
   });
   for (let i = 0; i < 14; i++) h.session.update(0.05);
+  // The far target also takes Serialization's long-range passive bonus.
   assert(
-    targets.every((e) => e.hp === e.max - 23),
+    targets.every((e, i) => Math.abs(e.hp - (e.max - 23 * (i ? 1 + s.stats.farBonus : 1))) < 1e-9),
     'one packet pierces two targets exactly once',
   );
   h.session.dispose();

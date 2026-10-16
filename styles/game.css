@@ -1209,6 +1209,17 @@ button:disabled {
   font-size: 11px;
   line-height: 1.5;
 }
+.run-hero small.run-hero-role {
+  color: #f7ce70;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.run-hero-role-line {
+  display: block;
+  margin-bottom: 4px;
+  color: #f7ce70;
+  letter-spacing: 0.04em;
+}
 .run-hero-foot {
   display: flex;
   align-items: center;
@@ -1957,5 +1968,270 @@ button:disabled {
     width: calc(100% - 110px);
     box-sizing: border-box;
     font-size: 10px;
+  }
+}
+
+/* Interface scale (settings): HUD, panels and controls grow or shrink together. */
+#hud,
+.overlay > *,
+.controls,
+.ability-controls,
+.actions,
+#toast,
+.tip,
+#bossbar {
+  zoom: var(--ui-scale, 1);
+}
+
+/* Weapon and passive slots: compact in the HUD, with names on pause. */
+.build-panel {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+.build-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.build-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #1a5763;
+  background: #0d252b;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.build-slot i {
+  font-style: normal;
+  color: var(--teal);
+}
+.build-slot b {
+  position: absolute;
+  right: 1px;
+  bottom: -1px;
+  font-size: 9px;
+  color: #d0e7eb;
+}
+.build-slot.empty {
+  border-style: dashed;
+  background: transparent;
+  color: #2f5f69;
+}
+.build-slot.evolved {
+  border-color: #ffd54f;
+  box-shadow: 0 0 0 1px #ffd54f55 inset;
+}
+.build-slot.evolved i {
+  color: #ffd54f;
+}
+.build-panel.detailed {
+  text-align: left;
+  margin: 18px auto;
+  max-width: 620px;
+}
+.build-panel.detailed h3 {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  margin: 8px 0 2px;
+}
+.build-panel.detailed .build-slot {
+  width: auto;
+  min-width: 190px;
+  height: auto;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 12px 8px 10px;
+}
+.build-panel.detailed .build-slot b {
+  position: static;
+  order: 3;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--cyan);
+}
+.build-panel.detailed .build-slot span {
+  font-size: 12px;
+  color: #d0e7eb;
+}
+.build-panel.detailed .build-slot small {
+  display: block;
+  font-size: 10px;
+  color: #7e9fa8;
+  margin-top: 2px;
+}
+.build-panel.detailed .build-slot.empty {
+  min-width: 52px;
+  justify-content: center;
+}
+.build-note {
+  font-size: 12px;
+}
+
+/* Level-up cards: badges, group line, opening lock and ban mode. */
+.upgrade {
+  position: relative;
+}
+.upgrade .upgrade-group {
+  color: var(--teal);
+  margin-bottom: 8px;
+}
+.upgrade .upgrade-key {
+  margin-top: 16px;
+  color: #00e5ff;
+}
+.upgrade-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--teal);
+  color: #041724;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.upgrade.evolves {
+  border-color: #ffd54f;
+}
+.upgrade.evolves strong {
+  color: #ffd54f;
+}
+.upgrade.kind-weapon em,
+.upgrade.kind-hero em {
+  color: #ffd54f;
+}
+.cards.locked .upgrade {
+  pointer-events: none;
+  opacity: 0.55;
+}
+.cards.locked .upgrade::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--cyan);
+  animation: card-unlock 0.4s linear forwards;
+}
+@keyframes card-unlock {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.cards.banish .upgrade {
+  border-color: #ff6559;
+}
+.cards.banish .upgrade:hover {
+  background: #3a1716;
+}
+.level-controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.small.armed {
+  border-color: #ff6559;
+  color: #ff6559;
+}
+
+/* Result screen. */
+.end-modal .stats .record-stat strong {
+  color: #ffd54f;
+}
+.damage-report {
+  max-width: 560px;
+  margin: 0 auto 18px;
+  text-align: left;
+}
+.damage-report h3 {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.damage-row {
+  display: grid;
+  grid-template-columns: 1fr 120px auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.damage-row i {
+  display: block;
+  height: 6px;
+  background: var(--cyan);
+  border-radius: 3px;
+}
+.damage-row b {
+  font-weight: normal;
+  color: #b2cbcf;
+  text-align: right;
+}
+.end-modal .build-panel {
+  justify-items: center;
+  margin-bottom: 20px;
+}
+
+/* First-run guidance banner. */
+.tip {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(560px, 90%);
+  padding: 12px 18px;
+  background: #0b2025f0;
+  border: 1px solid var(--teal);
+  border-left-width: 4px;
+  color: #d0e7eb;
+  font-size: 13px;
+  line-height: 1.6;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+/* Settings additions. */
+.settings-note {
+  display: block;
+  color: #7e9fa8;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.settings-row select {
+  padding: 8px 10px;
+  background: #112d35;
+  color: #00e5ff;
+  border: 1px solid #1a5763;
+  font: inherit;
+  border-radius: 4px;
+}
+.key-button {
+  min-width: 96px;
+}
+.settings-keys .small#resetBindings {
+  margin-top: 12px;
+}
+
+@media (max-width: 650px) {
+  .damage-row {
+    grid-template-columns: 1fr 60px auto;
+  }
+  .build-panel.detailed .build-slot {
+    min-width: 100%;
+  }
+  .tip {
+    bottom: 170px;
   }
 }

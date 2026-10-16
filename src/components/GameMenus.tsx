@@ -34,7 +34,7 @@ export function MainMenu({
           контура! Освободите пять узлов от багов, затем победите ЦРПТ.
         </p>
         <div className="rule">
-          <span>1 ГЕРОЙ: UTRACE</span>
+          <span>5 ГЕРОЕВ · 8 ВИДОВ ОРУЖИЯ · ЭВОЛЮЦИИ</span>
           <span>·</span>
           <span>5 УЗЛОВ · БАГИ-МИНИБОССЫ · КЛИЕНТЫ</span>
         </div>
@@ -49,8 +49,24 @@ export function MainMenu({
             НАСТРОЙКИ
           </button>
           <span id="wallet">{view.wallet}</span>
-          <button id="start" className="primary" style={primary} onClick={commands.openHeroSelect}>
-            ЗАПУСК СЕССИИ →
+          {view.resume && (
+            <button
+              id="resumeRun"
+              className="primary"
+              style={primary}
+              title={view.resume}
+              onClick={commands.resume}
+            >
+              ПРОДОЛЖИТЬ ЗАБЕГ · {view.resume}
+            </button>
+          )}
+          <button
+            id="start"
+            className={view.resume ? 'small' : 'primary'}
+            style={view.resume ? undefined : primary}
+            onClick={commands.openHeroSelect}
+          >
+            {view.resume ? 'НОВЫЙ ЗАБЕГ' : 'ЗАПУСК СЕССИИ →'}
           </button>
           <button
             type="button"
@@ -135,6 +151,7 @@ export function HeroSelect() {
               <span className="run-hero-copy">
                 <strong>{hero.name}</strong>
                 <small>{hero.weapon}</small>
+                {hero.role && <small className="run-hero-role">{hero.role}</small>}
               </span>
             </button>
           ))}
@@ -161,6 +178,7 @@ export function HeroSelect() {
         )}
         <footer className="run-hero-foot">
           <div id="runHeroStats" className="run-hero-stats">
+            {view.role && <strong className="run-hero-role-line">{view.role}</strong>}
             {view.stats}
           </div>
           <div className="run-hero-actions">
@@ -397,6 +415,30 @@ function VolumeSlider({
   );
 }
 
+function SettingRow({
+  title,
+  note,
+  id,
+  on,
+  onClick,
+}: {
+  title: string;
+  note: string;
+  id: string;
+  on: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div className="settings-row">
+      <div>
+        <strong>{title}</strong>
+        <small className="settings-note">{note}</small>
+      </div>
+      <Toggle id={id} on={on} onClick={onClick} />
+    </div>
+  );
+}
+
 export function Settings() {
   const session = useSession();
   const view = session.views.settings();
@@ -420,7 +462,7 @@ export function Settings() {
             ← НАЗАД
           </button>
         </div>
-        <p>Параметры звука и визуальной отдачи.</p>
+        <p>Звук, интерфейс и клавиши.</p>
         <div className="settings-grid">
           <div className="settings-card">
             <h3>♫ Звук</h3>
@@ -433,32 +475,73 @@ export function Settings() {
           </div>
           <div className="settings-card">
             <h3>Интерфейс и отклик</h3>
+            <SettingRow
+              title="Тряска экрана"
+              note="Сотрясение камеры при критических перегрузках"
+              id="settingShake"
+              on={view.shake}
+              onClick={() => commands.toggleSetting('shake')}
+            />
+            <SettingRow
+              title="Подсказки управления"
+              note="Горячие клавиши внизу экрана и советы первого забега"
+              id="settingHints"
+              on={view.hints}
+              onClick={() => commands.toggleSetting('hints')}
+            />
+            <SettingRow
+              title="Цифры урона"
+              note="Числа над врагами при попадании"
+              id="settingDamageNumbers"
+              on={view.damageNumbers}
+              onClick={() => commands.toggleSetting('damageNumbers')}
+            />
             <div className="settings-row">
               <div>
-                <strong>Тряска экрана</strong>
-                <small style={{ display: 'block', color: '#7e9fa8', fontSize: '11px' }}>
-                  Сотрясение камеры при критических перегрузках
-                </small>
+                <strong>Масштаб интерфейса</strong>
+                <small className="settings-note">Размер HUD, меню и кнопок</small>
               </div>
-              <Toggle
-                id="settingShake"
-                on={view.shake}
-                onClick={() => commands.toggleSetting('shake')}
-              />
+              <select
+                id="settingUiScale"
+                value={view.uiScale}
+                aria-label="Масштаб интерфейса"
+                onChange={(event) => commands.setUiScale(Number(event.target.value))}
+              >
+                {view.scales.map((scale: number) => (
+                  <option key={scale} value={scale}>
+                    {Math.round(scale * 100)}%
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="settings-row">
-              <div>
-                <strong>Подсказки управления</strong>
-                <small style={{ display: 'block', color: '#7e9fa8', fontSize: '11px' }}>
-                  Показывать горячие клавиши внизу экрана
-                </small>
+          </div>
+          <div className="settings-card settings-keys">
+            <h3>Управление</h3>
+            <p className="settings-note">
+              Нажми на клавишу действия, затем новую клавишу. Esc отменяет. Стрелки всегда двигают
+              героя, Esc всегда ставит паузу.
+            </p>
+            {view.bindings.map((binding: { action: string; label: string; key: string }) => (
+              <div key={binding.action} className="settings-row">
+                <span>{binding.label}</span>
+                <button
+                  id={'bind-' + binding.action}
+                  className={'small key-button' + (view.capture === binding.action ? ' armed' : '')}
+                  type="button"
+                  onClick={() => commands.startCapture(binding.action)}
+                >
+                  {view.capture === binding.action ? 'НАЖМИТЕ КЛАВИШУ…' : binding.key}
+                </button>
               </div>
-              <Toggle
-                id="settingHints"
-                on={view.hints}
-                onClick={() => commands.toggleSetting('hints')}
-              />
-            </div>
+            ))}
+            <button
+              id="resetBindings"
+              className="small"
+              type="button"
+              onClick={commands.resetBindings}
+            >
+              СБРОСИТЬ КЛАВИШИ
+            </button>
           </div>
         </div>
         <div style={{ marginTop: '24px', textAlign: 'right' }}>

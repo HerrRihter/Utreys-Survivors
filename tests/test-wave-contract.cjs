@@ -40,12 +40,12 @@ for (const mutate of [
 }
 const schedule = getWaveSchedule('empty');
 for (const [time, batch, cap] of [
-  [0, 2, 14],
-  [59.999, 2, 14],
-  [60, 3, 24],
-  [149.999, 3, 24],
-  [150, 4, 35],
-  [240, 5, 50],
+  [0, 2, 18],
+  [59.999, 2, 18],
+  [60, 4, 36],
+  [149.999, 4, 36],
+  [150, 6, 65],
+  [240, 8, 110],
 ]) {
   const wave = normalWave(schedule, time);
   assert.equal(wave.batch, batch);

@@ -17,12 +17,14 @@ export const SceneRenderer = {
     heroes,
     enemies,
     abilities,
+    weapons,
     sprite,
     settings,
     math,
     performance,
   }) {
     const visible = [];
+    const bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
     let cachedVignette = null,
       cachedVignetteW = 0,
       cachedVignetteH = 0;
@@ -98,6 +100,11 @@ export const SceneRenderer = {
           enemies.telegraph(ctx, e);
         }
         abilities.draw(ctx);
+        bounds.minX = minX;
+        bounds.maxX = maxX;
+        bounds.minY = minY;
+        bounds.maxY = maxY;
+        weapons?.draw(ctx, bounds, 'ground');
         // Sort only what can appear on screen.
         visible.length = 0;
         for (const e of s.enemies)
@@ -172,6 +179,7 @@ export const SceneRenderer = {
           for (let i = 0; i < 4; i++) g.fillRect(-7 + i * 4, -4, 2, 8);
           g.restore();
         }
+        weapons?.draw(ctx, bounds, 'air');
         for (const f of s.fx) {
           ctx.save();
           ctx.globalAlpha = f.life / f.max;
@@ -216,6 +224,13 @@ export const SceneRenderer = {
               g.lineTo(f.x, f.y + 6);
               neonStroke(g, f.color, 1, 3);
             }
+          } else if (f.kind === 'line') {
+            ctx.strokeStyle = f.color;
+            ctx.lineWidth = f.width * (f.life / f.max);
+            ctx.beginPath();
+            ctx.moveTo(f.x, f.y);
+            ctx.lineTo(f.toX, f.toY);
+            neonStroke(ctx, f.color, f.width * 0.5 * (f.life / f.max), 6);
           } else if (f.kind === 'spark') {
             ctx.fillStyle = f.color || '#00e5ff';
             ctx.fillRect(f.x, f.y, 3, 3);

@@ -2,7 +2,9 @@ import { updateEnemySpeech } from './enemy-speech.js';
 import { compact } from '../core/compact.js';
 import { resolveEnemyStrike } from './enemy-attacks.js';
 import { advanceAction } from '../core/action-timeline.js';
-import { protectedMove, blocksAttack, effectiveStats } from './ability-state.js';
+import { protectedMove, blocksAttack, effectiveStats, pacified } from './ability-state.js';
+import { countCrowd } from './hero-passives.js';
+import { defaultBindings } from '../app/run-state.js';
 
 const isLive = (item) => item.life > 0,
   isPresent = (item) => !item.dead,
@@ -23,9 +25,12 @@ export const Simulation = {
     abilities,
     combat,
     spawning,
+    weapons,
+    settings,
     events,
   }) {
     const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const fragments = [];
     const strike = {
       get arena() {
         return world.arena;
@@ -45,14 +50,10 @@ export const Simulation = {
       s.shake = Math.max(0, s.shake - dt * 20);
       p.inv = Math.max(0, p.inv - dt);
       p.hp = Math.min(p.max, p.hp + st.regen * dt);
-      let mx =
-          (run.keys.has('KeyD') || run.keys.has('ArrowRight') ? 1 : 0) -
-          (run.keys.has('KeyA') || run.keys.has('ArrowLeft') ? 1 : 0) +
-          run.stick.x,
-        my =
-          (run.keys.has('KeyS') || run.keys.has('ArrowDown') ? 1 : 0) -
-          (run.keys.has('KeyW') || run.keys.has('ArrowUp') ? 1 : 0) +
-          run.stick.y;
+      const keys = settings?.bindings || defaultBindings,
+        held = (action, arrow) => (run.keys.has(keys[action]) || run.keys.has(arrow) ? 1 : 0);
+      let mx = held('right', 'ArrowRight') - held('left', 'ArrowLeft') + run.stick.x,
+        my = held('down', 'ArrowDown') - held('up', 'ArrowUp') + run.stick.y;
       if (abilityMoving) {
         mx = 0;
         my = 0;
@@ -78,6 +79,7 @@ export const Simulation = {
       p.moving = travel > 0.01;
       p.walk = (p.walk || 0) + travel / 55;
       spawning.updateSpawning(dt);
+      s.crowd = countCrowd(s);
       if (p.hurt) {
         p.hurt.elapsed += dt;
         if (p.hurt.elapsed >= p.hurt.duration) p.hurt = null;
@@ -87,6 +89,7 @@ export const Simulation = {
         p.action.flip = Math.abs(p.facing.x) > 0.01 ? p.facing.x < 0 : p.flip;
       }
       advanceAction(p, dt, combat.heroImpact);
+      weapons?.update(dt);
       const heroSpec = heroes.defs[run.selected];
       s.attack -= dt;
       if (!blocksAttack(s) && s.attack <= 0 && !p.action) {
@@ -124,14 +127,25 @@ export const Simulation = {
         }
         e.animationTime = s.t;
         advanceAction(e, dt, (a) => resolveEnemyStrike(strike, s, e, u, a.aim));
-        if (!e.action && !e.hurt && e.cd <= 0 && d < u.range && world.arena.clear(e, p, 2)) {
+        if (
+          !e.action &&
+          !e.hurt &&
+          e.cd <= 0 &&
+          d < u.range &&
+          !pacified(s, e) &&
+          world.arena.clear(e, p, 2)
+        ) {
           combat.beginAction(e, u.wind, p);
           e.cd = u.cooldown;
           e.heading = Math.atan2(p.y - e.y, p.x - e.x);
         }
         const moving =
             !e.action && !e.hurt && d > (u.attack === 'projectile' ? u.range - 20 : e.r + 10),
-          speed = e.speed * (1 + s.t / 1800) * (1 - (e.abilitySlow || 0)),
+          speed =
+            e.speed *
+            (1 + s.t / 1800) *
+            (1 - (e.abilitySlow || 0)) *
+            (e.weaponSlowUntil > s.t ? 0.65 : 1),
           dir = moving ? world.arena.direction(e, p, e.r) : null,
           ox = e.x,
           oy = e.y;
@@ -164,6 +178,22 @@ export const Simulation = {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
         b.life -= dt;
+        // Serialization evolution: a packet ends by splitting into three fragments.
+        if (b.life <= 0 && b.split) {
+          b.split = false;
+          const a = Math.atan2(b.vy, b.vx),
+            v = Math.hypot(b.vx, b.vy);
+          for (const turn of [-0.45, 0, 0.45])
+            fragments.push({
+              ...b,
+              vx: Math.cos(a + turn) * v,
+              vy: Math.sin(a + turn) * v,
+              life: 0.45,
+              damage: b.damage * 0.6,
+              hit: new Set(),
+              split: false,
+            });
+        }
         b.age = (b.age || 0) + dt;
         b.angle += dt * 4.5;
         for (const e of s.enemies) {
@@ -171,14 +201,22 @@ export const Simulation = {
             b.hit.add(e);
             const impulse =
               b.push === undefined ? 0.25 : b.push / Math.max(1, Math.hypot(b.vx, b.vy));
-            combat.damage(e, b.damage, b.vx * impulse, b.vy * impulse, {
-              x: e.x - b.vx,
-              y: e.y - b.vy,
-            });
+            combat.damage(
+              e,
+              b.damage,
+              b.vx * impulse,
+              b.vy * impulse,
+              { x: e.x - b.vx, y: e.y - b.vy },
+              b.tag,
+            );
           }
         }
       }
       compact(s.shots, isLive);
+      if (fragments.length) {
+        for (const f of fragments) s.shots.push(f);
+        fragments.length = 0;
+      }
       for (const codeToken of s.codes) {
         const d = dist(codeToken, p);
         if (d < st.magnet && world.arena.clear(codeToken, p, 2)) {

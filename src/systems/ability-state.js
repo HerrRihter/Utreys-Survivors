@@ -7,6 +7,7 @@ export const blocksAttack = protectedMove;
 
 export function effectiveStats(state) {
   const stats = state.stats;
+  if (abilityActive(state, 'registry')) return { ...stats, chainUnlimited: true };
   if (!abilityActive(state, 'potion')) return stats;
   return {
     ...stats,
@@ -15,3 +16,6 @@ export function effectiveStats(state) {
     punchForce: ((stats.punchForce || 0) + 145) * 1.5 - 145,
   };
 }
+
+// Enemies under BA's negotiations walk but do not start attacks.
+export const pacified = (state, e) => e.pacifiedUntil > state.t;

@@ -5,7 +5,9 @@ import {
   abilityUpgradeDescriptions,
 } from '../../data/characters/abilities.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { heroPassives } from '../../data/characters/hero-passives.js';
 import { arenaDefinitions } from '../world/arenas.js';
+import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
 
 // Pure read models for the React screens. Each takes the explicit pieces it reads and
 // returns plain data; React renders it, the session's commands change the underlying state.
@@ -23,9 +25,11 @@ function unclaimedAchievements(progression, best) {
   ).length;
 }
 
-export function menuView({ run, progression }) {
+export function menuView({ run, progression, heroes, snapshot = null }) {
   const unclaimed = unclaimedAchievements(progression, run.best);
+  const hero = snapshot && heroes?.defs[snapshot.hero];
   return {
+    resume: hero ? `${hero.name} · ${clock(snapshot.state.t)} · ур. ${snapshot.state.level}` : null,
     wallet: 'КОДЫ: ' + progression.codes,
     record: run.best.time
       ? `ЛУЧШЕЕ ВРЕМЯ: ${clock(run.best.time)}`
@@ -36,18 +40,27 @@ export function menuView({ run, progression }) {
 
 export function heroSelectView({ run, progression, heroes, enemies }) {
   const owned = Object.keys(heroes.defs).filter((id) => progression.owned(id));
-  const hero = heroes.defs[run.pendingHero];
+  const hero = heroes.defs[run.pendingHero],
+    passive = heroPassives[run.pendingHero];
   return {
-    heroes: owned.map((id) => ({ id, name: heroes.defs[id].name, weapon: heroes.defs[id].weapon })),
+    heroes: owned.map((id) => ({
+      id,
+      name: heroes.defs[id].name,
+      weapon: heroes.defs[id].weapon,
+      role: heroPassives[id]?.role || '',
+    })),
     pending: run.pendingHero,
+    role: passive ? `${passive.role.toUpperCase()} · ${passive.roleDesc}` : '',
     stats:
-      (hero.desc || `Здоровье: ${hero.hp} · Скорость: ${hero.speed}`) +
+      (hero.desc || '') +
+      ` Здоровье ${hero.hp} · скорость ${hero.speed}.` +
       '\n' +
       abilityDefinitions[run.pendingHero]
         .map(
           (a, i) => `${i ? 'E' : 'Q'} · ${a.name}: ${a.description} Перезарядка ${a.cooldown} с.`,
         )
-        .join('\n'),
+        .join('\n') +
+      (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
     showBaClients: run.pendingHero === 'ba',
     baClients: baClientIds.map((id) => ({ id, name: enemies.units[id].name })),
     baClient: run.baClient,
@@ -69,7 +82,12 @@ export function shopView({ progression, heroes }) {
       id,
       name: hero.name,
       desc: hero.desc,
-      info: hero.hp + ' HP · скорость ' + hero.speed,
+      info:
+        (heroPassives[id] ? heroPassives[id].role + ' · ' : '') +
+        hero.hp +
+        ' HP · скорость ' +
+        hero.speed +
+        (heroPassives[id] ? ' · Пассивка: ' + heroPassives[id].name : ''),
       owned,
       label: owned ? 'Доступен для забега' : 'Купить · ' + progression.prices[id] + ' кодов',
       disabled: owned || codes < progression.prices[id],
@@ -144,15 +162,35 @@ export function achievementsView({ run, progression }) {
   };
 }
 
-/** @returns {{ icon: string, name: string, detail: string, desc: string }[]} */
+/**
+ * @typedef {{ icon: string, name: string, group: string, detail: string, desc: string,
+ *   isNew: boolean, evolves: boolean, kind: string }} LevelCard
+ * @returns {LevelCard[]}
+ */
 export function levelUpView({ run }) {
   return run.choice.map((u) => ({
     icon: u.icon,
     name: u.name,
-    detail:
-      u.group + (u.max ? ` · Ранг ${(run.state?.upgradeRanks?.[u.id] || 0) + 1}/${u.max}` : ''),
+    group: u.group || '',
+    detail: u.detail || '',
     desc: u.desc,
+    isNew: !!u.isNew,
+    evolves: !!u.evolves,
+    kind: u.kind || 'supply',
   }));
+}
+
+// The run's weapons and passives with empty slots, for the HUD and the pause panel.
+export function buildView({ run, upgrades }) {
+  const s = run.state;
+  if (!s) return null;
+  const build = upgrades.build(run.selected, s);
+  return {
+    ...build,
+    emptyWeapons: Math.max(0, build.weaponSlots - build.weapons.length),
+    emptyPassives: Math.max(0, build.passiveSlots - build.passives.length),
+    archives: s.evoTokens || 0,
+  };
 }
 
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
@@ -199,8 +237,16 @@ function abilityButtons(run) {
   });
 }
 
+function controlsHint(b = defaultBindings) {
+  const k = (action) => keyLabel(b[action]);
+  return (
+    `${k('up')}${k('left')}${k('down')}${k('right')} / СТРЕЛКИ — ПЕРЕМЕЩЕНИЕ · АТАКА И ОРУЖИЕ — АВТОМАТИЧЕСКИ · ` +
+    `${k('abilityQ')} / ${k('abilityE')} — УМЕНИЯ · ESC — ПАУЗА · УЗЛЫ: УБЕЙТЕ БАГА ИЛИ СТОЙТЕ В КРУГЕ 6 С`
+  );
+}
+
 // Everything the in-run overlay shows; refreshed about ten times a second.
-export function hudView({ run, progression, heroes, enemies, settings }) {
+export function hudView({ run, progression, heroes, enemies, settings, upgrades }) {
   const s = run.state;
   if (!s) return null;
   const hero = heroes.defs[run.selected];
@@ -227,6 +273,48 @@ export function hudView({ run, progression, heroes, enemies, settings }) {
     showAbilities: run.mode === 'play',
     showPause: run.mode !== 'end',
     showHint: settings.hints,
+    hint: controlsHint(settings.bindings),
     stick: run.stickView,
+    build: upgrades ? buildView({ run, upgrades }) : null,
+    tip: run.mode === 'play' && run.tip?.left > 0 ? run.tip.text : '',
+  };
+}
+
+const keyNames = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Space: 'Пробел' };
+export const keyLabel = (code) =>
+  keyNames[code] ||
+  (code || '')
+    .replace(/^Key/, '')
+    .replace(/^Digit/, '')
+    .replace(/^Numpad/, 'Num ');
+
+export function settingsView({ run, settings, audio }) {
+  return {
+    shake: settings.shake,
+    hints: settings.hints,
+    damageNumbers: settings.damageNumbers,
+    uiScale: settings.uiScale,
+    scales: uiScales,
+    capture: run.capture || null,
+    bindings: Object.keys(defaultBindings).map((action) => ({
+      action,
+      label: bindingLabels[action],
+      key: keyLabel(settings.bindings[action]),
+    })),
+    ...audio.settings,
+  };
+}
+
+// Counters and key names for the level-up controls.
+export function levelControlsView({ run, settings }) {
+  const s = run.state;
+  if (!s) return null;
+  const b = settings.bindings;
+  return {
+    rerolls: s.rerolls || 0,
+    skips: s.skips || 0,
+    banishes: s.banishes || 0,
+    banishArmed: !!run.banishArmed,
+    keys: { reroll: keyLabel(b.reroll), skip: keyLabel(b.skip), banish: keyLabel(b.banish) },
   };
 }

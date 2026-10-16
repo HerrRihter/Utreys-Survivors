@@ -1,10 +1,20 @@
 import { createEventScope } from './lifecycle.js';
 
 // Keyboard and touch-stick input. Writes raw input into `run` (keys, stick) and calls
-// `actions` for commands: { pause, pickUpgrade, activateAbility, closeScreen }.
-// `closeScreen()` returns true when Escape closed a menu screen instead of pausing.
+// `actions` for commands: { pause, pickUpgrade, activateAbility, closeScreen, captureKey,
+// reroll, skip, banish }. `closeScreen()` returns true when Escape closed a menu screen instead
+// of pausing; `captureKey(code)` returns true when the key was taken by the rebinding screen.
+// `bindings` maps actions to key codes (see defaultBindings).
 export const InputSystem = {
-  create({ window, document, canvas, run, actions, onStick = () => {} }) {
+  create({
+    window,
+    document,
+    canvas,
+    run,
+    actions,
+    bindings = () => ({ abilityQ: 'KeyQ', abilityE: 'KeyE', pause: 'KeyP' }),
+    onStick = () => {},
+  }) {
     const events = createEventScope();
     function resetInput() {
       run.keys.clear();
@@ -29,15 +39,25 @@ export const InputSystem = {
       )
         e.preventDefault();
       if (e.repeat) return;
-      if (run.mode === 'play' && (e.code === 'KeyQ' || e.code === 'KeyE')) {
+      if (actions.captureKey?.(e.code)) {
         e.preventDefault();
-        actions.activateAbility(e.code === 'KeyQ' ? 0 : 1);
+        return;
+      }
+      const keys = bindings();
+      if (run.mode === 'play' && (e.code === keys.abilityQ || e.code === keys.abilityE)) {
+        e.preventDefault();
+        actions.activateAbility(e.code === keys.abilityQ ? 0 : 1);
         return;
       }
       if (e.code === 'Escape' && actions.closeScreen()) return;
-      if (e.code === 'Escape' || e.code === 'KeyP') actions.pause();
-      if (run.mode === 'level' && ['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code))
-        actions.pickUpgrade(+e.code.slice(-1) - 1);
+      if (e.code === 'Escape' || e.code === keys.pause) actions.pause();
+      if (run.mode === 'level') {
+        const digit = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
+        if (digit >= 0) actions.pickUpgrade(digit);
+        else if (e.code === keys.reroll) actions.reroll?.();
+        else if (e.code === keys.skip) actions.skip?.();
+        else if (e.code === keys.banish) actions.banish?.();
+      }
       run.keys.add(e.code);
     }
     function bind() {

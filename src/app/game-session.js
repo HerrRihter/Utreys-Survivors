@@ -17,10 +17,13 @@ import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
 import { AbilitySystem } from '../systems/abilities.js';
 import { UpgradeSystem } from '../systems/upgrades.js';
+import { WeaponSystem } from '../systems/weapons.js';
 import { createCorpses } from '../systems/corpses.js';
 import { createEnemies } from '../entities/enemies.js';
 import { Heroes } from '../entities/heroes.js';
 import { MenuPortraits } from '../ui/menu-portraits.js';
+import { createRunSnapshots } from '../systems/run-snapshot.js';
+import { createTips } from './tips.js';
 
 // Composition root of one game mount. Every system gets exactly the collaborators it uses;
 // React talks to the session through `ui`/`hud` stores, read models (views) and commands.
@@ -47,6 +50,8 @@ export const GameSession = {
     const math = createMath(Math);
     const run = createRunState({ storage });
     const settings = createGameSettings({ storage });
+    const snapshots = createRunSnapshots({ storage });
+    const tips = createTips({ storage, settings, run });
     const ui = createStore(),
       hud = createStore();
     const arenas = createArenas({ createCanvas });
@@ -84,13 +89,17 @@ export const GameSession = {
       audio,
       math,
       toast,
+      settings,
     });
+    const weapons = WeaponSystem.create({ run, world, damage: combat.damage, audio, math });
     const abilities = AbilitySystem.create({
       run,
       world,
       damage: combat.damage,
       progression,
       audio,
+      heroes,
+      units: enemies.units,
     });
     const spawning = EnemySpawning.create({ run, enemies, world, math, toast, audio });
     function activateAbility(slot) {
@@ -106,10 +115,15 @@ export const GameSession = {
       run,
       actions: {
         pause: () => flow.pause(),
-        pickUpgrade: (i) => flow.pickUpgrade(i),
+        pickUpgrade: (i) => flow.chooseCard(i),
         activateAbility,
         closeScreen: () => flow.closeScreen(),
+        captureKey: (code) => flow.captureKey(code),
+        reroll: () => flow.reroll(),
+        skip: () => flow.skip(),
+        banish: () => flow.armBanish(),
       },
+      bindings: () => settings.bindings,
       onStick: hud.emit,
     });
     const flow = GameFlow.create({
@@ -121,6 +135,9 @@ export const GameSession = {
       upgrades,
       world,
       abilities,
+      weapons,
+      spawning,
+      snapshots,
       audio,
       input,
       math,
@@ -142,6 +159,8 @@ export const GameSession = {
       abilities,
       combat,
       spawning,
+      weapons,
+      settings,
       events: { finish: flow.finish, levelUp: flow.levelUp },
     });
     const { sprite } = SpriteRenderer.create({ run, heroes });
@@ -154,6 +173,7 @@ export const GameSession = {
       heroes,
       enemies,
       abilities,
+      weapons,
       sprite,
       settings,
       math,
@@ -176,10 +196,31 @@ export const GameSession = {
       for (const [target, hero] of attached) portraits.fit(target, hero, phase);
     }
 
-    // The HUD is refreshed at most ten times a second from the frame loop.
-    let hudClock = 0;
+    // The HUD is refreshed at most ten times a second from the frame loop; the run is saved
+    // every 30 s of play, tips are checked four times a second.
+    let hudClock = 0,
+      saveClock = 0,
+      tipClock = 0;
+    const SAVE_EVERY = 30;
     function frame(now, dt) {
-      if (run.mode === 'play') simulation.update(dt);
+      if (run.mode === 'play') {
+        simulation.update(dt);
+        saveClock += dt;
+        if (saveClock >= SAVE_EVERY) {
+          saveClock = 0;
+          snapshots.save(run);
+        }
+        tipClock += dt;
+        if (tipClock >= 0.25) {
+          tipClock = 0;
+          tips.check();
+        }
+        if (run.tip.left > 0) run.tip.left -= dt;
+      }
+      if (run.mode === 'level' && run.levelLock > 0) {
+        run.levelLock -= dt;
+        if (run.levelLock <= 0) ui.emit();
+      }
       if (run.mode === 'menu') animatePortraits(now);
       if (run.toast.left > 0) {
         run.toast.left -= dt;
@@ -194,6 +235,11 @@ export const GameSession = {
     }
     const loop = GameLoop.create({ requestAnimationFrame, cancelAnimationFrame, frame, audio });
     input.bind();
+    // Closing or hiding the tab keeps the run for "Continue".
+    const keepRun = () => {
+      if (run.state && ['play', 'pause', 'level'].includes(run.mode)) snapshots.save(run);
+    };
+    events.listen(window, 'pagehide', keepRun);
 
     function dispose() {
       if (disposed) return;
@@ -204,7 +250,7 @@ export const GameSession = {
       events.dispose();
       progression.flush?.();
     }
-    const read = { run, progression, heroes, enemies, settings };
+    const read = { run, progression, heroes, enemies, settings, upgrades };
 
     return {
       // Engine API (tests, tools)
@@ -212,6 +258,7 @@ export const GameSession = {
       menu: flow.menu,
       pause: flow.pause,
       pickUpgrade: flow.pickUpgrade,
+      resume: flow.resume,
       finish: flow.finish,
       activateAbility,
       update: simulation.update,
@@ -249,13 +296,15 @@ export const GameSession = {
       hud: { subscribe: hud.subscribe, getVersion: hud.getVersion },
       views: {
         run: () => run,
-        menu: () => views.menuView(read),
+        menu: () => views.menuView({ ...read, snapshot: snapshots.load() }),
         heroSelect: () => views.heroSelectView(read),
         shop: () => views.shopView(read),
         achievements: () => views.achievementsView(read),
         levelUp: () => views.levelUpView(read),
+        build: () => views.buildView(read),
+        levelControls: () => views.levelControlsView(read),
         hud: () => views.hudView(read),
-        settings: () => ({ shake: settings.shake, hints: settings.hints, ...audio.settings }),
+        settings: () => views.settingsView({ run, settings, audio }),
       },
       commands: {
         openHeroSelect: flow.openHeroSelect,
@@ -265,9 +314,16 @@ export const GameSession = {
         chooseMap: flow.chooseMap,
         startSelected: flow.startSelected,
         restart: flow.start,
+        resume: flow.resume,
         menu: flow.menu,
         pause: flow.pause,
-        pickUpgrade: flow.pickUpgrade,
+        pickUpgrade: flow.chooseCard,
+        reroll: flow.reroll,
+        skip: flow.skip,
+        armBanish: flow.armBanish,
+        startCapture: flow.startCapture,
+        resetBindings: flow.resetBindings,
+        setUiScale: flow.setUiScale,
         activateAbility,
         openShop: flow.openShop,
         openAchievements: flow.openAchievements,

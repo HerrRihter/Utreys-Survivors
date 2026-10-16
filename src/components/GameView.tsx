@@ -54,6 +54,9 @@ function GameScreens({
     document.body.dataset.mode = mode;
     document.body.classList.toggle('hide-hints', !settings.hints);
   }, [mode, settings.hints]);
+  useEffect(() => {
+    document.documentElement.style.setProperty('--ui-scale', String(settings.uiScale));
+  }, [settings.uiScale]);
 
   return (
     <>
