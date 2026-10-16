@@ -2591,6 +2591,34 @@ button:disabled {
   right: max(12px, env(safe-area-inset-right));
   z-index: 61;
 }
+/* The same speaker icon as the in-game corner button, on every device. */
+.view-sound #viewSound {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 0;
+  background: #0e252be6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  touch-action: manipulation;
+}
+.view-sound #viewSound::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9h4l5-4v14l-5-4H3z'/%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' d='M16 8q4 4 0 8M19 5q7 7 0 14'/%3E%3C/svg%3E")
+    center/contain no-repeat;
+}
+.view-sound #viewSound[aria-pressed='false'] {
+  color: #7e9fa8;
+}
+.view-sound #viewSound[aria-pressed='false']::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9h4l5-4v14l-5-4H3z'/%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' d='m16 9 6 6m0-6-6 6'/%3E%3C/svg%3E");
+}
 /* Collapsible keyboard settings */
 .settings-keys > summary {
   display: flex;
