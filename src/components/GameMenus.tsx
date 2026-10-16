@@ -7,6 +7,7 @@ import { StatsDialog } from './StatsView';
 import { LeaderboardDialog } from './LeaderboardView';
 import { useStore } from './cloud-context';
 import { Portrait } from './Portrait';
+import { AchievementIcon } from './AchievementIcon';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
@@ -517,7 +518,9 @@ export function Achievements() {
               className={`achievement-card${card.done ? ' completed' : ''}${card.claimed ? ' claimed' : ''}`}
             >
               <div className="achievement-head">
-                <div className="achievement-icon">{card.icon}</div>
+                <div className="achievement-icon">
+                  <AchievementIcon id={card.id} />
+                </div>
                 <div className="achievement-info">
                   <h3>{card.title}</h3>
                   <p>{card.desc}</p>

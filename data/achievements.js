@@ -15,7 +15,7 @@ const heroWin = (hero, name) => ({
   getProgress: (data) => data.stats?.heroWins?.[hero] || 0,
 });
 
-export const achievementDefinitions = [
+const standardAchievements = [
   {
     id: 'abilities_10',
     title: 'Первый сброс буфера',
@@ -328,5 +328,28 @@ export const achievementDefinitions = [
     reward: 35,
     rewardType: 'кодов',
     getProgress: (data) => data.stats?.maxEvolutions || 0,
+  },
+];
+
+export const achievementDefinitions = [
+  ...standardAchievements,
+  {
+    id: 'platinum',
+    title: 'Платина',
+    desc: 'Получить все остальные достижения',
+    icon: 'platinum',
+    category: 'milestone',
+    target: standardAchievements.length,
+    unit: 'достижений',
+    reward: 100,
+    rewardType: 'кодов',
+    // Claimed achievements stay earned even after their currency has been spent.
+    // Keep this outside the base list so it never counts itself.
+    getProgress: (data, best) =>
+      standardAchievements.filter(
+        (achievement) =>
+          data.claimedAchievements?.includes(achievement.id) ||
+          achievement.getProgress(data, best) >= achievement.target,
+      ).length,
   },
 ];

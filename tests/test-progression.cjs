@@ -166,6 +166,22 @@ async function main() {
   );
 
   // Every active achievement can be earned and claimed once.
+  const platinum = rewards.achievements.find((achievement) => achievement.id === 'platinum');
+  const others = rewards.achievements.filter((achievement) => achievement.id !== 'platinum');
+  assert.equal(platinum.target, others.length, 'Platinum excludes itself from the target');
+  assert.equal(platinum.getProgress({}), 0, 'Empty saves have no platinum progress');
+  assert(!rewards.claimAchievement('platinum'), 'Cannot claim platinum early');
+  const earnedIds = others.map((achievement) => achievement.id);
+  assert.equal(
+    platinum.getProgress({ claimedAchievements: [...earnedIds.slice(1), 'platinum', 'unknown'] }),
+    others.length - 1,
+    'Platinum and unknown IDs cannot replace a missing achievement',
+  );
+  assert.equal(
+    platinum.getProgress({ claimedAchievements: earnedIds, codes: 0 }),
+    others.length,
+    'Claimed achievements still count after spending codes',
+  );
   rewards.earn(10000);
   for (const id of Object.keys(rewards.upgrades)) while (rewards.buyUpgrade(id));
 
