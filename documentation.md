@@ -32,7 +32,7 @@ npm test автоматически запускает все верхнеуро
 
 ## Аккаунт и облако
 
-Вход по логину и паролю через Firebase — `src/services` (план и статус — [FIREBASE-PLAN](docs/FIREBASE-PLAN.md), настройка — [FIREBASE-SETUP](docs/FIREBASE-SETUP.md)). Включается переменными `VITE_FIREBASE_*` из `.env.local` или переменных GitHub Actions; без них панель аккаунта скрыта и SDK не загружается. Логин превращается в служебный адрес `hex(ключ)@<projectId>.firebaseapp.com`, ключ — нижний регистр и «ё» → «е». `VITE_FIREBASE_EMULATOR=127.0.0.1` подключает локальные эмуляторы. Забытый пароль сбрасывает `npm run admin:reset-password`.
+Вход по логину и паролю через Firebase — `src/services` (план и статус — [FIREBASE-PLAN](docs/FIREBASE-PLAN.md), настройка — [FIREBASE-SETUP](docs/FIREBASE-SETUP.md)). Включается переменными `VITE_FIREBASE_*` из `.env.local` или переменных GitHub Actions; без них панель аккаунта скрыта и SDK не загружается. Логин превращается в служебный адрес `hex(ключ)@<projectId>.firebaseapp.com`, ключ — нижний регистр и «ё» → «е». Прогресс вошедшего игрока синхронизируется с `progress/{uid}` (`src/services/cloud-progress.js`): локальное сохранение остаётся основным, при расхождении с облаком на двух устройствах игрок выбирает, какое оставить; метаданные устройства — в `utreys-cloud-v1`. `VITE_FIREBASE_EMULATOR=127.0.0.1` подключает локальные эмуляторы: положите демо-конфигурацию (`VITE_FIREBASE_PROJECT_ID=demo-utreys` и т. д.) в `.env.emulator.local`, запустите `npx firebase emulators:start --only auth,firestore --project demo-utreys` и `npx vite --mode emulator --port 3001`. Правила проверяет `npm run test:rules`. Забытый пароль сбрасывает `npm run admin:reset-password`.
 
 ## Реплики и палитра
 

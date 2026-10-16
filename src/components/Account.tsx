@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore, type FormEvent } from 'react';
 import type { createAccount } from '../services/auth.js';
+import type { CloudProgress } from '../app/useGameSession';
 import { LOGIN_MAX, PASSWORD_MIN } from '../services/login.js';
 import { Dialog } from './Dialog';
 
@@ -10,8 +11,36 @@ function useAccountState(account: Account) {
   return account.state;
 }
 
+const syncLabels: Record<string, string> = {
+  syncing: 'СОХРАНЕНИЕ В ОБЛАКО…',
+  synced: 'ПРОГРЕСС В ОБЛАКЕ',
+  offline: 'ОБЛАКО НЕДОСТУПНО',
+  conflict: 'НУЖНО ВЫБРАТЬ ПРОГРЕСС',
+};
+
+function useCloudState(cloud: CloudProgress) {
+  useSyncExternalStore(cloud.subscribe, cloud.getVersion);
+  return cloud.state;
+}
+
+function SyncStatus({ cloud }: { cloud: CloudProgress }) {
+  const { status } = useCloudState(cloud);
+  if (!syncLabels[status]) return null;
+  return (
+    <span className="account-sync" id="cloudStatus" data-status={status}>
+      {syncLabels[status]}
+    </span>
+  );
+}
+
 // The account row of the main menu. Hidden when the build has no Firebase config.
-export function AccountPanel({ account }: { account: Account }) {
+export function AccountPanel({
+  account,
+  cloud = null,
+}: {
+  account: Account;
+  cloud?: CloudProgress | null;
+}) {
   const state = useAccountState(account);
   const [dialog, setDialog] = useState<'auth' | 'password' | null>(null);
   if (state.status === 'disabled') return null;
@@ -39,6 +68,7 @@ export function AccountPanel({ account }: { account: Account }) {
           <span className="account-status">
             ИГРОК: <strong id="accountLogin">{state.login}</strong>
           </span>
+          {cloud && <SyncStatus cloud={cloud} />}
           <button className="small" onClick={() => setDialog('password')}>
             СМЕНИТЬ ПАРОЛЬ
           </button>
@@ -226,6 +256,62 @@ function PasswordDialog({ account, onClose }: { account: Account; onClose: () =>
           </button>
         </div>
       </form>
+    </Dialog>
+  );
+}
+
+const hours = (seconds: number) => {
+  const minutes = Math.round(seconds / 60);
+  return minutes < 60 ? `${minutes} мин` : `${Math.floor(minutes / 60)} ч ${minutes % 60} мин`;
+};
+
+// Shown when this device and the cloud both changed: the player keeps one of the saves.
+export function ConflictDialog({ cloud }: { cloud: CloudProgress }) {
+  const { conflict } = useCloudState(cloud);
+  if (!conflict) return null;
+  type Summary = NonNullable<CloudProgress['state']['conflict']>['local'];
+  const rows: [string, (s: Summary) => string | number][] = [
+    ['Коды', (s) => s.codes],
+    ['Победы', (s) => s.wins],
+    ['Герои', (s) => s.heroes],
+    ['Убийства', (s) => s.kills],
+    ['Время в игре', (s) => hours(s.time)],
+  ];
+  return (
+    // Escape does not close it: syncing waits for the answer.
+    <Dialog titleId="conflict-title" onClose={() => {}}>
+      <div className="account-form conflict-form" id="cloudConflict">
+        <h2 id="conflict-title">Какой прогресс оставить?</h2>
+        <p className="account-hint">
+          На этом устройстве и в облаке разный прогресс. Выбранный заменит другой, второй пропадёт.
+        </p>
+        <table className="conflict-table">
+          <thead>
+            <tr>
+              <th />
+              <th>Это устройство</th>
+              <th>Облако</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([label, value]) => (
+              <tr key={label}>
+                <th>{label}</th>
+                <td>{value(conflict.local)}</td>
+                <td>{value(conflict.cloud)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="account-actions">
+          <button id="conflictKeepLocal" className="small" onClick={() => cloud.resolve('local')}>
+            ОСТАВИТЬ С УСТРОЙСТВА
+          </button>
+          <button id="conflictTakeCloud" className="primary" onClick={() => cloud.resolve('cloud')}>
+            ВЗЯТЬ ИЗ ОБЛАКА
+          </button>
+        </div>
+      </div>
     </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
 import { AccountPanel, type Account } from './Account';
+import type { CloudProgress } from '../app/useGameSession';
 import { Overlay } from './Overlay';
 import { Portrait } from './Portrait';
 import { useSession } from './session';
@@ -43,11 +44,13 @@ export function GoalList({ goals, title }: { goals: Goal[]; title: string }) {
 
 export function MainMenu({
   account,
+  cloud,
   hints,
   onNavigateToArena,
   onNavigateToOpponents,
 }: {
   account: Account;
+  cloud: CloudProgress | null;
   hints: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
@@ -76,7 +79,7 @@ export function MainMenu({
           <span>·</span>
           <span>5 УЗЛОВ · БАГИ-МИНИБОССЫ · КЛИЕНТЫ</span>
         </div>
-        <AccountPanel account={account} />
+        <AccountPanel account={account} cloud={cloud} />
         <div className="startline">
           <button id="shopOpen" className="small" onClick={commands.openShop}>
             УЛУЧШЕНИЯ

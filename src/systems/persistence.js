@@ -1,58 +1,45 @@
 import { heroUnlockPrices, permanentUpgrades } from '../../data/upgrades.js';
 import { achievementDefinitions } from '../../data/achievements.js';
 import { maxLoad } from '../../data/difficulty.js';
-// Saved meta-progression (codes, heroes, upgrades, achievements). Nothing runs at import:
-// the session creates one per mount with its storage and page-lifecycle event targets.
-/**
- * @param {{
- *   storage: { getItem(key: string): string | null, setItem(key: string, value: string): void },
- *   events?: any,
- *   document?: any,
- * }} options
- */
-export function createProgression({
-  storage,
-  events = globalThis,
-  document = globalThis.document,
-} = {}) {
-  const key = 'utreys-progression-v1',
-    prices = heroUnlockPrices,
-    upgrades = permanentUpgrades;
-  let data = {
-      codes: 0,
-      kills: 0,
-      unlocked: ['utrace'],
-      levels: { health: 0, power: 0, speed: 0 },
-      stats: {
-        totalTime: 0,
-        maxTime: 0,
-        bossKills: 0,
-        abilitiesUsed: 0,
-        maxLevel: 0,
-        // Mastery, recorded once per run by recordRunStats.
-        wins: 0,
-        heroWins: {},
-        bestWinTime: 0,
-        untouchedRuns: 0,
-        cleanSweeps: 0,
-        workaroundWins: 0,
-        noFoodWins: 0,
-        maxEvolutions: 0,
-      },
-      // Kills per damage source (hero attack, ability or weapon id).
-      weaponKills: {},
-      // Evolutions ever assembled: weapon ids and 'hero_<id>' for hero attacks.
-      evolutionsSeen: [],
-      claimedAchievements: [],
-      // Highest load level won per hero, and production records per hero and level.
-      loads: {},
-      production: {},
+const prices = heroUnlockPrices,
+  upgrades = permanentUpgrades;
+const integer = (v, max = 1e9) => (Number.isSafeInteger(v) && v >= 0 ? Math.min(max, v) : 0);
+
+// A clean copy of saved progression, from localStorage or the cloud: unknown ids are dropped,
+// counters clamped and old formats migrated. Anything unreadable yields a new save.
+export function normalizeProgression(saved) {
+  const data = {
+    codes: 0,
+    kills: 0,
+    unlocked: ['utrace'],
+    levels: { health: 0, power: 0, speed: 0 },
+    stats: {
+      totalTime: 0,
+      maxTime: 0,
+      bossKills: 0,
+      abilitiesUsed: 0,
+      maxLevel: 0,
+      // Mastery, recorded once per run by recordRunStats.
+      wins: 0,
+      heroWins: {},
+      bestWinTime: 0,
+      untouchedRuns: 0,
+      cleanSweeps: 0,
+      workaroundWins: 0,
+      noFoodWins: 0,
+      maxEvolutions: 0,
     },
-    persistent = true;
+    // Kills per damage source (hero attack, ability or weapon id).
+    weaponKills: {},
+    // Evolutions ever assembled: weapon ids and 'hero_<id>' for hero attacks.
+    evolutionsSeen: [],
+    claimedAchievements: [],
+    // Highest load level won per hero, and production records per hero and level.
+    loads: {},
+    production: {},
+  };
   for (const id of Object.keys(upgrades)) data.levels[id] = 0;
-  const integer = (v, max = 1e9) => (Number.isSafeInteger(v) && v >= 0 ? Math.min(max, v) : 0);
   try {
-    const saved = JSON.parse(storage.getItem(key));
     if (saved && typeof saved === 'object') {
       data.codes = integer(saved.codes ?? saved.helmets ?? 0);
       data.kills = integer(saved.kills);
@@ -122,6 +109,33 @@ export function createProgression({
         ];
     }
   } catch {}
+  return data;
+}
+
+// Saved meta-progression (codes, heroes, upgrades, achievements). Nothing runs at import:
+// the session creates one per mount with its storage and page-lifecycle event targets.
+/**
+ * @param {{
+ *   storage: { getItem(key: string): string | null, setItem(key: string, value: string): void },
+ *   events?: any,
+ *   document?: any,
+ * }} options
+ */
+export function createProgression({
+  storage,
+  events = globalThis,
+  document = globalThis.document,
+} = {}) {
+  const key = 'utreys-progression-v1';
+  let data = normalizeProgression(readSaved()),
+    persistent = true;
+  function readSaved() {
+    try {
+      return JSON.parse(storage.getItem(key));
+    } catch {
+      return null;
+    }
+  }
   let dirty = false,
     pending = null,
     idle = null;
@@ -143,7 +157,24 @@ export function createProgression({
       persistent = false;
     }
   }
+  // Listeners hear about saves worth syncing elsewhere: purchases, run results ('save') and
+  // the page going away ('hidden'). Combat income alone does not notify.
+  const listeners = new Set();
+  const notify = (reason) => {
+    for (const listener of [...listeners]) listener(reason);
+  };
+  function onChange(listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }
   function save() {
+    dirty = true;
+    flush();
+    notify('save');
+  }
+  // Takes progression from elsewhere (the cloud) through the same checks as a local save.
+  function replace(saved) {
+    data = normalizeProgression(saved);
     dirty = true;
     flush();
   }
@@ -169,15 +200,20 @@ export function createProgression({
       else flush();
     }, 1000);
   }
-  const onVisibility = () => {
-    if (document?.hidden) flush();
+  const onHide = () => {
+    flush();
+    notify('hidden');
   };
-  events?.addEventListener?.('pagehide', flush);
+  const onVisibility = () => {
+    if (document?.hidden) onHide();
+  };
+  events?.addEventListener?.('pagehide', onHide);
   document?.addEventListener?.('visibilitychange', onVisibility);
   // Saves anything pending and releases the page listeners.
   function dispose() {
     flush();
-    events?.removeEventListener?.('pagehide', flush);
+    listeners.clear();
+    events?.removeEventListener?.('pagehide', onHide);
     document?.removeEventListener?.('visibilitychange', onVisibility);
   }
   function earn(amount) {
@@ -342,6 +378,8 @@ export function createProgression({
     earn,
     kill,
     flush,
+    replace,
+    onChange,
     recordTime,
     recordBossKill,
     recordAbility,

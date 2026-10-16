@@ -328,7 +328,8 @@ export const GameSession = {
       },
 
       // React bindings
-      ui: { subscribe: ui.subscribe, getVersion: ui.getVersion },
+      // `emit` re-renders menus after the save was replaced from the cloud.
+      ui: { subscribe: ui.subscribe, getVersion: ui.getVersion, emit: ui.emit },
       hud: { subscribe: hud.subscribe, getVersion: hud.getVersion },
       views: {
         run: () => run,

@@ -2,7 +2,8 @@ import { hudScale } from '../app/run-state.js';
 import { useEffect, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { createAccount } from '../services/auth.js';
-import type { Account } from './Account';
+import { ConflictDialog, type Account } from './Account';
+import type { CloudProgress } from '../app/useGameSession';
 import { GameHud } from './GameHud';
 import {
   Achievements,
@@ -25,8 +26,8 @@ interface GameViewProps {
 
 export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: GameViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const session = useGameSession(canvasRef, active);
   const account = useAccount();
+  const { session, cloud } = useGameSession(canvasRef, active, account);
   return (
     <>
       <canvas
@@ -40,6 +41,7 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
           <GameScreens
             session={session}
             account={account}
+            cloud={cloud}
             active={active}
             onNavigateToArena={onNavigateToArena}
             onNavigateToOpponents={onNavigateToOpponents}
@@ -70,12 +72,14 @@ function useAccount() {
 function GameScreens({
   session,
   account,
+  cloud,
   active,
   onNavigateToArena,
   onNavigateToOpponents,
 }: {
   session: Session;
   account: Account;
+  cloud: CloudProgress | null;
   active: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
@@ -116,6 +120,7 @@ function GameScreens({
       {mode === 'menu' && screen === 'menu' && (
         <MainMenu
           account={account}
+          cloud={cloud}
           hints={settings.hints}
           onNavigateToArena={onNavigateToArena}
           onNavigateToOpponents={onNavigateToOpponents}
@@ -129,6 +134,8 @@ function GameScreens({
       {mode === 'pause' && screen !== 'settings' && <PauseScreen />}
       {mode === 'end' && <EndScreen />}
       {screen === 'settings' && <Settings />}
+      {/* Never over a running fight: the choice waits for the menu, pause or results. */}
+      {cloud && mode !== 'play' && mode !== 'level' && <ConflictDialog cloud={cloud} />}
     </>
   );
 }

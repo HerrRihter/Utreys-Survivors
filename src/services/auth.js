@@ -187,6 +187,8 @@ export function createAccount({
       return state;
     },
     start,
+    // The loaded SDK for other services (cloud progress, statistics).
+    firebase: sdkOrFail,
     register,
     signIn,
     signOut,
