@@ -128,6 +128,7 @@ export const CombatSystem = {
       if (p.hp <= 0 || p.inv > 0 || protectedMove(run.state)) return;
       p.hp -= Math.max(1, e.damage - run.state.stats.armor);
       run.state.firstHurtAt ??= run.state.t;
+      run.state.lastHitBy = e.unit || e.kind || 'unknown';
       p.inv = 0.7;
       p.hurt = { elapsed: 0, duration: 0.34, flip: p.flip };
       run.state.shake = 4;

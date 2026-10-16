@@ -8,6 +8,7 @@ import { restoreRun } from '../systems/run-snapshot.js';
 import { nearestGoals, newlyDone } from './unlocks.js';
 import { layoutNodes, planEvents } from '../systems/run-layout.js';
 import { randomSeed, parseSeed, seedText } from '../core/rng.js';
+import { logOffer, logReoffer, logChoice, logEntry } from '../systems/run-log.js';
 import { maxLoad, rewardPerLevel, production, loadModifiers } from '../../data/difficulty.js';
 import { workaroundSeconds } from '../../data/enemies/nodes.js';
 
@@ -28,6 +29,7 @@ export const GameFlow = {
     weapons,
     spawning,
     snapshots,
+    runLog,
     audio,
     input,
     math,
@@ -56,6 +58,17 @@ export const GameFlow = {
       // Evolutions assembled in this run open their encyclopedia entries.
       for (const w of s.weapons || []) if (w.evolved) progression.recordEvolution(w.id);
       if (s.stats.heroEvo) progression.recordEvolution('hero_' + run.selected);
+      // The run journal: one entry per ending, with the offers made since the previous one.
+      const offers = s.offers || [];
+      runLog?.record(
+        logEntry({
+          s: { ...s, offers: offers.slice(s.offersLogged || 0) },
+          hero: run.selected,
+          win,
+          build: upgrades.build(run.selected, s),
+        }),
+      );
+      s.offersLogged = offers.length;
       if (!s.statsRecorded) {
         s.statsRecorded = true;
         progression.recordRunStats({
@@ -211,9 +224,12 @@ export const GameFlow = {
       if (run.screen === 'settings') run.screen = null;
       changed();
     }
-    function offerCards() {
+    // `change` marks the same level-up showing new cards: { reroll } or { banned: id }.
+    function offerCards(change = null) {
       run.choice = upgrades.offer(run.selected, run.state);
       run.banishArmed = false;
+      if (change) logReoffer(run.state, run.choice, change);
+      else logOffer(run.state, run.choice);
     }
     function levelUp() {
       const s = run.state;
@@ -232,6 +248,7 @@ export const GameFlow = {
       if (run.mode !== 'level' || !run.choice[i]) return;
       if (run.banishArmed) return banish(i);
       upgrades.apply(run.choice[i], run.state);
+      logChoice(run.state, run.choice[i].id, 'pick');
       closeLevel();
     }
     function closeLevel() {
@@ -251,7 +268,7 @@ export const GameFlow = {
     function reroll() {
       if (!levelReady() || !(run.state.rerolls > 0)) return;
       run.state.rerolls--;
-      offerCards();
+      offerCards({ reroll: true });
       audio.effect('ui');
       ui.emit();
     }
@@ -259,6 +276,7 @@ export const GameFlow = {
     function skip() {
       if (!levelReady() || !(run.state.skips > 0)) return;
       run.state.skips--;
+      logChoice(run.state, null, 'skip');
       closeLevel();
     }
     // Ban mode: the next card picked is removed from this run's offers.
@@ -276,7 +294,7 @@ export const GameFlow = {
       }
       run.state.banishes--;
       run.state.banned.push(card.id);
-      offerCards();
+      offerCards({ banned: card.id });
       audio.effect('ui');
       ui.emit();
     }
@@ -469,7 +487,8 @@ export const GameFlow = {
       if (snapshot.pendingLevel) {
         setMode('level');
         run.levelLock = LEVEL_LOCK;
-        offerCards();
+        // The saved offer is still open: its cards are replaced, not counted twice.
+        offerCards({});
         audio.effect('level');
       } else setMode('pause');
       snapshots.save(run);

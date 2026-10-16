@@ -431,8 +431,9 @@ export const keyLabel = (code) =>
     .replace(/^Digit/, '')
     .replace(/^Numpad/, 'Num ');
 
-export function settingsView({ run, settings, audio }) {
+export function settingsView({ run, settings, audio, runLog = null }) {
   return {
+    runLogCount: runLog ? runLog.count() : 0,
     shake: settings.shake,
     hints: settings.hints,
     damageNumbers: settings.damageNumbers,

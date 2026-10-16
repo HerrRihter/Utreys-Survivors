@@ -17,6 +17,7 @@ import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
 import { AbilitySystem } from '../systems/abilities.js';
 import { RunEvents } from '../systems/run-events.js';
+import { createRunLog } from '../systems/run-log.js';
 import { UpgradeSystem } from '../systems/upgrades.js';
 import { WeaponSystem } from '../systems/weapons.js';
 import { createCorpses } from '../systems/corpses.js';
@@ -52,6 +53,7 @@ export const GameSession = {
     const run = createRunState({ storage });
     const settings = createGameSettings({ storage });
     const snapshots = createRunSnapshots({ storage });
+    const runLog = createRunLog({ storage });
     const tips = createTips({ storage, settings, run });
     const ui = createStore(),
       hud = createStore();
@@ -104,6 +106,24 @@ export const GameSession = {
     });
     const spawning = EnemySpawning.create({ run, enemies, world, math, toast, audio });
     const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio, math });
+    // Saves the run journal as a JSON file; returns the file's text (tests read it).
+    function exportRunLog() {
+      const text = runLog.json();
+      try {
+        const blob = new window.Blob([text], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `utreys-runs-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      } catch {}
+      return text;
+    }
+    function clearRunLog() {
+      runLog.clear();
+      ui.emit();
+    }
     function activateAbility(slot) {
       const cast = abilities.activate(slot);
       if (cast) hud.emit();
@@ -140,6 +160,7 @@ export const GameSession = {
       weapons,
       spawning,
       snapshots,
+      runLog,
       audio,
       input,
       math,
@@ -309,7 +330,7 @@ export const GameSession = {
         build: () => views.buildView(read),
         levelControls: () => views.levelControlsView(read),
         hud: () => views.hudView(read),
-        settings: () => views.settingsView({ run, settings, audio }),
+        settings: () => views.settingsView({ run, settings, audio, runLog }),
       },
       commands: {
         openHeroSelect: flow.openHeroSelect,
@@ -333,6 +354,8 @@ export const GameSession = {
         startCapture: flow.startCapture,
         resetBindings: flow.resetBindings,
         setUiScale: flow.setUiScale,
+        exportRunLog,
+        clearRunLog,
         activateAbility,
         openShop: flow.openShop,
         openAchievements: flow.openAchievements,
