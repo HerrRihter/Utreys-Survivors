@@ -1,16 +1,30 @@
 {
-  "date": "2026-10-15",
-  "viewport": "1280x720",
+  "date": "2026-10-16",
+  "browser": "firefox 157.0",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "deviceScaleFactor": 2,
+  "duration": 35,
   "50 enemies": {
-    "fps": 142.4,
-    "jsMedianMs": 0.7,
-    "jsP95Ms": 1.1,
-    "jsMaxMs": 4.6
+    "fps": 60,
+    "jsMedianMs": 10,
+    "jsP95Ms": 13,
+    "jsMaxMs": 24,
+    "gapP95Ms": 16.68,
+    "gapMaxMs": 18.68,
+    "gapsOver50Ms": 0,
+    "simulatedSeconds": 35.012100000001
   },
   "300 enemies": {
-    "fps": 72.8,
-    "jsMedianMs": 2.3,
-    "jsP95Ms": 4.3,
-    "jsMaxMs": 7.4
+    "fps": 35.1,
+    "jsMedianMs": 28,
+    "jsP95Ms": 37,
+    "jsMaxMs": 52,
+    "gapP95Ms": 33.36,
+    "gapMaxMs": 50.04,
+    "gapsOver50Ms": 45,
+    "simulatedSeconds": 34.97688000000069
   }
 }

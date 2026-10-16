@@ -76,7 +76,8 @@ function createDatacenterArena(createCanvas, map = arenaDefinitions.empty) {
   // view = visible world rectangle; without it the whole floor is drawn (previews).
   function drawGround(g, view) {
     const scale = g.getTransform?.()?.a;
-    const pattern = view && scale > 0 ? groundPattern(g, Math.round(scale * 4) / 4) : null;
+    // Match the screen transform so the repeated floor does not get resampled.
+    const pattern = view && scale > 0 ? groundPattern(g, scale) : null;
     if (pattern) {
       const x0 = Math.max(0, Math.floor(view.x)),
         y0 = Math.max(0, Math.floor(view.y)),

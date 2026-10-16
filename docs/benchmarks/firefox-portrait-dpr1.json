@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-16",
+  "browser": "firefox 157.0",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "deviceScaleFactor": 1,
+  "duration": 35,
+  "cadence": "vsync",
+  "300 enemies": {
+    "fps": 48.8,
+    "jsMedianMs": 20,
+    "jsP95Ms": 25,
+    "jsMaxMs": 41,
+    "gapP95Ms": 33.36,
+    "gapMaxMs": 50.04,
+    "gapsOver50Ms": 5,
+    "simulatedSeconds": 34.97800000000079
+  }
+}

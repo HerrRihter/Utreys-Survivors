@@ -2664,3 +2664,209 @@ button:disabled {
     padding-bottom: 76px;
   }
 }
+
+/* Account row in the main menu and the sign-in / password dialogs. */
+.account-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.account-status strong {
+  color: var(--cyan);
+}
+.account-form {
+  display: grid;
+  gap: 10px;
+  width: min(400px, calc(100vw - 32px));
+  padding: 24px;
+}
+.account-form h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--cyan);
+}
+.account-tabs {
+  display: flex;
+  gap: 8px;
+}
+.account-tabs [aria-selected='true'] {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.account-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: #d0e7eb;
+}
+.account-form input {
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #06141a;
+  border: 1px solid var(--panel-border);
+  border-radius: 0;
+  min-width: 0;
+}
+.account-form input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 0;
+  border-color: var(--cyan);
+}
+.account-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.account-error {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 12px;
+  color: #ff6b81;
+}
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.account-actions .primary {
+  padding: 12px 20px;
+}
+.account-sync {
+  font-size: 11px;
+  color: var(--muted);
+}
+.account-sync[data-status='synced'] {
+  color: var(--teal);
+}
+.account-sync[data-status='offline'],
+.account-sync[data-status='conflict'] {
+  color: #ffb36b;
+}
+.conflict-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.conflict-table th,
+.conflict-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--panel-border);
+  text-align: right;
+}
+.conflict-table th:first-child {
+  text-align: left;
+  color: var(--muted);
+  font-weight: normal;
+}
+.conflict-table thead th {
+  color: var(--cyan);
+  font-size: 11px;
+}
+/* The statistics table needs more room than other dialogs; only the table scrolls. */
+.detail-dialog:has(.stats-form) {
+  max-width: min(760px, calc(100vw - 32px));
+  overflow-x: hidden;
+}
+.stats-form {
+  width: min(760px, calc(100vw - 34px));
+  min-width: 0;
+}
+.stats-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.stats-table th,
+.stats-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--panel-border);
+  text-align: right;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.stats-table tbody th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: normal;
+}
+.stats-table thead th {
+  color: var(--cyan);
+  font-size: 11px;
+  white-space: normal;
+}
+.stats-table td small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.leaders-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.leaders-choices [aria-pressed='true'] {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.leaders-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  border-top: 1px solid var(--panel-border);
+}
+.leaders-list li {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+}
+.leaders-list li.mine {
+  background: #00e5ff14;
+  color: var(--cyan);
+}
+.leaders-list .leaders-note {
+  display: block;
+  color: var(--muted);
+}
+.leaders-place {
+  color: var(--muted);
+  text-align: right;
+}
+.leaders-login {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leaders-value {
+  text-align: right;
+  white-space: nowrap;
+}
+.leaders-value small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.leaders-own {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cyan);
+}
+.run-records {
+  margin: 12px 0;
+}

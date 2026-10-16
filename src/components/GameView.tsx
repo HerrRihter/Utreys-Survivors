@@ -1,6 +1,10 @@
 import { hudScale } from '../app/run-state.js';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
+import { createAccount } from '../services/auth.js';
+import { ConflictDialog, type Account } from './Account';
+import type { CloudProgress } from '../app/useGameSession';
+import { CloudContext } from './cloud-context';
 import { GameHud } from './GameHud';
 import {
   Achievements,
@@ -23,7 +27,12 @@ interface GameViewProps {
 
 export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: GameViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const session = useGameSession(canvasRef, active);
+  const account = useAccount();
+  const { session, cloud, runStats, leaderboard } = useGameSession(canvasRef, active, account);
+  const services = useMemo(
+    () => ({ account, cloud, runStats, leaderboard }),
+    [account, cloud, runStats, leaderboard],
+  );
   return (
     <>
       <canvas
@@ -34,26 +43,50 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
       />
       {session && (
         <SessionContext.Provider value={session}>
-          <GameScreens
-            session={session}
-            active={active}
-            onNavigateToArena={onNavigateToArena}
-            onNavigateToOpponents={onNavigateToOpponents}
-          />
+          <CloudContext.Provider value={services}>
+            <GameScreens
+              session={session}
+              account={account}
+              cloud={cloud}
+              active={active}
+              onNavigateToArena={onNavigateToArena}
+              onNavigateToOpponents={onNavigateToOpponents}
+            />
+          </CloudContext.Provider>
         </SessionContext.Provider>
       )}
     </>
   );
 }
 
+// The account lives as long as the game view; the Firebase SDK loads once the menu is idle.
+function useAccount() {
+  const [account] = useState(() => createAccount());
+  useEffect(() => {
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => account.start(), { timeout: 3000 })
+      : window.setTimeout(() => account.start(), 1000);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+      account.dispose();
+    };
+  }, [account]);
+  return account;
+}
+
 // Which panel is open follows the run state: mode (menu/play/pause/level/end) and screen.
 function GameScreens({
   session,
+  account,
+  cloud,
   active,
   onNavigateToArena,
   onNavigateToOpponents,
 }: {
   session: Session;
+  account: Account;
+  cloud: CloudProgress | null;
   active: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
@@ -93,6 +126,8 @@ function GameScreens({
         )}
       {mode === 'menu' && screen === 'menu' && (
         <MainMenu
+          account={account}
+          cloud={cloud}
           hints={settings.hints}
           onNavigateToArena={onNavigateToArena}
           onNavigateToOpponents={onNavigateToOpponents}
@@ -106,6 +141,8 @@ function GameScreens({
       {mode === 'pause' && screen !== 'settings' && <PauseScreen />}
       {mode === 'end' && <EndScreen />}
       {screen === 'settings' && <Settings />}
+      {/* Never over a running fight: the choice waits for the menu, pause or results. */}
+      {cloud && mode !== 'play' && mode !== 'level' && <ConflictDialog cloud={cloud} />}
     </>
   );
 }

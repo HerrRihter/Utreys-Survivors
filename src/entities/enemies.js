@@ -2,7 +2,7 @@ import { unitDefinitions } from '../../data/enemies/units.js';
 import { neonStroke } from '../rendering/neon.js';
 import { clientEmblems, drawClientEmblem } from '../rendering/art/client-emblems.js';
 import { enemyArt } from '../rendering/art/enemy-art.js';
-import { browserCanvas } from '../rendering/offscreen.js';
+import { browserCanvas, trimCanvas } from '../rendering/offscreen.js';
 
 // Enemy data plus rendering with per-device-ratio sprite caches. `createCanvas` makes the
 // offscreen canvases; without one (headless tests) everything is painted directly.
@@ -10,17 +10,19 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
   const units = unitDefinitions;
   const labels = new Map();
 
-  function drawLabel(g, u, x, y) {
-    let label = labels.get(u);
+  function drawLabel(g, u, x, y, ratio = 2) {
+    const key = u.name + '|' + u.color + '@' + ratio;
+    let label = labels.get(key);
     const canvas = label ? null : createCanvas(1, 1),
       ctx = canvas?.getContext('2d');
     if (!label && ctx) {
+      if (labels.size > 600) labels.clear();
       ctx.font = 'bold 11px monospace';
       const width = Math.ceil(ctx.measureText(u.name).width) + 8,
         height = 20;
-      canvas.width = width * 2;
-      canvas.height = height * 2;
-      ctx.scale(2, 2);
+      canvas.width = Math.ceil(width * ratio);
+      canvas.height = Math.ceil(height * ratio);
+      ctx.scale(ratio, ratio);
       ctx.fillStyle = '#0b1612e0';
       ctx.fillRect(0, 0, width, height);
       ctx.strokeStyle = u.color;
@@ -31,10 +33,16 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
       ctx.fillStyle = u.color;
       ctx.fillText(u.name, width / 2, 14);
       label = { canvas, width, height };
-      labels.set(u, label);
+      labels.set(key, label);
     }
     if (label) {
-      g.drawImage(label.canvas, x - label.width / 2, y - 14, label.width, label.height);
+      g.drawImage(
+        label.canvas,
+        x - label.width / 2,
+        y - 14,
+        label.canvas.width / ratio,
+        label.canvas.height / ratio,
+      );
     } else {
       g.fillStyle = u.color;
       g.font = 'bold 10px monospace';
@@ -145,10 +153,10 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
   }
   function cachedSprite(e, u, ratio) {
     const key = spriteKey(e, u) + '@' + ratio;
-    let canvas = sprites.get(key);
-    if (!canvas) {
+    let sprite = sprites.get(key);
+    if (!sprite) {
       if (sprites.size > 600) sprites.clear();
-      canvas = createCanvas(
+      const canvas = createCanvas(
         Math.ceil(spriteBox.width * ratio),
         Math.ceil(spriteBox.height * ratio),
       );
@@ -157,9 +165,11 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
       c.scale(ratio, ratio);
       c.translate(spriteBox.left, spriteBox.top);
       paintBody(c, e, u);
-      sprites.set(key, canvas);
+      // Crop in backing pixels; the reciprocal ratio below preserves their positions.
+      sprite = trimCanvas(canvas, createCanvas);
+      sprites.set(key, sprite);
     }
-    return canvas;
+    return sprite;
   }
 
   function draw(g, e) {
@@ -167,21 +177,30 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     if (!u) return;
     const x = Math.round(e.x),
       y = Math.round(e.y);
-    // Cache at the target's device-pixel scale so drawImage copies pixels 1:1.
+    // Match the actual transform, including portrait zoom and elite scaling.
+    // Quantizing it forces Firefox to resample every sprite on every frame.
     const scale = g.getTransform?.()?.a;
-    const ratio = scale > 0 ? Math.round(scale * 4) / 4 : 0;
+    const ratio = scale > 0 ? scale : 0;
     const sprite = ratio ? cachedSprite(e, u, ratio) : null;
     g.save();
     g.translate(x, y);
-    if (sprite)
-      g.drawImage(sprite, -spriteBox.left, -spriteBox.top, spriteBox.width, spriteBox.height);
-    else paintBody(g, e, u);
+    if (sprite) {
+      const sx = 1 / ratio,
+        sy = 1 / ratio;
+      g.drawImage(
+        sprite.canvas,
+        -spriteBox.left + sprite.x * sx,
+        -spriteBox.top + sprite.y * sy,
+        sprite.canvas.width * sx,
+        sprite.canvas.height * sy,
+      );
+    } else paintBody(g, e, u);
     paintLive(g, e, u);
     g.restore();
 
     // Draw unit name label above
     const labelOffset = clientEmblems[e.unit] ? Math.max(u.r + 28, 60) : u.r + 28;
-    drawLabel(g, u, e.x, e.y - labelOffset);
+    drawLabel(g, u, e.x, e.y - labelOffset, ratio || 2);
   }
 
   return { units, mitigation, telegraph, draw, projectile };
