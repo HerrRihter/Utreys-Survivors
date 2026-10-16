@@ -89,7 +89,7 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
 
   // Death ends production with a per-hero, per-level record.
   s.kills += 7;
-  s.p.hp = 0;
+  s.p.hp = -1e6;
   game.update(0.01);
   assert.equal(game.mode, 'end');
   const result = game.views.run().result;

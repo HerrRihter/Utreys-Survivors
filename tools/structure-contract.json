@@ -2,17 +2,7 @@
   "directories": {
     "assets": ["runtime", "source"],
     "assets/runtime": ["audio"],
-    "src": [
-      "app",
-      "core",
-      "entities",
-      "systems",
-      "world",
-      "rendering",
-      "ui",
-      "pages",
-      "components"
-    ],
+    "src": ["app", "core", "entities", "systems", "world", "rendering", "ui", "components"],
     "data": ["animations", "characters", "enemies", "maps"]
   },
   "runtimeAssetPatterns": [
