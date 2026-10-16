@@ -158,7 +158,7 @@ export function createAccount({
     if (error) throw fail(error);
     const sdk = await sdkOrFail();
     const user = sdk.auth.currentUser;
-    if (!user) throw fail('Сначала войдите');
+    if (!user) throw fail('Сначала войди');
     try {
       const credential = sdk.authApi.EmailAuthProvider.credential(user.email, current);
       await sdk.authApi.reauthenticateWithCredential(user, credential);

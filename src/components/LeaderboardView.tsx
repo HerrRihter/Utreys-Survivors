@@ -134,9 +134,7 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
         <ol className="leaders-list" id="leadersList" aria-busy={!table.rows && !table.error}>
           {table.error && <li className="leaders-note">Нет связи с сервером</li>}
           {!table.error && !table.rows && <li className="leaders-note">Загрузка…</li>}
-          {table.rows?.length === 0 && (
-            <li className="leaders-note">Пока никого — будьте первым</li>
-          )}
+          {table.rows?.length === 0 && <li className="leaders-note">Пока никого — будь первым</li>}
           {table.rows?.map((row) => (
             <li key={row.uid} className={row.uid === uid ? 'mine' : undefined}>
               <span className="leaders-place">{row.place}</span>
@@ -148,12 +146,12 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
             </li>
           ))}
         </ol>
-        {!uid && <p className="account-hint">Войдите, чтобы попасть в таблицу.</p>}
+        {!uid && <p className="account-hint">Войди, чтобы попасть в таблицу.</p>}
         {uid && own && !inTop && (
           <p className="leaders-own" id="leadersOwn">
             {own.value
-              ? `Вы: ${placeText(own.place)} · ${formatStat(metric, own.value)}`
-              : 'Вас пока нет в этой таблице'}
+              ? `Ты: ${placeText(own.place)} · ${formatStat(metric, own.value)}`
+              : 'Тебя пока нет в этой таблице'}
           </p>
         )}
         <div className="account-actions">

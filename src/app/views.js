@@ -31,10 +31,35 @@ function unclaimedAchievements(progression, best) {
   ).length;
 }
 
+// What the player has opened so far, counted from the data so it never goes stale.
+function collection(progression, heroes) {
+  const heroIds = Object.keys(heroes.defs),
+    weaponIds = Object.keys(weaponDefinitions),
+    evolutions = [...weaponIds, ...heroIds.map((id) => 'hero_' + id)];
+  return [
+    {
+      label: 'Герои',
+      have: heroIds.filter((id) => progression.owned(id)).length,
+      total: heroIds.length,
+    },
+    {
+      label: 'Оружие',
+      have: weaponIds.filter((id) => progression.weaponUnlocked(id)).length,
+      total: weaponIds.length,
+    },
+    {
+      label: 'Эволюции',
+      have: evolutions.filter((id) => progression.evolutionSeen(id)).length,
+      total: evolutions.length,
+    },
+  ];
+}
+
 export function menuView({ run, progression, heroes, snapshot = null }) {
   const unclaimed = unclaimedAchievements(progression, run.best);
   const hero = snapshot && heroes?.defs[snapshot.hero];
   return {
+    collection: collection(progression, heroes),
     resume: hero ? `${hero.name} · ${clock(snapshot.state.t)} · ур. ${snapshot.state.level}` : null,
     wallet: 'КОДЫ: ' + progression.codes,
     record: run.best.time
@@ -49,15 +74,17 @@ export function menuView({ run, progression, heroes, snapshot = null }) {
 }
 
 export function heroSelectView({ run, progression, heroes, enemies }) {
-  const owned = Object.keys(heroes.defs).filter((id) => progression.owned(id));
   const hero = heroes.defs[run.pendingHero],
     passive = heroPassives[run.pendingHero];
   return {
-    heroes: owned.map((id) => ({
+    // Locked heroes stay in the list with their price, so the player sees what to save for.
+    heroes: Object.keys(heroes.defs).map((id) => ({
       id,
       name: heroes.defs[id].name,
       weapon: heroes.defs[id].weapon,
       role: heroPassives[id]?.role || '',
+      locked: !progression.owned(id),
+      price: progression.prices[id] || 0,
     })),
     pending: run.pendingHero,
     role: passive ? `${passive.role.toUpperCase()} · ${passive.roleDesc}` : '',
@@ -165,7 +192,7 @@ export function shopView({ progression, heroes }) {
     refund,
     refundLabel: refund ? `СБРОСИТЬ УЛУЧШЕНИЯ · +${refund} кодов` : 'Нечего сбрасывать',
     wallet:
-      `У вас ${codes} кодов · до следующей награды: ${10 - (progression.data.kills % 10)} побед` +
+      `У тебя ${codes} кодов · до следующей награды: ${10 - (progression.data.kills % 10)} побед` +
       (progression.persistent ? '' : ' · Не удалось сохранить прогресс. Не закрывай игру.'),
   };
 }
@@ -185,7 +212,7 @@ export function encyclopediaView({ progression, heroes, upgrades }) {
     const discovered = progression.evolutionSeen(id);
     return {
       name: discovered ? evo.name : '???',
-      desc: discovered ? evo.desc : 'Соберите эволюцию, чтобы узнать её эффект.',
+      desc: discovered ? evo.desc : 'Собери эволюцию, чтобы узнать её эффект.',
       recipe,
       discovered,
     };
@@ -384,7 +411,7 @@ function controlsHint(b = defaultBindings) {
   const k = (action) => keyLabel(b[action]);
   return (
     `${k('up')}${k('left')}${k('down')}${k('right')} / СТРЕЛКИ — ПЕРЕМЕЩЕНИЕ · АТАКА И ОРУЖИЕ — АВТОМАТИЧЕСКИ · ` +
-    `${k('abilityQ')} / ${k('abilityE')} — УМЕНИЯ · ESC — ПАУЗА · УЗЛЫ: УБЕЙТЕ БАГА ИЛИ СТОЙТЕ В КРУГЕ 6 С`
+    `${k('abilityQ')} / ${k('abilityE')} — УМЕНИЯ · ESC — ПАУЗА · УЗЛЫ: УБЕЙ БАГА ИЛИ СТОЙ В КРУГЕ 6 С`
   );
 }
 

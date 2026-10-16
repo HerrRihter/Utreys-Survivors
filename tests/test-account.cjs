@@ -12,7 +12,7 @@ const { createAccount } = require('../src/services/auth.js');
 assert.equal(loginError('Вася'), null);
 assert.equal(loginError('vasya_2'), null);
 assert.equal(loginError('Алёна-1'), null);
-assert.equal(loginError('Вaся'), 'Не смешивайте кириллицу и латиницу', 'Latin «a» in Cyrillic');
+assert.equal(loginError('Вaся'), 'Не смешивай кириллицу и латиницу', 'Latin «a» in Cyrillic');
 assert.match(loginError('ab'), /от 3 до 16/);
 assert.match(loginError('абвгдеёжзийклмнопр'), /от 3 до 16/);
 assert.equal(loginError('абвгдеёжзийклмно'), null, '16 Cyrillic letters fit');
@@ -30,7 +30,7 @@ assert.equal(passwordError('123456', '123457'), 'Пароли не совпад�
 assert.equal(passwordError('123456', '123456'), null);
 assert.equal(authErrorText({ code: 'auth/email-already-in-use' }), 'Логин занят');
 assert.equal(authErrorText({ code: 'auth/invalid-credential' }), 'Неверный логин или пароль');
-assert.equal(authErrorText({ code: 'whatever' }), 'Не получилось, попробуйте ещё раз');
+assert.equal(authErrorText({ code: 'whatever' }), 'Не получилось, попробуй ещё раз');
 
 // A fake Firebase with the SDK surface auth.js uses: accounts by address, documents by path.
 function fakeFirebase({ failProfile = false } = {}) {
@@ -121,7 +121,7 @@ const make = (fake) =>
   account.start();
   await settle();
   assert.equal(account.state.status, 'guest');
-  await assert.rejects(account.register('Вaся', '123456', '123456'), /Не смешивайте/);
+  await assert.rejects(account.register('Вaся', '123456', '123456'), /Не смешивай/);
   await assert.rejects(account.register('Алёна', '123456', '654321'), /Пароли не совпадают/);
   await account.register('Алёна', '123456', '123456');
   await settle();

@@ -24,7 +24,7 @@ export function drawNodes(g, nodes) {
     g.font = '11px monospace';
     g.fillText(
       guarded
-        ? 'Уничтожьте баг или стойте в круге 6 с'
+        ? 'Уничтожь баг или стой в круге 6 с'
         : node.status === 'destroyed'
           ? 'Баг уничтожен'
           : 'Воркэраунд найден',
