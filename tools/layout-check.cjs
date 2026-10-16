@@ -90,6 +90,20 @@ const screens = [
     },
   },
   {
+    name: 'bestiary-page',
+    open: () =>
+      [...document.querySelectorAll('button')]
+        .find((b) => b.textContent.trim() === 'ВРАГИ И КЛИЕНТЫ')
+        .click(),
+  },
+  {
+    name: 'arena-page',
+    open: () =>
+      [...document.querySelectorAll('button')]
+        .find((b) => b.textContent.trim() === 'СЕРВЕРНЫЙ КОНТУР')
+        .click(),
+  },
+  {
     name: 'result',
     open: (s) => {
       s.start();
@@ -155,7 +169,17 @@ function inspect({ minTouch, touch, hud, maxCover, maxCoverHero }) {
     const hit = document.elementFromPoint(x, y);
     if (hit && hit !== el && !el.contains(hit))
       problems.push(`${name(el)} перекрыт элементом ${name(hit)}`);
-    if (touch && !el.disabled && el.type !== 'range' && (r.width < minTouch || r.height < minTouch))
+    // A checkbox inside a label is tapped through the whole label.
+    const target =
+      (el.type === 'checkbox' || el.type === 'radio') && el.closest('label')
+        ? el.closest('label').getBoundingClientRect()
+        : r;
+    if (
+      touch &&
+      !el.disabled &&
+      el.type !== 'range' &&
+      (target.width < minTouch || target.height < minTouch)
+    )
       problems.push(`${name(el)} мал для касания: ${Math.round(r.width)}×${Math.round(r.height)}`);
     if (touch && el.type === 'range' && r.height < minTouch / 2)
       problems.push(`${name(el)} ползунок ниже ${minTouch / 2} px`);
@@ -267,6 +291,28 @@ function inspect({ minTouch, touch, hud, maxCover, maxCoverHero }) {
       problems.push(
         `интерфейс закрывает ${coverage.hero}% зоны вокруг героя (норма до ${maxCoverHero * 100}%)`,
       );
+  }
+  // Every screen offers a reachable sound toggle.
+  const sound = [...document.querySelectorAll('[aria-label="Переключить звук"]')].filter(visible);
+  if (!sound.length) problems.push('нет кнопки звука');
+  // One way back: two back/close/done buttons on one screen duplicate each other.
+  const back = controls.filter((el) =>
+    /^(←|назад|в меню|готово|закрыть)/i.test((el.textContent || '').trim()),
+  );
+  if (back.length > 1)
+    problems.push('несколько кнопок «назад»: ' + back.map((el) => name(el)).join(', '));
+  // Without a keyboard, keyboard hints and key settings are noise.
+  if (touch) {
+    const keyText =
+      /WASD|Нажми \d|\[\s?\d\s?\]|\[[A-ZА-Я]\]|\bEsc\b|горяч\S* клавиш|клавиш[уи] действия|^[QE] · /;
+    const walker = document.createTreeWalker(document.body, window.NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const text = n.textContent.trim();
+      if (!text || !keyText.test(text) || !visible(n.parentElement)) continue;
+      problems.push(`подсказка про клавиатуру на сенсорном экране: «${text.slice(0, 50)}»`);
+    }
+    if (document.querySelector('[id^="bind-"]'))
+      problems.push('настройка клавиш на сенсорном экране');
   }
   window.scrollTo(0, 0);
   return { problems, warnings, coverage };

@@ -51,12 +51,21 @@ export const GameSession = {
 
     const math = createMath(Math);
     const run = createRunState({ storage });
+    // No mouse and no hover: a phone or tablet. Keyboard hints and key settings are hidden.
+    const touchQuery = window.matchMedia?.('(hover: none) and (pointer: coarse)');
+    run.touchOnly = !!touchQuery?.matches;
     const settings = createGameSettings({ storage });
     const snapshots = createRunSnapshots({ storage });
     const runLog = createRunLog({ storage });
     const tips = createTips({ storage, settings, run });
     const ui = createStore(),
       hud = createStore();
+    if (touchQuery)
+      events.listen(touchQuery, 'change', () => {
+        run.touchOnly = touchQuery.matches;
+        ui.emit();
+        hud.emit();
+      });
     const arenas = createArenas({ createCanvas });
     // Resolved once per map change: the simulation reads it hundreds of times per frame.
     const world = {
@@ -295,7 +304,9 @@ export const GameSession = {
       run() {
         if (!disposed) loop.run();
       },
-      stop: loop.stop,
+      stop: () => loop.stop(),
+      // Hidden behind another page (arena, bestiary): no frames, music continues.
+      sleep: () => loop.stop(true),
       dispose,
       keys: run.keys,
       get state() {

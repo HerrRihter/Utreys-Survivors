@@ -7,7 +7,7 @@ const TIP_SECONDS = 7;
 
 export const tipTexts = {
   move: (keys) =>
-    `${keys} или стрелки — движение. Атака и оружие срабатывают сами. Собирай опыт — на новом уровне выбирай улучшение.`,
+    `${keys} — движение. Атака и оружие срабатывают сами. Собирай опыт — на новом уровне выбирай улучшение.`,
   node: () =>
     'Узел компонента. Убей бага — получишь архив для эволюции оружия. Или стой в круге 6 с без урона — найдёшь воркэраунд.',
   evolve: (name) =>
@@ -36,11 +36,10 @@ export function createTips({ storage, settings, run }) {
     const s = run.state;
     if (!s) return false;
     const b = settings.bindings || {};
-    if (
-      s.t > 0.5 &&
-      show('move', tipTexts.move([b.up, b.left, b.down, b.right].map(keyName).join('')))
-    )
-      return true;
+    const moveKeys = run.touchOnly
+      ? 'Джойстик справа внизу'
+      : [b.up, b.left, b.down, b.right].map(keyName).join('') + ' или стрелки';
+    if (s.t > 0.5 && show('move', tipTexts.move(moveKeys))) return true;
     const node = s.nodes.find(
       (n) => n.status === 'guarded' && Math.hypot(n.x - s.p.x, n.y - s.p.y) < 260,
     );

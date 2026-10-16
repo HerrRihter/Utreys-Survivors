@@ -2,7 +2,16 @@ import { hudScale } from '../app/run-state.js';
 import { useEffect, useRef } from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { GameHud } from './GameHud';
-import { Achievements, Encyclopedia, HeroSelect, MainMenu, Settings, Shop } from './GameMenus';
+import {
+  Achievements,
+  Encyclopedia,
+  HeroSelect,
+  MainMenu,
+  Settings,
+  Shop,
+  SoundButton,
+} from './GameMenus';
+import { createPortal } from 'react-dom';
 import { EndScreen, LevelUpScreen, PauseScreen } from './GameRunScreens';
 import { SessionContext, useUiVersion, type Session } from './session';
 
@@ -27,6 +36,7 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
         <SessionContext.Provider value={session}>
           <GameScreens
             session={session}
+            active={active}
             onNavigateToArena={onNavigateToArena}
             onNavigateToOpponents={onNavigateToOpponents}
           />
@@ -39,10 +49,12 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
 // Which panel is open follows the run state: mode (menu/play/pause/level/end) and screen.
 function GameScreens({
   session,
+  active,
   onNavigateToArena,
   onNavigateToOpponents,
 }: {
   session: Session;
+  active: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
 }) {
@@ -71,6 +83,14 @@ function GameScreens({
   return (
     <>
       <GameHud soundEnabled={settings.enabled} />
+      {/* The game view is hidden behind the arena or bestiary page: keep the sound toggle. */}
+      {!active &&
+        createPortal(
+          <div className="view-sound">
+            <SoundButton id="viewSound" enabled={settings.enabled} />
+          </div>,
+          document.body,
+        )}
       {mode === 'menu' && screen === 'menu' && (
         <MainMenu
           hints={settings.hints}
@@ -83,7 +103,7 @@ function GameScreens({
       {mode === 'menu' && screen === 'achievements' && <Achievements />}
       {mode === 'menu' && screen === 'encyclopedia' && <Encyclopedia />}
       {mode === 'level' && <LevelUpScreen hints={settings.hints} />}
-      {mode === 'pause' && screen !== 'settings' && <PauseScreen soundEnabled={settings.enabled} />}
+      {mode === 'pause' && screen !== 'settings' && <PauseScreen />}
       {mode === 'end' && <EndScreen />}
       {screen === 'settings' && <Settings />}
     </>

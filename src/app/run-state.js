@@ -19,7 +19,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
  *   selectedMap: string, selectedLoad: number, seedInput: string,
- *   nextSeed: number | null, choice: UpgradeChoice[], result: RunResult | null,
+ *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], result: RunResult | null,
  *   best: { kills: number, time: number }, toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
@@ -46,6 +46,7 @@ export function createRunState({ storage }) {
     selectedMap: 'empty',
     selectedLoad: 1, // load level for the next run, clamped to what the hero has opened
     seedInput: '', // seed typed in hero select; empty means a random one
+    touchOnly: false, // a touch device without mouse or keyboard (set by the session)
     nextSeed: null, // seed for the next start (typed, repeated or resumed)
     choice: [],
     result: null, // { win, ... } after a run ends

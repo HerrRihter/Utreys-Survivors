@@ -129,8 +129,7 @@ export function MainMenu({
         <GoalList goals={view.goals} title="Ближайшие открытия" />
         {hints && (
           <div id="menuHint" className="footer">
-            WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · сенсорный
-            джойстик на мобильных
+            {view.hint}
           </div>
         )}
       </main>
@@ -660,7 +659,7 @@ export function Settings() {
             ← НАЗАД
           </button>
         </div>
-        <p>Звук, интерфейс и клавиши.</p>
+        <p>{view.keyboard ? 'Звук, интерфейс и клавиши.' : 'Звук и интерфейс.'}</p>
         <div className="settings-grid">
           <div className="settings-card">
             <h3>♫ Звук</h3>
@@ -682,7 +681,11 @@ export function Settings() {
             />
             <SettingRow
               title="Подсказки управления"
-              note="Горячие клавиши внизу экрана и советы первого забега"
+              note={
+                view.keyboard
+                  ? 'Горячие клавиши внизу экрана и советы первого забега'
+                  : 'Советы первого забега и пояснения на экранах'
+              }
               id="settingHints"
               on={view.hints}
               onClick={() => commands.toggleSetting('hints')}
@@ -744,44 +747,40 @@ export function Settings() {
               </span>
             </div>
           </div>
-          <div className="settings-card settings-keys">
-            <h3>Управление</h3>
-            <p className="settings-note">
-              Нажми на клавишу действия, затем новую клавишу. Esc отменяет. Стрелки всегда двигают
-              героя, Esc всегда ставит паузу.
-            </p>
-            {view.bindings.map((binding: { action: string; label: string; key: string }) => (
-              <div key={binding.action} className="settings-row">
-                <span>{binding.label}</span>
-                <button
-                  id={'bind-' + binding.action}
-                  className={'small key-button' + (view.capture === binding.action ? ' armed' : '')}
-                  type="button"
-                  onClick={() => commands.startCapture(binding.action)}
-                >
-                  {view.capture === binding.action ? 'НАЖМИТЕ КЛАВИШУ…' : binding.key}
-                </button>
-              </div>
-            ))}
-            <button
-              id="resetBindings"
-              className="small"
-              type="button"
-              onClick={commands.resetBindings}
-            >
-              СБРОСИТЬ КЛАВИШИ
-            </button>
-          </div>
-        </div>
-        <div style={{ marginTop: '24px', textAlign: 'right' }}>
-          <button
-            id="settingsBack"
-            className="primary"
-            style={primary}
-            onClick={commands.closeSettings}
-          >
-            ГОТОВО →
-          </button>
+          {view.keyboard && (
+            <details className="settings-card settings-keys">
+              <summary>
+                <h3>Управление с клавиатуры</h3>
+              </summary>
+              <p className="settings-note">
+                Нажми на клавишу действия, затем новую клавишу. Esc отменяет. Стрелки всегда двигают
+                героя, Esc всегда ставит паузу.
+              </p>
+              {view.bindings.map((binding: { action: string; label: string; key: string }) => (
+                <div key={binding.action} className="settings-row">
+                  <span>{binding.label}</span>
+                  <button
+                    id={'bind-' + binding.action}
+                    className={
+                      'small key-button' + (view.capture === binding.action ? ' armed' : '')
+                    }
+                    type="button"
+                    onClick={() => commands.startCapture(binding.action)}
+                  >
+                    {view.capture === binding.action ? 'НАЖМИТЕ КЛАВИШУ…' : binding.key}
+                  </button>
+                </div>
+              ))}
+              <button
+                id="resetBindings"
+                className="small"
+                type="button"
+                onClick={commands.resetBindings}
+              >
+                СБРОСИТЬ КЛАВИШИ
+              </button>
+            </details>
+          )}
         </div>
       </section>
     </Overlay>

@@ -1,5 +1,5 @@
 import { Overlay } from './Overlay';
-import { SoundButton, GoalList } from './GameMenus';
+import { GoalList } from './GameMenus';
 import { useSession } from './session';
 
 const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
@@ -85,7 +85,7 @@ export function BuildPanel({ build, detailed }: { build: Build | null; detailed:
   );
 }
 
-export function PauseScreen({ soundEnabled }: { soundEnabled: boolean }) {
+export function PauseScreen() {
   const session = useSession();
   const { commands } = session;
   const build = session.views.build();
@@ -100,7 +100,6 @@ export function PauseScreen({ soundEnabled }: { soundEnabled: boolean }) {
         <button id="resume" className="primary" style={primary} onClick={commands.pause}>
           ПРОДОЛЖИТЬ →
         </button>
-        <SoundButton id="pauseSound" enabled={soundEnabled} />
         <button
           id="pauseSettings"
           className="small"
@@ -156,7 +155,7 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
                 {card.detail ? ' · ' + card.detail : ''}
               </span>
               <span>{card.desc}</span>
-              <span className="upgrade-key">[ {i + 1} ]</span>
+              {controls?.keyboard !== false && <span className="upgrade-key">[ {i + 1} ]</span>}
             </button>
           ))}
         </div>
@@ -168,7 +167,8 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
               disabled={locked || controls.rerolls < 1}
               onClick={commands.reroll}
             >
-              РЕРОЛЛ · {controls.rerolls} [{controls.keys.reroll}]
+              РЕРОЛЛ · {controls.rerolls}
+              {controls.keys && ` [${controls.keys.reroll}]`}
             </button>
             <button
               id="banish"
@@ -177,7 +177,8 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
               disabled={locked || controls.banishes < 1}
               onClick={commands.armBanish}
             >
-              БАН · {controls.banishes} [{controls.keys.banish}]
+              БАН · {controls.banishes}
+              {controls.keys && ` [${controls.keys.banish}]`}
             </button>
             <button
               id="skip"
@@ -185,14 +186,15 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
               disabled={locked || controls.skips < 1}
               onClick={commands.skip}
             >
-              ПРОПУСТИТЬ · {controls.skips} [{controls.keys.skip}]
+              ПРОПУСТИТЬ · {controls.skips}
+              {controls.keys && ` [${controls.keys.skip}]`}
             </button>
           </div>
         )}
         {hints && (
           <div id="levelupHint" className="footer">
-            Нажми 1, 2, 3 или 4 · одно из предложений всегда оружие · оружие 6 ур. + нужная пассивка
-            эволюционирует от архива бага
+            {controls?.keyboard !== false && 'Нажми 1, 2, 3 или 4 · '}одно из предложений всегда
+            оружие · оружие 6 ур. + нужная пассивка эволюционирует от архива бага
           </div>
         )}
       </div>

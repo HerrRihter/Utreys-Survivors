@@ -42,6 +42,9 @@ export function menuView({ run, progression, heroes, snapshot = null }) {
       : 'Лучшее время появится после первого забега.',
     achievementsLabel: unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ',
     goals: nearestGoals(progression, run.best, 3),
+    hint: run.touchOnly
+      ? 'Джойстик справа внизу — движение · атака и оружие срабатывают сами · умения — кнопки слева внизу'
+      : 'WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · Q / E — умения',
   };
 }
 
@@ -366,7 +369,7 @@ function abilityButtons(run) {
   return (s.abilities || []).slice(0, 2).map((a, i) => {
     const status = a.left > 0 ? 'Активно' : a.cd > 0 ? Math.ceil(a.cd) + ' с' : 'Готово';
     return {
-      label: `${i ? 'E' : 'Q'} · ${a.name} · ${abilityRank(s, a.id)}/${abilityUpgradeMax}\n${
+      label: `${run.touchOnly ? '' : (i ? 'E' : 'Q') + ' · '}${a.name} · ${abilityRank(s, a.id)}/${abilityUpgradeMax}\n${
         a.left > 0 ? 'Активно ' + a.left.toFixed(1) + ' с' : status
       }`,
       name: a.name,
@@ -414,7 +417,8 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
       : null,
     abilities: abilityButtons(run),
     showAbilities: run.mode === 'play',
-    showPause: run.mode !== 'end',
+    // Pause only means something during play; the stick is shown with it.
+    showPause: run.mode === 'play',
     showHint: settings.hints,
     hint: controlsHint(settings.bindings),
     stick: run.stickView,
@@ -433,6 +437,8 @@ export const keyLabel = (code) =>
 
 export function settingsView({ run, settings, audio, runLog = null }) {
   return {
+    // Key bindings and keyboard hints only make sense with a keyboard.
+    keyboard: !run.touchOnly,
     runLogCount: runLog ? runLog.count() : 0,
     shake: settings.shake,
     hints: settings.hints,
@@ -459,6 +465,9 @@ export function levelControlsView({ run, settings }) {
     skips: s.skips || 0,
     banishes: s.banishes || 0,
     banishArmed: !!run.banishArmed,
-    keys: { reroll: keyLabel(b.reroll), skip: keyLabel(b.skip), banish: keyLabel(b.banish) },
+    keyboard: !run.touchOnly,
+    keys: run.touchOnly
+      ? null
+      : { reroll: keyLabel(b.reroll), skip: keyLabel(b.skip), banish: keyLabel(b.banish) },
   };
 }

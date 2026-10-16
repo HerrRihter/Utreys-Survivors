@@ -232,7 +232,8 @@ button:focus-visible {
   bottom: 20px;
   display: flex;
   gap: 8px;
-  z-index: 35;
+  /* Above every screen: the sound toggle is always reachable. */
+  z-index: 55;
   align-items: center;
 }
 .small {
@@ -2556,7 +2557,7 @@ button:disabled {
     margin: 0 0 6px;
   }
   #levelup .cards {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 6px;
     margin: 6px 0;
   }
@@ -2580,5 +2581,58 @@ button:disabled {
   #toast {
     top: auto;
     bottom: calc(max(16px, env(safe-area-inset-bottom)) + 190px);
+  }
+}
+
+/* Sound toggle on the arena and bestiary pages, next to their navigation. */
+.view-sound {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 61;
+}
+/* Collapsible keyboard settings */
+.settings-keys > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+.settings-keys > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-keys > summary h3 {
+  margin: 0;
+}
+.settings-keys > summary::after {
+  content: '▸ ПОКАЗАТЬ';
+  color: var(--cyan);
+  font-size: 11px;
+}
+.settings-keys[open] > summary::after {
+  content: '▾ СКРЫТЬ';
+}
+
+/* Media rules above lower .actions; the corner sound toggle must stay over every screen. */
+#actions.actions {
+  z-index: 55;
+}
+/* Room for the corner buttons: screens never put their own controls under them. */
+@media (pointer: coarse), (max-width: 700px) {
+  .overlay {
+    padding-top: max(64px, calc(env(safe-area-inset-top) + 56px));
+  }
+  .view-navigation {
+    max-width: calc(100vw - 32px - 56px);
+  }
+  label:has(> input[type='checkbox']) {
+    min-height: 44px;
+  }
+}
+@media (pointer: fine) and (min-width: 701px) {
+  .overlay {
+    padding-bottom: 76px;
   }
 }

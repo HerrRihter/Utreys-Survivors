@@ -13,11 +13,8 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
   const run = session.views.run();
   const { commands } = session;
   const stick = hud?.stick;
-  // A modal screen covers the corner buttons: they leave the tab order until it closes.
-  const covered =
-    ['level', 'pause', 'end'].includes(run.mode) ||
-    run.screen === 'settings' ||
-    (run.mode === 'menu' && !!run.screen && run.screen !== 'menu');
+  // The corner sound button stays above every screen; settings have their own sound toggle.
+  const ownSound = run.screen === 'settings';
   return (
     <>
       <div id="hud" className={hidden(!!hud, 'hud')}>
@@ -63,8 +60,8 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
         {hud?.hint}
       </div>
 
-      <div id="actions" className="actions" inert={covered}>
-        <SoundButton id="sound" enabled={soundEnabled} />
+      <div id="actions" className="actions">
+        {!ownSound && <SoundButton id="sound" enabled={soundEnabled} />}
         <button
           id="pause"
           className={hidden(!!hud?.showPause, 'small')}
