@@ -82,6 +82,28 @@ button:focus-visible {
   letter-spacing: 2px;
   margin: 23px 0 30px;
 }
+.rule.collection {
+  gap: 1em;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #9fc3cc;
+  text-align: left;
+  text-transform: uppercase;
+}
+.rule.collection > span {
+  white-space: nowrap;
+}
+.rule.collection > span > span {
+  margin-right: 1em;
+}
+.rule.collection b {
+  color: var(--cyan);
+}
+.rule.collection:hover {
+  color: #d8f6fb;
+}
 .heroes {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1216,6 +1238,24 @@ button:disabled {
   color: #f7ce70;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+.run-hero.locked {
+  opacity: 1;
+  border-style: dashed;
+  background: #0b1d22;
+}
+.run-hero.locked:hover {
+  transform: none;
+  border-color: #1c4b56;
+}
+.run-hero.locked canvas {
+  filter: grayscale(1) brightness(0.5);
+}
+.run-hero.locked strong {
+  color: #6f8f97;
+}
+.run-hero small.run-hero-price {
+  color: #8aa3aa;
 }
 .run-hero-role-line {
   display: block;

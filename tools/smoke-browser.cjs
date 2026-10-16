@@ -148,7 +148,7 @@ const assets = require('./active-assets.json');
           'focus returns to trigger',
         );
         await page.getByRole('button', { name: '← В игру', exact: true }).click();
-        await page.getByRole('button', { name: 'СЕРВЕРНЫЙ КОНТУР', exact: true }).click();
+        await page.getByRole('button', { name: 'КАРТА', exact: true }).click();
         await page.getByRole('button', { name: '← В игру', exact: true }).click();
         await page.reload();
         await page.locator('#settingsOpen').click();

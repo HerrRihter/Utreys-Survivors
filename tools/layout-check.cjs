@@ -100,7 +100,7 @@ const screens = [
     name: 'arena-page',
     open: () =>
       [...document.querySelectorAll('button')]
-        .find((b) => b.textContent.trim() === 'СЕРВЕРНЫЙ КОНТУР')
+        .find((b) => b.textContent.trim() === 'КАРТА')
         .click(),
   },
   {

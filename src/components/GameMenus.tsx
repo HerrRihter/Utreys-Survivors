@@ -77,14 +77,23 @@ export function MainMenu({
         </h1>
         <p className="intro">
           Стресс-тест ядра Utrace в условиях пиковой нагрузки. Обрабатывай миллионы кодов
-          маркировки, выдерживай наплыв запросов от клиентов (Пепси, Инбев, Марс) и отражай проверки
-          контура! Освободите пять узлов от багов, затем победите ЦРПТ.
+          маркировки, выдерживай наплыв запросов от клиентов и отражай проверки контура! Освободи
+          пять узлов от багов, затем победи ЦРПТ.
         </p>
-        <div className="rule">
-          <span>5 ГЕРОЕВ · 8 ВИДОВ ОРУЖИЯ · ЭВОЛЮЦИИ</span>
-          <span>·</span>
-          <span>5 УЗЛОВ · БАГИ-МИНИБОССЫ · КЛИЕНТЫ</span>
-        </div>
+        <button
+          type="button"
+          id="collection"
+          className="rule collection"
+          title="Открыть энциклопедию"
+          onClick={commands.openEncyclopedia}
+        >
+          {view.collection.map((item, i) => (
+            <span key={item.label}>
+              {i > 0 && <span aria-hidden="true">·</span>}
+              {item.label} <b>{item.have}</b>/{item.total}
+            </span>
+          ))}
+        </button>
         <AccountPanel account={account} cloud={cloud} />
         <div className="startline">
           <button id="shopOpen" className="small" onClick={commands.openShop}>
@@ -95,6 +104,12 @@ export function MainMenu({
           </button>
           <button id="encyclopediaOpen" className="small" onClick={commands.openEncyclopedia}>
             ЭНЦИКЛОПЕДИЯ
+          </button>
+          <button type="button" className="small" onClick={onNavigateToOpponents}>
+            ВРАГИ И КЛИЕНТЫ
+          </button>
+          <button type="button" className="small" onClick={onNavigateToArena}>
+            КАРТА
           </button>
           <button id="statsOpen" className="small" onClick={() => setStatsOpen(true)}>
             СТАТИСТИКА
@@ -126,22 +141,6 @@ export function MainMenu({
             onClick={commands.openHeroSelect}
           >
             {view.resume ? 'НОВЫЙ ЗАБЕГ' : 'ЗАПУСК СЕССИИ →'}
-          </button>
-          <button
-            type="button"
-            className="small"
-            onClick={onNavigateToArena}
-            style={{ color: 'var(--cyan)', cursor: 'pointer' }}
-          >
-            СЕРВЕРНЫЙ КОНТУР
-          </button>
-          <button
-            type="button"
-            className="small"
-            onClick={onNavigateToOpponents}
-            style={{ color: 'var(--cyan)', cursor: 'pointer' }}
-          >
-            ВРАГИ И КЛИЕНТЫ
           </button>
           <div className="record" id="record">
             {view.record}
@@ -175,16 +174,16 @@ export function HeroSelect() {
         <header className="run-hero-head">
           <div>
             <h2 id="runHeroTitle" style={{ color: 'var(--cyan)' }}>
-              Конфигурация ядра
+              Выбор героя
             </h2>
-            <p>Выберите ядро для забега. Новые модификации открываются за коды в магазине.</p>
+            <p>Выбери героя для забега. Новых героев открывают за коды в разделе «Улучшения».</p>
           </div>
           <button id="runHeroBack" className="small" onClick={commands.closeHeroSelect}>
             ← НАЗАД
           </button>
         </header>
         <div className="map-select">
-          <label htmlFor="runMap">СЕРВЕРНЫЙ КОНТУР</label>
+          <label htmlFor="runMap">КАРТА</label>
           <select
             id="runMap"
             value={view.map}
@@ -232,15 +231,23 @@ export function HeroSelect() {
             <button
               key={hero.id}
               type="button"
-              className={`run-hero${hero.id === view.pending ? ' selected' : ''}`}
+              className={`run-hero${hero.id === view.pending ? ' selected' : ''}${hero.locked ? ' locked' : ''}`}
               data-hero={hero.id}
+              disabled={hero.locked}
+              title={
+                hero.locked ? `Открывается в разделе «Улучшения» за ${hero.price} кодов` : undefined
+              }
               onClick={() => commands.chooseHero(hero.id)}
             >
               <Portrait hero={hero.id} width={64} height={80} />
               <span className="run-hero-copy">
                 <strong>{hero.name}</strong>
                 <small>{hero.weapon}</small>
-                {hero.role && <small className="run-hero-role">{hero.role}</small>}
+                {hero.locked ? (
+                  <small className="run-hero-price">Закрыт · {hero.price} кодов</small>
+                ) : (
+                  hero.role && <small className="run-hero-role">{hero.role}</small>
+                )}
               </span>
             </button>
           ))}
@@ -309,7 +316,7 @@ export function Shop() {
         <p style={{ fontSize: '12px', lineHeight: 1.7 }}>
           Накопленные коды и апгрейды сохраняются между сессиями.
         </p>
-        <h3>Ядро</h3>
+        <h3>Герои</h3>
         <div id="shopHeroes" className="shopgrid">
           {view.heroes.map((hero) => (
             <div key={hero.id} className="shopcard">
@@ -742,9 +749,8 @@ export function Settings() {
           <div className="settings-card">
             <h3>Журнал забегов</h3>
             <p className="settings-note">
-              Каждый забег записывается локально: герой, нагрузка, время, причина поражения,
-              предложенные и взятые карточки, урон по источникам. Файл читает{' '}
-              <code>node tools/run-stats.cjs</code>.
+              Каждый забег записывается на этом устройстве: герой, нагрузка, время, причина
+              поражения, выбранные карточки и урон по источникам.
             </p>
             <div className="settings-row">
               <span id="runLogCount">Записей: {view.runLogCount}</span>
@@ -790,7 +796,7 @@ export function Settings() {
                     type="button"
                     onClick={() => commands.startCapture(binding.action)}
                   >
-                    {view.capture === binding.action ? 'НАЖМИТЕ КЛАВИШУ…' : binding.key}
+                    {view.capture === binding.action ? 'НАЖМИ КЛАВИШУ…' : binding.key}
                   </button>
                 </div>
               ))}

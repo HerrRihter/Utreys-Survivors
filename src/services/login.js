@@ -20,7 +20,7 @@ export function loginError(login) {
   if (length < LOGIN_MIN || length > LOGIN_MAX)
     return `Логин: от ${LOGIN_MIN} до ${LOGIN_MAX} символов`;
   if (latin.test(value) || cyrillic.test(value)) return null;
-  if (/[a-z]/i.test(value) && /[а-яё]/i.test(value)) return 'Не смешивайте кириллицу и латиницу';
+  if (/[a-z]/i.test(value) && /[а-яё]/i.test(value)) return 'Не смешивай кириллицу и латиницу';
   return 'Логин: буквы, цифры, «_» и «-»';
 }
 
@@ -51,7 +51,7 @@ const authErrors = {
   'auth/user-not-found': 'Неверный логин или пароль',
   'auth/invalid-email': 'Неверный логин или пароль',
   'auth/weak-password': `Пароль: не короче ${PASSWORD_MIN} символов`,
-  'auth/too-many-requests': 'Слишком много попыток, подождите',
+  'auth/too-many-requests': 'Слишком много попыток, подожди',
   'auth/network-request-failed': 'Нет связи с сервером',
   'auth/user-disabled': 'Аккаунт отключён',
   'auth/operation-not-allowed': 'Вход по паролю не включён в Firebase',
@@ -63,4 +63,4 @@ const authErrors = {
 };
 
 export const authErrorText = (error) =>
-  authErrors[error?.code] || 'Не получилось, попробуйте ещё раз';
+  authErrors[error?.code] || 'Не получилось, попробуй ещё раз';

@@ -95,9 +95,9 @@ export function eventLabel(s) {
   const e = s?.event;
   if (!e) return '';
   const left = Math.ceil(Math.max(0, e.left)) + ' с';
-  if (e.type === 'friday') return `Релиз в пятницу: продержитесь ${left}`;
+  if (e.type === 'friday') return `Релиз в пятницу: продержись ${left}`;
   if (e.type === 'incident')
-    return `Инцидент: удержите точку ${Math.floor(e.progress)}/${e.need} с · ${left}`;
+    return `Инцидент: удержи точку ${Math.floor(e.progress)}/${e.need} с · ${left}`;
   return `Срочный тираж: ${e.progress}/${e.need} кодов · ${left}`;
 }
 
