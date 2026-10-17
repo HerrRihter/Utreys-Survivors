@@ -20,6 +20,9 @@
 //   summon     every `every` s calls `count` of `units` around itself, at most `max` alive
 //   pools      every `every` s leaves `count` damaging zones near the player
 //   phases     boss only: at a health share `at`, summons adds and gains new attacks
+// Every enemy hit, bosses included, is this much stronger than the numbers below.
+export const enemyDamageScale = 1.1;
+
 export const unitDefinitions = {
   l3: {
     name: 'L3',
@@ -29,7 +32,7 @@ export const unitDefinitions = {
     r: 16,
     range: 45,
     wind: 0.6,
-    cooldown: 1.2,
+    cooldown: 0.8,
     xp: 2,
     color: '#00e676',
     mark: 'L3',
@@ -75,7 +78,7 @@ export const unitDefinitions = {
     r: 18,
     range: 50,
     wind: 0.7,
-    cooldown: 1.4,
+    cooldown: 0.93,
     xp: 4,
     color: '#0051a8',
     mark: 'P',
@@ -153,7 +156,7 @@ export const unitDefinitions = {
     r: 15,
     range: 44,
     wind: 0.6,
-    cooldown: 1.4,
+    cooldown: 0.93,
     xp: 1,
     color: '#ffb74d',
     mark: 'МЛ',
@@ -269,7 +272,7 @@ export const unitDefinitions = {
     r: 18,
     range: 52,
     wind: 0.7,
-    cooldown: 1.5,
+    cooldown: 1,
     xp: 3,
     color: '#b18bea',
     mark: 'MD',
