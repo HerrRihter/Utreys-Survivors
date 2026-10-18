@@ -13,9 +13,21 @@ export function createNodeState(seconds = workaroundSeconds, layout = nodeDefini
 
 export function allNodesResolved(state) {
   return (
-    state.nodes?.length === nodeDefinitions.length &&
+    state.nodes?.length > 0 &&
     state.nodes.every((node) => node.status === 'destroyed' || node.status === 'workaround')
   );
+}
+
+// A bug stands beside its node; a desk is the objective itself.
+export function guardianPoint(node) {
+  return { x: node.x + (node.kind === 'desk' ? 0 : 110), y: node.y };
+}
+
+// Open tickets: living enemies released by the run's service desks.
+export function openTickets(state) {
+  let n = 0;
+  for (const e of state.enemies) if (e.hp > 0 && e.summonedBy?.nodeId) n++;
+  return n;
 }
 
 export function updateNodes(context, dt) {
@@ -23,16 +35,18 @@ export function updateNodes(context, dt) {
   for (const node of s.nodes) {
     if (node.status !== 'guarded') continue;
     if (!node.guardian) {
-      const guardian = context.spawn(node.bug, false, { x: node.x + 110, y: node.y });
+      const guardian = context.spawn(node.bug, false, guardianPoint(node));
       if (!guardian) continue;
       guardian.nodeId = node.id;
       node.guardian = guardian;
     }
     if (node.guardian.hp <= 0) {
       node.status = 'destroyed';
-      context.toast(node.id + ': баг уничтожен');
+      context.toast(node.id + (node.kind === 'desk' ? ': закрыт' : ': баг уничтожен'));
       continue;
     }
+    // A desk has no workaround: it must be destroyed.
+    if (node.kind === 'desk') continue;
     // Standing at a component researches a workaround on both desktop and touch devices.
     const near = Math.hypot(s.p.x - node.x, s.p.y - node.y) <= workaroundRadius;
     const need = node.need ?? workaroundSeconds;

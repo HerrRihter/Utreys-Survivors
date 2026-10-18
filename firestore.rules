@@ -77,7 +77,7 @@ service cloud.firestore {
     match /stats/{uid} {
       // Keep in step with data/maps/maps.js (checked by tests/test-firestore-rules.cjs).
       function knownMaps() {
-        return ['empty', 'serverRoom'];
+        return ['empty', 'serverRoom', 'pepsiDesk'];
       }
       // Numbers checked on every write; the client always sends all of them.
       function statNumbers() {

@@ -156,13 +156,19 @@ export function updateTraits(c, s, e, u, dt) {
     }
   }
   if (u.summon) {
-    e.summonCd = (e.summonCd ?? u.summon.every / 2) - dt;
-    if (e.summonCd <= 0 && Math.hypot(s.p.x - e.x, s.p.y - e.y) < 650) {
-      e.summonCd = u.summon.every;
+    const spec = u.summon;
+    e.summonCd = (e.summonCd ?? spec.every / 2) - dt;
+    if (e.summonCd <= 0 && Math.hypot(s.p.x - e.x, s.p.y - e.y) < (spec.reach ?? 650)) {
+      e.summonCd = spec.every;
       let alive = 0;
       for (const o of s.enemies) if (o.summonedBy === e && o.hp > 0) alive++;
-      const count = Math.min(u.summon.count, u.summon.max - alive);
-      if (count > 0) summonAround(c, s, e, u.summon.units, count);
+      // `grow`: one more per call after every `grow` calls, up to `countMax`.
+      const size = spec.grow
+        ? Math.min(spec.countMax, spec.count + Math.floor((e.summons || 0) / spec.grow))
+        : spec.count;
+      e.summons = (e.summons || 0) + 1;
+      const count = Math.min(size, spec.max - alive);
+      if (count > 0) summonAround(c, s, e, spec.units, count);
     }
   }
   if (u.pools) {

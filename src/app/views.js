@@ -11,6 +11,8 @@ import { productionMinutes } from '../systems/difficulty.js';
 import { eventLabel } from '../systems/run-events.js';
 import { effectiveStats } from '../systems/ability-state.js';
 import { arenaDefinitions } from '../world/arenas.js';
+import { mapUnlocked } from '../../data/maps/maps.js';
+import { openTickets } from '../systems/node-objectives.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
 import { nearestGoals, unlockText } from './unlocks.js';
 import { weaponDefinitions, weaponMaxLevel, heroEvolutions } from '../../data/weapons.js';
@@ -105,17 +107,18 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
     maps: Object.entries(arenaDefinitions).map(([id, map]) => ({
       id,
       name: map.name,
-      locked: map.unlock === 'win' && !(progression.data.stats.wins > 0),
+      locked: !mapUnlocked(map, progression.data.stats),
     })),
     map: run.selectedMap,
     seed: run.seedInput,
     mapDescription: arenaDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.
     mapLocked: Object.keys(arenaDefinitions).length < 2,
+    // The next map still closed, and what opens it.
     mapHint:
-      arenaDefinitions.serverRoom && !(progression.data.stats.wins > 0)
-        ? 'Серверный зал откроется после первой победы.'
-        : '',
+      Object.values(arenaDefinitions).find(
+        (map) => map.unlockHint && !mapUnlocked(map, progression.data.stats),
+      )?.unlockHint || '',
   };
 }
 
@@ -383,8 +386,11 @@ function nodeProgress(s) {
   const arrow =
     next &&
     arrows[(Math.round(Math.atan2(next.y - s.p.y, next.x - s.p.x) / (Math.PI / 4)) + 8) % 8];
+  const desks = s.nodes[0]?.kind === 'desk';
   return (
-    `Узлы: ${resolved}/${s.nodes.length}` +
+    (desks
+      ? `Сервисдески: ${resolved}/${s.nodes.length} · бэклог ${openTickets(s)}`
+      : `Узлы: ${resolved}/${s.nodes.length}`) +
     (next
       ? ` · ${next.id} ${arrow} ${Math.round(nextDistance / 10) * 10} px`
       : ' · Шлюз ЦРПТ разблокирован')
@@ -407,11 +413,12 @@ function abilityButtons(run) {
   });
 }
 
-function controlsHint(b = defaultBindings) {
+function controlsHint(b = defaultBindings, desks = false) {
   const k = (action) => keyLabel(b[action]);
   return (
     `${k('up')}${k('left')}${k('down')}${k('right')} / СТРЕЛКИ — ПЕРЕМЕЩЕНИЕ · АТАКА И ОРУЖИЕ — АВТОМАТИЧЕСКИ · ` +
-    `${k('abilityQ')} / ${k('abilityE')} — УМЕНИЯ · ESC — ПАУЗА · УЗЛЫ: УБЕЙ БАГА ИЛИ СТОЙ В КРУГЕ 6 С`
+    `${k('abilityQ')} / ${k('abilityE')} — УМЕНИЯ · ESC — ПАУЗА · ` +
+    (desks ? 'СНЕСИ ВСЕ СЕРВИСДЕСКИ' : 'УЗЛЫ: УБЕЙ БАГА ИЛИ СТОЙ В КРУГЕ 6 С')
   );
 }
 
@@ -447,7 +454,7 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
     // Pause only means something during play; the stick is shown with it.
     showPause: run.mode === 'play',
     showHint: settings.hints,
-    hint: controlsHint(settings.bindings),
+    hint: controlsHint(settings.bindings, s.nodes[0]?.kind === 'desk'),
     stick: run.stickView,
     build: upgrades ? buildView({ run, upgrades }) : null,
     tip: run.mode === 'play' && run.tip?.left > 0 ? run.tip.text : '',

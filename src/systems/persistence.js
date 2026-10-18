@@ -23,6 +23,8 @@ export function normalizeProgression(saved) {
       // Mastery, recorded once per run by recordRunStats.
       wins: 0,
       heroWins: {},
+      // Victories per map, for map unlocks.
+      mapWins: {},
       bestWinTime: 0,
       untouchedRuns: 0,
       cleanSweeps: 0,
@@ -81,6 +83,9 @@ export function normalizeProgression(saved) {
         if (saved.stats.heroWins && typeof saved.stats.heroWins === 'object')
           for (const [hero, n] of Object.entries(saved.stats.heroWins))
             if (integer(n) > 0) data.stats.heroWins[hero] = integer(n);
+        if (saved.stats.mapWins && typeof saved.stats.mapWins === 'object')
+          for (const [map, n] of Object.entries(saved.stats.mapWins))
+            if (/^[a-zA-Z]+$/.test(map) && integer(n) > 0) data.stats.mapWins[map] = integer(n);
       }
       if (Array.isArray(saved.evolutionsSeen))
         data.evolutionsSeen = [
@@ -316,6 +321,7 @@ export function createProgression({
     if (run.win) {
       st.wins++;
       st.heroWins[run.hero] = (st.heroWins[run.hero] || 0) + 1;
+      if (run.map) st.mapWins[run.map] = (st.mapWins[run.map] || 0) + 1;
       if (run.time > 0 && (!st.bestWinTime || run.time < st.bestWinTime)) st.bestWinTime = run.time;
       if (run.cleanSweep) st.cleanSweeps++;
       if (run.allWorkaround) st.workaroundWins++;

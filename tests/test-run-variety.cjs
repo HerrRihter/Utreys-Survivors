@@ -27,9 +27,15 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
     const positions = new Set();
     for (let seed = 1; seed <= 40; seed++) {
       const nodes = layoutNodes(map, seed);
+      const desks = mapDefinitions[map].objective;
       assert.deepEqual(nodes, layoutNodes(map, seed), 'same seed, same layout');
-      assert.equal(nodes.length, nodeDefinitions.length);
-      assert.deepEqual(nodes.map((n) => n.bug).sort(), nodeDefinitions.map((n) => n.bug).sort());
+      if (desks) {
+        assert.equal(nodes.length, desks.count, `${map} places every desk`);
+        assert(nodes.every((n) => n.kind === 'desk' && n.bug === desks.unit));
+      } else {
+        assert.equal(nodes.length, nodeDefinitions.length);
+        assert.deepEqual(nodes.map((n) => n.bug).sort(), nodeDefinitions.map((n) => n.bug).sort());
+      }
       for (const n of nodes) {
         assert(!arena.blocked(n.x, n.y, 40), `${map} node on a rack`);
         for (const m of nodes) if (m !== n) assert(Math.hypot(m.x - n.x, m.y - n.y) >= nodeSpacing);

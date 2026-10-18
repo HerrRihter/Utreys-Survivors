@@ -1,4 +1,5 @@
 import { makeElite } from './difficulty.js';
+import { guardianPoint } from './node-objectives.js';
 
 // A paused or interrupted run, kept in storage so a closed tab does not lose it.
 // Only plain data is stored: enemies come back at their saved positions and health, live
@@ -73,6 +74,8 @@ export function snapshotRun(run) {
         status: n.status,
         progress: n.progress,
         guardianHp: n.guardian && n.guardian.hp > 0 ? n.guardian.hp : null,
+        // A desk keeps its escalation across a resumed run.
+        summons: n.guardian?.summons || 0,
       })),
       enemies: s.enemies
         .filter((e) => e.hp > 0 && !e.nodeId)
@@ -141,9 +144,10 @@ export function restoreRun(s, snapshot, spawn) {
     node.status = saved.status;
     node.progress = saved.progress;
     if (node.status !== 'guarded' || saved.guardianHp === null) continue;
-    const guardian = spawn(node.bug, false, { x: node.x + 110, y: node.y });
+    const guardian = spawn(node.bug, false, guardianPoint(node));
     if (!guardian) continue;
     guardian.hp = saved.guardianHp;
+    guardian.summons = saved.summons || 0;
     guardian.nodeId = node.id;
     node.guardian = guardian;
   }

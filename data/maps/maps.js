@@ -1,6 +1,9 @@
-// Arenas. `nodeZones` are [x, y, width, height] areas where a run may place its five nodes
-// (one node per zone, at least `nodeSpacing` apart). `racks` are [x, y, width, height]
-// obstacles; `unlock: 'win'` opens a map after the first victory.
+// Arenas. `nodeZones` are [x, y, width, height] areas where a run may place its objectives
+// (one per zone, at least `nodeSpacing` apart). `racks` are [x, y, width, height] obstacles.
+// `unlock: 'win'` opens a map after the first victory, `unlock: { winOn: id }` after a victory
+// on that map; `unlockHint` says so in the map picker.
+// `objective` is what clears the way to the CRPT (default: the five component nodes):
+//   { type: 'desks', unit, count }  — `count` structures of `unit` that must be destroyed.
 export const nodeSpacing = 450;
 
 export const mapDefinitions = {
@@ -27,6 +30,7 @@ export const mapDefinitions = {
     name: 'Серверный зал',
     description: 'Ряды стоек и узкие коридоры: врагов можно разводить по проходам.',
     unlock: 'win',
+    unlockHint: 'Серверный зал откроется после первой победы.',
     racks: [
       [300, 260, 520, 70],
       [1380, 260, 520, 70],
@@ -52,4 +56,40 @@ export const mapDefinitions = {
       [1500, 1670, 250, 150],
     ],
   },
+  pepsiDesk: {
+    notes: 'Офис поддержки Пепси: сервисдески без остановки плодят тикеты.',
+    victoryTag: 'БЭКЛОГ ЗАКРЫТ',
+    name: 'Сервисдеск Пепси',
+    description:
+      'Три сервисдеска выпускают Пепси, и чем дольше они работают, тем больше за раз. Снеси все три, чтобы закрыть бэклог, — тогда придёт ЦРПТ.',
+    unlock: { winOn: 'serverRoom' },
+    unlockHint: 'Сервисдеск Пепси откроется после победы в Серверном зале.',
+    objective: { type: 'desks', unit: 'pepsi_desk', count: 3 },
+    // Office desks: short cover in the middle ring, open lanes between them.
+    racks: [
+      [700, 640, 220, 50],
+      [1280, 640, 220, 50],
+      [640, 1040, 50, 120],
+      [1510, 1040, 50, 120],
+      [700, 1510, 220, 50],
+      [1280, 1510, 220, 50],
+    ],
+    nodeZones: [
+      [300, 300, 300, 250],
+      [950, 250, 300, 200],
+      [1600, 300, 300, 250],
+      [250, 950, 200, 300],
+      [1750, 950, 200, 300],
+      [300, 1650, 300, 250],
+      [950, 1750, 300, 200],
+      [1600, 1650, 300, 250],
+    ],
+  },
 };
+
+// Whether a map can be picked with these saved stats.
+export function mapUnlocked(map, stats = {}) {
+  if (!map?.unlock) return !!map;
+  if (map.unlock === 'win') return stats.wins > 0;
+  return (stats.mapWins?.[map.unlock.winOn] || 0) > 0;
+}

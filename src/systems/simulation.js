@@ -205,6 +205,7 @@ export const Simulation = {
         if (
           !e.action &&
           !e.hurt &&
+          !u.passive &&
           e.cd <= 0 &&
           d < u.range &&
           !pacified(s, e) &&

@@ -8,6 +8,8 @@ const TIP_SECONDS = 7;
 export const tipTexts = {
   move: (keys) =>
     `${keys} — движение. Атака и оружие срабатывают сами. Собирай опыт — на новом уровне выбирай улучшение.`,
+  desk: () =>
+    'Сервисдеск Пепси. Пока он открыт, он выпускает Пепси, и с каждым разом больше. Снеси его — получишь архив для эволюции.',
   node: () =>
     'Узел компонента. Убей бага — получишь архив для эволюции оружия. Или стой в круге 6 с без урона — найдёшь воркэраунд.',
   evolve: (name) =>
@@ -43,7 +45,12 @@ export function createTips({ storage, settings, run }) {
     const node = s.nodes.find(
       (n) => n.status === 'guarded' && Math.hypot(n.x - s.p.x, n.y - s.p.y) < 260,
     );
-    if (node && show('node', tipTexts.node())) return true;
+    if (
+      node && node.kind === 'desk'
+        ? show('desk', tipTexts.desk())
+        : node && show('node', tipTexts.node())
+    )
+      return true;
     const ready = (s.weapons || []).find(
       (w) =>
         !w.evolved &&
