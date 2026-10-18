@@ -1,8 +1,35 @@
 import { workaroundRadius, workaroundSeconds } from '../../data/enemies/nodes.js';
 import { neonStroke } from './neon.js';
 
+// A service desk is drawn as an enemy; the ground only marks its spot and status.
+function drawDesk(g, node) {
+  const open = node.status === 'guarded';
+  g.save();
+  g.translate(node.x, node.y);
+  g.strokeStyle = open ? '#2f7cf6' : '#64ffda';
+  g.lineWidth = 2;
+  g.beginPath();
+  g.arc(0, 0, 58, 0, Math.PI * 2);
+  neonStroke(g, g.strokeStyle, 1.5, 6);
+  g.fillStyle = g.strokeStyle;
+  g.font = 'bold 12px monospace';
+  g.textAlign = 'center';
+  g.fillText(node.id, 0, -118);
+  g.font = '11px monospace';
+  g.fillText(open ? 'Снеси, чтобы закрыть бэклог' : 'Бэклог закрыт', 0, 78);
+  if (open && node.guardian) {
+    g.fillStyle = '#ff5252';
+    g.fillRect(-40, -112, 80 * Math.max(0, node.guardian.hp / node.guardian.max), 5);
+  }
+  g.restore();
+}
+
 export function drawNodes(g, nodes) {
   for (const node of nodes || []) {
+    if (node.kind === 'desk') {
+      drawDesk(g, node);
+      continue;
+    }
     const guarded = node.status === 'guarded';
     g.save();
     g.translate(node.x, node.y);

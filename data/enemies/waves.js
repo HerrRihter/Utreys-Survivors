@@ -191,4 +191,23 @@ export const waveSchedules = {
     elites: { first: 80, every: 70 },
     events: { ...datacenter.events, times: [70, 150, 230, 310] },
   },
+  // The desks add their own Pepsi: the regular waves are a little thinner.
+  pepsiDesk: {
+    ...datacenter,
+    normal: {
+      ...datacenter.normal,
+      stages: datacenter.normal.stages.map((stage) => ({
+        ...stage,
+        cap: Math.round(stage.cap * 0.85),
+      })),
+    },
+    boss: {
+      ...datacenter.boss,
+      message: 'ВНИМАНИЕ: Бэклог закрыт, ЦРПТ пришёл с проверкой SLA!',
+    },
+    notifications: [
+      { time: 5, message: 'Сервисдески Пепси открыты: тикеты пошли. Снеси все три!' },
+      { time: 90, message: 'Бэклог растёт: сервисдески выпускают всё больше тикетов!' },
+    ],
+  },
 };

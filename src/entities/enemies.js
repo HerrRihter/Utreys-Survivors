@@ -276,7 +276,7 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     g.restore();
 
     // Draw unit name label above
-    const labelOffset = clientEmblems[e.unit] ? Math.max(u.r + 28, 60) : u.r + 28;
+    const labelOffset = u.labelAbove ?? (clientEmblems[e.unit] ? Math.max(u.r + 28, 60) : u.r + 28);
     drawLabel(g, u, e.x, e.y - labelOffset, ratio || 2);
   }
 

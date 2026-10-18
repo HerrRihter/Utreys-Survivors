@@ -3,6 +3,7 @@ import { getWaveSchedule, createWaveState } from '../systems/wave-schedule.js';
 import { permanentUpgradeDefinitions, levelUpControls } from '../../data/upgrades.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { arenaDefinitions } from '../world/arenas.js';
+import { mapUnlocked } from '../../data/maps/maps.js';
 import { weaponDefinitions } from '../../data/weapons.js';
 import { restoreRun } from '../systems/run-snapshot.js';
 import { nearestGoals, newlyDone } from './unlocks.js';
@@ -95,13 +96,16 @@ export const GameFlow = {
       s.offersLogged = offers.length;
       if (!s.statsRecorded) {
         s.statsRecorded = true;
+        const nodesMap = !arenaDefinitions[s.map]?.objective;
         progression.recordRunStats({
           win,
           hero: run.selected,
+          map: s.map,
           time: s.t,
           untouched: (s.firstHurtAt ?? s.t) >= 180,
-          cleanSweep: s.nodes.every((n) => n.status === 'destroyed'),
-          allWorkaround: s.nodes.every((n) => n.status === 'workaround'),
+          // Sweeps are about the five component nodes; desks are always destroyed.
+          cleanSweep: nodesMap && s.nodes.every((n) => n.status === 'destroyed'),
+          allWorkaround: nodesMap && s.nodes.every((n) => n.status === 'workaround'),
           noFood: !s.foodTaken,
           evolutions: (s.evolutions || 0) + (s.stats.heroEvo ? 1 : 0),
         });
@@ -116,9 +120,9 @@ export const GameFlow = {
     }
     const clampLoad = (hero, level) =>
       Math.max(1, Math.min(progression.loadAvailable(hero), Math.floor(level) || 1));
-    // Maps with `unlock: 'win'` open after the first victory.
     const mapOpen = (id) =>
-      !!arenaDefinitions[id] && (!arenaDefinitions[id].unlock || progression.data.stats.wins > 0);
+      Object.hasOwn(arenaDefinitions, id) &&
+      mapUnlocked(arenaDefinitions[id], progression.data.stats);
     function start() {
       recordRun();
       countRun();

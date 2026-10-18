@@ -20,6 +20,8 @@
 //   summon     every `every` s calls `count` of `units` around itself, at most `max` alive
 //   pools      every `every` s leaves `count` damaging zones near the player
 //   phases     boss only: at a health share `at`, summons adds and gains new attacks
+//   passive    never attacks (a structure that only summons)
+//   labelAbove height of the name tag over the feet, for art taller than the radius
 // Every enemy hit, bosses included, is this much stronger than the numbers below.
 export const enemyDamageScale = 1.1;
 
@@ -386,6 +388,28 @@ export const unitDefinitions = {
     poise: 1.5,
     // Leaves damaging report pools around the player.
     pools: { every: 5, count: 2, radius: 42, life: 4, scatter: 80, damage: 0.5, reach: 300 },
+  },
+  // Objective of the Pepsi service desk map: a structure that never attacks, only releases
+  // Pepsi tickets wherever the player is, a bigger batch the longer it stays open.
+  pepsi_desk: {
+    name: 'Сервисдеск Пепси',
+    hp: 1400,
+    speed: 0,
+    damage: 1,
+    r: 34,
+    range: 1,
+    wind: 1,
+    cooldown: 99,
+    passive: true,
+    xp: 30,
+    color: '#2f7cf6',
+    mark: 'SD',
+    // The monitor makes the desk taller than its radius: the name goes above it.
+    labelAbove: 86,
+    miniboss: true,
+    heavy: true,
+    archiveName: 'Архив тикетов',
+    summon: { every: 7, count: 1, grow: 3, countMax: 4, max: 7, reach: 4000, units: ['pepsi'] },
   },
 };
 

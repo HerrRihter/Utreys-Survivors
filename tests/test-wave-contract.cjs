@@ -10,7 +10,7 @@ const {
   createWaveState,
   waveRoster,
 } = require('../src/systems/wave-schedule.js');
-assert.equal(checkGameContracts(), 2);
+assert.equal(checkGameContracts(), 3);
 for (const mutate of [
   (s) => {
     delete s.empty;

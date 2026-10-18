@@ -103,7 +103,10 @@ export const CombatSystem = {
         // A node guardian leaves a bug archive: it evolves a ready weapon now or later.
         if (enemies.units[e.unit]?.miniboss) {
           run.state.evoTokens = (run.state.evoTokens || 0) + 1;
-          toast('Архив бага получен: эволюция готового оружия');
+          toast(
+            (enemies.units[e.unit].archiveName || 'Архив бага') +
+              ' получен: эволюция готового оружия',
+          );
         }
         if (e.boss && run.state.endless) {
           // Production CRPTs pay codes; the run goes on.

@@ -267,4 +267,16 @@ export const OPPONENTS_META: Record<UnitKey, OpponentMeta> = {
       'Баг охраняет узел и не двигается. У каждого бага своя защита. Уничтожение бага или найденный воркэраунд освобождает компонент.',
     tactics: `Оставляет под тобой зоны отчётов, которые бьют, пока ты в них стоишь, и держатся ${unitDefinitions.bug_goods.pools.life} с. Уничтожь минибосса или оставайся в круге узла 6 секунд без урона; после прерывания баг ${unitDefinitions.bug_goods.poise} с не сбивается.`,
   },
+  pepsi_desk: {
+    category: 'clients',
+    badge: 'СЕРВИСДЕСК · ЦЕЛЬ КАРТЫ · ТИКЕТЫ',
+    badgeColor: unitDefinitions.pepsi_desk.color,
+    role: 'Поддержка клиента Пепси',
+    protocol: 'Тикеты · Бэклог без SLA',
+    frequency: `Тикеты каждые ${unitDefinitions.pepsi_desk.summon.every} с`,
+    aggregation: 'Карта «Сервисдеск Пепси»',
+    description:
+      'Стоит на месте, не атакует и не отбрасывается. Пока сервисдеск работает, он выпускает Пепси, где бы ты ни был. Три сервисдеска заменяют узлы на своей карте.',
+    tactics: `Каждые ${unitDefinitions.pepsi_desk.summon.every} с выпускает Пепси: сначала по ${unitDefinitions.pepsi_desk.summon.count}, затем на одного больше после каждых ${unitDefinitions.pepsi_desk.summon.grow} выпусков, до ${unitDefinitions.pepsi_desk.summon.countMax} за раз и не больше ${unitDefinitions.pepsi_desk.summon.max} живых от одного стола. Не тяни: чем дольше открыт стол, тем гуще бэклог. Снеси все три, и придёт ЦРПТ.`,
+  },
 };

@@ -20,6 +20,52 @@ function uprightText(g, flip, text, x, y) {
 }
 
 export const unitArt = {
+  // Сервисдеск Пепси — a support counter with a ticket monitor.
+  pepsi_desk: {
+    draw(g, u, hitFlash, flip) {
+      // Counter
+      g.fillStyle = hitFlash ? '#ffffff' : '#0d2a4a';
+      g.fillRect(-36, -26, 72, 26);
+      g.lineWidth = 2;
+      g.strokeStyle = u.color;
+      g.strokeRect(-36, -26, 72, 26);
+      g.fillStyle = '#e32934';
+      g.fillRect(-36, -12, 72, 4);
+      // Monitor on a stand
+      g.fillStyle = '#163a5e';
+      g.fillRect(-4, -36, 8, 10);
+      g.fillStyle = hitFlash ? '#ffffff' : '#0a1b2e';
+      g.fillRect(-26, -70, 52, 36);
+      g.strokeStyle = '#8ec5ff';
+      g.strokeRect(-26, -70, 52, 36);
+      // Pepsi globe on the screen
+      g.save();
+      g.translate(-11, -52);
+      g.fillStyle = '#ffffff';
+      g.beginPath();
+      g.arc(0, 0, 9, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#e32934';
+      g.beginPath();
+      g.arc(0, 0, 9, Math.PI, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#004b93';
+      g.beginPath();
+      g.arc(0, 0, 9, 0.15, Math.PI - 0.15);
+      g.fill();
+      g.restore();
+      // Ticket queue lines
+      g.fillStyle = '#8ec5ff';
+      g.fillRect(3, -62, 18, 3);
+      g.fillRect(3, -55, 14, 3);
+      g.fillRect(3, -48, 16, 3);
+      g.fillStyle = '#ffffff';
+      g.font = 'bold 11px monospace';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      uprightText(g, flip, u.mark, 0, -18);
+    },
+  },
   // Пепси — Iconic Blue / White / Red Client Sphere
   pepsi: {
     draw(g, u, hitFlash, flip) {
