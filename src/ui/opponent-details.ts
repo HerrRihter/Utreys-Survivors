@@ -1,4 +1,4 @@
-import { unitDefinitions } from '../../data/enemies/units.js';
+import { unitDefinitions, enemyHpScale } from '../../data/enemies/units.js';
 export interface OpponentMeta {
   category: 'regulators' | 'clients';
   badge: string;
@@ -35,7 +35,7 @@ export const OPPONENTS_META: Record<UnitKey, OpponentMeta> = {
     protocol: 'Криптографический шлюз ГОСТ · HSM',
     frequency: `Круговая валидация (каждые ${unitDefinitions.crpt.cooldown} с)`,
     aggregation: 'Полный реестр эмиссии кодов маркировки',
-    description: `Эмиссионный шлюз ЦРПТ (Честный ЗНАК). Ключевой регулятор системы: ${unitDefinitions.crpt.hp} HP, круговая валидация на ${unitDefinitions.crpt.range} px и три фазы проверки. На ${Math.round(unitDefinitions.crpt.phases[0].at * 100)}% здоровья подключает клиентов и добавляет к каждой проверке залп по кругу, на ${Math.round(unitDefinitions.crpt.phases[1].at * 100)}% вызывает подкрепление, накрывает площадь отметками и ускоряется.`,
+    description: `Эмиссионный шлюз ЦРПТ (Честный ЗНАК). Ключевой регулятор системы: ${Math.round(unitDefinitions.crpt.hp * enemyHpScale)} HP, круговая валидация на ${unitDefinitions.crpt.range} px и три фазы проверки. На ${Math.round(unitDefinitions.crpt.phases[0].at * 100)}% здоровья подключает клиентов и добавляет к каждой проверке залп по кругу, на ${Math.round(unitDefinitions.crpt.phases[1].at * 100)}% вызывает подкрепление, накрывает площадь отметками и ускоряется.`,
     tactics:
       'Появляется после устранения всех пяти багов. Выходи из золотой зоны во время подготовки, в фазе залпа ищи промежуток между снарядами, а в последней фазе не стой на месте: отметки на земле взрываются через секунду.',
   },

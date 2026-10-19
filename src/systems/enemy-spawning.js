@@ -8,7 +8,7 @@ import {
 } from './wave-schedule.js';
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
-import { enemyDamageScale } from '../../data/enemies/units.js';
+import { enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
   create({ run, enemies, world, math, toast, audio }) {
@@ -56,6 +56,7 @@ export const EnemySpawning = {
         e.hp = e.max = Math.max(1, Math.round(e.hp * k));
         e.damage *= k;
       }
+      e.hp = e.max = Math.max(1, Math.round(e.hp * enemyHpScale));
       e.damage = Math.max(1, Math.round(e.damage * enemyDamageScale));
       scaleEnemy(e, runModifiers(s), boss ? s.productionBosses || 0 : 0);
       s.enemies.push(e);

@@ -39,7 +39,7 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
         id="game"
         ref={canvasRef}
         aria-label="Контур валидации Utrace"
-        style={{ width: '100vw', height: '100vh', display: 'block', imageRendering: 'pixelated' }}
+        style={{ width: '100%', height: '100%', display: 'block', imageRendering: 'pixelated' }}
       />
       {session && (
         <SessionContext.Provider value={session}>
@@ -106,7 +106,10 @@ function GameScreens({
     const fit = () =>
       root.style.setProperty(
         '--hud-scale',
-        String(hudScale(settings.uiScale, window.innerWidth, window.innerHeight)),
+        String(
+          // The layout viewport: innerWidth/innerHeight shrink while the page is pinch-zoomed.
+          hudScale(settings.uiScale, root.clientWidth, root.clientHeight),
+        ),
       );
     fit();
     window.addEventListener('resize', fit);
