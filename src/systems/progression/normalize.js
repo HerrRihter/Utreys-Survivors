@@ -2,14 +2,17 @@ import { heroUnlockPrices, permanentUpgrades, starterHeroes } from '../../../dat
 import { achievementDefinitions } from '../../../data/achievements.js';
 import { maxLoad } from '../../../data/difficulty.js';
 import { normalizeRunStats } from '../run-records.js';
+import { migrateProgressionNames } from '../../core/migrations.js';
 const prices = heroUnlockPrices,
   upgrades = permanentUpgrades;
 // A whole count in 0..max; anything else is 0.
 export const integer = (v, max = 1e9) => (Number.isSafeInteger(v) && v >= 0 ? Math.min(max, v) : 0);
 
 // A clean copy of saved progression, from localStorage or the cloud: unknown ids are dropped,
-// counters clamped and old formats migrated. Anything unreadable yields a new save.
-export function normalizeProgression(saved) {
+// counters clamped and old formats migrated (src/core/migrations.js). Anything unreadable yields
+// a new save.
+export function normalizeProgression(input) {
+  const saved = migrateProgressionNames(input);
   const data = {
     codes: 0,
     kills: 0,
@@ -50,7 +53,7 @@ export function normalizeProgression(saved) {
   try {
     if (saved && typeof saved === 'object') {
       data.runStats = normalizeRunStats(saved.runStats);
-      data.codes = integer(saved.codes ?? saved.helmets ?? 0);
+      data.codes = integer(saved.codes);
       data.kills = integer(saved.kills);
       if (Array.isArray(saved.unlocked))
         data.unlocked = [
@@ -118,9 +121,9 @@ export function normalizeProgression(saved) {
       if (Array.isArray(saved.claimedAchievements))
         data.claimedAchievements = [
           ...new Set(
-            saved.claimedAchievements
-              .map((id) => (id === 'helmets_100' ? 'codes_100' : id))
-              .filter((id) => achievementDefinitions.some((a) => a.id === id)),
+            saved.claimedAchievements.filter((id) =>
+              achievementDefinitions.some((a) => a.id === id),
+            ),
           ),
         ];
     }

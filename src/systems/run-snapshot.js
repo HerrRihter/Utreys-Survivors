@@ -3,6 +3,7 @@ import { guardianPoint } from './node-objectives.js';
 import { persistentKeys, reducedKeys } from './run-model.js';
 import { createGameRng } from '../core/rng.js';
 import { toGraphJson, fromGraphJson } from '../core/graph-json.js';
+import { persisted } from '../core/storage.js';
 import { currentAbilityId, currentCardId } from '../../data/characters/abilities.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
 
@@ -125,53 +126,20 @@ export function migrateRunSnapshot(saved) {
 }
 
 export function createRunSnapshots({ storage }) {
-  const read = (key) => {
-    try {
-      return JSON.parse(storage.getItem(key));
-    } catch {
-      return null;
-    }
-  };
-  const remove = (key) => {
-    try {
-      if (storage.removeItem) storage.removeItem(key);
-      else storage.setItem(key, 'null');
-    } catch {}
-  };
   // A save left by an older build is converted once and stored as the current version.
-  function migrate() {
-    const key = LEGACY_RUN_SNAPSHOT_KEYS.find((k) => read(k) !== null);
-    if (!key) return null;
-    const migrated = migrateRunSnapshot(read(key));
-    try {
-      if (migrated) storage.setItem(RUN_SNAPSHOT_KEY, JSON.stringify(migrated));
-    } catch {
-      return migrated;
-    }
-    for (const k of LEGACY_RUN_SNAPSHOT_KEYS) remove(k);
-    return migrated;
-  }
-  function load() {
-    const saved = read(RUN_SNAPSHOT_KEY) ?? migrate();
-    return saved?.version === VERSION && saved.state ? saved : null;
-  }
+  const file = persisted(storage, RUN_SNAPSHOT_KEY, {
+    normalize: (saved) => (saved?.version === VERSION && saved.state ? saved : null),
+    migrate: migrateRunSnapshot,
+    legacyKeys: LEGACY_RUN_SNAPSHOT_KEYS,
+  });
   return {
-    load,
-    has: () => !!load(),
+    load: file.load,
+    has: () => !!file.load(),
     save(run) {
       const snapshot = snapshotRun(run);
-      if (!snapshot) return false;
-      try {
-        storage.setItem(RUN_SNAPSHOT_KEY, JSON.stringify(snapshot));
-        return true;
-      } catch {
-        return false;
-      }
+      return !!snapshot && file.save(snapshot);
     },
-    clear() {
-      remove(RUN_SNAPSHOT_KEY);
-      for (const key of LEGACY_RUN_SNAPSHOT_KEYS) remove(key);
-    },
+    clear: file.clear,
   };
 }
 

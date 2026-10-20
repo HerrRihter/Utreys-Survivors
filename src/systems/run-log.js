@@ -1,4 +1,5 @@
 import { currentCardId } from '../../data/characters/abilities.js';
+import { persisted } from '../core/storage.js';
 
 // Local journal of finished runs for balance work. Each ending adds one entry; the settings
 // screen exports the journal as JSON for `tools/run-stats.cjs`. Only the newest `MAX_ENTRIES`
@@ -80,34 +81,23 @@ export function normalizeLogEntry(entry) {
 export function createRunLog({ storage }) {
   // Settings read the count on every render; keep it without parsing the journal each time.
   let count = null;
-  function entries() {
-    try {
-      const saved = JSON.parse(storage.getItem(RUN_LOG_KEY));
-      return Array.isArray(saved) ? saved.map(normalizeLogEntry) : [];
-    } catch {
-      return [];
-    }
-  }
+  const file = persisted(storage, RUN_LOG_KEY, {
+    normalize: (saved) => (Array.isArray(saved) ? saved.map(normalizeLogEntry) : []),
+  });
+  const entries = file.load;
   return {
     entries,
     count: () => (count ??= entries().length),
     record(entry) {
       const list = entries();
       list.push(entry);
-      try {
-        const kept = list.slice(-MAX_ENTRIES);
-        storage.setItem(RUN_LOG_KEY, JSON.stringify(kept));
-        count = kept.length;
-        return true;
-      } catch {
-        return false;
-      }
+      const kept = list.slice(-MAX_ENTRIES);
+      if (!file.save(kept)) return false;
+      count = kept.length;
+      return true;
     },
     clear() {
-      try {
-        storage.setItem(RUN_LOG_KEY, '[]');
-        count = 0;
-      } catch {}
+      if (file.save([])) count = 0;
     },
     // The export file's content.
     json: () =>

@@ -1,4 +1,5 @@
 import { createStore } from '../core/store.js';
+import { persisted } from '../core/storage.js';
 import { normalizeProgression } from '../systems/progression/index.js';
 
 // Keeps progress/{uid} in Firestore in step with the local save (docs/FIREBASE-PLAN.md,
@@ -78,18 +79,11 @@ export function createCloudProgress({
   const stale = () => Object.assign(new Error('stale'), { code: 'stale' });
 
   // This device: its id and the cloud revision it last matched, per account.
-  function readMeta() {
-    try {
-      const meta = JSON.parse(storage.getItem(CLOUD_META_KEY));
-      if (meta && typeof meta === 'object') return meta;
-    } catch {}
-    return {};
-  }
-  function writeMeta(meta) {
-    try {
-      storage.setItem(CLOUD_META_KEY, JSON.stringify(meta));
-    } catch {}
-  }
+  const metaFile = persisted(storage, CLOUD_META_KEY, {
+    normalize: (meta) => (meta && typeof meta === 'object' ? meta : {}),
+  });
+  const readMeta = metaFile.load;
+  const writeMeta = metaFile.save;
   function deviceId() {
     const meta = readMeta();
     if (typeof meta.device !== 'string' || !meta.device) {

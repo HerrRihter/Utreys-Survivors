@@ -1,4 +1,5 @@
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { persisted } from '../core/storage.js';
 
 /**
  * @typedef {{ id: string, icon: string, name: string, level: number, max: number,
@@ -99,7 +100,7 @@ export function hudScale(uiScale, width, height) {
 
 // Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings),
 // persisted separately from progress.
-export function createGameSettings({ storage }) {
+export function normalizeSettings(saved) {
   const settings = {
     shake: true,
     hints: true,
@@ -107,23 +108,21 @@ export function createGameSettings({ storage }) {
     uiScale: 1,
     bindings: { ...defaultBindings },
   };
-  try {
-    const saved = JSON.parse(storage.getItem('utreys-settings'));
-    if (saved && typeof saved === 'object') {
-      for (const key of ['shake', 'hints', 'damageNumbers'])
-        if (typeof saved[key] === 'boolean') settings[key] = saved[key];
-      if (uiScales.includes(saved.uiScale)) settings.uiScale = saved.uiScale;
-      if (saved.bindings && typeof saved.bindings === 'object')
-        for (const action of Object.keys(defaultBindings))
-          if (typeof saved.bindings[action] === 'string')
-            settings.bindings[action] = saved.bindings[action];
-    }
-  } catch {}
-  const save = () => {
-    try {
-      storage.setItem('utreys-settings', JSON.stringify(settings));
-    } catch {}
-  };
+  if (saved && typeof saved === 'object') {
+    for (const key of ['shake', 'hints', 'damageNumbers'])
+      if (typeof saved[key] === 'boolean') settings[key] = saved[key];
+    if (uiScales.includes(saved.uiScale)) settings.uiScale = saved.uiScale;
+    if (saved.bindings && typeof saved.bindings === 'object')
+      for (const action of Object.keys(defaultBindings))
+        if (typeof saved.bindings[action] === 'string')
+          settings.bindings[action] = saved.bindings[action];
+  }
+  return settings;
+}
+export function createGameSettings({ storage }) {
+  const file = persisted(storage, 'utreys-settings', { normalize: normalizeSettings });
+  const settings = file.load();
+  const save = () => file.save(settings);
   return {
     get shake() {
       return settings.shake;

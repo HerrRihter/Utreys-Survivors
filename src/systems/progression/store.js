@@ -1,4 +1,5 @@
 import { normalizeProgression } from './normalize.js';
+import { persisted } from '../../core/storage.js';
 import {
   LEGACY_BEST_KEY,
   legacyBest,
@@ -22,22 +23,16 @@ export function createProgressionStore({
   events = globalThis,
   document = globalThis.document,
 }) {
-  const key = 'utreys-progression-v1';
-  const stored = read(key);
+  const file = persisted(storage, 'utreys-progression-v1');
+  const oldBest = persisted(storage, LEGACY_BEST_KEY, { normalize: legacyBest });
+  const stored = file.load();
   let data = normalizeProgression(stored),
     persistent = true;
   const previous = deepFreeze(previousProgressionShape(stored, data));
   // This device's record from before it moved into the save; it also joins a save that
   // replaces this one during the session (from the cloud), so it is never lost.
-  const best = legacyBest(read(LEGACY_BEST_KEY));
+  const best = oldBest.load();
   if (best) mergeLegacyBest(data, best);
-  function read(name) {
-    try {
-      return JSON.parse(storage.getItem(name));
-    } catch {
-      return null;
-    }
-  }
   let dirty = false,
     pending = null,
     idle = null;
@@ -63,13 +58,8 @@ export function createProgressionStore({
       idle = null;
     }
     if (!dirty) return;
-    try {
-      storage.setItem(key, JSON.stringify(data));
-      persistent = true;
-      dirty = false;
-    } catch {
-      persistent = false;
-    }
+    persistent = file.save(data);
+    if (persistent) dirty = false;
   }
   // Listeners hear about saves worth syncing elsewhere: purchases, run results ('save'), a
   // counted run ending ('run', with the entry) and the page going away ('hidden'). Combat
@@ -139,11 +129,7 @@ export function createProgressionStore({
   if (best) {
     dirty = true;
     flush();
-    if (persistent)
-      try {
-        if (storage.removeItem) storage.removeItem(LEGACY_BEST_KEY);
-        else storage.setItem(LEGACY_BEST_KEY, 'null');
-      } catch {}
+    if (persistent) oldBest.clear();
   }
   return {
     get data() {

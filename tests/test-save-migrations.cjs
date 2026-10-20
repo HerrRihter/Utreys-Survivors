@@ -89,6 +89,7 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   assert.equal(audio.settings.enabled, false);
   audio.dispose();
   assert.equal(JSON.parse(saved.get('utreys-audio')).music, 0.17);
+  assert.equal(JSON.parse(saved.get('gaul-audio')), null, 'the old audio key is cleared');
   saved.set('utreys-audio', JSON.stringify({ enabled: true, music: 0.3, effects: 0.5 }));
   audio = AudioSystem.create(c);
   assert.equal(audio.settings.music, 0.3);

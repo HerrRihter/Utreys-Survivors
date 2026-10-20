@@ -1,8 +1,11 @@
 import { allNodesResolved } from '../systems/node-objectives.js';
 import { weaponDefinitions, weaponMaxLevel } from '../../data/weapons.js';
+import { persisted } from '../core/storage.js';
 
 // First-run guidance. Each tip is shown once per player (stored), only while hints are on.
 const STORAGE_KEY = 'utreys-tips';
+const seenIds = (saved) =>
+  Array.isArray(saved) ? saved.filter((id) => typeof id === 'string') : [];
 const TIP_SECONDS = 7;
 
 export const tipTexts = {
@@ -18,17 +21,12 @@ export const tipTexts = {
 };
 
 export function createTips({ storage, settings, run }) {
-  let seen = [];
-  try {
-    const saved = JSON.parse(storage.getItem(STORAGE_KEY));
-    if (Array.isArray(saved)) seen = saved.filter((id) => typeof id === 'string');
-  } catch {}
+  const file = persisted(storage, STORAGE_KEY, { normalize: seenIds });
+  let seen = file.load();
   function show(id, text) {
     if (!settings.hints || seen.includes(id)) return false;
     seen.push(id);
-    try {
-      storage.setItem(STORAGE_KEY, JSON.stringify(seen));
-    } catch {}
+    file.save(seen);
     run.tip = { text, left: TIP_SECONDS };
     return true;
   }
@@ -70,9 +68,7 @@ export function createTips({ storage, settings, run }) {
     check,
     reset() {
       seen = [];
-      try {
-        storage.setItem(STORAGE_KEY, '[]');
-      } catch {}
+      file.save(seen);
     },
   };
 }
