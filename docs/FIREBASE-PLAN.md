@@ -192,33 +192,33 @@ stats/{uid}
 
 ## Изменения в коде
 
-| Файл                                                                                | Что                                                                                                                |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `package.json`                                                                      | зависимость `firebase` (модульный SDK v11+); `firebase-admin`, `@firebase/rules-unit-testing` в devDependencies    |
-| `src/services/firebase.js`                                                          | ленивая инициализация `initializeApp`, `getAuth`, `getFirestore` из lite; `cloudEnabled()` по наличию конфигурации |
-| `src/services/login.js`                                                             | проверка формата, нормализация, ключ, служебный адрес; без Firebase, покрывается обычными тестами                  |
-| `src/services/auth.js`                                                              | регистрация, вход, выход, смена пароля, перевод ошибок Firebase в тексты, подписка на состояние                    |
-| `src/services/cloud-progress.js`                                                    | синхронизация по алгоритму выше, троттлинг                                                                         |
-| `src/services/run-stats.js`                                                         | расчёт прироста по забегу, транзакция `stats/{uid}`, очередь неотправленных забегов                                |
-| `src/services/leaderboard.js`                                                       | `top(metric, scope, n)`, `rank(metric, scope)`, кэш на 60 с                                                        |
-| `data/leaderboards.js`                                                              | список показателей: поле, подпись, сортировка, формат значения                                                     |
-| `src/systems/progression/` (раньше src/systems/progression/)                                                        | `normalize`, `snapshot`, `replace`, `mapStats`, событие изменения                                                  |
-| `src/app/game-flow.js`                                                              | `runId`, учёт забега и отправка в конце `finish`                                                                   |
-| `src/app/game-session.js`, `useGameSession.ts`                                      | создание облачного слоя, команды для UI                                                                            |
-| `src/components/AccountPanel.tsx`                                                   | в меню: «Войти» или логин игрока, «Моя статистика», «Сменить пароль», «Выйти»                                      |
-| `src/components/AuthDialog.tsx`                                                     | окно с вкладками «Вход» / «Регистрация»: логин, пароль, повтор пароля, ошибки                                      |
-| `src/components/LeaderboardView.tsx`                                                | экран лидеров: вкладки, показатель, карта, топ-50, своя строка                                                     |
-| `src/components/PlayerStatsView.tsx`                                                | экран «Моя статистика»                                                                                             |
-| `src/components/GameMenus.tsx`, `GameRunScreens.tsx`                                | кнопка «Лидеры», блок рекордов на итогах, диалог выбора прогресса                                                  |
-| `styles/`                                                                           | стили в текущих токенах, проверка экранов в `test:layout`                                                          |
-| `firestore.rules`, `firestore.indexes.json`, `firebase.json`, `.firebaserc`         | правила, индексы (пустой список), конфиг CLI                                                                       |
-| `tests/test-login.cjs`, `tests/test-run-stats.cjs`, `tests/test-cloud-progress.cjs` | логины, расчёт статистики, синхронизация с фейковым бэкендом                                                       |
-| `tests/rules/*.test.js`, скрипт `test:rules`                                        | правила на эмуляторе                                                                                               |
-| `tools/reset-password.cjs`, скрипт `admin:reset-password`                           | сброс пароля по логину                                                                                             |
-| `.env.example`                                                                      | список `VITE_FIREBASE_*`                                                                                           |
-| `.github/workflows/deploy-pages.yml`                                                | передача переменных в `npm run build`, шаг `test:rules`                                                            |
-| `tools/structure-contract.json`, `docs/STRUCTURE-CONTRACT.md`                       | новая папка `src/services`                                                                                         |
-| `documentation.md`, `docs/README.md`                                                | раздел про облако                                                                                                  |
+| Файл                                                                               | Что                                                                                                                |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `package.json`                                                                     | зависимость `firebase` (модульный SDK v11+); `firebase-admin`, `@firebase/rules-unit-testing` в devDependencies    |
+| `src/services/firebase.js`                                                         | ленивая инициализация `initializeApp`, `getAuth`, `getFirestore` из lite; `cloudEnabled()` по наличию конфигурации |
+| `src/services/login.js`                                                            | проверка формата, нормализация, ключ, служебный адрес; без Firebase, покрывается обычными тестами                  |
+| `src/services/auth.js`                                                             | регистрация, вход, выход, смена пароля, перевод ошибок Firebase в тексты, подписка на состояние                    |
+| `src/services/cloud-progress.js`                                                   | синхронизация по алгоритму выше, троттлинг                                                                         |
+| `src/services/run-stats.js`                                                        | расчёт прироста по забегу, транзакция `stats/{uid}`, очередь неотправленных забегов                                |
+| `src/services/leaderboard.js`                                                      | `top(metric, scope, n)`, `rank(metric, scope)`, кэш на 60 с                                                        |
+| `data/leaderboards.js`                                                             | список показателей: поле, подпись, сортировка, формат значения                                                     |
+| `src/systems/progression/` (раньше src/systems/progression/)                       | `normalize`, `snapshot`, `replace`, `mapStats`, событие изменения                                                  |
+| `src/app/game-flow.js`                                                             | `runId`, учёт забега и отправка в конце `finish`                                                                   |
+| `src/app/game-session.js`, `useGameSession.ts`                                     | создание облачного слоя, команды для UI                                                                            |
+| `src/components/AccountPanel.tsx`                                                  | в меню: «Войти» или логин игрока, «Моя статистика», «Сменить пароль», «Выйти»                                      |
+| `src/components/AuthDialog.tsx`                                                    | окно с вкладками «Вход» / «Регистрация»: логин, пароль, повтор пароля, ошибки                                      |
+| `src/components/LeaderboardView.tsx`                                               | экран лидеров: вкладки, показатель, карта, топ-50, своя строка                                                     |
+| `src/components/PlayerStatsView.tsx`                                               | экран «Моя статистика»                                                                                             |
+| `src/components/GameMenus.tsx`, `GameRunScreens.tsx`                               | кнопка «Лидеры», блок рекордов на итогах, диалог выбора прогресса                                                  |
+| `styles/`                                                                          | стили в текущих токенах, проверка экранов в `test:layout`                                                          |
+| `firestore.rules`, `firestore.indexes.json`, `firebase.json`, `.firebaserc`        | правила, индексы (пустой список), конфиг CLI                                                                       |
+| `tests/account.test.js`, `tests/run-stats.test.js`, `tests/cloud-progress.test.js` | логины, расчёт статистики, синхронизация с фейковым бэкендом                                                       |
+| `tests/rules/*.test.js`, скрипт `test:rules`                                       | правила на эмуляторе                                                                                               |
+| `tools/reset-password.cjs`, скрипт `admin:reset-password`                          | сброс пароля по логину                                                                                             |
+| `.env.example`                                                                     | список `VITE_FIREBASE_*`                                                                                           |
+| `.github/workflows/deploy-pages.yml`                                               | передача переменных в `npm run build`, шаг `test:rules`                                                            |
+| `tools/structure-contract.json`, `docs/STRUCTURE-CONTRACT.md`                      | новая папка `src/services`                                                                                         |
+| `documentation.md`, `docs/README.md`                                               | раздел про облако                                                                                                  |
 
 ## Этапы
 
@@ -230,7 +230,7 @@ stats/{uid}
 
 **Статус на 16.10:** сделано. Кроме перечисленного, в этап вошли правила для `logins` и
 `users` (без них регистрация не работает) и `firebase.json`. Проверено тестами на фейковом
-Firebase (`tests/test-account.cjs`) и в браузере с эмулятором Auth: панель, ошибки, вход
+Firebase (`tests/account.test.js`) и в браузере с эмулятором Auth: панель, ошибки, вход
 логином в другом регистре, откат аккаунта при сбое записи профиля, сессия после перезагрузки,
 вёрстка на 375 px. Регистрация на настоящем проекте проверена владельцем.
 
@@ -248,7 +248,7 @@ Firebase (`tests/test-account.cjs`) и в браузере с эмуляторо
 - Запрос может вычислить не больше 1000 выражений. Поэтому числовые поля статистики
   обязательны (клиент всегда шлёт все), а подписи рекордов (герой, нагрузка) правила не
   проверяют: клиент показывает только известные ему id героев и нагрузку 1–10.
-- `tests/test-firestore-rules.cjs` (в `npm test`) сверяет список карт в правилах с
+- `tests/firestore-rules.test.js` (в `npm test`) сверяет список карт в правилах с
   `data/maps/maps.js`.
 
 **Этап 3. Облачный прогресс.** Рефакторинг `persistence.js` (теперь `src/systems/progression/`), `cloud-progress.js`, диалог
@@ -262,7 +262,7 @@ Firebase (`tests/test-account.cjs`) и в браузере с эмуляторо
 со страницы — сразу; без сети показывает «ОБЛАКО НЕДОСТУПНО» и повторяет через минуту.
 Устройство помнит в `utreys-cloud-v1` свой id, аккаунт, ревизию и короткий хэш последней
 синхронизации. Диалог выбора не появляется поверх боя и левелапа. Проверено:
-`tests/test-cloud-progress.cjs` (два и более «устройств» с общим фейковым облаком: перенос,
+`tests/cloud-progress.test.js` (два и более «устройств» с общим фейковым облаком: перенос,
 конфликт в обе стороны, гонка записей, офлайн, смена аккаунта) и в браузере на эмуляторах
 Auth и Firestore с настоящими правилами: регистрация «Тестер», выгрузка, конфликт с
 изменённой облачной копией, «Взять из облака», покупка уходит ревизией 3.
@@ -279,7 +279,7 @@ Auth и Firestore с настоящими правилами: регистрац
 `statsCounted` сохраняются в снимке забега, поэтому продолжение после закрытия вкладки не
 добавляет вторую игру. Экран — кнопка «СТАТИСТИКА» в меню, таблица «показатель × карта»
 показывает сохранение этого устройства (оно же синхронизируется через облачный прогресс);
-места в таблицах — этап 5. Проверено: `tests/test-run-stats.cjs` и в браузере на
+места в таблицах — этап 5. Проверено: `tests/run-stats.test.js` и в браузере на
 эмуляторах: победа на «Дата-центре» и выход на «Серверном зале» записаны в `stats/{uid}`
 настоящими правилами и совпали с локальной статистикой.
 
@@ -296,7 +296,7 @@ Auth и Firestore с настоящими правилами: регистрац
 под таблицей. На итогах забега — «Рекорды в таблицах» с местами; гость видит «ВОЙТИ, ЧТОБЫ
 ПОПАСТЬ В ТАБЛИЦУ», и после входа этот забег отправляется (только последний забег гостя).
 Места в «Моей статистике» не показываются: это 24 запроса подсчёта на открытие. Проверено:
-`tests/test-leaderboard.cjs`, 13 тестов правил и в браузере на эмуляторах с «соперником»:
+`tests/leaderboard.test.js`, 13 тестов правил и в браузере на эмуляторах с «соперником»:
 места на итогах, обе вкладки, пустая карта, своя строка вне топа, 375 px. `test:layout`
 окна не открывает: они доступны только с настроенным Firebase.
 
