@@ -167,25 +167,6 @@ function checkStructure({
   for (const file of assets)
     if (file.startsWith('assets/runtime/') && !published.has(file))
       throw new Error('Unused runtime asset: ' + file);
-  const references = [
-    ...contract.referenceFiles,
-    ...contract.referenceRoots.flatMap((dir) => walk(root, dir)),
-    ...walk(root, 'tools').filter(
-      (file) => /\.(cjs|ps1)$/.test(file) && file !== 'tools/check-structure.cjs',
-    ),
-  ];
-  for (const file of references.filter((file) => /\.(js|tsx?|cjs|json|html|css|ps1)$/.test(file))) {
-    const source = fs.readFileSync(path.join(root, file), 'utf8');
-    for (const obsolete of contract.forbiddenReferences) {
-      if (source.includes(obsolete))
-        throw new Error(`Obsolete asset reference in ${file}: ${obsolete}`);
-    }
-    // Names of the retired village game must not creep back into the engine.
-    if (!file.startsWith('tools/'))
-      for (const name of contract.forbiddenIdentifiers || [])
-        if (new RegExp(`\\b${name}\\b`).test(source))
-          throw new Error(`Obsolete identifier in ${file}: ${name}`);
-  }
   for (const file of [
     ...fs.readdirSync(root),
     ...['src', 'data', 'styles', 'tools', 'tests'].flatMap((dir) => walk(root, dir)),

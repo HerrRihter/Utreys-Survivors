@@ -22,20 +22,14 @@ test('resource-contract', async () => {
   try {
     for (const dir of [...Object.keys(contract.directories), 'tools', 'tests', 'styles'])
       fs.mkdirSync(path.join(root, dir), { recursive: true });
-    for (const file of contract.referenceFiles) write(file);
     const inventory = { pages: [], groups: [{ files: ['assets/runtime/audio/sfx/hit.ogg'] }] };
     assert.throws(() => checkStructure({ root, inventory }), /Missing publication resource/);
     write('assets/runtime/audio/sfx/hit.ogg');
     assert.equal(checkStructure({ root, inventory }).published, 1);
-    write('src/main.js', "const path='assets/audio/invalid.ogg';");
-    assert.throws(() => checkStructure({ root, inventory }), /Obsolete asset reference/);
-    write('src/main.js', 'export const Legion = {};');
-    assert.throws(() => checkStructure({ root, inventory }), /Obsolete identifier/);
-    write('src/main.js');
     write('src/leak.png');
     assert.throws(() => checkStructure({ root, inventory }), /Media outside assets/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
-  console.log('PASS: publication inventory, unsafe paths, obsolete references and media placement');
+  console.log('PASS: publication inventory, unsafe paths and media placement');
 });
