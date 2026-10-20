@@ -82,9 +82,11 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   s.kills = 17;
   const guardian = nodeGuardian(s, s.nodes[0]);
   guardian.hp = 123;
+  // A workaround removes the node's guardian, as the game does.
   s.nodes[1].status = 'workaround';
+  s.enemies = s.enemies.filter((e) => e !== nodeGuardian(s, s.nodes[1]));
   game.pause();
-  assert(store.has('utreys-run-v3'), 'pausing saves the run');
+  assert(store.has('utreys-run-v4'), 'pausing saves the run');
   const enemies = s.enemies.filter((e) => !e.nodeId).length;
   game.dispose();
 
@@ -106,8 +108,30 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   game.pause();
   game.update(0.05);
   game.finish(false);
-  assert(!store.has('utreys-run-v3'), 'a finished run is not offered again');
+  assert(!store.has('utreys-run-v4'), 'a finished run is not offered again');
   assert.equal(game.views.menu().resume, null);
+
+  // A level-up open when the tab closes comes back with the same cards and the run's random
+  // source where it was.
+  game.start();
+  game.state.xp = game.state.need;
+  game.update(1 / 60);
+  assert.equal(game.mode, 'level');
+  const offered = game.views.run().choice.map((card) => card.id);
+  const position = game.state.rng.getState();
+  h.listeners.pagehide({});
+  game.dispose();
+  game = h.createSession();
+  assert(game.resume());
+  assert.equal(game.mode, 'level');
+  assert.deepEqual(
+    game.views.run().choice.map((card) => card.id),
+    offered,
+    'the same cards are offered',
+  );
+  assert.equal(game.state.rng.getState(), position, 'no new cards were drawn');
+  game.pickUpgrade(0);
+  game.menu();
 
   // Tips: shown once, only with hints on.
   game.start();

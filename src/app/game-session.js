@@ -111,7 +111,7 @@ export const GameSession = {
       progression,
       audio,
     });
-    const spawning = EnemySpawning.create({ run, world, cosmetic, toast, audio });
+    const spawning = EnemySpawning.create({ run, world, toast, audio });
     const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio });
     // Saves the run journal as a JSON file; returns the file's text (tests read it).
     function exportRunLog() {

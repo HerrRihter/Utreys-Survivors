@@ -48,14 +48,14 @@ import { createGameRng } from '../core/rng.js';
  * @typedef {{ x: number, y: number, v: number, dead?: boolean, pull?: boolean }} Gem
  * @typedef {{ x: number, y: number, value: number, event?: boolean, dead?: boolean }} CodeToken
  * @typedef {{ x: number, y: number, type: string, dead?: boolean }} Pickup
- * Short-lived world objects (shots, effects, hazards, corpses): dropped on save. The player's
+ * Short-lived world objects (shots, effects, hazards, corpses). The player's
  * projectiles are `shots` (the hero's packets) and `wfx` (weapon shots, mines, zones), both
  * moved by the projectile kinds of src/systems/projectiles.js.
  * @typedef {Record<string, unknown>} WorldObject
  * @typedef {{ client: string, bonus: number }} BaSpecialization
  *
- * Caches and cosmetic cursors of the running simulation. Recomputed or restarted after a
- * resume, so never saved.
+ * Caches of the running simulation (counted once per step, read later in the step) and the
+ * cosmetic cursors of enemy speech.
  * @typedef {{ crowd: number, guards: Enemy[], attackCycle: number,
  *   speechPhraseIndex: Record<string, number>, speechCursor: number,
  *   nextSpeechAt: number }} RunRuntime
@@ -106,12 +106,13 @@ export function createRunRuntime() {
   };
 }
 
-// How each field of the run is saved (src/systems/run-snapshot.js builds saves from this):
-//   save    copied into the snapshot as it is (plain data)
-//   reduce  saved in a reduced form: the hero's position and health, owned items, node
-//           status, living enemies, drops
-//   rebuild not saved: rebuilt by start() from the hero, map and seed, live world that a
-//           resumed run starts without, ending bookkeeping, and the runtime caches
+// How each field of the run is saved (src/systems/run-snapshot.js builds saves from this).
+// A saved run continues exactly as the running one would: everything the simulation reads is
+// kept, with the references between its objects (src/core/graph-json.js).
+//   save    copied into the snapshot as it is
+//   reduce  saved in a reduced form: the game random source as its position
+//   rebuild not saved: rebuilt by start() from the hero, map and seed, cosmetic leftovers
+//           (corpses, effects, floating texts, screen shake) and ending bookkeeping
 /** @type {Record<keyof RunModel, 'save' | 'reduce' | 'rebuild'>} */
 export const runFields = {
   t: 'save',
@@ -119,7 +120,7 @@ export const runFields = {
   runId: 'save',
   map: 'rebuild', // kept at the snapshot's top level
   seed: 'save',
-  rng: 'rebuild',
+  rng: 'reduce',
   load: 'save',
   healFactor: 'save',
   eventPlan: 'rebuild',
@@ -135,12 +136,12 @@ export const runFields = {
   xp: 'save',
   need: 'save',
   earned: 'save',
-  attack: 'rebuild',
-  p: 'reduce',
+  attack: 'save',
+  p: 'save',
   stats: 'save',
   heroWeaponName: 'rebuild',
-  abilities: 'reduce',
-  weapons: 'reduce',
+  abilities: 'save',
+  weapons: 'save',
   evoTokens: 'save',
   evolutions: 'save',
   upgradeRanks: 'save',
@@ -156,21 +157,21 @@ export const runFields = {
   firstHurtAt: 'save',
   foodTaken: 'save',
   doneBefore: 'save',
-  enemies: 'reduce',
+  enemies: 'save',
   nextEnemyId: 'save',
-  nodes: 'reduce',
-  gems: 'reduce',
-  codes: 'reduce',
-  pickups: 'reduce',
-  corpses: 'rebuild',
-  enemyShots: 'rebuild',
-  hazards: 'rebuild',
-  shots: 'rebuild',
-  wfx: 'rebuild',
-  fx: 'rebuild',
-  texts: 'rebuild',
-  bossDead: 'rebuild',
-  shake: 'rebuild',
+  nodes: 'save',
+  gems: 'save',
+  codes: 'save',
+  pickups: 'save',
+  corpses: 'rebuild', // cosmetic
+  enemyShots: 'save',
+  hazards: 'save',
+  shots: 'save',
+  wfx: 'save',
+  fx: 'rebuild', // cosmetic
+  texts: 'rebuild', // cosmetic
+  bossDead: 'save',
+  shake: 'rebuild', // cosmetic
   endless: 'save',
   endlessStart: 'save',
   endlessKills: 'save',
@@ -182,7 +183,7 @@ export const runFields = {
   statsCounted: 'save',
   earnedPaid: 'save',
   recordsImproved: 'rebuild',
-  runtime: 'rebuild',
+  runtime: 'save',
 };
 const fieldsOf = (/** @type {string} */ kind) =>
   Object.keys(runFields).filter((key) => runFields[/** @type {keyof RunModel} */ (key)] === kind);

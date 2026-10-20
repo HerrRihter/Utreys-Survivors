@@ -12,7 +12,7 @@ import { production } from '../../data/difficulty.js';
 import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
-  create({ run, world, cosmetic, toast, audio }) {
+  create({ run, world, toast, audio }) {
     function spawn(unit, boss = false, position = null) {
       const s = run.state,
         p = s.p,
@@ -47,7 +47,8 @@ export const EnemySpawning = {
         boss,
         hit: 0,
         cd: 0,
-        phase: cosmetic() * 3,
+        // Animation offset, spread by id so neighbours do not walk in step.
+        phase: (((s.nextEnemyId - 1) * 0.6180339887) % 1) * 3,
         vx: 0,
         vy: 0,
         heading: Math.atan2(p.y - y, p.x - x),

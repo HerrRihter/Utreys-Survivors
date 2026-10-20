@@ -203,9 +203,16 @@ export const UpgradeSystem = {
       result.push(...rest.slice(0, 4 - result.length));
       for (const u of fallback) {
         if (result.length === 4) break;
-        result.push({ ...u, group: cardTexts.groups.supply, detail: '', isNew: false });
+        result.push(supply(u));
       }
       return result;
+    }
+    const supply = (u) => ({ ...u, group: cardTexts.groups.supply, detail: '', isNew: false });
+    // The cards of a saved offer, by id; null when one of them can no longer be offered.
+    function cards(hero, s, ids) {
+      const all = [...pool(hero, s), ...fallback.map(supply)];
+      const out = ids.map((id) => all.find((u) => u.id === id));
+      return out.length && out.every(Boolean) ? out : null;
     }
     function apply(u, s) {
       if (u.available && !u.available(s)) return false;
@@ -255,6 +262,6 @@ export const UpgradeSystem = {
         passiveSlots,
       };
     }
-    return { common, heroes, weapons, abilities, pool, offer, apply, build, describe };
+    return { common, heroes, weapons, abilities, pool, offer, cards, apply, build, describe };
   },
 };

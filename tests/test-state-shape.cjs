@@ -5,36 +5,28 @@ const { mapDefinitions } = require('../data/maps/maps.js');
 const { abilityDefinitions } = require('../data/characters/abilities.js');
 const { runFields, persistentKeys, reducedKeys } = require('../src/systems/run-model.js');
 const { RUN_SNAPSHOT_KEY } = require('../src/systems/run-snapshot.js');
+const { toGraphJson } = require('../src/core/graph-json.js');
 
 // Every field of `run.state` comes from the run model's schema (runFields): copied into the
-// save, saved in a reduced form or rebuilt. Only `runtime` holds the simulation's caches.
+// save, saved in a reduced form or rebuilt. Only `runtime` holds the simulation's caches; it is
+// saved, since a step reads values the previous step counted.
 // A field outside the schema fails here, so a save never drops it silently.
 const RUNTIME_KEYS = ['runtime'];
 
-// What a resumed run must have as saved: every copied field, the hero's health, owned items,
-// nodes with their guardians and the enemies with their links.
+// What a resumed run must have as saved: every copied field as it was, with the references
+// between objects (targets, hit lists, guards), and the game random source at its position.
 const shape = (s) =>
-  JSON.parse(
-    JSON.stringify({
-      ...Object.fromEntries(persistentKeys.map((key) => [key, s[key]])),
-      hp: s.p.hp,
-      max: s.p.max,
-      weapons: s.weapons.map((w) => [w.id, w.level, w.evolved]),
-      abilities: s.abilities.map((a) => [a.id, a.cd]),
-      nodes: s.nodes.map((n) => [n.id, n.status, n.progress, n.guardianId]),
-      guardians: s.enemies.filter((e) => e.nodeId).map((e) => [e.id, e.nodeId, e.hp]),
-      enemies: s.enemies
-        .filter((e) => e.hp > 0 && !e.nodeId)
-        .map((e) => [e.id, e.unit, e.hp, e.summonerId]),
-    }),
-  );
+  JSON.stringify({
+    fields: toGraphJson(Object.fromEntries(persistentKeys.map((key) => [key, s[key]]))),
+    rng: s.rng.getState(),
+  });
 
 const SECONDS = 180,
   DT = 1 / 60;
 
 (async () => {
   const known = new Set(Object.keys(runFields));
-  for (const key of RUNTIME_KEYS) assert.equal(runFields[key], 'rebuild', key + ' is never saved');
+  for (const key of RUNTIME_KEYS) assert.equal(runFields[key], 'save', key + ' is saved');
   assert.equal(
     new Set([...persistentKeys, ...reducedKeys]).size,
     persistentKeys.length + reducedKeys.length,
@@ -102,7 +94,7 @@ const SECONDS = 180,
       game.dispose();
       game = h.createSession();
       assert(game.resume(), label + ' resumes');
-      assert.deepEqual(shape(game.state), expected, label + ' round trip keeps the saved fields');
+      assert.equal(shape(game.state), expected, label + ' round trip keeps the saved fields');
       game.menu();
       game.dispose();
     }

@@ -452,8 +452,13 @@ export const GameFlow = {
       if (snapshot.pendingLevel) {
         setMode('level');
         run.levelLock = LEVEL_LOCK;
-        // The saved offer is still open: its cards are replaced, not counted twice.
-        offerCards({});
+        // The saved offer is still open with the same cards. A save of an older build kept
+        // no cards: new ones replace the logged offer, not counted twice.
+        const saved = snapshot.choice && upgrades.cards(run.selected, run.state, snapshot.choice);
+        if (saved) {
+          run.choice = saved;
+          run.banishArmed = false;
+        } else offerCards({});
         audio.effect('level');
       } else setMode('pause');
       snapshots.save(run);
