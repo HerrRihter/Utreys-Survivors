@@ -200,7 +200,13 @@ export const GameSession = {
       if (!s) return;
       visible.width = view.W || 960;
       visible.height = view.H || 640;
-      const origin = cameraOrigin(s.p, visible.width, visible.height, world.arena.size);
+      const origin = cameraOrigin(
+        s.p,
+        visible.width,
+        visible.height,
+        world.arena.size,
+        world.arena.rooms,
+      );
       visible.x = origin.x;
       visible.y = origin.y;
       updateEnemySpeech(s, visible);

@@ -48,7 +48,7 @@ export const SceneRenderer = {
     function draw() {
       const s = run.state,
         p = s ? s.p : { x: 1100, y: 1010 },
-        { x: cx, y: cy } = cameraOrigin(p, view.W, view.H, world.arena.size);
+        { x: cx, y: cy } = cameraOrigin(p, view.W, view.H, world.arena.size, world.arena.rooms);
       ctx.save();
       if (s && s.shake && run.mode === 'play' && settings.shake !== false)
         ctx.translate((cosmetic() * 2 - 1) * s.shake, (cosmetic() * 2 - 1) * s.shake);
