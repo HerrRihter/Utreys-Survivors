@@ -7,10 +7,10 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src data tools tests && npm run typecheck",
-    "format": "prettier --write src data styles tools tests vite.config.ts",
-    "format:check": "prettier --check src data styles tools tests vite.config.ts",
-    "test": "node tools/test-all.cjs",
+    "lint": "eslint src data tools tests vitest.config.js && npm run typecheck",
+    "format": "prettier --write src data styles tools tests vite.config.ts vitest.config.js",
+    "format:check": "prettier --check src data styles tools tests vite.config.ts vitest.config.js",
+    "test": "vitest run",
     "test:browser": "node tools/smoke-browser.cjs",
     "test:layout": "node tools/layout-check.cjs",
     "check:structure": "node tools/check-structure.cjs",
@@ -41,7 +41,8 @@
     "playwright": "^1.64.1",
     "prettier": "^3.9.10",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vitest": "^4.1.12"
   },
   "engines": {
     "node": ">=22"

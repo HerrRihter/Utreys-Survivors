@@ -15,6 +15,11 @@ export default [
     rules,
   },
   {
+    // vitest suites and the config run in Node as modules.
+    files: ['tests/**/*.js', 'vitest.config.js'],
+    languageOptions: { globals: globals.node },
+  },
+  {
     // Tools and tests run in Node and also ship callbacks into the browser (page.evaluate).
     files: ['**/*.cjs'],
     languageOptions: {
