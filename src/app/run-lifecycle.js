@@ -64,6 +64,7 @@ export function createRunLifecycle({
       baClient: run.baClient,
       doneBefore: achievements.list.filter((a) => achievements.achievementDone(a)).map((a) => a.id),
     });
+    world.follow(run.state);
     world.arena.prepare(
       Object.values(unitDefinitions).map((unit) => unit.r),
       run.state.p,
@@ -96,6 +97,7 @@ export function createRunLifecycle({
     progression.flush();
     setMode('menu');
     run.state = null;
+    world.select(run.selectedMap);
     run.screen = 'menu';
     run.toast = { text: '', left: 0 };
     input.resetInput();
@@ -243,6 +245,8 @@ export function createRunLifecycle({
     run.selectedLoad = snapshot.state.load || 1;
     run.nextSeed = snapshot.state.seed ?? null;
     start(true);
+    // A learning run resumes in the room it was saved in: its walls first, then the enemies.
+    if (saved.learning) world.follow({ ...run.state, learning: saved.learning });
     restoreRun(run.state, snapshot, spawning.spawn);
     if (run.state.learning?.active) setMode('quiz');
     else if (snapshot.pendingLevel) levels.reopen(snapshot.choice);

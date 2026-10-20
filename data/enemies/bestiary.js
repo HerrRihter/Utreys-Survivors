@@ -24,7 +24,7 @@ export const bestiary = {
     aggregation: 'Номер партии и резервирование',
     frequency: `Призыв каждые ${unitDefinitions.batch_accounting.summon.every} с`,
     description:
-      'Множество склеенных значков Пепси. Ждёт в последней комнате учебного полигона после трёх тестов.',
+      'Множество склеенных значков Пепси. Ждёт в центральном зале учебного полигона, за тремя лабиринтами.',
     tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
   },
   l3: {

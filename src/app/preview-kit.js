@@ -2,6 +2,7 @@ import { mapDefinitions } from '../../data/maps/maps.js';
 import { unitDefinitions, enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
 import { createArenas } from '../world/arenas.js';
 import { layoutNodes } from '../systems/run-layout.js';
+import { roomLayout } from '../systems/queries/learning.js';
 import { createNodeState } from '../systems/node-objectives.js';
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
@@ -18,7 +19,17 @@ const maps = Object.entries(mapDefinitions).map(([id, map]) => ({ id, name: map.
 export function createPreviewKit() {
   const arenas = createArenas();
   const floor = createArenaFloor();
-  const nodes = (map) => createNodeState(undefined, layoutNodes(map, 1));
+  // A map as the previews show it: the learning map by a sample first maze (seed 1).
+  const plan = (map) => {
+    const layout = roomLayout(map, 1, 0),
+      nodes = createNodeState(undefined, layoutNodes(map, 1));
+    return layout
+      ? {
+          arena: arenas.forRoom(map, map + ':preview', layout.walls),
+          nodes: nodes.filter((n) => n.room === 0),
+        }
+      : { arena: arenas.get(map), nodes };
+  };
   let enemies = null;
   const schedules = new Map();
   const schedule = (map) => {
@@ -49,10 +60,10 @@ export function createPreviewKit() {
       };
     },
     drawArenaPlan(g, map, { close, labels, bounds }) {
-      drawArenaPlan(g, { floor, arena: arenas.get(map), nodes: nodes(map), close, labels, bounds });
+      drawArenaPlan(g, { floor, ...plan(map), close, labels, bounds });
     },
     drawRadar(g, map, t) {
-      drawRadar(g, { floor, arena: arenas.get(map), nodes: nodes(map), t });
+      drawRadar(g, { floor, ...plan(map), t });
     },
     drawOpponent(g, unit, { motion, phase, reverse }) {
       enemies ??= createEnemyRenderer();

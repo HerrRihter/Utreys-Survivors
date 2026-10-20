@@ -14,8 +14,9 @@ export function createNodeState(seconds = workaroundSeconds, layout = nodeDefini
     ...node,
     label: node.label ?? node.id,
     need: seconds,
-    status:
-      node.kind === 'learning-terminal' ? (node.room === 0 ? 'available' : 'locked') : 'guarded',
+    // A learning terminal is guarded in the first maze and locked in the later ones until the
+    // hero gets there.
+    status: node.kind === 'learning-terminal' && node.room > 0 ? 'locked' : 'guarded',
     progress: 0,
     guardianId: null,
   }));
@@ -28,9 +29,10 @@ export function allNodesResolved(state) {
   );
 }
 
-// A bug stands beside its node; a desk is the objective itself.
+// A bug stands beside its node; a desk is the objective itself; a learning terminal's guard
+// stands where its maze put it.
 export function guardianPoint(node) {
-  return { x: node.x + (node.kind === 'desk' ? 0 : 110), y: node.y };
+  return node.guard ?? { x: node.x + (node.kind === 'desk' ? 0 : 110), y: node.y };
 }
 
 // Re-exported for the node logic's callers; rendering imports it from queries directly.
@@ -43,6 +45,14 @@ export function openTickets(state) {
   let n = 0;
   for (const e of state.enemies) if (e.hp > 0 && guardians.has(e.summonerId)) n++;
   return n;
+}
+
+// A freed node is resolved; a learning terminal opens for its test instead.
+function free(node, how, toast) {
+  const terminal = node.kind === 'learning-terminal';
+  node.status = terminal ? 'available' : how;
+  const key = terminal ? 'opened' : node.kind === 'desk' ? 'closed' : how;
+  toast(node.label + nodeToasts[key]);
 }
 
 export function updateNodes(context, dt) {
@@ -58,8 +68,7 @@ export function updateNodes(context, dt) {
     // A killed guardian leaves the enemy list at the end of its step.
     const guardian = nodeGuardian(s, node);
     if (!guardian || guardian.hp <= 0) {
-      node.status = 'destroyed';
-      context.toast(node.label + (node.kind === 'desk' ? nodeToasts.closed : nodeToasts.destroyed));
+      free(node, 'destroyed', context.toast);
       continue;
     }
     // A desk has no workaround: it must be destroyed.
@@ -69,10 +78,9 @@ export function updateNodes(context, dt) {
     const need = node.need ?? workaroundSeconds;
     node.progress = near && !s.p.hurt ? Math.min(need, node.progress + dt) : 0;
     if (node.progress >= need) {
-      node.status = 'workaround';
       // Bypassing a bug grants no kill, XP, boss reward or corpse.
       s.enemies = s.enemies.filter((enemy) => enemy !== guardian);
-      context.toast(node.label + nodeToasts.workaround);
+      free(node, 'workaround', context.toast);
     }
   }
 }

@@ -1,5 +1,6 @@
 import { createEventScope } from '../core/lifecycle.js';
 import { createArenas } from '../world/arenas.js';
+import { currentLayout } from '../systems/queries/learning.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { CanvasSystem } from '../rendering/canvas.js';
 import { SpriteRenderer } from '../rendering/sprite-renderer.js';
@@ -76,6 +77,13 @@ export const GameSession = {
       arena: arenas.get(run.selectedMap),
       select(id) {
         this.arena = arenas.get(id);
+      },
+      // The arena a run plays in: its map's, or the generated room of the learning map.
+      follow(s) {
+        const layout = currentLayout(s);
+        this.arena = layout
+          ? arenas.forRoom(s.map, `${s.map}:${s.seed}:${s.learning.roomIndex}`, layout.walls)
+          : arenas.get(s.map);
       },
     };
     const corpses = createCorpses();

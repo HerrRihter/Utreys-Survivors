@@ -2,19 +2,19 @@ import { learningCourse } from '../../data/learning-questions.js';
 import { learningRules, learningRooms } from '../../data/learning-rules.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { shuffle } from '../core/rng.js';
+import { availableTerminal, availableExit, roomLayout } from './queries/learning.js';
 
-// Questions asked and right answers needed: bonus terminals have their own, smaller quiz.
-const questionCount = (reason) =>
-  reason === 'bonus' ? learningRules.bonusQuestions : learningRules.questions;
-const passingCount = (reason) =>
-  reason === 'bonus' ? learningRules.bonusPassing : learningRules.passing;
-import { availableTerminal, availableExit, currentRoom } from './queries/learning.js';
+// The map's layout generation: 2 = generated mazes. A saved run of another layout cannot go on.
+export const LEARNING_LAYOUT = 2;
 
 export function createLearningState(map) {
   return mapDefinitions[map]?.objective?.type === 'learning'
     ? {
         courseVersion: learningCourse.version,
+        layout: LEARNING_LAYOUT,
         roomIndex: 0,
+        // Packs of enemies owed for wrong answers; spawning sends them once the quiz closes.
+        audits: 0,
         nextAttempt: 1,
         active: null,
         reviveUsed: false,
@@ -66,7 +66,7 @@ export function beginLearning(s, reason, nodeId = null) {
   // Prefer unseen questions, then mistakes; shuffle only once when creating the attempt.
   const questions = shuffle(pool, s.rng.random)
     .sort((a, b) => (l.answers[a.id]?.correct ? 1 : 0) - (l.answers[b.id]?.correct ? 1 : 0))
-    .slice(0, questionCount(reason));
+    .slice(0, learningRules.questions);
   l.active = {
     id: l.nextAttempt++,
     reason,
@@ -82,6 +82,7 @@ export function beginLearning(s, reason, nodeId = null) {
     })),
     index: 0,
     selected: [],
+    answered: 0,
     correct: 0,
     lastCorrect: false,
     passed: false,
@@ -117,6 +118,7 @@ export function submitLearning(s, id) {
     topic: q.topic,
   };
   record.attempts++;
+  a.answered++;
   if (correct) {
     if (!record.correct) l.points += learningRules.points;
     record.correct++;
@@ -138,7 +140,7 @@ export function advanceLearning(s, id) {
       a.selected = [];
       a.phase = 'question';
     } else {
-      a.passed = a.correct >= passingCount(a.reason);
+      a.passed = a.correct >= learningRules.passing;
       a.phase = 'result';
     }
   } else return false;
@@ -162,23 +164,16 @@ export function closeLearning(s, id) {
     l.active = null;
     return complete && a.passed ? 'play' : 'defeat';
   }
+  // A passed terminal drops its reward once; every wrong answer, passed or not, calls an audit.
   const node = s.nodes.find((n) => n.id === a.nodeId);
-  if (a.reason === 'bonus') node.status = 'exhausted';
   if (complete && a.passed) {
     node.status = 'completed';
     if (!l.rewards.includes(node.id)) {
-      s.p.hp = Math.min(
-        s.p.max,
-        s.p.hp +
-          Math.round(
-            s.p.max *
-              (a.reason === 'bonus' ? learningRules.bonusHeal : learningRules.terminalHeal) *
-              s.healFactor,
-          ),
-      );
+      s.pickups.push({ x: node.x, y: node.y + 60, type: learningRules.terminalReward });
       l.rewards.push(node.id);
     }
   }
+  l.audits += Math.min(learningRules.auditMax, a.answered - a.correct);
   l.active = null;
   return 'play';
 }
@@ -186,7 +181,8 @@ export function closeLearning(s, id) {
 export function moveLearningRoom(s) {
   if (!s.learning || s.learning.active || !availableExit(s)) return false;
   s.learning.roomIndex++;
-  const room = currentRoom(s);
+  s.learning.audits = 0;
+  const { entry } = roomLayout(s.map, s.seed, s.learning.roomIndex);
   for (const key of [
     'enemies',
     'enemyShots',
@@ -205,7 +201,7 @@ export function moveLearningRoom(s) {
   s.runtime.crowd = 0;
   s.event = null;
   s.shake = 0;
-  Object.assign(s.p, room.entry, {
+  Object.assign(s.p, entry, {
     action: null,
     hurt: null,
     chainImpactAt: null,
@@ -223,7 +219,7 @@ export function moveLearningRoom(s) {
   }
   s.spawn = learningRules.roomEntryWave;
   for (const n of s.nodes)
-    if (n.room === s.learning.roomIndex && n.status === 'locked') n.status = 'available';
+    if (n.room === s.learning.roomIndex && n.status === 'locked') n.status = 'guarded';
   return true;
 }
 
@@ -251,6 +247,8 @@ export function validLearning(l) {
   if (
     !l ||
     l.courseVersion !== learningCourse.version ||
+    l.layout !== LEARNING_LAYOUT ||
+    !Number.isInteger(l.audits) ||
     !Number.isInteger(l.roomIndex) ||
     l.roomIndex < 0 ||
     l.roomIndex >= learningRooms.length ||
@@ -263,10 +261,11 @@ export function validLearning(l) {
   if (!a) return true;
   return (
     Number.isInteger(a.id) &&
-    ['lesson', 'bonus', 'revive'].includes(a.reason) &&
+    ['lesson', 'revive'].includes(a.reason) &&
     ['intro', 'question', 'feedback', 'result'].includes(a.phase) &&
     Array.isArray(a.questions) &&
-    a.questions.length === questionCount(a.reason) &&
+    a.questions.length === learningRules.questions &&
+    Number.isInteger(a.answered) &&
     Number.isInteger(a.index) &&
     a.index >= 0 &&
     a.index < a.questions.length &&

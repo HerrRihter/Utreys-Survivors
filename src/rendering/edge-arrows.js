@@ -1,7 +1,8 @@
 import { eventSpec } from '../systems/queries/events.js';
 import { inBox } from '../core/math.js';
-
 import { nodeAvailable } from '../systems/queries/nodes.js';
+import { currentLayout, doorOpen } from '../systems/queries/learning.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
 
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
@@ -29,12 +30,17 @@ export function edgeMarker(target, cx, cy, width, height, margin = 30) {
   return { x: mx + dx * scale, y: my + dy * scale, angle: Math.atan2(dy, dx) };
 }
 
-// Targets worth pointing at: the closest guarded node and a living boss.
+// Targets worth pointing at: the closest guarded node and a living boss. In a learning maze
+// the terminals are to be found, so only the open door is pointed at.
 export function edgeTargets(s) {
   const out = [];
+  if (doorOpen(s)) {
+    const { exit } = currentLayout(s);
+    out.push({ x: exit.x, y: exit.y, label: 'ДВЕРЬ', color: '#64ffda' });
+  }
   let node = null,
     best = Infinity;
-  for (const n of s.nodes) {
+  for (const n of s.learning ? [] : s.nodes) {
     if (!nodeAvailable(n)) continue;
     const d = Math.hypot(n.x - s.p.x, n.y - s.p.y);
     if (d < best) {
@@ -56,7 +62,7 @@ export function edgeTargets(s) {
       out.push({
         x: e.x,
         y: e.y,
-        label: 'ЦРПТ',
+        label: unitDefinitions[e.unit].name,
         color: '#ff5252',
       });
   return out;

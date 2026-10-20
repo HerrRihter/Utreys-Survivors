@@ -50,6 +50,7 @@ export const GameFlow = {
     });
     const learning = createLearningFlow({
       run,
+      world,
       input,
       snapshots,
       toast,

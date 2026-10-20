@@ -6,6 +6,7 @@ import { mapDefinitions, nodeSpacing } from '../data/maps/maps.js';
 import { nodeDefinitions } from '../data/enemies/nodes.js';
 import { waveSchedules } from '../data/enemies/waves.js';
 import { createArenas } from '../src/world/arenas.js';
+import { roomLayout } from '../src/systems/queries/learning.js';
 import { snapshotRun } from '../src/systems/run-snapshot.js';
 import { test, vi } from 'vitest';
 
@@ -36,11 +37,23 @@ test('run-variety', async () => {
       const desks = mapDefinitions[map].objective;
       assert.deepEqual(nodes, layoutNodes(map, seed), 'same seed, same layout');
       if (desks?.type === 'learning') {
-        assert.equal(nodes.filter((n) => n.required).length, 3);
-        assert.equal(nodes.length, 4);
-        assert(
-          nodes.every((n) => n.kind === 'learning-terminal' && mapDefinitions[map].rooms[n.room]),
-        );
+        // Three guarded terminals per maze, each clear of that maze's walls, spaced apart.
+        const mazes = mapDefinitions[map].rooms.filter((room) => room.maze).length;
+        assert.equal(nodes.length, 3 * mazes);
+        for (let room = 0; room < mazes; room++) {
+          const own = nodes.filter((n) => n.room === room),
+            maze = arenas.forRoom(map, `${map}:${seed}:${room}`, roomLayout(map, seed, room).walls);
+          assert.equal(own.length, 3, 'three terminals in maze ' + room);
+          for (const n of own) {
+            assert(n.kind === 'learning-terminal' && n.required && n.bug);
+            assert(!maze.blocked(n.x, n.y, 40), 'terminal clear of walls');
+            assert(!maze.blocked(n.guard.x, n.guard.y, 30), 'guard clear of walls');
+            for (const m of own)
+              if (m !== n) assert(Math.hypot(m.x - n.x, m.y - n.y) >= nodeSpacing);
+          }
+        }
+        positions.add(nodes.map((n) => `${n.x},${n.y}`).join(';'));
+        continue;
       } else if (desks) {
         assert.equal(nodes.length, desks.count, `${map} places every desk`);
         assert(nodes.every((n) => n.kind === 'desk' && n.bug === desks.unit));
@@ -54,9 +67,7 @@ test('run-variety', async () => {
       }
       positions.add(nodes.map((n) => `${n.x},${n.y}`).join(';'));
     }
-    if (mapDefinitions[map].rooms)
-      assert.equal(positions.size, 1, 'room terminals have fixed safe positions');
-    else assert(positions.size > 30, `${map} layouts vary between seeds`);
+    assert(positions.size > 30, `${map} layouts vary between seeds`);
   }
   const plan = planEvents(waveSchedules.empty, 7);
   assert.deepEqual(plan, planEvents(waveSchedules.empty, 7));

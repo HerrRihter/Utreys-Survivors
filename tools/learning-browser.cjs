@@ -4,6 +4,9 @@ const { chromium } = require('playwright');
 const { startPreview } = require('./preview-server.cjs');
 const { learningCourse } = require('../data/learning-questions.js');
 const { learningRooms } = require('../data/learning-rules.js');
+const { roomLayout } = require('../src/systems/queries/learning.js');
+
+const mazes = learningRooms.filter((room) => room.maze).length;
 
 (async () => {
   fs.mkdirSync('test-results', { recursive: true });
@@ -39,45 +42,84 @@ const { learningRooms } = require('../data/learning-rules.js');
       }
       await page.getByRole('button', { name: 'Продолжить', exact: true }).click();
     };
-    for (let room = 0; room < 3; room++) {
-      await page.evaluate((index) => {
-        const s = window.__utraceSession,
-          n = s.state.nodes.find((n) => n.room === index && n.required);
-        s.state.p.x = n.x;
-        s.state.p.y = n.y;
-      }, room);
-      await page
-        .getByRole('button', { name: 'Тест: ' + learningRooms[room].name, exact: true })
-        .click();
-      if (room === 0) {
-        const time = await page.evaluate(() => window.__utraceSession.state.t);
-        await page.keyboard.press('Escape');
-        await page.keyboard.press('q');
-        assert.equal(await page.evaluate(() => window.__utraceSession.mode), 'quiz');
-        for (const [width, height] of [
-          [1366, 768],
-          [390, 844],
-          [844, 390],
-          [360, 640],
-        ]) {
-          await page.setViewportSize({ width, height });
-          await page.screenshot({ path: `test-results/learning-intro-${width}.png` });
-          assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    // Beats a terminal's guard (the run's own loop spawns it) and stands at the terminal.
+    const reach = async (room, k) => {
+      await page.waitForFunction(
+        ([room, k]) => {
+          const s = window.__utraceSession.state,
+            n = s.nodes.filter((n) => n.room === room)[k];
+          return n.status !== 'guarded' || s.enemies.some((e) => e.id === n.guardianId);
+        },
+        [room, k],
+      );
+      await page.evaluate(
+        ([room, k]) => {
+          const g = window.__utraceSession,
+            n = g.state.nodes.filter((n) => n.room === room)[k],
+            guard = g.state.enemies.find((e) => e.id === n.guardianId);
+          if (guard) g.damage(guard, 1e9, 0, 0, g.state.p, 'hero');
+          Object.assign(g.state.p, { x: n.x, y: n.y });
+        },
+        [room, k],
+      );
+      await page.waitForFunction(
+        ([room, k]) =>
+          window.__utraceSession.state.nodes.filter((n) => n.room === room)[k].status ===
+          'available',
+        [room, k],
+      );
+    };
+    const seed = await page.evaluate(() => window.__utraceSession.state.seed);
+    for (let room = 0; room < mazes; room++) {
+      for (let k = 0; k < 3; k++) {
+        await reach(room, k);
+        await page.getByRole('button', { name: `Тест: Терминал ${k + 1}`, exact: true }).click();
+        if (room === 0 && k === 0)
+          await page.screenshot({ path: 'test-results/learning-intro-maze.png' });
+        if (room === 0 && k === 0) {
+          const time = await page.evaluate(() => window.__utraceSession.state.t);
+          await page.keyboard.press('Escape');
+          await page.keyboard.press('q');
+          assert.equal(await page.evaluate(() => window.__utraceSession.mode), 'quiz');
+          for (const [width, height] of [
+            [1366, 768],
+            [390, 844],
+            [844, 390],
+            [360, 640],
+          ]) {
+            await page.setViewportSize({ width, height });
+            await page.screenshot({ path: `test-results/learning-intro-${width}.png` });
+            assert(
+              await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+            );
+          }
+          assert.equal(await page.evaluate(() => window.__utraceSession.state.t), time);
+          await page.reload();
+          await page.locator('#start').waitFor();
+          await page.evaluate(() => {
+            window.__utraceSession.resume();
+          });
+          assert.equal(await page.evaluate(() => window.__utraceSession.mode), 'quiz');
+          await page.setViewportSize({ width: 390, height: 844 });
         }
-        assert.equal(await page.evaluate(() => window.__utraceSession.state.t), time);
-        await page.reload();
-        await page.locator('#start').waitFor();
-        await page.evaluate(() => {
-          window.__utraceSession.resume();
-        });
-        assert.equal(await page.evaluate(() => window.__utraceSession.mode), 'quiz');
-        await page.setViewportSize({ width: 390, height: 844 });
+        await answerTest();
       }
-      await answerTest();
-      await page.evaluate((point) => {
-        Object.assign(window.__utraceSession.state.p, point);
-      }, learningRooms[room].exit);
-      await page.getByRole('button', { name: 'В следующую комнату →', exact: true }).click();
+      if (room === 0) {
+        await page.setViewportSize({ width: 1366, height: 768 });
+        await page.screenshot({ path: 'test-results/learning-maze.png' });
+      }
+      // The door: the arrow points at it; standing there offers the way on.
+      await page.evaluate(
+        (point) => {
+          Object.assign(window.__utraceSession.state.p, point);
+        },
+        roomLayout('learningLab', seed, room).exit,
+      );
+      await page.getByRole('button', { name: /^В .* →$/ }).click();
+      assert.equal(
+        await page.evaluate(() => window.__utraceSession.state.learning.roomIndex),
+        room + 1,
+      );
     }
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.waitForFunction(() => window.__utraceSession.state.bossSpawned);
@@ -110,7 +152,7 @@ const { learningRooms } = require('../data/learning-rules.js');
     await page.screenshot({ path: 'test-results/learning-result.png' });
     assert.equal(errors.length, 0, errors.join('\n'));
     console.log(
-      'PASS learning browser: rooms, mobile questions, reload, boss summons, revival, victory',
+      'PASS learning browser: guarded terminals in 3 mazes, mobile questions, reload, doors, hall boss, revival, victory',
     );
   } finally {
     await browser.close();

@@ -111,7 +111,8 @@ const screens = [
       s.selectMap('learningLab');
       s.start();
       s.state.spawn = 9999;
-      const terminal = s.state.nodes.find((n) => n.status === 'available');
+      const terminal = s.state.nodes.find((n) => n.room === 0);
+      terminal.status = 'available';
       Object.assign(s.state.p, { x: terminal.x, y: terminal.y });
       s.update(0.016);
     },
@@ -121,7 +122,8 @@ const screens = [
     open: (s) => {
       s.selectMap('learningLab');
       s.start();
-      const terminal = s.state.nodes.find((n) => n.status === 'available');
+      const terminal = s.state.nodes.find((n) => n.room === 0);
+      terminal.status = 'available';
       Object.assign(s.state.p, { x: terminal.x, y: terminal.y });
       s.commands.startLearningTest(terminal.id);
     },
@@ -131,7 +133,8 @@ const screens = [
     open: (s) => {
       s.selectMap('learningLab');
       s.start();
-      const terminal = s.state.nodes.find((n) => n.status === 'available');
+      const terminal = s.state.nodes.find((n) => n.room === 0);
+      terminal.status = 'available';
       Object.assign(s.state.p, { x: terminal.x, y: terminal.y });
       s.commands.startLearningTest(terminal.id);
       s.commands.advanceLearning(s.state.learning.active.id);

@@ -1,6 +1,6 @@
 // @ts-check
 import { createLearningState } from './learning.js';
-import { mapDefinitions } from '../../data/maps/maps.js';
+import { roomLayout } from './queries/learning.js';
 import { createNodeState } from './node-objectives.js';
 import { createWaveState } from './wave-schedule.js';
 import { layoutNodes, planEvents } from './run-layout.js';
@@ -217,8 +217,8 @@ export function createRunModel({
   doneBefore = [],
 }) {
   const mods = loadModifiers(load);
-  const entry = /** @type {Record<string, { rooms?: { entry: Point }[] }>} */ (mapDefinitions)[map]
-    ?.rooms?.[0].entry;
+  // The learning map's hero starts at its first room's entry; other maps in the middle.
+  const entry = roomLayout(map, seed, 0)?.entry;
   /** @type {RunModel} */
   const s = {
     learning: createLearningState(map),

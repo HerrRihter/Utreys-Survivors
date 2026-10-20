@@ -1,4 +1,3 @@
-import { currentRoom } from './queries/learning.js';
 import { compact } from '../core/compact.js';
 import { clamp, near } from '../core/math.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
@@ -331,12 +330,6 @@ export const Simulation = {
         t.y -= dt * 35;
       }
       compact(s.texts, isLive);
-      const room = currentRoom(s);
-      if (room) {
-        const [left, top, right, bottom] = room.bounds;
-        p.x = clamp(p.x, left + 14, right - 14);
-        p.y = clamp(p.y, top + 14, bottom - 14);
-      }
       if (p.hp <= 0) {
         p.hp = 0;
         events.finish(false);

@@ -1,56 +1,60 @@
-// The learning map's quiz rules. A test at a required terminal asks `questions` and passes with
-// `passing` right answers; a bonus terminal asks `bonusQuestions` and passes with
-// `bonusPassing`. A revival test follows the required terminals' numbers.
+// The learning map's quiz rules. A terminal's test asks `questions` and passes with `passing`
+// right answers; the revival test is the same. A passed terminal drops an update bundle
+// (`terminalReward`, a map pickup type); every wrong answer calls an audit: `auditPack`
+// enemies of the current waves arrive `auditDistance` away, at most `auditMax` packs per test.
 export const learningRules = {
   questions: 3,
   passing: 2,
-  bonusQuestions: 1,
-  bonusPassing: 1,
   points: 10,
-  terminalHeal: 0.2,
-  bonusHeal: 0.25,
+  terminalReward: 'bundle',
+  auditPack: 3,
+  auditMax: 2,
+  auditDistance: [320, 620],
   reviveHealth: 0.5,
   reviveInvulnerability: 3,
   interactionRadius: 110,
   // Grace after moving to the next room, and the delay before its first wave.
   roomEntryInvulnerability: 2,
   roomEntryWave: 2,
+  // Ordinary waves arrive this far (straight line) from the hero in a maze: out of sight,
+  // close enough to find their way to the hero through the corridors.
+  waveDistance: [420, 900],
 };
 
-// Rooms in order. `bounds` = [left, top, right, bottom]; the hero enters at `entry`. A room with
-// a `terminal` holds a required test on its `topic` (index in learningCourse.topics) and opens
-// `exit` once passed; `bonus` is an optional terminal on the same topic. The last room has the
-// `boss` point instead.
+// Every maze: `cols` × `rows` cells over the whole arena, walls `wall` px thick, `braid` the
+// share of dead ends opened into loops, `terminals` guarded terminals to find.
+export const learningMaze = { cols: 10, rows: 10, wall: 36, braid: 0.15, terminals: 3 };
+
+// Rooms in order; each one fills the arena, the next replaces it. A `maze` room is generated
+// from the run's seed: its terminals test the `topic` (index in learningCourse.topics) and
+// its door opens once all are passed. `strength` scales its enemies' health and damage,
+// `waves` its wave size (`batch`) and limit (`cap`); the whole roster comes in every room.
+// The last room is the central hall: `racks` as cover, the hero at `entry`, the boss at `boss`.
 export const learningRooms = [
+  { name: 'Лабиринт основ', topic: 0, maze: true, strength: 1, waves: { batch: 1, cap: 1 } },
   {
-    name: 'Основы',
-    topic: 0,
-    bounds: [80, 120, 1040, 1040],
-    entry: { x: 300, y: 350 },
-    terminal: { id: 'lesson-basics', x: 800, y: 760 },
-    exit: { x: 910, y: 920 },
-  },
-  {
-    name: 'Резервирование',
+    name: 'Лабиринт резервирования',
     topic: 1,
-    bounds: [1160, 120, 2120, 1040],
-    entry: { x: 1350, y: 350 },
-    terminal: { id: 'lesson-reserve', x: 1850, y: 760 },
-    bonus: { id: 'bonus-reserve', label: 'Бонус знаний', x: 1370, y: 820 },
-    exit: { x: 1960, y: 920 },
+    maze: true,
+    strength: 1.3,
+    waves: { batch: 1.25, cap: 1.3 },
   },
   {
-    name: 'Ошибки и исключения',
+    name: 'Лабиринт ошибок',
     topic: 2,
-    bounds: [1160, 1160, 2120, 2120],
-    entry: { x: 1350, y: 1370 },
-    terminal: { id: 'lesson-errors', x: 1850, y: 1840 },
-    exit: { x: 1960, y: 2000 },
+    maze: true,
+    strength: 1.6,
+    waves: { batch: 1.5, cap: 1.6 },
   },
   {
-    name: 'Партионный учёт',
-    bounds: [80, 1160, 1040, 2120],
-    entry: { x: 300, y: 1390 },
-    boss: { x: 720, y: 1800 },
+    name: 'Центральный зал',
+    entry: { x: 1100, y: 1900 },
+    boss: { x: 1100, y: 900 },
+    racks: [
+      [560, 560, 120, 120],
+      [1520, 560, 120, 120],
+      [560, 1300, 120, 120],
+      [1520, 1300, 120, 120],
+    ],
   },
 ];
