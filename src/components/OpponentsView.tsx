@@ -1,12 +1,9 @@
-import { useOpponentPreview } from '../ui/useOpponentPreview';
-import { ALL_UNIT_KEYS, OPPONENTS_META, type UnitKey } from '../ui/opponent-details';
+import { useOpponentPreview } from './useOpponentPreview';
 import { Dialog } from './Dialog';
 import React, { useRef, useState, useMemo } from 'react';
-import { unitDefinitions, enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
-import { getWaveSchedule } from '../systems/wave-schedule.js';
-import { waveTiming } from '../ui/wave-preview.js';
-import { mapDefinitions } from '../../data/maps/maps.js';
-import { MapSelect, type MapId } from './MapSelect';
+import { createPreviewKit } from '../app/preview-kit.js';
+import type { MapId, UnitKey } from '../app/types';
+import { MapSelect } from './MapSelect';
 
 export const OpponentsView: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<'all' | 'regulators' | 'clients'>('all');
@@ -22,14 +19,15 @@ export const OpponentsView: React.FC = () => {
   const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map());
 
   const [map, setMap] = useState<MapId>('empty');
-  const schedule = getWaveSchedule(map);
+  const [kit] = useState(createPreviewKit);
+  const { units } = kit;
 
   const filteredUnits = useMemo(() => {
-    return ALL_UNIT_KEYS.filter((key) => {
+    return units.filter((key) => {
       if (filterCategory === 'all') return true;
-      return OPPONENTS_META[key].category === filterCategory;
+      return kit.meta[key].category === filterCategory;
     });
-  }, [filterCategory]);
+  }, [kit, units, filterCategory]);
 
   const triggerUnitAttack = (unit: UnitKey) => {
     setSingleUnitAttacking((prev) => ({
@@ -39,6 +37,7 @@ export const OpponentsView: React.FC = () => {
   };
 
   useOpponentPreview({
+    kit,
     motion,
     frozen,
     reverse,
@@ -50,14 +49,11 @@ export const OpponentsView: React.FC = () => {
     map,
   });
 
-  const currentArena = mapDefinitions[map];
+  const currentArena = kit.map(map);
 
   const tab = (category: typeof filterCategory) =>
     filterCategory === category ? 'small is-current' : 'small';
-  const inspected = inspectedUnit && {
-    meta: OPPONENTS_META[inspectedUnit],
-    unit: (unitDefinitions as Record<string, any>)[inspectedUnit],
-  };
+  const inspected = inspectedUnit && kit.opponent(inspectedUnit, map);
 
   return (
     <div id="opponentsView" className="overlay catalog">
@@ -78,7 +74,7 @@ export const OpponentsView: React.FC = () => {
           {/* Category Filter Tabs */}
           <div className="opponents-tabs">
             <button type="button" className={tab('all')} onClick={() => setFilterCategory('all')}>
-              Все сущности ({ALL_UNIT_KEYS.length})
+              Все сущности ({units.length})
             </button>
             <button
               type="button"
@@ -86,21 +82,20 @@ export const OpponentsView: React.FC = () => {
               onClick={() => setFilterCategory('regulators')}
             >
               Регуляторы и баги (
-              {ALL_UNIT_KEYS.filter((key) => OPPONENTS_META[key].category === 'regulators').length})
+              {units.filter((key) => kit.meta[key].category === 'regulators').length})
             </button>
             <button
               type="button"
               className={tab('clients')}
               onClick={() => setFilterCategory('clients')}
             >
-              Клиенты FMCG (
-              {ALL_UNIT_KEYS.filter((key) => OPPONENTS_META[key].category === 'clients').length})
+              Клиенты FMCG ({units.filter((key) => kit.meta[key].category === 'clients').length})
             </button>
           </div>
 
           {/* Animation Global Controls */}
           <div className="opponents-motion">
-            <MapSelect value={map} onChange={setMap} />
+            <MapSelect maps={kit.maps} value={map} onChange={setMap} />
             <label className="opponents-mode">
               <span>Режим:</span>
               <select
@@ -135,12 +130,8 @@ export const OpponentsView: React.FC = () => {
         {/* Entities Grid */}
         <div className="opponents-grid">
           {filteredUnits.map((unit) => {
-            const u = (unitDefinitions as Record<string, any>)[unit];
-            if (!u) return null;
-            const meta = OPPONENTS_META[unit];
-            const isBoss = !!u.boss;
-
-            const timing = (isBoss ? 'ГЛАВНЫЙ БОСС · ' : '') + waveTiming(schedule, unit);
+            const u = kit.opponent(unit, map);
+            const { meta, timing, boss: isBoss } = u;
 
             return (
               <article key={unit} className={isBoss ? 'opponent-card is-boss' : 'opponent-card'}>
@@ -174,9 +165,9 @@ export const OpponentsView: React.FC = () => {
 
                 {/* Stats Bar */}
                 <div className="opponent-stats">
-                  <span>{Math.round(u.hp * enemyHpScale)} HP</span>
+                  <span>{u.hp} HP</span>
                   <span>·</span>
-                  <span>{Math.max(1, Math.round(u.damage * enemyDamageScale))} УРОНА</span>
+                  <span>{u.damage} УРОНА</span>
                   <span>·</span>
                   <span>{u.speed} СКОРОСТЬ</span>
                   <span>·</span>
@@ -251,8 +242,8 @@ export const OpponentsView: React.FC = () => {
               </button>
             </div>
 
-            <h2 id="opponent-title" style={{ color: inspected.unit?.color }}>
-              {inspected.unit?.name}
+            <h2 id="opponent-title" style={{ color: inspected.color }}>
+              {inspected.name}
             </h2>
             <div className="opponent-sheet-role">{inspected.meta.role}</div>
 

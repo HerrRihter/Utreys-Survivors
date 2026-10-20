@@ -1,11 +1,7 @@
-import { drawNodes } from '../rendering/node-objectives.js';
-import { createNodeState } from '../systems/node-objectives.js';
 import React, { useEffect, useRef, useState } from 'react';
-import { createArenas } from '../world/arenas.js';
-import { mapDefinitions } from '../../data/maps/maps.js';
-import { createArenaFloor } from '../rendering/arena-floor.js';
-import { drawCollision } from '../rendering/collision.js';
-import { MapSelect, type MapId } from './MapSelect';
+import { createPreviewKit } from '../app/preview-kit.js';
+import type { MapId } from '../app/types';
+import { MapSelect } from './MapSelect';
 
 export const ArenaView: React.FC = () => {
   const [selectedArena, setSelectedArena] = useState<MapId>('empty');
@@ -13,49 +9,19 @@ export const ArenaView: React.FC = () => {
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showBounds, setShowBounds] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [kit] = useState(createPreviewKit);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const g = canvas.getContext('2d');
-    if (!g) return;
+    const g = canvasRef.current?.getContext('2d');
+    if (g)
+      kit.drawArenaPlan(g, selectedArena, {
+        close: isClose,
+        labels: showLabels,
+        bounds: showBounds,
+      });
+  }, [kit, selectedArena, isClose, showLabels, showBounds]);
 
-    const arenas = createArenas();
-    const floor = createArenaFloor();
-
-    const render = () => {
-      const world = arenas.get(selectedArena);
-      g.setTransform(1, 0, 0, 1, 0, 0);
-      g.clearRect(0, 0, canvas.width, canvas.height);
-
-      const scale = isClose ? 0.95 : 0.43;
-      g.translate(660, 500);
-      g.scale(scale, scale);
-      g.translate(-1100, isClose ? -1070 : -1090);
-
-      floor.draw(g, world);
-      drawNodes(g, createNodeState());
-
-      if (showBounds && world.collision) {
-        drawCollision(g, world.collision.outlines);
-        g.strokeStyle = '#00e5ff';
-        g.lineWidth = 5;
-        g.strokeRect(0, 0, world.size, world.size);
-      }
-
-      if (showLabels) {
-        g.fillStyle = '#00e5ff';
-        g.font = 'bold 24px monospace';
-        g.textAlign = 'center';
-        g.fillText('ЯДРО UTRACE', world.size / 2, world.size / 2);
-      }
-    };
-
-    render();
-  }, [selectedArena, isClose, showLabels, showBounds]);
-
-  const arena: { name: string; description: string; notes?: string } =
-    mapDefinitions[selectedArena];
+  const arena = kit.map(selectedArena);
 
   return (
     <div id="arenaView" className="overlay catalog">
@@ -69,7 +35,7 @@ export const ArenaView: React.FC = () => {
         </header>
 
         <nav className="catalog-controls">
-          <MapSelect value={selectedArena} onChange={setSelectedArena} />
+          <MapSelect maps={kit.maps} value={selectedArena} onChange={setSelectedArena} />
 
           <button
             type="button"
