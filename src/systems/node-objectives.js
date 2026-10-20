@@ -1,3 +1,4 @@
+import { nodeGuardian } from './queries/nodes.js';
 import { nodeDefinitions, workaroundSeconds, workaroundRadius } from '../../data/enemies/nodes.js';
 
 // `seconds` is the workaround time on this run's load level; `layout` gives positions and bugs.
@@ -23,12 +24,8 @@ export function guardianPoint(node) {
   return { x: node.x + (node.kind === 'desk' ? 0 : 110), y: node.y };
 }
 
-// The enemy standing at a node; null before it is spawned and once it is gone.
-export function nodeGuardian(state, node) {
-  if (node.guardianId === null) return null;
-  for (const e of state.enemies) if (e.id === node.guardianId) return e;
-  return null;
-}
+// Re-exported for the node logic's callers; rendering imports it from queries directly.
+export { nodeGuardian };
 
 // Open tickets: living enemies released by the run's service desks.
 export function openTickets(state) {

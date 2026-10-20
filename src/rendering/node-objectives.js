@@ -1,6 +1,6 @@
 import { workaroundRadius, workaroundSeconds } from '../../data/enemies/nodes.js';
 import { neonStroke } from './neon.js';
-import { nodeGuardian } from '../systems/node-objectives.js';
+import { nodeGuardian } from '../systems/queries/nodes.js';
 
 // A service desk is drawn as an enemy; the ground only marks its spot and status.
 function drawDesk(g, node, guardian) {
