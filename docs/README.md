@@ -18,10 +18,10 @@
 - [Реплики, палитра и очистка прежнего контента](CONTENT-CLEANUP-2026-10-15.md)
 - [Исходный аудит 15 октября](PROJECT-AUDIT-2026-10-15.md) — снимок проблем до исправлений
 - [Выполненные изменения и проверка](AUDIT-IMPLEMENTATION-2026-10-15.md)
-- [Что удалено и почему](archive/RETIRED-2026-10-15.md)
+- Что удалено и почему (RETIRED-2026-10-15.md) — в истории git (`git log --diff-filter=D -- docs/archive` находит коммит удаления)
 
 ## История
 
-В archive/legacy перенесены IMPLEMENTATION-PLAN, ACTIVE-ABILITIES-PLAN, PROJECT-STRUCTURE-AUDIT, ART-SOURCES, ADDING-CHARACTERS, CHARACTER-FRAMES, NEW-MAPS и прежние отчёты COMBAT/MICROFREEZE/FRAME/DEPTH/PERFORMANCE. Они сохранены как история решений и материалов, не как инструкции запуска текущего продукта. Их команды и список контента не следует применять без адаптации.
+Исторические планы и отчёты (docs/archive: IMPLEMENTATION-PLAN, ACTIVE-ABILITIES-PLAN, PROJECT-STRUCTURE-AUDIT, ART-SOURCES, ADDING-CHARACTERS, CHARACTER-FRAMES, NEW-MAPS, отчёты COMBAT/MICROFREEZE/FRAME/DEPTH/PERFORMANCE, дампы бенчмарков) убраны из дерева на этапе 7 рефакторинга и остаются в истории git (`git log --diff-filter=D -- docs/archive` находит коммит удаления). Это история решений, не инструкции для текущего продукта.
 
 Исходные PNG, промпты и лицензии сохраняются в assets. Старые профили не являются baseline производительности текущей React/Vite-версии. Новые измерения должны указывать commit, сценарий, браузер, устройство и окружение.

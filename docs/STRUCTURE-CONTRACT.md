@@ -119,4 +119,4 @@ tests/test-structure-layers.cjs. Учитываются статические, 
 - Рисует только src/rendering: системы и мир меняют состояние и отдают геометрию данными
   (`collision.outlines`, `orbitShape` в systems/queries/weapons.js).
 
-Исторический аудит archive/legacy/PROJECT-STRUCTURE-AUDIT.md не является параллельным контрактом. Текущие команды: npm ci, npm run check, npm run test:browser.
+Исторический аудит PROJECT-STRUCTURE-AUDIT.md (docs/archive/legacy, теперь только в истории git) не является параллельным контрактом. Текущие команды: npm ci, npm run check, npm run test:browser.
