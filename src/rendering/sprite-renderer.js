@@ -1,5 +1,5 @@
 import { traceabilityCharge } from './hero-charge.js';
-import { blocksAttack } from '../systems/ability-state.js';
+import { blocksAttack } from '../systems/queries/abilities.js';
 
 // Hero sprites for the scene and menu portraits; the Traceability ring reads the live run.
 export const SpriteRenderer = {

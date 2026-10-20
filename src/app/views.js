@@ -8,8 +8,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { heroPassives } from '../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
 import { productionMinutes } from '../systems/difficulty.js';
-import { eventLabel } from '../systems/run-events.js';
-import { effectiveStats } from '../systems/ability-state.js';
+import { effectiveStats } from '../systems/queries/abilities.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { mapUnlocked } from '../../data/maps/maps.js';
 import { openTickets } from '../systems/node-objectives.js';
@@ -19,6 +18,17 @@ import { weaponDefinitions, weaponMaxLevel, heroEvolutions } from '../../data/we
 
 // Pure read models for the React screens. Each takes the explicit pieces it reads and
 // returns plain data; React renders it, the session's commands change the underlying state.
+
+// HUD line for the running event; '' when none.
+export function eventLabel(s) {
+  const e = s?.event;
+  if (!e) return '';
+  const left = Math.ceil(Math.max(0, e.left)) + ' с';
+  if (e.type === 'friday') return `Релиз в пятницу: продержись ${left}`;
+  if (e.type === 'incident')
+    return `Инцидент: удержи точку ${Math.floor(e.progress)}/${e.need} с · ${left}`;
+  return `Срочный тираж: ${e.progress}/${e.need} кодов · ${left}`;
+}
 
 export function clock(time) {
   const minutes = Math.floor(time / 60),

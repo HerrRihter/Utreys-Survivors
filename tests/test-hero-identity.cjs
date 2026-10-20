@@ -102,7 +102,7 @@ const { passiveDamage, countCrowd } = require('../src/systems/hero-passives.js')
     const { h, s } = await session('traceability');
     assert(h.session.activateAbility(1));
     h.session.update(0.02);
-    const { effectiveStats } = require('../src/systems/ability-state.js');
+    const { effectiveStats } = require('../src/systems/queries/abilities.js');
     assert(effectiveStats(s).chainUnlimited, 'Registry lifts the chain cap');
     s.t += 10;
     assert(!effectiveStats(s).chainUnlimited, 'and ends');

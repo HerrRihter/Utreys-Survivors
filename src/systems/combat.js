@@ -1,7 +1,7 @@
 import { heroAttack } from './hero-attacks.js';
 import { advanceAction } from '../core/action-timeline.js';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
-import { protectedMove, effectiveStats } from './ability-state.js';
+import { protectedMove, effectiveStats } from './queries/abilities.js';
 import { passiveDamage } from './hero-passives.js';
 import { production } from '../../data/difficulty.js';
 import { elite } from './difficulty.js';

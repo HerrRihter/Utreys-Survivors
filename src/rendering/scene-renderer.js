@@ -4,7 +4,7 @@ import { neonStroke } from './neon.js';
 import { orderActors } from './depth-order.js';
 import { cameraOrigin } from './camera.js';
 import { drawEdgeArrows } from './edge-arrows.js';
-import { drawEvent } from '../systems/run-events.js';
+import { drawEvent } from './events.js';
 import { drawPickup, drawEliteAura } from './pickups.js';
 
 // The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.

@@ -1,4 +1,5 @@
 // Read-only questions about running abilities, shared by combat, rendering and the simulation.
+// Pure queries over run state: rendering may import this folder (see STRUCTURE-CONTRACT).
 export const abilityActive = (state, id) =>
   !!state?.abilities?.some((a) => a.id === id && a.left > 0 && state.t < a.endsAt);
 

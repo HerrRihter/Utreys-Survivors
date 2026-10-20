@@ -1,6 +1,6 @@
 import { weaponDefinitions, weaponStats, weaponMaxLevel } from '../../data/weapons.js';
 import { compact } from '../core/compact.js';
-import { effectiveStats } from './ability-state.js';
+import { effectiveStats } from './queries/abilities.js';
 
 const isLive = (item) => item.life > 0;
 const TAU = Math.PI * 2;

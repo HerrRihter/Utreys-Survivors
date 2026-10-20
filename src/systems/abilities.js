@@ -1,5 +1,5 @@
 import { abilityRank } from '../../data/characters/abilities.js';
-import { abilityActive, effectiveStats } from './ability-state.js';
+import { abilityActive, effectiveStats } from './queries/abilities.js';
 
 const TAU = Math.PI * 2;
 

@@ -10,7 +10,7 @@ import {
   cooldownFactor,
 } from './enemy-behaviors.js';
 import { advanceAction } from '../core/action-timeline.js';
-import { protectedMove, blocksAttack, effectiveStats, pacified } from './ability-state.js';
+import { protectedMove, blocksAttack, effectiveStats, pacified } from './queries/abilities.js';
 import { countCrowd } from './hero-passives.js';
 
 const isLive = (item) => item.life > 0,
