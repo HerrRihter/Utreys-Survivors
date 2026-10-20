@@ -1,6 +1,6 @@
+'use strict';
 const { loadModule } = require('./load-modules.cjs');
 const { canvasContext } = require('./canvas-context.cjs');
-('use strict');
 
 const vm = require('node:vm');
 const path = require('node:path');
