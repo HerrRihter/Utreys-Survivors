@@ -224,6 +224,11 @@ function checkGameContracts() {
         'Hero contract: price',
       );
   }
+  // Every weapon names a kind the weapon system knows.
+  const { weaponDefinitions } = require('../data/weapons.js');
+  const { weaponKinds } = require('../src/systems/weapons/index.js');
+  for (const [id, weapon] of Object.entries(weaponDefinitions))
+    assert(Object.hasOwn(weaponKinds, weapon.kind), `Weapon contract: ${id}.kind ${weapon.kind}`);
   // Node 24 can require synchronous ES modules; no duplicate JSON representation.
   const { waveSchedules } = require('../data/enemies/waves.js');
   const { mapDefinitions } = require('../data/maps/maps.js');
