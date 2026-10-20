@@ -1,6 +1,7 @@
 import { compact } from '../core/compact.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
+import { pickupDefinitions } from '../../data/pickups.js';
 import { resolveEnemyStrike } from './enemy-attacks.js';
 import {
   moveGoal,
@@ -52,44 +53,56 @@ export const Simulation = {
     };
     // Enemy speed grows with time, up to this multiplier.
     const timeSpeedCap = 1.2;
-    // Map pickups: food heals, an update bundle upgrades items, magnet / bomb / freeze act at once.
-    function pickUp(s, item, st) {
-      const p = s.p;
-      if (item.type === 'bundle') {
+    // Map pickups by kind (data/pickups.js): `spec` is the pickup type's data.
+    const pickupKinds = {
+      upgrade() {
         events.openBundle?.();
-        return;
-      }
-      if (item.type === 'magnet') {
+      },
+      pull(s, spec) {
+        const p = s.p;
         for (const gem of s.gems) gem.pull = true;
-        s.texts.push({ x: p.x, y: p.y - 30, v: 'МАГНИТ', life: 1 });
-        audio.effect('pickup');
-        return;
-      }
-      if (item.type === 'bomb') {
+        s.texts.push({ x: p.x, y: p.y - 30, v: spec.text, life: 1 });
+        audio.effect(spec.sound);
+      },
+      blast(s, spec, st, type) {
+        const p = s.p;
         for (const e of s.enemies)
-          if (e.hp > 0 && Math.abs(e.x - p.x) < 700 && Math.abs(e.y - p.y) < 520)
-            combat.damage(e, 120 * st.damage, 0, 0, p, 'bomb');
-        s.fx.push({ kind: 'ring', x: p.x, y: p.y, r: 520, life: 0.5, max: 0.5, color: '#ff8a65' });
-        s.shake = 8;
-        audio.effect('boss');
-        return;
-      }
-      if (item.type === 'freeze') {
+          if (
+            e.hp > 0 &&
+            Math.abs(e.x - p.x) < spec.halfWidth &&
+            Math.abs(e.y - p.y) < spec.halfHeight
+          )
+            combat.damage(e, spec.damage * st.damage, 0, 0, p, type);
+        ring(s, spec.ring);
+        s.shake = spec.shake;
+        audio.effect(spec.sound);
+      },
+      stun(s, spec) {
+        const p = s.p;
         for (const e of s.enemies)
           if (e.hp > 0 && !e.boss && !unitDefinitions[e.unit]?.miniboss) {
-            e.abilityStun = Math.max(e.abilityStun || 0, 4);
+            e.abilityStun = Math.max(e.abilityStun || 0, spec.seconds);
             e.action = null;
           }
-        s.fx.push({ kind: 'ring', x: p.x, y: p.y, r: 600, life: 0.6, max: 0.6, color: '#80deea' });
-        s.texts.push({ x: p.x, y: p.y - 30, v: 'ЗАМОРОЗКА', life: 1 });
-        audio.effect('magic');
-        return;
-      }
-      const heal = Math.round(25 * s.healFactor);
-      s.foodTaken++;
-      p.hp = Math.min(p.max, p.hp + heal);
-      s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });
-      audio.effect('heal');
+        ring(s, spec.ring);
+        s.texts.push({ x: p.x, y: p.y - 30, v: spec.text, life: 1 });
+        audio.effect(spec.sound);
+      },
+      heal(s, spec) {
+        const p = s.p;
+        const heal = Math.round(spec.amount * s.healFactor);
+        s.foodTaken++;
+        p.hp = Math.min(p.max, p.hp + heal);
+        s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });
+        audio.effect(spec.sound);
+      },
+    };
+    function ring(s, { r, life, color }) {
+      s.fx.push({ kind: 'ring', x: s.p.x, y: s.p.y, r, life, max: life, color });
+    }
+    function pickUp(s, item, st) {
+      const spec = pickupDefinitions[item.type];
+      pickupKinds[spec.kind](s, spec, st, item.type);
     }
     function update(dt) {
       const s = run.state,
@@ -264,7 +277,7 @@ export const Simulation = {
         if (dist(codeToken, p) < 20) {
           s.earned += progression.earn(codeToken.value);
           codeToken.dead = true;
-          if (codeToken.event && s.event?.type === 'rush') s.event.progress++;
+          if (codeToken.event) runEvents?.collectCode(s);
           s.texts.push({ x: p.x, y: p.y - 30, v: '+' + codeToken.value + ' кодов', life: 1 });
         }
       }

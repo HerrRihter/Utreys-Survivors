@@ -9,6 +9,7 @@ import { auraFactor, deathBlast, mitigation } from './enemy-behaviors.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
 import { heroEvolutions } from '../../data/weapons.js';
+import { dropTable } from '../../data/pickups.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
@@ -76,19 +77,19 @@ export const CombatSystem = {
         run.state.kills++;
         run.state.earned += progression.kill(tag);
         const luck = run.state.stats.luck || 0;
-        if (math.random() < 0.05 + luck) run.state.codes.push({ x: e.x, y: e.y, value: 3 });
+        if (math.random() < dropTable.code.chance + luck * dropTable.code.luck)
+          run.state.codes.push({ x: e.x, y: e.y, value: dropTable.code.value });
         run.state.gems.push({
           x: e.x,
           y: e.y,
           v: unitDefinitions[e.unit].xp * (e.elite ? elite.xp : 1),
         });
         // Elites leave an update bundle; ordinary kills rarely drop a map pickup.
-        if (e.elite) run.state.pickups.push({ x: e.x, y: e.y, type: 'bundle' });
+        if (e.elite) run.state.pickups.push({ x: e.x, y: e.y, type: dropTable.elite });
         else {
           const roll = math.random();
-          const type =
-            roll < 0.004 ? 'magnet' : roll < 0.007 ? 'bomb' : roll < 0.01 ? 'freeze' : '';
-          if (type) run.state.pickups.push({ x: e.x + 12, y: e.y, type });
+          const rare = dropTable.rare.find((drop) => roll < drop.below);
+          if (rare) run.state.pickups.push({ x: e.x + 12, y: e.y, type: rare.type });
         }
         for (let i = 0; i < 4; i++)
           run.state.fx.push({
@@ -101,8 +102,8 @@ export const CombatSystem = {
             max: 0.3,
             color: i % 2 === 0 ? '#00e5ff' : '#64ffda',
           });
-        if (math.random() < 0.025 + luck / 2)
-          run.state.pickups.push({ x: e.x, y: e.y, type: 'food' });
+        if (math.random() < dropTable.food.chance + luck * dropTable.food.luck)
+          run.state.pickups.push({ x: e.x, y: e.y, type: dropTable.food.type });
         // A node guardian leaves a bug archive: it evolves a ready weapon now or later.
         if (unitDefinitions[e.unit]?.miniboss) {
           run.state.evoTokens++;

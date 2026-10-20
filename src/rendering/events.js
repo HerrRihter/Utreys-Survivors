@@ -1,9 +1,16 @@
+import { eventSpec } from '../systems/queries/events.js';
+
 const TAU = Math.PI * 2;
 
-// The incident's point and its hold progress, drawn on the ground.
+// The running event on the ground, by its kind (src/systems/run-events.js).
 export function drawEvent(g, s) {
-  const e = s?.event;
-  if (e?.type !== 'incident') return;
+  eventPainters[eventSpec(s)?.kind]?.(g, s.event);
+}
+
+const eventPainters = { hold: drawHoldPoint };
+
+// The point to hold and the hold progress.
+function drawHoldPoint(g, e) {
   g.save();
   g.strokeStyle = '#ff5252';
   g.fillStyle = '#ff525218';

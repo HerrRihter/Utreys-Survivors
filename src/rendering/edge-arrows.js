@@ -1,3 +1,5 @@
+import { eventSpec } from '../systems/queries/events.js';
+
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
 // Where a marker for a world point sits on screen, or null when the point is visible.
@@ -38,11 +40,12 @@ export function edgeTargets(s) {
     }
   }
   if (node) out.push({ x: node.x, y: node.y, label: node.id, color: '#ffd54f', distance: best });
-  if (s.event?.type === 'incident')
+  const marker = eventSpec(s)?.marker;
+  if (marker)
     out.push({
       x: s.event.x,
       y: s.event.y,
-      label: 'ИНЦИДЕНТ',
+      label: marker,
       color: '#ff8a65',
       distance: Math.hypot(s.event.x - s.p.x, s.event.y - s.p.y),
     });

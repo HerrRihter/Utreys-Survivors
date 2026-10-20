@@ -1,3 +1,4 @@
+import { eventSpec } from '../systems/queries/events.js';
 import {
   abilityDefinitions,
   abilityRank,
@@ -23,13 +24,13 @@ import { weaponDefinitions, weaponMaxLevel, heroEvolutions } from '../../data/we
 
 // HUD line for the running event; '' when none.
 export function eventLabel(s) {
-  const e = s?.event;
-  if (!e) return '';
-  const left = Math.ceil(Math.max(0, e.left)) + ' с';
-  if (e.type === 'friday') return `Релиз в пятницу: продержись ${left}`;
-  if (e.type === 'incident')
-    return `Инцидент: удержи точку ${Math.floor(e.progress)}/${e.need} с · ${left}`;
-  return `Срочный тираж: ${e.progress}/${e.need} кодов · ${left}`;
+  const spec = eventSpec(s);
+  if (!spec) return '';
+  const e = s.event;
+  return spec.label
+    .replace('{left}', Math.ceil(Math.max(0, e.left)) + ' с')
+    .replace('{progress}', String(Math.floor(e.progress)))
+    .replace('{need}', String(e.need));
 }
 
 export function clock(time) {

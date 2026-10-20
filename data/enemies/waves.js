@@ -153,15 +153,46 @@ const datacenter = {
   events: {
     times: [80, 170, 260],
     types: ['friday', 'incident', 'rush'],
-    friday: { duration: 25, count: 14, message: 'Релиз в пятницу! Нагрузка со всех сторон' },
+    // Each type: its `kind` (src/systems/run-events.js), numbers, the start `message`, the
+    // HUD `label` ({left} seconds, {progress}/{need}), the edge `marker` of a point to hold,
+    // the `success` / `failed` toasts and the `reward`: `codes` or a `pickup` type.
+    friday: {
+      kind: 'siege',
+      duration: 25,
+      count: 14,
+      distance: 430,
+      message: 'Релиз в пятницу! Нагрузка со всех сторон',
+      label: 'Релиз в пятницу: продержись {left}',
+      success: 'Релиз пережит!',
+      failed: 'Событие провалено',
+      reward: { pickup: 'bundle' },
+    },
     incident: {
+      kind: 'hold',
       duration: 60,
       hold: 15,
       radius: 90,
       distance: 380,
       message: 'Инцидент! Удержи точку 15 секунд',
+      label: 'Инцидент: удержи точку {progress}/{need} с · {left}',
+      marker: 'ИНЦИДЕНТ',
+      success: 'Инцидент закрыт!',
+      failed: 'Событие провалено',
+      reward: { pickup: 'bundle' },
     },
-    rush: { duration: 40, tokens: 16, need: 12, message: 'Срочный тираж! Собери 12 кодов' },
+    rush: {
+      kind: 'collect',
+      duration: 40,
+      tokens: 16,
+      need: 12,
+      near: 150,
+      far: 520,
+      message: 'Срочный тираж! Собери 12 кодов',
+      label: 'Срочный тираж: {progress}/{need} кодов · {left}',
+      success: 'Тираж сдан',
+      failed: 'Событие провалено',
+      reward: { codes: 25 },
+    },
   },
 };
 

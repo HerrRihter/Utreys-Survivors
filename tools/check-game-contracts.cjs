@@ -1,7 +1,19 @@
 'use strict';
 const assert = require('node:assert/strict');
 
-function validateSchedules(schedules, maps, units) {
+// Fields each kind of mid-run event needs besides the common ones (src/systems/run-events.js).
+const eventFields = {
+  siege: ['count', 'distance'],
+  hold: ['hold', 'radius', 'distance'],
+  collect: ['tokens', 'need', 'near', 'far'],
+};
+
+function validateSchedules(
+  schedules,
+  maps,
+  units,
+  pickups = require('../data/pickups.js').pickupDefinitions,
+) {
   const fail = (condition, message) => assert(condition, 'Game contract: ' + message);
   const shape = (value, keys, label) => {
     fail(value && typeof value === 'object' && !Array.isArray(value), label + ' must be an object');
@@ -138,7 +150,7 @@ function validateSchedules(schedules, maps, units) {
       number(schedule.elites.first, 0, 'elites.first');
       positive(schedule.elites.every, 'elites.every');
       const events = schedule.events;
-      shape(events, ['times', 'types', 'friday', 'incident', 'rush'], id + '.events');
+      const types = Object.keys(events).filter((key) => key !== 'times' && key !== 'types');
       fail(Array.isArray(events.times) && events.times.length > 0, 'event times');
       events.times.forEach((time, i) => {
         positive(time, 'event time');
@@ -147,21 +159,53 @@ function validateSchedules(schedules, maps, units) {
       fail(
         Array.isArray(events.types) &&
           events.types.length > 0 &&
-          events.types.every((type) => ['friday', 'incident', 'rush'].includes(type)),
+          events.types.every((type) => types.includes(type)),
         'event types',
       );
-      shape(events.friday, ['duration', 'count', 'message'], 'friday');
-      shape(events.incident, ['duration', 'hold', 'radius', 'distance', 'message'], 'incident');
-      shape(events.rush, ['duration', 'tokens', 'need', 'message'], 'rush');
-      positive(events.friday.duration, 'friday.duration');
-      integer(events.friday.count, 1, 'friday.count');
-      positive(events.incident.hold, 'incident.hold');
-      fail(events.incident.hold < events.incident.duration, 'incident hold fits its duration');
-      positive(events.incident.radius, 'incident.radius');
-      positive(events.incident.distance, 'incident.distance');
-      integer(events.rush.need, 1, 'rush.need');
-      fail(events.rush.tokens >= events.rush.need, 'rush has enough tokens');
-      positive(events.rush.duration, 'rush.duration');
+      for (const type of types) {
+        const spec = events[type];
+        const fields = eventFields[spec?.kind];
+        fail(fields, `event ${type}.kind`);
+        const reward = spec.reward;
+        shape(
+          spec,
+          [
+            'kind',
+            'duration',
+            'message',
+            'label',
+            'success',
+            'failed',
+            'reward',
+            ...fields,
+            ...('marker' in spec ? ['marker'] : []),
+          ],
+          'event ' + type,
+        );
+        positive(spec.duration, type + '.duration');
+        for (const text of ['message', 'label', 'success', 'failed'])
+          fail(typeof spec[text] === 'string' && spec[text], `${type}.${text}`);
+        fail(
+          reward &&
+            (Number.isSafeInteger(reward.codes) && reward.codes > 0
+              ? Object.keys(reward).length === 1
+              : Object.keys(reward).length === 1 && Object.hasOwn(pickups, reward.pickup)),
+          type + '.reward',
+        );
+        if (spec.kind === 'siege') {
+          integer(spec.count, 1, type + '.count');
+          positive(spec.distance, type + '.distance');
+        } else if (spec.kind === 'hold') {
+          positive(spec.hold, type + '.hold');
+          fail(spec.hold < spec.duration, type + ' hold fits its duration');
+          positive(spec.radius, type + '.radius');
+          positive(spec.distance, type + '.distance');
+        } else {
+          integer(spec.need, 1, type + '.need');
+          fail(spec.tokens >= spec.need, type + ' has enough tokens');
+          fail(spec.near > 0 && spec.far > spec.near, type + ' token distances');
+        }
+      }
     }
     if (schedule.boss !== null) {
       shape(
@@ -234,6 +278,22 @@ function checkGameContracts() {
         'Hero contract: price',
       );
   }
+  // Event kinds of the contract are the ones the event system knows.
+  const { eventKinds } = require('../src/systems/run-events.js');
+  assert.deepEqual(Object.keys(eventKinds).sort(), Object.keys(eventFields).sort(), 'Event kinds');
+  // Pickups: known kinds and icons; drops name pickup types.
+  const { pickupDefinitions, dropTable } = require('../data/pickups.js');
+  const pickupKinds = ['upgrade', 'pull', 'blast', 'stun', 'heal'];
+  const pickupIcons = ['crate', 'magnet', 'bomb', 'snowflake', 'capsule'];
+  for (const [id, pickup] of Object.entries(pickupDefinitions)) {
+    assert(pickupKinds.includes(pickup.kind), 'Pickup contract: kind of ' + id);
+    assert(pickupIcons.includes(pickup.icon), 'Pickup contract: icon of ' + id);
+  }
+  for (const type of [dropTable.elite, dropTable.food.type, ...dropTable.rare.map((d) => d.type)])
+    assert(Object.hasOwn(pickupDefinitions, type), 'Drop contract: unknown pickup ' + type);
+  dropTable.rare.forEach((drop, i) =>
+    assert(drop.below > (i ? dropTable.rare[i - 1].below : 0), 'Drop contract: rare order'),
+  );
   // Every weapon names a kind the weapon system knows.
   const { weaponDefinitions } = require('../data/weapons.js');
   const { weaponKinds } = require('../src/systems/weapons/index.js');

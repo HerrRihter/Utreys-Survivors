@@ -1,11 +1,11 @@
+import { pickupDefinitions } from '../../data/pickups.js';
+
 // Map pickups, gems, dropped codes and the elite aura. `t` is the run clock for pulsing.
 const TAU = Math.PI * 2;
 
-export function drawPickup(g, a, t = 0) {
-  const pulse = 1 + Math.sin(t * 6 + a.x) * 0.12;
-  g.save();
-  g.translate(a.x, a.y);
-  if (a.type === 'bundle') {
+// Pickup art by the type's `icon` (data/pickups.js); `pulse` makes it breathe.
+const pickupIcons = {
+  crate(g, pulse) {
     g.scale(pulse, pulse);
     g.fillStyle = '#3b2a05';
     g.fillRect(-11, -9, 22, 18);
@@ -15,7 +15,8 @@ export function drawPickup(g, a, t = 0) {
     g.fillStyle = '#ffd54f';
     g.fillRect(-11, -2, 22, 4);
     g.fillRect(-2, -9, 4, 18);
-  } else if (a.type === 'magnet') {
+  },
+  magnet(g) {
     g.strokeStyle = '#ff5252';
     g.lineWidth = 5;
     g.beginPath();
@@ -24,7 +25,8 @@ export function drawPickup(g, a, t = 0) {
     g.fillStyle = '#e0e0e0';
     g.fillRect(-10, -2, 5, 8);
     g.fillRect(5, -2, 5, 8);
-  } else if (a.type === 'bomb') {
+  },
+  bomb(g, pulse) {
     g.fillStyle = '#1b1f24';
     g.beginPath();
     g.arc(0, 0, 9 * pulse, 0, TAU);
@@ -34,7 +36,8 @@ export function drawPickup(g, a, t = 0) {
     g.stroke();
     g.fillStyle = '#ffd54f';
     g.fillRect(-1, -14, 2, 5);
-  } else if (a.type === 'freeze') {
+  },
+  snowflake(g, pulse) {
     g.strokeStyle = '#80deea';
     g.lineWidth = 2;
     g.beginPath();
@@ -44,15 +47,23 @@ export function drawPickup(g, a, t = 0) {
       g.lineTo(Math.cos(k) * 10 * pulse, Math.sin(k) * 10 * pulse);
     }
     g.stroke();
-  } else {
-    // Food: a data/energy recovery capsule.
+  },
+  // A data/energy recovery capsule; also drawn for a type without an icon.
+  capsule(g) {
     g.fillStyle = '#00e5ff';
     g.fillRect(-7, -5, 14, 10);
     g.fillStyle = '#0a192f';
     g.fillRect(-5, -3, 10, 6);
     g.fillStyle = '#64ffda';
     g.fillRect(-3, -1, 6, 2);
-  }
+  },
+};
+
+export function drawPickup(g, a, t = 0) {
+  const pulse = 1 + Math.sin(t * 6 + a.x) * 0.12;
+  g.save();
+  g.translate(a.x, a.y);
+  (pickupIcons[pickupDefinitions[a.type]?.icon] ?? pickupIcons.capsule)(g, pulse);
   g.restore();
 }
 
