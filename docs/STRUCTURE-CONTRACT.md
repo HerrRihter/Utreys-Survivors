@@ -68,6 +68,8 @@ tests/test-structure-layers.cjs. Учитываются статические, 
 - Определения героев и врагов системы берут прямо из data (data/characters/heroes.js,
   data/enemies/units.js); рендереры (`createEnemyRenderer`, `createCorpseRenderer`) создаёт каждый
   вид сам — сессия и бестиарий держат свои экземпляры, общих синглтонов нет.
+- В src/systems и src/world нет вызовов Canvas API (`getContext`, `fillRect`, `strokeRect`,
+  `beginPath`, `arc(`, `drawImage`, `fillText`); проверяет `checkNoCanvas` в tools/check-structure.cjs.
 - То, что зависит от экрана (кто из врагов говорит), вызывается из сессии с видимым прямоугольником
   мира, а не из шага симуляции.
 - Типы, которые app отдаёт React (Session, Account), живут в src/app/types.ts.

@@ -82,6 +82,36 @@ function checkLayers({ root = path.resolve(__dirname, '..'), layers = contract.l
   return { files: files.length };
 }
 
+// Code without comments (line numbers kept), so prose may name Canvas calls.
+const stripComments = (source) =>
+  source
+    .replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ''))
+    .replace(/(^|\s)\/\/.*$/gm, '$1');
+
+// Systems and world only change state: no Canvas call such as `g.fillRect(` in the
+// contract's `noCanvas.roots`.
+function checkNoCanvas({ root = path.resolve(__dirname, '..'), rule = contract.noCanvas } = {}) {
+  const call = new RegExp(`\\.\\s*(${rule.calls.join('|')})\\s*\\(`, 'g');
+  const violations = [];
+  const files = rule.roots
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const lines = stripComments(fs.readFileSync(path.join(root, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      for (const match of line.matchAll(call))
+        violations.push(`${file}:${i + 1} calls ${match[1]}()`);
+    });
+  }
+  if (violations.length)
+    throw new Error(
+      'Canvas call outside src/rendering (see docs/STRUCTURE-CONTRACT.md):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
 function checkStructure({
   root = path.resolve(__dirname, '..'),
   inventory = {
@@ -136,6 +166,7 @@ function checkStructure({
       throw new Error(`Media outside assets: ${file}`);
   }
   const { files: modules } = checkLayers({ root });
+  checkNoCanvas({ root });
   return {
     assets: assets.length,
     modules,
@@ -144,4 +175,4 @@ function checkStructure({
 }
 
 if (require.main === module) console.log('Structure contract OK:', checkStructure());
-module.exports = { checkStructure, checkLayers, validateAssetPath };
+module.exports = { checkStructure, checkLayers, checkNoCanvas, validateAssetPath };

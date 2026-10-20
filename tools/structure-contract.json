@@ -19,6 +19,11 @@
     "components": ["data", "core", "world", "systems", "services", "rendering", "ui", "app"],
     "src": ["data", "core", "world", "systems", "services", "rendering", "ui", "app", "components"]
   },
+  "noCanvas": {
+    "$comment": "Simulation and world only change state; drawing lives in src/rendering. These Canvas calls must not appear in the listed folders (comments excluded). See docs/STRUCTURE-CONTRACT.md.",
+    "roots": ["src/systems", "src/world"],
+    "calls": ["getContext", "fillRect", "strokeRect", "beginPath", "arc", "drawImage", "fillText"]
+  },
   "runtimeAssetPatterns": [
     "^assets/runtime/audio/(music|sfx)/[a-z0-9-]+\\.(mp3|ogg|wav)$",
     "^assets/runtime/audio/(CREDITS\\.md|[A-Za-z0-9-]+-LICENSE\\.txt)$"
