@@ -4,9 +4,35 @@
 // on that map; `unlockHint` says so in the map picker.
 // `objective` is what clears the way to the CRPT (default: the five component nodes):
 //   { type: 'desks', unit, count }  — `count` structures of `unit` that must be destroyed.
+import { learningRooms } from '../learning-rules.js';
+
 export const nodeSpacing = 450;
 
 export const mapDefinitions = {
+  learningLab: {
+    name: 'Учебный полигон · эксперимент',
+    description:
+      'Три комнаты с мини-тестами и босс «Партионный учёт». Знания открывают путь и дают вторую жизнь.',
+    notes:
+      'Комнаты связаны переходами: пройди тест, затем подойди к выходу. Учебные результаты не входят в рейтинг.',
+    victoryTag: 'ПАРТИОННЫЙ УЧЁТ ОСВОЕН',
+    ranked: false,
+    objective: { type: 'learning', count: 3, label: 'Терминал' },
+    rooms: learningRooms,
+    racks: [
+      [40, 80, 2120, 40],
+      [40, 2120, 2120, 40],
+      [40, 80, 40, 2080],
+      [2120, 80, 40, 2080],
+      [1040, 80, 120, 2080],
+      [40, 1040, 2120, 120],
+    ],
+    nodeZones: [
+      [700, 650, 160, 160],
+      [1750, 650, 160, 160],
+      [1750, 1730, 160, 160],
+    ],
+  },
   empty: {
     notes: 'Высоконагруженный контур валидации данных и стресс-тестирования сервисов Utrace.',
     victoryTag: 'ВАЛИДАЦИЯ УСПЕШНА',

@@ -1,3 +1,4 @@
+import { learningSummary } from '../../systems/learning.js';
 import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { weaponDefinitions } from '../../../data/weapons.js';
 import { seedText } from '../../core/rng.js';
@@ -22,7 +23,8 @@ export function resultView({
   const endless = !!s.endless;
   return {
     ...resultHeader({ s, map, win, endless, opened, bonus }),
-    canContinue: win && !endless,
+    canContinue: win && !endless && !s.learning,
+    learning: learningSummary(s),
     stats: [
       ...resultStats({ s, endless, productionBest, before }),
       { value: String(s.level), label: 'УРОВЕНЬ' },
@@ -37,6 +39,13 @@ export function resultView({
 }
 
 function resultHeader({ s, map, win, endless, opened, bonus }) {
+  if (s.learning)
+    return {
+      win,
+      tag: win ? map.victoryTag : 'УЧЕБНЫЙ ЗАБЕГ ОКОНЧЕН',
+      title: win ? 'Партионный учёт освоен' : 'Практика продолжается',
+      text: 'Учебные очки действуют в этом забеге. Результат не входит в рейтинг и не открывает обычные карты или нагрузки.',
+    };
   const loadText = `НАГРУЗКА ${s.load}`;
   if (endless)
     return {
@@ -70,8 +79,12 @@ function resultStats({ s, endless, productionBest, before }) {
       { value: clock(s.t), label: 'ВСЕГО' },
     ];
   return [
-    { value: clock(s.t), label: 'ВРЕМЯ', best: s.t > before.maxTime },
-    { value: String(s.kills), label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО', best: s.kills > before.maxKills },
+    { value: clock(s.t), label: 'ВРЕМЯ', best: !s.learning && s.t > before.maxTime },
+    {
+      value: String(s.kills),
+      label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО',
+      best: !s.learning && s.kills > before.maxKills,
+    },
   ];
 }
 

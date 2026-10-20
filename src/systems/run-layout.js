@@ -7,6 +7,28 @@ import { createRng, shuffle } from '../core/rng.js';
 // `desks` objective places its structures the same way instead of the nodes.
 export function layoutNodes(mapId, seed) {
   const map = mapDefinitions[mapId] || mapDefinitions.empty;
+  if (map.objective?.type === 'learning')
+    return [
+      ...map.rooms.slice(0, 3).map((room, i) => ({
+        id: 'lesson-' + i,
+        label: room.name,
+        kind: 'learning-terminal',
+        required: true,
+        room: i,
+        topic: i,
+        ...room.terminal,
+      })),
+      {
+        id: 'bonus-lesson',
+        label: 'Бонус знаний',
+        kind: 'learning-terminal',
+        required: false,
+        room: 1,
+        topic: 1,
+        x: 1370,
+        y: 820,
+      },
+    ];
   const rng = createRng(seed).random;
   const zones = shuffle(map.nodeZones, rng);
   if (map.objective?.type === 'desks') return layoutDesks(map.objective, zones, rng);

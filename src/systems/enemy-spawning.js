@@ -1,3 +1,4 @@
+import { currentRoom, inRoom } from './queries/learning.js';
 import { clamp } from '../core/math.js';
 import { updateNodes, allNodesResolved } from './node-objectives.js';
 import {
@@ -18,11 +19,34 @@ export const EnemySpawning = {
         p = s.p,
         u = unitDefinitions[unit];
       if (!u) throw new Error('Unknown unit: ' + unit);
+      const room = currentRoom(s);
       let x, y;
       if (position) {
         x = position.x;
         y = position.y;
       }
+      if (room && !position) {
+        if (boss) position = room.boss;
+        else
+          for (let attempt = 0; attempt < 30; attempt++) {
+            const [left, top, right, bottom] = room.bounds;
+            const point = {
+              x: s.rng.rand(left + u.r, right - u.r),
+              y: s.rng.rand(top + u.r, bottom - u.r),
+            };
+            if (
+              Math.hypot(point.x - p.x, point.y - p.y) >= 240 &&
+              !world.arena.blocked(point.x, point.y, u.r)
+            ) {
+              position = point;
+              break;
+            }
+          }
+        if (!position) return;
+        x = position.x;
+        y = position.y;
+      }
+      if (room && !inRoom(room, x, y, u.r)) return;
       for (let i = 0; !position && i < 100; i++) {
         const a = s.rng.rand(0, Math.PI * 2),
           r = s.rng.rand(520, 640);
@@ -72,6 +96,15 @@ export const EnemySpawning = {
         schedule = getWaveSchedule(s.map);
       if (schedule.active === false) return;
       updateNodes({ state: s, spawn, toast }, dt);
+      const room = currentRoom(s);
+      if (room?.boss) {
+        if (allNodesResolved(s) && !s.bossSpawned && spawn(schedule.boss.unit, true, room.boss)) {
+          s.bossSpawned = true;
+          toast(schedule.boss.message);
+          audio.effect(schedule.boss.sound);
+        }
+        return;
+      }
       // Living enemies per unit and in total, counted once and kept current as we spawn.
       let counted = false,
         combat = 0;
@@ -147,7 +180,7 @@ export const EnemySpawning = {
         }
       }
       const boss = schedule.boss;
-      if (boss && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
+      if (boss && !room && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
         s.bossSpawned = true;
         if (boss.heal) {
           const gain = Math.round(s.p.max * boss.heal * s.healFactor);

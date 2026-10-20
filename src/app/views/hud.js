@@ -1,3 +1,4 @@
+import { nodeResolved, nodeAvailable } from '../../systems/queries/nodes.js';
 import { eventSpec } from '../../systems/queries/events.js';
 import {
   abilityRank,
@@ -40,14 +41,17 @@ function hudBuild(run, upgrades) {
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
 function nodeProgress(s) {
+  if (s.learning)
+    return `Учебные терминалы: ${s.nodes.filter((n) => n.required && nodeResolved(n)).length}/3 · Комната ${s.learning.roomIndex + 1}/4`;
   let next = null,
     nextDistance = Infinity,
     resolved = 0;
   for (const n of s.nodes) {
-    if (n.status !== 'guarded') {
+    if (nodeResolved(n)) {
       resolved++;
       continue;
     }
+    if (!nodeAvailable(n)) continue;
     const d = Math.hypot(n.x - s.p.x, n.y - s.p.y);
     if (d < nextDistance) {
       next = n;
@@ -128,7 +132,9 @@ export function hudView({ run, progression, settings, upgrades }) {
     // Pause only means something during play; the stick is shown with it.
     showPause: run.mode === 'play',
     showHint: settings.hints,
-    hint: controlsHint(settings.bindings, s.nodes[0]?.kind === 'desk'),
+    hint: s.learning
+      ? 'Подойди к терминалу и начни тест · После успеха найди переход в следующую комнату'
+      : controlsHint(settings.bindings, s.nodes[0]?.kind === 'desk'),
     stick: run.stickView,
     build: upgrades ? hudBuild(run, upgrades) : null,
     tip: run.mode === 'play' && run.tip?.left > 0 ? run.tip.text : '',

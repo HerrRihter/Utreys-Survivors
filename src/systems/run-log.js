@@ -1,3 +1,4 @@
+import { learningSummary } from './learning.js';
 import { currentCardId } from '../../data/characters/abilities.js';
 import { persisted } from '../core/storage.js';
 
@@ -5,7 +6,7 @@ import { persisted } from '../core/storage.js';
 // screen exports the journal as JSON for `tools/run-stats.cjs`. Only the newest `MAX_ENTRIES`
 // are kept so storage stays small.
 export const RUN_LOG_KEY = 'utreys-run-log-v1';
-export const RUN_LOG_VERSION = 1;
+export const RUN_LOG_VERSION = 2;
 export const MAX_ENTRIES = 300;
 
 // Level-up bookkeeping on the run state: every offer, what was taken and how.
@@ -39,6 +40,7 @@ export function logChoice(s, picked, action) {
 export function logEntry({ s, hero, win, build, date = new Date() }) {
   return {
     version: RUN_LOG_VERSION,
+    learning: learningSummary(s),
     date: date.toISOString(),
     hero,
     map: s.map,
@@ -65,6 +67,7 @@ export function logEntry({ s, hero, win, build, date = new Date() }) {
 // An entry as the current build names things: level-up cards of renamed abilities (an older
 // journal has `ability_potion`) get their current ids. Entries are not rewritten in storage.
 export function normalizeLogEntry(entry) {
+  if (entry?.version === 1) entry = { ...entry, version: RUN_LOG_VERSION, learning: null };
   if (!Array.isArray(entry?.offers)) return entry;
   const cards = (list) => (Array.isArray(list) ? list.map(currentCardId) : list);
   return {

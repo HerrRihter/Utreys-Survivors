@@ -225,6 +225,25 @@ export function EndScreen() {
         </div>
         <h2 id="endTitle">{result.title}</h2>
         <p id="endText">{result.text}</p>
+        {result.learning && (
+          <div className="learning-summary">
+            <strong>Знания: {result.learning.points} очков</strong>
+            <p>
+              С первого раза: {result.learning.firstCorrect}/{result.learning.answered} · Повторных
+              ответов: {result.learning.retries}
+            </p>
+            <p>
+              {result.learning.reviveUsed
+                ? 'Попытка второй жизни использована'
+                : 'Без второй жизни'}
+            </p>
+            {result.learning.topics.map((t) => (
+              <p key={t.name}>
+                {t.name}: ошибок {t.mistakes}
+              </p>
+            ))}
+          </div>
+        )}
         <div id="endStats" className="stats">
           {result.stats.map((stat: { value: string; label: string; best?: boolean }) => (
             <div key={stat.label} className={stat.best ? 'record-stat' : undefined}>

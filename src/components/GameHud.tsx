@@ -1,3 +1,4 @@
+import type { LearningTerminal } from '../app/types';
 import { SoundButton } from './menus/SoundButton';
 import { BuildPanel } from './GameRunScreens';
 import { useHudVersion, useSession } from './session';
@@ -12,6 +13,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
   const hud = session.views.hud();
   const run = session.views.run();
   const { commands } = session;
+  const learning = session.views.learning();
   const stick = hud?.stick;
   // The corner sound button stays above every screen; settings have their own sound toggle.
   const ownSound = run.screen === 'settings';
@@ -56,6 +58,28 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
         </div>
       </div>
 
+      {learning && run.mode === 'play' && (
+        <div className="learning-hud">
+          <strong>
+            Комната {learning.roomNumber}/4 · {learning.room}
+          </strong>
+          <span>
+            {learning.points} очков ·{' '}
+            {learning.reviveAvailable ? 'Вторая жизнь доступна' : 'Вторая жизнь использована'}
+          </span>
+          {learning.terminals.map((n: LearningTerminal) => (
+            <button key={n.id} onClick={() => commands.startLearningTest(n.id)}>
+              Тест: {n.label}
+            </button>
+          ))}
+          {learning.exit && (
+            <>
+              <button onClick={commands.moveLearningRoom}>В следующую комнату →</button>
+              <small>Неподобранные предметы останутся здесь</small>
+            </>
+          )}
+        </div>
+      )}
       <div id="hint" className={hidden(!!hud?.showHint, 'controls')}>
         {hud?.hint}
       </div>

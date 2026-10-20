@@ -81,9 +81,9 @@ export const AudioSystem = {
         current = audio ? { name: wanted, audio } : null;
         if (audio) audio.currentTime = 0;
       }
-      if (quiet() || mode === 'pause') silenceEffects();
+      if (quiet() || mode === 'pause' || mode === 'quiz') silenceEffects();
       if (!current) return;
-      current.audio.volume = settings.music * (mode === 'level' ? 0.45 : 1);
+      current.audio.volume = settings.music * (mode === 'level' || mode === 'quiz' ? 0.45 : 1);
       if (quiet() || mode === 'pause' || settings.music === 0) current.audio.pause();
       else if (current.audio.paused && !(current.audio.ended && !current.audio.loop))
         play(current.audio);

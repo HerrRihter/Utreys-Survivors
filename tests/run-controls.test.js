@@ -87,7 +87,7 @@ test('run-controls', async () => {
   s.nodes[1].status = 'workaround';
   s.enemies = s.enemies.filter((e) => e !== nodeGuardian(s, s.nodes[1]));
   game.pause();
-  assert(store.has('utreys-run-v4'), 'pausing saves the run');
+  assert(store.has('utreys-run-v5'), 'pausing saves the run');
   const enemies = s.enemies.filter((e) => !e.nodeId).length;
   game.dispose();
 
@@ -109,7 +109,7 @@ test('run-controls', async () => {
   game.pause();
   game.update(0.05);
   game.finish(false);
-  assert(!store.has('utreys-run-v4'), 'a finished run is not offered again');
+  assert(!store.has('utreys-run-v5'), 'a finished run is not offered again');
   assert.equal(game.views.menu().resume, null);
 
   // A level-up open when the tab closes comes back with the same cards and the run's random

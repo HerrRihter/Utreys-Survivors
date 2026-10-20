@@ -36,8 +36,14 @@ export function recordTape(seed, steps) {
 // Everything the simulation reads, with the references between objects, and the random
 // source's position. Not the run id (a new one each start) or what enemies say on screen.
 const cosmetic = new Set(['runId', 'speech', 'nextSpeechAt', 'speechPhraseIndex', 'speechCursor']);
-export function stateHash(s) {
-  const fields = toGraphJson(Object.fromEntries(persistentKeys.map((key) => [key, s[key]])));
+export function stateHash(s, legacyProjection = false) {
+  const fields = toGraphJson(
+    Object.fromEntries(
+      persistentKeys
+        .filter((key) => !legacyProjection || key !== 'learning')
+        .map((key) => [key, s[key]]),
+    ),
+  );
   const text = JSON.stringify(fields, (key, value) => (cosmetic.has(key) ? undefined : value));
   return crypto
     .createHash('sha256')
@@ -110,7 +116,7 @@ export async function replayContinuous(scenario, marks = []) {
   let step = 0;
   for (const mark of [...marks, scenario.steps]) {
     step = play(game, tape, step, mark, cursor);
-    hashes[mark] = stateHash(game.state);
+    hashes[mark] = stateHash(game.state, scenario.legacyProjection);
   }
   const s = game.state;
   const out = { hashes, t: s.t, kills: s.kills, level: s.level, enemies: s.enemies.length };

@@ -28,6 +28,35 @@ function drawDesk(g, node, guardian) {
 // `enemies` holds the node guardians; previews draw bare nodes without them.
 export function drawNodes(g, nodes, enemies = []) {
   for (const node of nodes || []) {
+    if (node.kind === 'learning-terminal') {
+      g.save();
+      g.translate(node.x, node.y);
+      const done = node.status === 'completed';
+      g.strokeStyle = done ? '#64ffda' : node.status === 'available' ? '#55bfff' : '#637783';
+      g.fillStyle = '#102634';
+      g.lineWidth = 3;
+      g.fillRect(-40, -35, 80, 70);
+      g.strokeRect(-40, -35, 80, 70);
+      g.fillStyle = g.strokeStyle;
+      g.font = 'bold 22px monospace';
+      g.textAlign = 'center';
+      g.fillText(done ? '✓' : '?', 0, 8);
+      g.font = '12px sans-serif';
+      g.fillText(node.label, 0, -55);
+      g.fillText(
+        done
+          ? 'Тест пройден'
+          : node.status === 'available'
+            ? 'Подойди и начни тест'
+            : node.status === 'exhausted'
+              ? 'Попытка использована'
+              : 'Следующая комната',
+        0,
+        65,
+      );
+      g.restore();
+      continue;
+    }
     const guardian = nodeGuardian({ enemies }, node);
     if (node.kind === 'desk') {
       drawDesk(g, node, guardian);

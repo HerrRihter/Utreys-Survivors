@@ -11,12 +11,13 @@ import { persisted } from '../core/storage.js';
  *   damage: { tag: string, name: string, amount: number, share: number }[],
  *   build: RunBuild, canContinue?: boolean, seed: string,
  *   unlocked: { id: string, title: string, unlock: string }[],
+ *   learning?: ReturnType<typeof import('../systems/learning.js').learningSummary>,
  *   goals: import('./unlocks.js').UnlockGoal[] }} RunResult
  * @typedef {{ id: string, name: string, desc: string, icon: string, group: string,
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
- *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
+ *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'quiz' | 'end',
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
  *   selectedMap: string, selectedLoad: number, seedInput: string,

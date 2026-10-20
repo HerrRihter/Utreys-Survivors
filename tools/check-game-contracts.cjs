@@ -154,14 +154,19 @@ function validateSchedules(
       positive(schedule.elites.every, 'elites.every');
       const events = schedule.events;
       const types = Object.keys(events).filter((key) => key !== 'times' && key !== 'types');
-      fail(Array.isArray(events.times) && events.times.length > 0, 'event times');
+      fail(
+        Array.isArray(events.times) &&
+          (maps[id].rooms ? events.times.length === 0 : events.times.length > 0),
+        'event times',
+      );
+      if (maps[id].rooms) shape(events, ['times', 'types'], id + '.room events');
       events.times.forEach((time, i) => {
         positive(time, 'event time');
         if (i) fail(time > events.times[i - 1], 'event times must be ordered');
       });
       fail(
         Array.isArray(events.types) &&
-          events.types.length > 0 &&
+          (events.times.length ? events.types.length > 0 : events.types.length === 0) &&
           events.types.every((type) => types.includes(type)),
         'event types',
       );
@@ -227,7 +232,13 @@ function validateSchedules(
       if ('heal' in schedule.boss)
         fail(schedule.boss.heal > 0 && schedule.boss.heal <= 1, 'boss.heal must be a share');
       unit(schedule.boss.unit);
-      fail(schedule.boss.condition === 'all-nodes-resolved', 'boss condition');
+      fail(
+        schedule.boss.condition ===
+          (maps[id].objective?.type === 'learning'
+            ? 'learning-rooms-complete'
+            : 'all-nodes-resolved'),
+        'boss condition',
+      );
       fail(
         typeof schedule.boss.message === 'string' && typeof schedule.boss.sound === 'string',
         'boss messages',

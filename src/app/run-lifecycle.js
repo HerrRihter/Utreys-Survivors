@@ -1,3 +1,5 @@
+import { validLearning } from '../systems/learning.js';
+import { fromGraphJson } from '../core/graph-json.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
@@ -32,10 +34,10 @@ export function createRunLifecycle({
 }) {
   const { wallet, shop, achievements, loads } = progression;
   const { countRun, recordRun } = createRunRecording({ run, progression, upgrades, runLog });
-  function start() {
+  function start(restoring = false) {
     recordRun();
     countRun();
-    snapshots?.clear();
+    if (!restoring) snapshots?.clear();
     if (!shop.owned(run.selected)) run.selected = 'utrace';
     if (!mapOpen(progression, run.selectedMap)) {
       run.selectedMap = 'empty';
@@ -121,7 +123,7 @@ export function createRunLifecycle({
     // A first win on the load level opens the next one; higher levels pay more codes.
     let opened = false,
       bonus = 0;
-    if (win && !endless) {
+    if (win && !endless && !s.learning) {
       opened = loads.recordLoadWin(run.selected, s.load) && s.load < maxLoad;
       bonus = wallet.earn(Math.floor(s.earned * rewardPerLevel * (s.load - 1)));
       s.earned += bonus;
@@ -192,7 +194,8 @@ export function createRunLifecycle({
   // After a win: keep playing the same run in the endless production mode.
   function continueProduction() {
     const s = run.state;
-    if (run.mode !== 'end' || !run.result?.canContinue || !s || s.endless) return false;
+    if (run.mode !== 'end' || !run.result?.canContinue || !s || s.endless || s.learning)
+      return false;
     s.endless = true;
     s.endlessStart = s.t;
     s.endlessKills = s.kills;
@@ -212,6 +215,22 @@ export function createRunLifecycle({
   function resume() {
     const snapshot = snapshots?.load();
     if (!snapshot || run.mode !== 'menu') return false;
+    let saved;
+    try {
+      saved = fromGraphJson(snapshot.state);
+    } catch {
+      toast('Не удалось прочитать сохранение. Можно начать новый забег.');
+      return false;
+    }
+    if (
+      (mapDefinitions[snapshot.map]?.objective?.type === 'learning' &&
+        !validLearning(saved.learning)) ||
+      (saved.p.hp <= 0 &&
+        !(saved.learning?.active?.reason === 'revive' && saved.learning.reviveUsed))
+    ) {
+      toast('Учебное сохранение несовместимо. Можно начать новый забег.');
+      return false;
+    }
     if (!heroDefinitions[snapshot.hero] || !shop.owned(snapshot.hero)) {
       snapshots.clear();
       ui.emit();
@@ -223,9 +242,10 @@ export function createRunLifecycle({
     if (snapshot.baClient) run.baClient = snapshot.baClient;
     run.selectedLoad = snapshot.state.load || 1;
     run.nextSeed = snapshot.state.seed ?? null;
-    start();
+    start(true);
     restoreRun(run.state, snapshot, spawning.spawn);
-    if (snapshot.pendingLevel) levels.reopen(snapshot.choice);
+    if (run.state.learning?.active) setMode('quiz');
+    else if (snapshot.pendingLevel) levels.reopen(snapshot.choice);
     else setMode('pause');
     snapshots.save(run);
     changed();
@@ -233,7 +253,7 @@ export function createRunLifecycle({
   }
 
   return {
-    start,
+    start: () => start(),
     startSelected,
     restartSameSeed,
     menu,

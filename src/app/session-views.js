@@ -1,3 +1,4 @@
+import { learningView } from './views/learning.js';
 import * as views from './views/index.js';
 
 // The session's read models for React: each call builds a screen's data from the current state.
@@ -14,6 +15,7 @@ export function createSessionViews({
   const read = { run, progression, settings, upgrades };
   return {
     run: () => run,
+    learning: () => learningView(read),
     menu: () => views.menuView({ ...read, snapshot: snapshots.load() }),
     heroSelect: () => views.heroSelectView(read),
     shop: () => views.shopView(read),

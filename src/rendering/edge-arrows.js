@@ -1,6 +1,8 @@
 import { eventSpec } from '../systems/queries/events.js';
 import { inBox } from '../core/math.js';
 
+import { nodeAvailable } from '../systems/queries/nodes.js';
+
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
 // Where a marker for a world point sits on screen, or null when the point is visible.
@@ -33,7 +35,7 @@ export function edgeTargets(s) {
   let node = null,
     best = Infinity;
   for (const n of s.nodes) {
-    if (n.status !== 'guarded') continue;
+    if (!nodeAvailable(n)) continue;
     const d = Math.hypot(n.x - s.p.x, n.y - s.p.y);
     if (d < best) {
       best = d;

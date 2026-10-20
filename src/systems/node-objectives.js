@@ -1,3 +1,4 @@
+import { nodeResolved } from './queries/nodes.js';
 import { nodeGuardian } from './queries/nodes.js';
 import {
   nodeDefinitions,
@@ -13,7 +14,8 @@ export function createNodeState(seconds = workaroundSeconds, layout = nodeDefini
     ...node,
     label: node.label ?? node.id,
     need: seconds,
-    status: 'guarded',
+    status:
+      node.kind === 'learning-terminal' ? (node.room === 0 ? 'available' : 'locked') : 'guarded',
     progress: 0,
     guardianId: null,
   }));
@@ -22,7 +24,7 @@ export function createNodeState(seconds = workaroundSeconds, layout = nodeDefini
 export function allNodesResolved(state) {
   return (
     state.nodes?.length > 0 &&
-    state.nodes.every((node) => node.status === 'destroyed' || node.status === 'workaround')
+    state.nodes.filter((node) => node.required !== false).every(nodeResolved)
   );
 }
 

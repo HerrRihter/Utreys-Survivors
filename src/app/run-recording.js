@@ -9,7 +9,7 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
   // a run; a run continued in production ends again later. `victory` only from finish().
   function countRun(victory = false) {
     const s = run.state;
-    if (!s?.runId) return null;
+    if (!s?.runId || s.learning) return null;
     const counted = s.statsCounted ?? { kills: 0, codes: 0 };
     const improved = records.recordRunResult({
       runId: s.runId,
@@ -33,9 +33,9 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
   function recordRun(win = false) {
     const s = run.state;
     if (!s || s.resultRecorded) return null;
-    records.recordTime(s.t, s.recordedTime);
-    records.recordLevel(s.level);
-    records.recordKills(s.kills);
+    if (!s.learning) records.recordTime(s.t, s.recordedTime);
+    if (!s.learning) records.recordLevel(s.level);
+    if (!s.learning) records.recordKills(s.kills);
     s.resultRecorded = true;
     s.recordedTime = s.t;
     // Evolutions assembled in this run open their encyclopedia entries.
@@ -52,7 +52,7 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
       }),
     );
     s.offersLogged = offers.length;
-    if (!s.statsRecorded) {
+    if (!s.statsRecorded && !s.learning) {
       s.statsRecorded = true;
       const nodesMap = !mapDefinitions[s.map]?.objective;
       records.recordRunStats({

@@ -20,6 +20,26 @@ function uprightText(g, flip, text, x, y) {
 }
 
 export const unitArt = {
+  batch_accounting: {
+    draw(g, u, flash, flip) {
+      for (const [x, y, scale] of [
+        [-27, -41, 0.9],
+        [4, -48, 1],
+        [30, -34, 0.9],
+        [-37, -12, 0.85],
+        [-9, -18, 1.1],
+        [24, -9, 1],
+        [-20, 12, 0.8],
+        [8, 14, 0.85],
+      ]) {
+        g.save();
+        g.translate(x, y);
+        g.scale(scale, scale);
+        unitArt.pepsi.draw(g, u, flash, flip);
+        g.restore();
+      }
+    },
+  },
   // Сервисдеск Пепси — a support counter with a ticket monitor.
   pepsi_desk: {
     draw(g, u, hitFlash, flip) {
