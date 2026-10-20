@@ -19,14 +19,14 @@ function createDatacenterArena(map = mapDefinitions.empty) {
     cell = 25,
     cols = 88,
     racks = map.racks || [],
-    objects = racks.map(([x, y, w, h]) => ({ x, y, footprint: [0, 0, w, h] }));
-  const collision = ArenaCollision.create(objects, size);
+    boxes = racks.map(([x, y, w, h]) => ({ minX: x, minY: y, maxX: x + w, maxY: y + h }));
+  const collision = ArenaCollision.create(boxes, size);
   const navigation = ArenaNavigation.create({
     size,
     cell,
     cols,
     ...collision,
-    open: !objects.length,
+    open: !boxes.length,
   });
 
   return {

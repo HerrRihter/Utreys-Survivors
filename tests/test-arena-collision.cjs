@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const { ArenaCollision } = require('../src/world/collision.js');
 const { ArenaNavigation } = require('../src/world/navigation.js');
 const { createArenas } = require('../src/world/arenas.js');
-const collision = ArenaCollision.create([{ x: 100, y: 100, footprint: [0, 0, 50, 50] }], 400);
+const collision = ArenaCollision.create([{ minX: 100, minY: 100, maxX: 150, maxY: 150 }], 400);
 assert(collision.blocked(125, 125, 5));
 assert(!collision.clear({ x: 50, y: 125 }, { x: 200, y: 125 }, 5), 'swept collision cannot tunnel');
 assert(collision.clear({ x: 50, y: 60 }, { x: 200, y: 60 }, 5));
@@ -16,10 +16,10 @@ for (let i = 0; i < 300; i++) {
   assert(!collision.blocked(actor.x, actor.y, 10));
   if (Math.hypot(actor.x - 250, actor.y - 125) < 15) break;
 }
-assert(Math.hypot(actor.x - 250, actor.y - 125) < 15, 'routes around explicit footprint');
+assert(Math.hypot(actor.x - 250, actor.y - 125) < 15, 'routes around a box');
 const arena = createArenas().get('empty');
 for (const r of [14, 18, 24, 28, 32]) {
   assert(arena.clear({ x: 500, y: 500 }, { x: 1000, y: 1000 }, r));
   assert(arena.blocked(1, 1, r));
 }
-console.log('PASS: arena footprints, swept collision, navigation and boundary radii');
+console.log('PASS: arena boxes, swept collision, navigation and boundary radii');
