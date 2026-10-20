@@ -317,11 +317,17 @@ export const GameSession = {
       upgrades,
       enemies,
       run() {
-        if (!disposed) loop.run();
+        if (disposed) return;
+        input.enable();
+        loop.run();
       },
       stop: () => loop.stop(),
-      // Hidden behind another page (arena, bestiary): no frames, music continues.
-      sleep: () => loop.stop(true),
+      // Hidden behind another page (arena, bestiary): no frames and no key commands, music
+      // continues.
+      sleep() {
+        input.disable();
+        loop.stop(true);
+      },
       dispose,
       keys: run.keys,
       get state() {

@@ -42,9 +42,10 @@ export const InputSystem = {
       run.move.x = held('right', 'ArrowRight') - held('left', 'ArrowLeft') + run.stick.x;
       run.move.y = held('down', 'ArrowDown') - held('up', 'ArrowUp') + run.stick.y;
     }
+    // Off while another page (bestiary, arena preview) owns the keyboard; see disable().
+    let enabled = true;
     function onKeyDown(e) {
-      // Other views (bestiary, arena preview) own the keyboard.
-      if (document.body?.dataset.view && document.body.dataset.view !== 'game') return;
+      if (!enabled) return;
       if (
         e.code !== 'Escape' &&
         e.target?.matches?.('input,select,textarea,[contenteditable="true"]')
@@ -120,6 +121,13 @@ export const InputSystem = {
       resetInput,
       updateMove,
       bind,
+      // The session turns key commands off while it sleeps behind another page.
+      disable() {
+        enabled = false;
+      },
+      enable() {
+        enabled = true;
+      },
       dispose() {
         events.dispose();
         resetInput();
