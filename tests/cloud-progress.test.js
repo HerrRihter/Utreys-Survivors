@@ -1,149 +1,150 @@
-const assert = require('node:assert/strict');
-const { createStore } = require('../src/core/store.js');
-const { createProgression, normalizeProgression } = require('../src/systems/progression/index.js');
-const {
+import assert from 'node:assert/strict';
+import { createStore } from '../src/core/store.js';
+import { createProgression, normalizeProgression } from '../src/systems/progression/index.js';
+import {
   createCloudProgress,
   stableKey,
   saveHash,
   CLOUD_META_KEY,
-} = require('../src/services/cloud-progress.js');
+} from '../src/services/cloud-progress.js';
+import { test } from 'vitest';
 
 // The save is normalized the same way from localStorage and from the cloud.
-const fresh = normalizeProgression(null);
-assert.equal(fresh.codes, 0);
-assert.deepEqual(fresh.unlocked, ['utrace']);
-const cleaned = normalizeProgression({ codes: -5, unlocked: ['nobody'], helmets: 7 });
-assert.equal(cleaned.codes, 0, 'negative codes are dropped');
-assert.deepEqual(cleaned.unlocked, ['utrace'], 'unknown heroes are dropped');
-assert.equal(normalizeProgression({ helmets: 7 }).codes, 7, 'old currency key migrates');
-assert.equal(
-  stableKey({ b: 1, a: [1, { d: 2, c: 3 }] }),
-  stableKey({ a: [1, { c: 3, d: 2 }], b: 1 }),
-);
+test('cloud-progress', async () => {
+  const fresh = normalizeProgression(null);
+  assert.equal(fresh.codes, 0);
+  assert.deepEqual(fresh.unlocked, ['utrace']);
+  const cleaned = normalizeProgression({ codes: -5, unlocked: ['nobody'], helmets: 7 });
+  assert.equal(cleaned.codes, 0, 'negative codes are dropped');
+  assert.deepEqual(cleaned.unlocked, ['utrace'], 'unknown heroes are dropped');
+  assert.equal(normalizeProgression({ helmets: 7 }).codes, 7, 'old currency key migrates');
+  assert.equal(
+    stableKey({ b: 1, a: [1, { d: 2, c: 3 }] }),
+    stableKey({ a: [1, { c: 3, d: 2 }], b: 1 }),
+  );
 
-// One Firestore shared by every device: documents by path, transactions all or nothing.
-function fakeCloud() {
-  const docs = new Map();
-  let writes = 0,
-    beforeTransaction = null;
-  const snapshot = (path) => {
-    const data = docs.has(path) ? structuredClone(docs.get(path)) : undefined;
-    return { exists: () => data !== undefined, data: () => data };
-  };
-  const firestore = {
-    doc: (_db, ...path) => path.join('/'),
-    getDoc: async (path) => snapshot(path),
-    serverTimestamp: () => 'now',
-    async runTransaction(_db, body) {
-      beforeTransaction?.();
+  // One Firestore shared by every device: documents by path, transactions all or nothing.
+  function fakeCloud() {
+    const docs = new Map();
+    let writes = 0,
       beforeTransaction = null;
-      const pending = new Map();
-      await body({
-        get: async (path) => snapshot(path),
-        set: (path, data) => pending.set(path, data),
-      });
-      for (const [path, data] of pending) {
-        docs.set(path, structuredClone(data));
-        writes++;
-      }
-    },
-  };
-  return {
-    docs,
-    sdk: { db: {}, firestore },
-    get writes() {
-      return writes;
-    },
-    // Runs once, between a device reading the cloud and writing to it.
-    interleave(fn) {
-      beforeTransaction = fn;
-    },
-  };
-}
+    const snapshot = (path) => {
+      const data = docs.has(path) ? structuredClone(docs.get(path)) : undefined;
+      return { exists: () => data !== undefined, data: () => data };
+    };
+    const firestore = {
+      doc: (_db, ...path) => path.join('/'),
+      getDoc: async (path) => snapshot(path),
+      serverTimestamp: () => 'now',
+      async runTransaction(_db, body) {
+        beforeTransaction?.();
+        beforeTransaction = null;
+        const pending = new Map();
+        await body({
+          get: async (path) => snapshot(path),
+          set: (path, data) => pending.set(path, data),
+        });
+        for (const [path, data] of pending) {
+          docs.set(path, structuredClone(data));
+          writes++;
+        }
+      },
+    };
+    return {
+      docs,
+      sdk: { db: {}, firestore },
+      get writes() {
+        return writes;
+      },
+      // Runs once, between a device reading the cloud and writing to it.
+      interleave(fn) {
+        beforeTransaction = fn;
+      },
+    };
+  }
 
-function fakeAccount(cloud) {
-  const store = createStore();
-  let state = { status: 'guest', uid: '', login: '' },
-    online = true;
-  return {
-    subscribe: store.subscribe,
-    getVersion: store.getVersion,
-    get state() {
-      return state;
-    },
-    firebase: async () => {
-      if (!online) throw new Error('Нет связи с сервером');
-      return cloud.sdk;
-    },
-    signIn(uid) {
-      state = { status: 'signedIn', uid, login: uid };
-      store.emit();
-    },
-    signOut() {
-      state = { status: 'guest', uid: '', login: '' };
-      store.emit();
-    },
-    set online(value) {
-      online = value;
-    },
+  function fakeAccount(cloud) {
+    const store = createStore();
+    let state = { status: 'guest', uid: '', login: '' },
+      online = true;
+    return {
+      subscribe: store.subscribe,
+      getVersion: store.getVersion,
+      get state() {
+        return state;
+      },
+      firebase: async () => {
+        if (!online) throw new Error('Нет связи с сервером');
+        return cloud.sdk;
+      },
+      signIn(uid) {
+        state = { status: 'signedIn', uid, login: uid };
+        store.emit();
+      },
+      signOut() {
+        state = { status: 'guest', uid: '', login: '' };
+        store.emit();
+      },
+      set online(value) {
+        online = value;
+      },
+    };
+  }
+
+  function fakeTimers() {
+    let next = 1;
+    const pending = new Map();
+    return {
+      setTimeout(fn, ms) {
+        pending.set(next, { fn, ms });
+        return next++;
+      },
+      clearTimeout(id) {
+        pending.delete(id);
+      },
+      get pending() {
+        return [...pending.values()];
+      },
+      runAll() {
+        const due = [...pending.values()];
+        pending.clear();
+        for (const { fn } of due) fn();
+      },
+    };
+  }
+
+  function device(cloud, saved = []) {
+    const map = new Map(saved);
+    const storage = { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) };
+    const progression = createProgression({ storage, events: null, document: null });
+    const account = fakeAccount(cloud);
+    const timers = fakeTimers();
+    let replaced = 0;
+    const sync = createCloudProgress({
+      account,
+      progression,
+      storage,
+      timers,
+      onReplace: () => replaced++,
+    });
+    return {
+      map,
+      progression,
+      account,
+      timers,
+      sync,
+      get replaced() {
+        return replaced;
+      },
+    };
+  }
+
+  const settle = async () => {
+    for (let i = 0; i < 20; i++) await new Promise((resolve) => setTimeout(resolve, 0));
   };
-}
+  const win = (p) => p.records.recordRunStats({ win: true, hero: 'utrace', time: 400 });
+  const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
 
-function fakeTimers() {
-  let next = 1;
-  const pending = new Map();
-  return {
-    setTimeout(fn, ms) {
-      pending.set(next, { fn, ms });
-      return next++;
-    },
-    clearTimeout(id) {
-      pending.delete(id);
-    },
-    get pending() {
-      return [...pending.values()];
-    },
-    runAll() {
-      const due = [...pending.values()];
-      pending.clear();
-      for (const { fn } of due) fn();
-    },
-  };
-}
-
-function device(cloud, saved = []) {
-  const map = new Map(saved);
-  const storage = { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) };
-  const progression = createProgression({ storage, events: null, document: null });
-  const account = fakeAccount(cloud);
-  const timers = fakeTimers();
-  let replaced = 0;
-  const sync = createCloudProgress({
-    account,
-    progression,
-    storage,
-    timers,
-    onReplace: () => replaced++,
-  });
-  return {
-    map,
-    progression,
-    account,
-    timers,
-    sync,
-    get replaced() {
-      return replaced;
-    },
-  };
-}
-
-const settle = async () => {
-  for (let i = 0; i < 20; i++) await new Promise((resolve) => setTimeout(resolve, 0));
-};
-const win = (p) => p.records.recordRunStats({ win: true, hero: 'utrace', time: 400 });
-const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
-
-(async () => {
   const cloud = fakeCloud();
 
   // Signed out: nothing leaves the device.
@@ -329,7 +330,4 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
   assert.equal(e.timers.pending.length, 0);
 
   console.log('Cloud progress checks passed.');
-})().catch((e) => {
-  console.error(e);
-  process.exitCode = 1;
 });

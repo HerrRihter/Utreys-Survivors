@@ -1,70 +1,71 @@
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const {
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {
   createLeaderboard,
   statPath,
   TABLE_SIZE,
   RANK_LIMIT,
-} = require('../src/services/leaderboard.js');
-const { statMetrics } = require('../data/leaderboards.js');
-const { statNumbers } = require('../src/systems/run-records.js');
+} from '../src/services/leaderboard.js';
+import { statMetrics } from '../data/leaderboards.js';
+import { statNumbers } from '../src/systems/run-records.js';
+import { test } from 'vitest';
 
 // Every table is a stats field, and the rules' list limit allows the queries we send.
-for (const metric of statMetrics) assert.ok(statNumbers.includes(metric.field), metric.field);
-assert.equal(statMetrics.length, statNumbers.length, 'every number has a table');
-const rules = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8');
-const listLimit = Number(rules.match(/allow list: if request\.query\.limit <= (\d+);/)[1]);
-assert.ok(TABLE_SIZE <= listLimit && RANK_LIMIT <= listLimit);
-assert.equal(statPath('all', 'games'), 'all.games');
-assert.equal(statPath('serverRoom', 'bestTime'), 'maps.serverRoom.bestTime');
+test('leaderboard', async () => {
+  for (const metric of statMetrics) assert.ok(statNumbers.includes(metric.field), metric.field);
+  assert.equal(statMetrics.length, statNumbers.length, 'every number has a table');
+  const rules = fs.readFileSync(path.join(import.meta.dirname, '..', 'firestore.rules'), 'utf8');
+  const listLimit = Number(rules.match(/allow list: if request\.query\.limit <= (\d+);/)[1]);
+  assert.ok(TABLE_SIZE <= listLimit && RANK_LIMIT <= listLimit);
+  assert.equal(statPath('all', 'games'), 'all.games');
+  assert.equal(statPath('serverRoom', 'bestTime'), 'maps.serverRoom.bestTime');
 
-// A Firestore with just the query features the leaderboards use.
-function fakeFirestore(docs) {
-  let reads = 0,
-    counts = 0;
-  const value = (data, field) => field.split('.').reduce((v, key) => v?.[key], data);
-  const run = ({ filters, order, max }) => {
-    let rows = [...docs.entries()].map(([id, data]) => ({ id, data }));
-    for (const f of filters) rows = rows.filter((r) => value(r.data, f.field) > f.value);
-    if (order) rows.sort((a, b) => value(b.data, order) - value(a.data, order));
-    return rows.slice(0, max);
-  };
-  const firestore = {
-    collection: () => 'stats',
-    where: (field, op, v) => ({ type: 'where', field, op, value: v }),
-    orderBy: (field, dir) => ({ type: 'order', field, dir }),
-    limit: (n) => ({ type: 'limit', n }),
-    query: (_c, ...parts) => ({
-      filters: parts.filter((p) => p.type === 'where'),
-      order: parts.find((p) => p.type === 'order')?.field,
-      max: parts.find((p) => p.type === 'limit')?.n ?? Infinity,
-    }),
-    async getDocs(q) {
-      reads++;
-      assert.ok(q.max <= listLimit, 'the rules refuse larger queries');
-      return { docs: run(q).map((r) => ({ id: r.id, data: () => r.data })) };
-    },
-    async getCount(q) {
-      counts++;
-      assert.ok(q.max <= listLimit, 'the rules refuse larger queries');
-      return { data: () => ({ count: run(q).length }) };
-    },
-  };
-  return {
-    sdk: { db: {}, firestore },
-    get reads() {
-      return reads;
-    },
-    get counts() {
-      return counts;
-    },
-  };
-}
+  // A Firestore with just the query features the leaderboards use.
+  function fakeFirestore(docs) {
+    let reads = 0,
+      counts = 0;
+    const value = (data, field) => field.split('.').reduce((v, key) => v?.[key], data);
+    const run = ({ filters, order, max }) => {
+      let rows = [...docs.entries()].map(([id, data]) => ({ id, data }));
+      for (const f of filters) rows = rows.filter((r) => value(r.data, f.field) > f.value);
+      if (order) rows.sort((a, b) => value(b.data, order) - value(a.data, order));
+      return rows.slice(0, max);
+    };
+    const firestore = {
+      collection: () => 'stats',
+      where: (field, op, v) => ({ type: 'where', field, op, value: v }),
+      orderBy: (field, dir) => ({ type: 'order', field, dir }),
+      limit: (n) => ({ type: 'limit', n }),
+      query: (_c, ...parts) => ({
+        filters: parts.filter((p) => p.type === 'where'),
+        order: parts.find((p) => p.type === 'order')?.field,
+        max: parts.find((p) => p.type === 'limit')?.n ?? Infinity,
+      }),
+      async getDocs(q) {
+        reads++;
+        assert.ok(q.max <= listLimit, 'the rules refuse larger queries');
+        return { docs: run(q).map((r) => ({ id: r.id, data: () => r.data })) };
+      },
+      async getCount(q) {
+        counts++;
+        assert.ok(q.max <= listLimit, 'the rules refuse larger queries');
+        return { data: () => ({ count: run(q).length }) };
+      },
+    };
+    return {
+      sdk: { db: {}, firestore },
+      get reads() {
+        return reads;
+      },
+      get counts() {
+        return counts;
+      },
+    };
+  }
 
-const player = (login, all, maps = {}) => ({ login, all, maps });
+  const player = (login, all, maps = {}) => ({ login, all, maps });
 
-(async () => {
   const docs = new Map([
     ['a', player('Аня', { bestTime: 300, games: 4 }, { empty: { bestTime: 300 } })],
     [
@@ -142,7 +143,4 @@ const player = (login, all, maps = {}) => ({ login, all, maps });
   assert.equal((await flaky.top('games', 'all')).length, TABLE_SIZE);
 
   console.log('Leaderboard checks passed.');
-})().catch((e) => {
-  console.error(e);
-  process.exitCode = 1;
 });
