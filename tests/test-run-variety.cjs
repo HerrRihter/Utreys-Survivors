@@ -21,7 +21,7 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   assert.equal(parseSeed(''), null);
 
   // Layouts: repeatable, varied, spaced, clear of racks, bugs dealt once each.
-  const arenas = createArenas({ createCanvas: () => null });
+  const arenas = createArenas();
   for (const map of Object.keys(mapDefinitions)) {
     const arena = arenas.get(map);
     const positions = new Set();

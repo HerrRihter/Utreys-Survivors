@@ -13,6 +13,7 @@ const noScenery = [];
 export const SceneRenderer = {
   create({
     ctx,
+    floor,
     view,
     run,
     world,
@@ -44,7 +45,7 @@ export const SceneRenderer = {
       ctx.fillRect(0, 0, view.W, view.H);
       ctx.save();
       ctx.translate(-cx, -cy);
-      world.arena.drawGround(ctx, {
+      floor.draw(ctx, world.arena, {
         x: cx - 20,
         y: cy - 20,
         width: view.W + 40,

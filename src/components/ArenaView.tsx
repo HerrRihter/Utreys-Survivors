@@ -2,6 +2,7 @@ import { drawNodes } from '../rendering/node-objectives.js';
 import { createNodeState } from '../systems/node-objectives.js';
 import React, { useEffect, useRef, useState } from 'react';
 import { createArenas, arenaDefinitions } from '../world/arenas.js';
+import { createArenaFloor } from '../rendering/arena-floor.js';
 
 export const ArenaView: React.FC = () => {
   const selectedArena = 'empty';
@@ -17,6 +18,7 @@ export const ArenaView: React.FC = () => {
     if (!g) return;
 
     const arenas = createArenas();
+    const floor = createArenaFloor();
 
     const render = () => {
       const world = arenas.get(selectedArena);
@@ -28,7 +30,7 @@ export const ArenaView: React.FC = () => {
       g.scale(scale, scale);
       g.translate(-1100, isClose ? -1070 : -1090);
 
-      world.draw(g);
+      floor.draw(g, world);
       drawNodes(g, createNodeState());
 
       if (showBounds && world.collision) {

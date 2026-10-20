@@ -4,6 +4,7 @@ import { createMath } from '../core/math.js';
 import { CanvasSystem } from '../rendering/canvas.js';
 import { SpriteRenderer } from '../rendering/sprite-renderer.js';
 import { SceneRenderer } from '../rendering/scene-renderer.js';
+import { createArenaFloor } from '../rendering/arena-floor.js';
 import { cameraOrigin } from '../rendering/camera.js';
 import { canvasFactory } from '../rendering/offscreen.js';
 import { AudioSystem } from '../core/audio.js';
@@ -68,7 +69,7 @@ export const GameSession = {
         ui.emit();
         hud.emit();
       });
-    const arenas = createArenas({ createCanvas });
+    const arenas = createArenas();
     // Resolved once per map change: the simulation reads it hundreds of times per frame.
     const world = {
       arena: arenas.get(run.selectedMap),
@@ -199,6 +200,7 @@ export const GameSession = {
     const { sprite } = SpriteRenderer.create({ run, heroes });
     const renderer = SceneRenderer.create({
       ctx,
+      floor: createArenaFloor({ createCanvas }),
       view,
       run,
       world,

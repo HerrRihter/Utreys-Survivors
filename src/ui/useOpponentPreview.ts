@@ -6,6 +6,7 @@ import { useEffect, type RefObject } from 'react';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { Enemies } from '../entities/enemies.js';
 import { createArenas } from '../world/arenas.js';
+import { createArenaFloor } from '../rendering/arena-floor.js';
 import { ALL_UNIT_KEYS } from './opponent-details';
 
 export function useOpponentPreview({
@@ -191,6 +192,7 @@ export function useOpponentPreview({
     let animId: number;
     let t = radarRef.current;
     const arenas = createArenas();
+    const floor = createArenaFloor();
 
     const renderMap = () => {
       if (!frozen) t += 0.035;
@@ -199,7 +201,7 @@ export function useOpponentPreview({
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.clearRect(0, 0, canvas.width, canvas.height);
       g.setTransform(0.25, 0, 0, 0.25, 0, 0);
-      world.draw(g);
+      floor.draw(g, world);
       drawNodes(g, createNodeState());
 
       // Radar pulses from core
