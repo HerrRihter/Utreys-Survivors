@@ -1,4 +1,4 @@
-import { createStore } from '../app/store.js';
+import { createStore } from '../core/store.js';
 import { applyRun, normalizeRunEntry, normalizeScope } from '../systems/run-records.js';
 
 // Sends counted runs of a signed-in player to stats/{uid}, the document the leaderboards

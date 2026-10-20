@@ -9,7 +9,7 @@ import { AudioSystem } from '../core/audio.js';
 import { InputSystem } from '../core/input.js';
 import { GameLoop } from '../core/game-loop.js';
 import { GameFlow } from './game-flow.js';
-import { createStore } from './store.js';
+import { createStore } from '../core/store.js';
 import { createRunState, createGameSettings } from './run-state.js';
 import * as views from './views.js';
 import { EnemySpawning } from '../systems/enemy-spawning.js';

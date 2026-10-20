@@ -1,4 +1,4 @@
-import { createStore } from '../app/store.js';
+import { createStore } from '../core/store.js';
 import { normalizeProgression } from '../systems/persistence.js';
 
 // Keeps progress/{uid} in Firestore in step with the local save (docs/FIREBASE-PLAN.md,
