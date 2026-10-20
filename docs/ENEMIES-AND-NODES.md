@@ -5,7 +5,7 @@
 позиции и привязки компонентов — в `nodes.js`. Поведение по полям юнита собрано
 в `src/systems/enemy-behaviors.js`, удары — в `src/systems/enemy-attacks.js`. Тексты бестиария —
 `data/enemies/bestiary.js` (числа берутся из `units.js`; экран читает их через
-`src/ui/opponent-details.ts`).
+`createPreviewKit` в `src/app/preview-kit.js` и `src/ui/opponent-details.ts`).
 
 ## Роли
 

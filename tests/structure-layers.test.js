@@ -29,8 +29,13 @@ test('structure-layers', async () => {
       'src/rendering/sprites.js',
       "import { abilityActive } from '../systems/queries/abilities.js';",
     );
-    write('src/App.tsx', "import type { X } from './app/run-state.js';");
-    assert.equal(checkLayers({ root }).files, 7, 'allowed imports pass');
+    write('src/app/preview-kit.js', "import { abilityActive } from '../rendering/sprites.js';");
+    write(
+      'src/components/ArenaView.tsx',
+      "import { createPreviewKit } from '../app/preview-kit.js';",
+    );
+    write('src/App.tsx', "import { ArenaView } from './components/ArenaView';");
+    assert.equal(checkLayers({ root }).files, 9, 'allowed imports pass');
 
     // A lower layer reaching right: systems → app.
     write(
@@ -62,6 +67,20 @@ test('structure-layers', async () => {
       /data\/units\.js \(data\) imports src\/core\/math\.js \(core\); data may import only: nothing/,
     );
     write('data/units.js');
+
+    // React reaches the game only through app: no renderer, system or data behind its back.
+    write('src/components/ArenaView.tsx', "import { drawNodes } from '../rendering/sprites.js';");
+    violation(
+      /src\/components\/ArenaView\.tsx \(components\) imports src\/rendering\/sprites\.js \(rendering\); components may import only: app/,
+    );
+    write('src/components/ArenaView.tsx', "import type { Units } from '../../data/units.js';");
+    violation(/components\) imports data\/units\.js \(data\)/);
+    write('src/components/ArenaView.tsx');
+    write('src/App.tsx', "import { units } from '../data/units.js';");
+    violation(
+      /src\/App\.tsx \(src\) imports data\/units\.js \(data\); src may import only: components/,
+    );
+    write('src/App.tsx');
 
     // A new src folder needs a row in the matrix.
     write('src/extras/thing.js');

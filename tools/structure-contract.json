@@ -6,7 +6,7 @@
     "data": ["animations", "characters", "enemies", "maps"]
   },
   "layers": {
-    "$comment": "Allowed imports between layers: a file in src/<layer> (or data) may import only the listed layers and itself. \"systems/queries\" admits only src/systems/queries, whose pure read-only questions may themselves import only data, core and world. A layer always reaches its own sublayers. \"src\" is the entry files directly in src/. Order: data → core → world → systems → services → rendering → ui → app → components → src. See docs/STRUCTURE-CONTRACT.md.",
+    "$comment": "Allowed imports between layers: a file in src/<layer> (or data) may import only the listed layers and itself. \"systems/queries\" admits only src/systems/queries, whose pure read-only questions may themselves import only data, core and world. A layer always reaches its own sublayers. \"src\" is the entry files directly in src/. Order: data → core → world → systems → services → rendering → ui → app → components → src. React (components) reaches the game only through app: the session, its views and commands, the preview kit for the catalog pages and app/types.ts. See docs/STRUCTURE-CONTRACT.md.",
     "data": [],
     "core": ["data"],
     "world": ["data", "core"],
@@ -14,10 +14,10 @@
     "services": ["data", "core", "systems"],
     "systems/queries": ["data", "core", "world"],
     "rendering": ["data", "core", "world", "systems/queries"],
-    "ui": ["data", "core", "world", "systems", "rendering"],
+    "ui": ["data", "systems"],
     "app": ["data", "core", "world", "systems", "services", "rendering", "ui"],
-    "components": ["data", "core", "world", "systems", "services", "rendering", "ui", "app"],
-    "src": ["data", "core", "world", "systems", "services", "rendering", "ui", "app", "components"]
+    "components": ["app"],
+    "src": ["components"]
   },
   "noCanvas": {
     "$comment": "Simulation and world only change state; drawing lives in src/rendering. These Canvas calls must not appear in the listed folders (comments excluded). See docs/STRUCTURE-CONTRACT.md.",
