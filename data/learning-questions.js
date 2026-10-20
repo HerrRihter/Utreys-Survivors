@@ -1,9 +1,9 @@
 // Version 1 preserves the supplied training material; explanations are not regulatory advice.
+// The project facts and the explanations still await the course owner's review.
 export const learningCourse = {
   id: 'batch-accounting',
   version: 1,
   title: 'Партионный учёт',
-  source: 'Предоставленный тест; проектные сведения требуют проверки владельцем курса.',
   topics: [
     {
       name: 'Структура номера партии',

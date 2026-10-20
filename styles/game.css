@@ -2388,6 +2388,8 @@ button:disabled {
   margin: 0;
   color: #b2cbcf;
   line-height: 1.5;
+  /* Hero entries list their attack, abilities and passive line by line. */
+  white-space: pre-line;
 }
 .codex-card.locked .codex-head i {
   color: #0d2a31;
@@ -3432,7 +3434,6 @@ button:disabled {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;
 }
-.learning-source,
 .learning-counter {
   color: #b6cbd5;
   font-size: 0.85rem;
@@ -3499,4 +3500,9 @@ body[data-mode='quiz'] #toast {
     transform: translateY(-50%);
     max-width: 200px;
   }
+}
+.pause-controls {
+  margin: 14px 0 0;
+  color: #9fb8c2;
+  font-size: 12px;
 }

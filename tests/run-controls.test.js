@@ -139,11 +139,11 @@ test('run-controls', async () => {
   game.state.spawn = 1e9;
   game.run();
   for (let t = 16; t <= 1200; t += 16) h.tick(t);
-  assert.match(game.views.hud().tip, /движение/);
+  assert.match(game.views.hud().tip, /Атака срабатывает сама/);
   game.menu();
   game.start();
   for (let t = 1216; t <= 2400; t += 16) h.tick(t);
-  assert.doesNotMatch(game.views.hud().tip || '', /движение/, 'a tip is shown once');
+  assert.doesNotMatch(game.views.hud().tip || '', /Атака срабатывает сама/, 'a tip is shown once');
   game.dispose();
   console.log('PASS: reroll, ban, skip, key rebinding, settings, saved run and first-run tips');
 });

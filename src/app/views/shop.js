@@ -11,7 +11,7 @@ export function shopView({ progression }) {
     return {
       id,
       name: hero.name,
-      desc: hero.desc,
+      desc: hero.summary,
       info:
         (heroPassives[id] ? heroPassives[id].role + ' · ' : '') +
         hero.hp +
@@ -33,8 +33,8 @@ export function shopView({ progression }) {
       locked = !!lock;
     groups.at(-1).items.push({
       id,
+      // A hero's training is named after the hero already.
       label:
-        (u.hero ? heroDefinitions[u.hero].name + ' · ' : '') +
         `${u.name} ${level}/${u.max} · ${u.desc} · ` +
         (level >= u.max ? 'Максимум' : codes(progression.shop.cost(id))) +
         (lock === 'hero' ? ' · Сначала открой героя' : '') +

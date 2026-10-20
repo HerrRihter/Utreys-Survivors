@@ -1,3 +1,6 @@
+import { abilityDefinitions } from '../../../data/characters/abilities.js';
+import { heroPassives } from '../../../data/characters/hero-passives.js';
+import { slotKey } from './format.js';
 import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { weaponDefinitions, weaponMaxLevel, heroEvolutions } from '../../../data/weapons.js';
 
@@ -50,11 +53,20 @@ export function encyclopediaView({ progression, upgrades }) {
       evolution: null,
     };
   });
+  // The full account of each hero: attack, abilities with cooldowns and the passive.
   const heroCards = Object.entries(heroDefinitions).map(([id, hero]) => ({
     id,
     icon: '⚔',
-    name: hero.weapon,
-    desc: hero.name,
+    name: `${hero.weapon} · ${hero.name}`,
+    desc: [
+      hero.details,
+      ...abilityDefinitions[id].map(
+        (a, i) => `${slotKey(i)} · ${a.name}: ${a.description} Перезарядка ${a.cooldown} с.`,
+      ),
+      heroPassives[id] && `Пассивка «${heroPassives[id].name}»: ${heroPassives[id].details}`,
+    ]
+      .filter(Boolean)
+      .join('\n'),
     locked: false,
     condition: '',
     evolution: evolution('hero_' + id, heroEvolutions[id], 'атака героя ур. 6'),

@@ -13,13 +13,11 @@ import { GoalList } from './GoalList';
 export function MainMenu({
   account,
   cloud,
-  hints,
   onNavigateToArena,
   onNavigateToOpponents,
 }: {
   account: Account;
   cloud: CloudProgress | null;
-  hints: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
 }) {
@@ -41,9 +39,8 @@ export function MainMenu({
           <span style={{ color: 'var(--cyan)' }}>SURVIVORS</span>
         </h1>
         <p className="intro">
-          Стресс-тест ядра Utrace в условиях пиковой нагрузки. Обрабатывай миллионы кодов
-          маркировки, выдерживай наплыв запросов от клиентов и отражай проверки контура! Освободи
-          пять узлов от багов, затем победи ЦРПТ.
+          Стресс-тест ядра Utrace в условиях пиковой нагрузки: выдержи наплыв клиентов и пройди
+          проверку ЦРПТ.
         </p>
         <button
           type="button"
@@ -114,11 +111,6 @@ export function MainMenu({
         <GoalList goals={view.goals} title="Ближайшие открытия" />
         {statsOpen && <StatsDialog onClose={() => setStatsOpen(false)} />}
         {leadersOpen && <LeaderboardDialog onClose={() => setLeadersOpen(false)} />}
-        {hints && (
-          <div id="menuHint" className="footer">
-            {view.hint}
-          </div>
-        )}
       </main>
     </Overlay>
   );

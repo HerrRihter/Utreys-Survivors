@@ -153,15 +153,14 @@ const datacenter = {
   events: {
     times: [80, 170, 260],
     types: ['friday', 'incident', 'rush'],
-    // Each type: its `kind` (src/systems/run-events.js), numbers, the start `message`, the
-    // HUD `label` ({left} seconds, {progress}/{need}), the edge `marker` of a point to hold,
+    // Each type: its `kind` (src/systems/run-events.js), numbers, the HUD `label` shown while it
+    // runs ({left} seconds, {progress}/{need}), the edge `marker` of a point to hold,
     // the `success` / `failed` toasts and the `reward`: `codes` or a `pickup` type.
     friday: {
       kind: 'siege',
       duration: 25,
       count: 14,
       distance: 430,
-      message: 'Релиз в пятницу! Нагрузка со всех сторон',
       label: 'Релиз в пятницу: продержись {left}',
       success: 'Релиз пережит!',
       failed: 'Событие провалено',
@@ -173,7 +172,6 @@ const datacenter = {
       hold: 15,
       radius: 90,
       distance: 380,
-      message: 'Инцидент! Удержи точку 15 секунд',
       label: 'Инцидент: удержи точку {progress}/{need} с · {left}',
       marker: 'ИНЦИДЕНТ',
       success: 'Инцидент закрыт!',
@@ -187,7 +185,6 @@ const datacenter = {
       need: 12,
       near: 150,
       far: 520,
-      message: 'Срочный тираж! Собери 12 кодов',
       label: 'Срочный тираж: {progress}/{need} кодов · {left}',
       success: 'Тираж сдан',
       failed: 'Событие провалено',

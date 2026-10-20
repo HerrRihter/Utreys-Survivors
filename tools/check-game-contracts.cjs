@@ -180,7 +180,6 @@ function validateSchedules(
           [
             'kind',
             'duration',
-            'message',
             'label',
             'success',
             'failed',
@@ -191,7 +190,7 @@ function validateSchedules(
           'event ' + type,
         );
         positive(spec.duration, type + '.duration');
-        for (const text of ['message', 'label', 'success', 'failed'])
+        for (const text of ['label', 'success', 'failed'])
           fail(typeof spec[text] === 'string' && spec[text], `${type}.${text}`);
         fail(
           reward &&

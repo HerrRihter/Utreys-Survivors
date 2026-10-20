@@ -8,16 +8,13 @@ const seenIds = (saved) =>
   Array.isArray(saved) ? saved.filter((id) => typeof id === 'string') : [];
 const TIP_SECONDS = 7;
 
+// One short sentence each: the keys are in the HUD hint, the details in the encyclopedia.
 const tipTexts = {
-  move: (keys) =>
-    `${keys} — движение. Атака и оружие срабатывают сами. Собирай опыт — на новом уровне выбирай улучшение.`,
-  desk: () =>
-    'Сервисдеск Пепси. Пока он открыт, он выпускает Пепси, и с каждым разом больше. Снеси его — получишь архив для эволюции.',
-  node: () =>
-    'Узел компонента. Убей бага — получишь архив для эволюции оружия. Или стой в круге 6 с без урона — найдёшь воркэраунд.',
-  evolve: (name) =>
-    `${name} готово к эволюции. Убей бага у любого узла: его архив запустит эволюцию.`,
-  boss: () => 'Все узлы разрешены. Появился ЦРПТ — победи его, чтобы завершить забег.',
+  move: (stick) => (stick ? 'Джойстик — движение. ' : '') + 'Атака срабатывает сама: собирай опыт.',
+  desk: () => 'Сервисдеск выпускает Пепси, пока цел. Снеси его.',
+  node: () => 'Убей бага или постой в круге — узел освободится.',
+  evolve: (name) => `${name} готово к эволюции: нужен архив бага.`,
+  boss: () => 'Путь открыт: победи босса.',
 };
 
 export function createTips({ storage, settings, run }) {
@@ -30,16 +27,11 @@ export function createTips({ storage, settings, run }) {
     run.tip = { text, left: TIP_SECONDS };
     return true;
   }
-  const keyName = (code) => (code || '').replace(/^Key/, '');
   // Called a few times a second during play; returns true when a tip appeared.
   function check() {
     const s = run.state;
     if (!s) return false;
-    const b = settings.bindings || {};
-    const moveKeys = run.touchOnly
-      ? 'Джойстик справа внизу'
-      : [b.up, b.left, b.down, b.right].map(keyName).join('') + ' или стрелки';
-    if (s.t > 0.5 && show('move', tipTexts.move(moveKeys))) return true;
+    if (s.t > 0.5 && show('move', tipTexts.move(run.touchOnly))) return true;
     const node = s.nodes.find(
       (n) => n.status === 'guarded' && Math.hypot(n.x - s.p.x, n.y - s.p.y) < 260,
     );

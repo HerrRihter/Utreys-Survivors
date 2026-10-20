@@ -47,8 +47,5 @@ export function menuView({ run, progression, snapshot = null }) {
       : 'Лучшее время появится после первого забега.',
     achievementsLabel: unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ',
     goals: nearestGoals(progression, 3),
-    hint: run.touchOnly
-      ? 'Джойстик справа внизу — движение · атака и оружие срабатывают сами · умения — кнопки слева внизу'
-      : 'WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · Q / E — умения',
   };
 }

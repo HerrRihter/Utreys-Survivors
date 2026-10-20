@@ -34,8 +34,16 @@ export function recordTape(seed, steps) {
 }
 
 // Everything the simulation reads, with the references between objects, and the random
-// source's position. Not the run id (a new one each start) or what enemies say on screen.
-const cosmetic = new Set(['runId', 'speech', 'nextSpeechAt', 'speechPhraseIndex', 'speechCursor']);
+// source's position. Not the run id (a new one each start), display labels or what enemies say
+// on screen.
+const cosmetic = new Set([
+  'runId',
+  'label',
+  'speech',
+  'nextSpeechAt',
+  'speechPhraseIndex',
+  'speechCursor',
+]);
 export function stateHash(s, legacyProjection = false) {
   const fields = toGraphJson(
     Object.fromEntries(

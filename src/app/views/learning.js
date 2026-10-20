@@ -60,7 +60,6 @@ export function learningView({ run }) {
             a.reason === 'revive'
               ? revival[0].toUpperCase() + revival.slice(1) + '.'
               : `Награда: лечение на ${percent(a.reason === 'bonus' ? r.bonusHeal : r.terminalHeal)} здоровья. Учебные очки (${r.points}) — за первый верный ответ на каждый вопрос.`,
-          source: learningCourse.source,
         }
       : null,
   };

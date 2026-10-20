@@ -97,6 +97,7 @@ export function PauseScreen() {
   const session = useSession();
   const { commands } = session;
   const build = session.views.build();
+  const controls = session.views.hud()?.controls;
   return (
     <Overlay id="paused">
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="pausedTitle">
@@ -105,6 +106,7 @@ export function PauseScreen() {
         </div>
         <h2 id="pausedTitle">Обработка приостановлена</h2>
         <BuildPanel build={build} detailed />
+        {controls && <p className="pause-controls">{controls}</p>}
         <button id="resume" className="primary" style={primary} onClick={commands.pause}>
           ПРОДОЛЖИТЬ →
         </button>
@@ -199,10 +201,9 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
             </button>
           </div>
         )}
-        {hints && (
+        {hints && controls?.keyboard !== false && (
           <div id="levelupHint" className="footer">
-            {controls?.keyboard !== false && 'Нажми 1, 2, 3 или 4 · '}одно из предложений всегда
-            оружие · оружие 6 ур. + нужная пассивка эволюционирует от архива бага
+            Нажми 1, 2, 3 или 4
           </div>
         )}
       </div>

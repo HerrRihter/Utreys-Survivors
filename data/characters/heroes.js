@@ -1,3 +1,7 @@
+// `summary` is the hero select and shop line; `details` the encyclopedia's exact account.
+const degrees = (half) => Math.round((half * 2 * 180) / Math.PI) + '°';
+const decimal = (n) => String(n).replace('.', ',');
+
 export const heroDefinitions = {
   utrace: {
     name: 'Utrace',
@@ -14,7 +18,10 @@ export const heroDefinitions = {
     weapon: 'Трассировка кодов',
     // Played when the hero starts an attack.
     swingSound: 'punchSwing',
-    desc: 'Система сквозной прослеживаемости Utrace. Обеспечивает высокоскоростную обработку запросов маркировки и защиту контуров валидации.',
+    summary: 'Бьёт сектором перед собой и отбрасывает врагов.',
+    get details() {
+      return `Удар сектором ${degrees(this.half)} на ${this.range} px перед героем, раз в ${decimal(this.interval)} с, отбрасывает врагов.`;
+    },
   },
   traceability: {
     name: 'Полная прослеживаемость',
@@ -30,7 +37,10 @@ export const heroDefinitions = {
     chainLimit: 6,
     color: '#6de2cd',
     weapon: 'Цепочка прослеживаемости',
-    desc: 'Цепь поражает до 6 связанных целей: переход между соседними целями до 115. Каждая цель получает урон один раз, без затухания.',
+    summary: 'Цепь перескакивает между стоящими рядом врагами.',
+    get details() {
+      return `Цепь поражает до ${this.chainLimit} целей; следующая цель — не дальше ${this.range} px от предыдущей. Каждая цель получает полный урон один раз.`;
+    },
   },
   serialization: {
     name: 'Сериализация',
@@ -44,7 +54,10 @@ export const heroDefinitions = {
     attack: 'packet',
     color: '#fa5946',
     weapon: 'Серийный пакет',
-    desc: 'Выпускает пробивающий пакет по направлению движения. Один пакет поражает каждую цель на пути один раз.',
+    summary: 'Стреляет пробивающим пакетом издалека.',
+    get details() {
+      return `Пакет летит на ${this.range} px по направлению движения и задевает каждую цель на пути один раз.`;
+    },
   },
   ba: {
     name: 'БА',
@@ -61,7 +74,10 @@ export const heroDefinitions = {
     attack: 'sector',
     color: '#f7ce70',
     weapon: 'Разбор требований',
-    desc: 'Перед забегом выбирает клиента. Каждое его убийство даёт +1 к текущему и максимальному HP до конца забега. Атакует широким сектором.',
+    summary: 'Танк: выбирает клиента и крепнет, побеждая его.',
+    get details() {
+      return `Перед забегом выбирает клиента: каждое его убийство даёт +1 к текущему и максимальному HP до конца забега. Бьёт сектором ${degrees(this.half)} на ${this.range} px.`;
+    },
   },
   qa: {
     name: 'QA',
@@ -76,6 +92,9 @@ export const heroDefinitions = {
     attack: 'scan',
     color: '#79edbd',
     weapon: 'Регрессионная проверка',
-    desc: 'Проверяет квадратную область вокруг себя, отмечает цели прицелами и прерывает обычных врагов на 0,6 секунды. Боссы устойчивы к прерыванию.',
+    summary: 'Сканирует область вокруг и сбивает атаки обычных врагов.',
+    get details() {
+      return `Проверяет квадрат ${this.range * 2}×${this.range * 2} px вокруг себя, отмечает цели и прерывает обычных врагов на 0,6 с. Боссы устойчивы к прерыванию.`;
+    },
   },
 };

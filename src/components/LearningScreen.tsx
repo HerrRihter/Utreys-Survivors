@@ -22,7 +22,6 @@ export function LearningScreen() {
           <>
             <p>{a.note}</p>
             <p>{a.terms}</p>
-            <p className="learning-source">{a.source}</p>
             <details className="learning-selfcheck">
               <summary>Открытые вопросы для самопроверки</summary>
               {view.selfChecks.map((q: { id: string; text: string; reference: string }) => (

@@ -77,8 +77,8 @@ export const RunEvents = {
       const spec = specOf(s, type);
       const event = { type, left: spec.duration, progress: 0, need: 0 };
       eventKinds[spec.kind].begin({ s, world, spawning }, event, spec);
+      // The HUD event line announces it; a toast would say the same twice.
       s.event = event;
-      toast(spec.message);
       audio.effect('boss');
     }
 

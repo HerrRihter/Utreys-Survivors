@@ -23,12 +23,11 @@ export function heroSelectView({ run, progression }) {
     })),
     pending: run.pendingHero,
     role: passive ? `${passive.role.toUpperCase()} · ${passive.roleDesc}` : '',
+    // Short lines; exact numbers and cooldowns are in the encyclopedia.
     stats:
-      (hero.desc || '') +
-      ` Здоровье ${hero.hp} · скорость ${hero.speed}.` +
-      '\n' +
+      `${hero.summary} Здоровье ${hero.hp} · скорость ${hero.speed}.\n` +
       abilityDefinitions[run.pendingHero]
-        .map((a, i) => `${slotKey(i)} · ${a.name}: ${a.description} Перезарядка ${a.cooldown} с.`)
+        .map((a, i) => `${slotKey(i)} · ${a.name}: ${a.description}`)
         .join('\n') +
       (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
     ...loadView(run, progression),

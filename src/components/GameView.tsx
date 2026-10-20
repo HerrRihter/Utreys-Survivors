@@ -131,7 +131,6 @@ function GameScreens({
         <MainMenu
           account={account}
           cloud={cloud}
-          hints={settings.hints}
           onNavigateToArena={onNavigateToArena}
           onNavigateToOpponents={onNavigateToOpponents}
         />
