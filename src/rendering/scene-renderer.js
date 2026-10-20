@@ -166,16 +166,6 @@ export const SceneRenderer = {
           width: view.W,
           height: view.H,
         });
-      } else {
-        for (let i = 0; i < 14; i++)
-          sprite(
-            ctx,
-            run.selected,
-            1300 + (i % 5) * 47,
-            890 + Math.floor(i / 5) * 60,
-            2,
-            i % 2 === 0,
-          );
       }
       ctx.restore();
       const vignette = getVignette(view.W, view.H);
