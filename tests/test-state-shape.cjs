@@ -45,6 +45,10 @@ const SECONDS = 180,
   // `P.data` is a copy: heroes are opened through a replaced save.
   P.replace({ ...P.data, unlocked: heroes });
 
+  // A picked card can open the next level-up at once when the experience covers two.
+  const answerLevelUps = (game) => {
+    for (let i = 0; i < 20 && game.mode === 'level'; i++) game.pickUpgrade(0);
+  };
   const seen = new Set();
   const unknown = new Map();
   for (const hero of heroes)
@@ -58,7 +62,7 @@ const SECONDS = 180,
       assert.equal(game.state.abilities[1].id, abilityDefinitions[hero][1].id, label + ' hero');
       const moves = ['KeyD', 'KeyS', 'KeyA', 'KeyW'];
       for (let i = 0, steps = SECONDS / DT; i < steps; i++) {
-        if (game.mode === 'level') game.pickUpgrade(0);
+        answerLevelUps(game);
         if (game.mode !== 'play') break;
         // Walk a square so pickups and nodes are reached; full health keeps the run going.
         if (i % 120 === 0) {
@@ -69,7 +73,7 @@ const SECONDS = 180,
         game.update(DT);
       }
       game.keys.clear();
-      if (game.mode === 'level') game.pickUpgrade(0);
+      answerLevelUps(game);
       const s = game.state;
       for (const key of Object.keys(s)) {
         seen.add(key);
