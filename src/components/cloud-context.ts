@@ -1,5 +1,5 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
-import type { Account } from './Account';
+import type { Account } from '../app/types';
 import type { CloudProgress, RunStats } from '../app/useGameSession';
 import type { createLeaderboard } from '../services/leaderboard.js';
 

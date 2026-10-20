@@ -4,8 +4,7 @@ import { createProgression } from '../systems/persistence.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
 import { createRunStats } from '../services/run-stats.js';
 import { createLeaderboard } from '../services/leaderboard.js';
-import type { Session } from '../components/session';
-import type { Account } from '../components/Account';
+import type { Session, Account } from './types';
 
 export type CloudProgress = ReturnType<typeof createCloudProgress>;
 export type RunStats = ReturnType<typeof createRunStats>;

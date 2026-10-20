@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
-import { AccountPanel, type Account } from './Account';
+import { AccountPanel } from './Account';
+import type { Account } from '../app/types';
 import type { CloudProgress } from '../app/useGameSession';
 import { Overlay } from './Overlay';
 import { StatsDialog } from './StatsView';

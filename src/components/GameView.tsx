@@ -2,7 +2,8 @@ import { hudScale } from '../app/run-state.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
 import { createAccount } from '../services/auth.js';
-import { ConflictDialog, type Account } from './Account';
+import { ConflictDialog } from './Account';
+import type { Account, Session } from '../app/types';
 import type { CloudProgress } from '../app/useGameSession';
 import { CloudContext } from './cloud-context';
 import { GameHud } from './GameHud';
@@ -17,7 +18,7 @@ import {
 } from './GameMenus';
 import { createPortal } from 'react-dom';
 import { EndScreen, LevelUpScreen, PauseScreen } from './GameRunScreens';
-import { SessionContext, useUiVersion, type Session } from './session';
+import { SessionContext, useUiVersion } from './session';
 
 interface GameViewProps {
   active: boolean;

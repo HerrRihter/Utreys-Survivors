@@ -1,10 +1,8 @@
 import { useState, useSyncExternalStore, type FormEvent } from 'react';
-import type { createAccount } from '../services/auth.js';
 import type { CloudProgress } from '../app/useGameSession';
+import type { Account } from '../app/types';
 import { LOGIN_MAX, PASSWORD_MIN } from '../services/login.js';
 import { Dialog } from './Dialog';
-
-export type Account = ReturnType<typeof createAccount>;
 
 function useAccountState(account: Account) {
   useSyncExternalStore(account.subscribe, account.getVersion);
