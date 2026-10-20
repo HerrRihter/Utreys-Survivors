@@ -26,8 +26,8 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.equal(traceabilityCharge(s).charge, 0.35, 'haste uses actual cycle duration');
 
   const h = await createHarness();
-  h.env.Progression.earn(80);
-  h.env.Progression.buyHero('traceability');
+  h.env.Progression.wallet.earn(80);
+  h.env.Progression.shop.buyHero('traceability');
   h.session.select('traceability');
   h.session.start();
   h.session.state.spawn = 9999;

@@ -24,10 +24,10 @@ const { unitDefinitions } = require('../data/enemies/units.js');
     P = h.env.Progression;
   s.commands.chooseMap('pepsiDesk');
   assert.notEqual(s.views.run().selectedMap, 'pepsiDesk', 'a closed map cannot be picked');
-  P.recordRunStats({ win: true, hero: 'utrace', map: 'empty', time: 600 });
+  P.records.recordRunStats({ win: true, hero: 'utrace', map: 'empty', time: 600 });
   s.commands.chooseMap('pepsiDesk');
   assert.notEqual(s.views.run().selectedMap, 'pepsiDesk', 'a win elsewhere does not open it');
-  P.recordRunStats({ win: true, hero: 'utrace', map: 'serverRoom', time: 600 });
+  P.records.recordRunStats({ win: true, hero: 'utrace', map: 'serverRoom', time: 600 });
   s.commands.chooseMap('pepsiDesk');
   assert.equal(s.views.run().selectedMap, 'pepsiDesk');
 

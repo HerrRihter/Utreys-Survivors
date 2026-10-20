@@ -50,8 +50,8 @@ async function waves() {
 // Stress: 300 enemies kept around a moving chain hero; exercises chain, collision and spawning.
 async function stress() {
   const h = await createHarness();
-  h.env.Progression.earn(1e6);
-  h.env.Progression.buyHero('traceability');
+  h.env.Progression.wallet.earn(1e6);
+  h.env.Progression.shop.buyHero('traceability');
   const game = h.session;
   game.select('traceability');
   seeded(game, 424242);

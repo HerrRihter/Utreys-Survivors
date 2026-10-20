@@ -69,7 +69,7 @@ export const eventKinds = {
 };
 
 export const RunEvents = {
-  create({ run, world, spawning, progression, toast, audio }) {
+  create({ run, world, spawning, wallet, toast, audio }) {
     const specOf = (s, type) => getWaveSchedule(s.map).events[type];
     const kindOf = (s, e) => eventKinds[specOf(s, e.type).kind];
 
@@ -95,7 +95,7 @@ export const RunEvents = {
       }
       const { codes, pickup } = spec.reward;
       if (codes) {
-        s.earned += progression.earn(codes);
+        s.earned += wallet.earn(codes);
         toast(`${spec.success}: +${codes} кодов`);
       } else {
         s.pickups.push({ x: s.p.x, y: s.p.y, type: pickup });

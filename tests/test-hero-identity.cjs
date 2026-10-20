@@ -74,8 +74,8 @@ const { passiveDamage, countCrowd } = require('../src/systems/hero-passives.js')
   // Each hero's E inside a running session.
   async function session(id) {
     const h = await createHarness();
-    h.env.Progression.earn(1000);
-    if (heroUnlockPrices[id]) assert(h.env.Progression.buyHero(id));
+    h.env.Progression.wallet.earn(1000);
+    if (heroUnlockPrices[id]) assert(h.env.Progression.shop.buyHero(id));
     h.session.select(id);
     h.session.start();
     const s = h.session.state;

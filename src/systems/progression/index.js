@@ -20,26 +20,12 @@ export function createProgression(options) {
     wallet,
     shop,
     records,
+    achievements,
     loads,
-    ...shop,
-    ...records,
-    ...loads,
-    earn: wallet.earn,
-    kill: wallet.kill,
-    achievementDone: achievements.achievementDone,
-    weaponUnlocked: achievements.weaponUnlocked,
-    claimAchievement: achievements.claimAchievement,
-    isClaimed: achievements.isClaimed,
     flush: store.flush,
     replace: store.replace,
     onChange: store.onChange,
     dispose: store.dispose,
-    get achievements() {
-      return achievements.list;
-    },
-    get codes() {
-      return store.data.codes;
-    },
     get data() {
       return JSON.parse(JSON.stringify(store.data));
     },

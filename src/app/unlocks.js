@@ -19,7 +19,7 @@ function clockText(seconds) {
 /** @returns {UnlockGoal[]} */
 export function nearestGoals(progression, best, count = 3) {
   const data = progression.data;
-  return progression.achievements
+  return progression.achievements.list
     .map((a) => ({ a, progress: a.getProgress(data, best) }))
     .filter(({ a, progress }) => progress < a.target)
     .map(({ a, progress }) => ({ a, progress, ratio: progress / a.target }))
@@ -40,7 +40,7 @@ export function nearestGoals(progression, best, count = 3) {
 
 // Achievements done now that were not done when the run started.
 export function newlyDone(progression, best, before = []) {
-  return progression.achievements
-    .filter((a) => !before.includes(a.id) && progression.achievementDone(a, best))
+  return progression.achievements.list
+    .filter((a) => !before.includes(a.id) && progression.achievements.achievementDone(a, best))
     .map((a) => ({ id: a.id, title: a.title, unlock: unlockText(a) }));
 }

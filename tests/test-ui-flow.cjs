@@ -26,7 +26,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   const shop = s.views.shop();
   assert.equal(shop.heroes.find((hero) => hero.id === 'utrace').owned, true);
   assert(shop.heroes.find((hero) => hero.id === 'qa').disabled, 'cannot afford QA yet');
-  h.env.Progression.earn(500);
+  h.env.Progression.wallet.earn(500);
   const before = uiChanges;
   commands.buyHero('qa');
   assert(uiChanges > before && s.views.shop().heroes.find((hero) => hero.id === 'qa').owned);

@@ -36,6 +36,7 @@ export const GameFlow = {
     ui,
     hud,
   }) {
+    const { wallet, shop, records, achievements, loads } = progression;
     function setMode(mode) {
       run.mode = mode;
       audio.sync();
@@ -51,7 +52,7 @@ export const GameFlow = {
       const s = run.state;
       if (!s?.runId) return null;
       const counted = s.statsCounted ?? { kills: 0, codes: 0 };
-      const improved = progression.recordRunResult({
+      const improved = records.recordRunResult({
         runId: s.runId,
         map: s.map,
         hero: run.selected,
@@ -73,13 +74,13 @@ export const GameFlow = {
     function recordRun(win = false) {
       const s = run.state;
       if (!s || s.resultRecorded) return null;
-      progression.recordTime(s.t, s.recordedTime);
-      progression.recordLevel(s.level);
+      records.recordTime(s.t, s.recordedTime);
+      records.recordLevel(s.level);
       s.resultRecorded = true;
       s.recordedTime = s.t;
       // Evolutions assembled in this run open their encyclopedia entries.
-      for (const w of s.weapons) if (w.evolved) progression.recordEvolution(w.id);
-      if (s.stats.heroEvo) progression.recordEvolution('hero_' + run.selected);
+      for (const w of s.weapons) if (w.evolved) records.recordEvolution(w.id);
+      if (s.stats.heroEvo) records.recordEvolution('hero_' + run.selected);
       // The run journal: one entry per ending, with the offers made since the previous one.
       const offers = s.offers;
       runLog?.record(
@@ -94,7 +95,7 @@ export const GameFlow = {
       if (!s.statsRecorded) {
         s.statsRecorded = true;
         const nodesMap = !arenaDefinitions[s.map]?.objective;
-        progression.recordRunStats({
+        records.recordRunStats({
           win,
           hero: run.selected,
           map: s.map,
@@ -108,7 +109,7 @@ export const GameFlow = {
         });
       }
       if (!s.endless) return null;
-      return progression.recordProduction(
+      return loads.recordProduction(
         run.selected,
         s.load,
         s.t - s.endlessStart,
@@ -116,7 +117,7 @@ export const GameFlow = {
       );
     }
     const clampLoad = (hero, level) =>
-      Math.max(1, Math.min(progression.loadAvailable(hero), Math.floor(level) || 1));
+      Math.max(1, Math.min(loads.loadAvailable(hero), Math.floor(level) || 1));
     const mapOpen = (id) =>
       Object.hasOwn(arenaDefinitions, id) &&
       mapUnlocked(arenaDefinitions[id], progression.data.stats);
@@ -124,7 +125,7 @@ export const GameFlow = {
       recordRun();
       countRun();
       snapshots?.clear();
-      if (!progression.owned(run.selected)) run.selected = 'utrace';
+      if (!shop.owned(run.selected)) run.selected = 'utrace';
       if (!mapOpen(run.selectedMap)) {
         run.selectedMap = 'empty';
         world.select('empty');
@@ -148,8 +149,8 @@ export const GameFlow = {
         schedule,
         arenaSize: world.arena.size,
         baClient: run.baClient,
-        doneBefore: progression.achievements
-          .filter((a) => progression.achievementDone(a, run.best))
+        doneBefore: achievements.list
+          .filter((a) => achievements.achievementDone(a, run.best))
           .map((a) => a.id),
       });
       world.arena.prepare(
@@ -287,17 +288,17 @@ export const GameFlow = {
       const s = run.state;
       if (!s || s.resultRecorded) return;
       const endless = !!s.endless;
-      const records = recordRun(win && !endless) || { time: false, kills: false };
+      const productionBest = recordRun(win && !endless) || { time: false, kills: false };
       // A first win on the load level opens the next one; higher levels pay more codes.
       let opened = false,
         bonus = 0;
       if (win && !endless) {
-        opened = progression.recordLoadWin(run.selected, s.load) && s.load < maxLoad;
-        bonus = progression.earn(Math.floor(s.earned * rewardPerLevel * (s.load - 1)));
+        opened = loads.recordLoadWin(run.selected, s.load) && s.load < maxLoad;
+        bonus = wallet.earn(Math.floor(s.earned * rewardPerLevel * (s.load - 1)));
         s.earned += bonus;
       }
       // Greed: a share of the codes earned since the last ending.
-      const greed = progression.earn(Math.floor((s.earned - s.earnedPaid) * (s.stats.greed || 0)));
+      const greed = wallet.earn(Math.floor((s.earned - s.earnedPaid) * (s.stats.greed || 0)));
       s.earned += greed;
       s.earnedPaid = s.earned;
       // After the bonuses: the codes of this ending are final.
@@ -332,11 +333,15 @@ export const GameFlow = {
           };
       const stats = endless
         ? [
-            { value: clock(s.t - s.endlessStart), label: 'В ПРОДАКШЕНЕ', best: records.time },
+            {
+              value: clock(s.t - s.endlessStart),
+              label: 'В ПРОДАКШЕНЕ',
+              best: productionBest.time,
+            },
             {
               value: String(s.kills - s.endlessKills),
               label: 'ПОБЕЖДЕНО В ПРОДАКШЕНЕ',
-              best: records.kills,
+              best: productionBest.kills,
             },
             { value: clock(s.t), label: 'ВСЕГО' },
           ]
@@ -388,7 +393,7 @@ export const GameFlow = {
         if (upgrades.apply(card, s)) names.push(card.name);
       }
       if (!names.length) {
-        s.earned += progression.earn(10);
+        s.earned += wallet.earn(10);
         names.push('+10 кодов');
       }
       s.fx.push({
@@ -436,7 +441,7 @@ export const GameFlow = {
     function resume() {
       const snapshot = snapshots?.load();
       if (!snapshot || run.mode !== 'menu') return false;
-      if (!heroDefinitions[snapshot.hero] || !progression.owned(snapshot.hero)) {
+      if (!heroDefinitions[snapshot.hero] || !shop.owned(snapshot.hero)) {
         snapshots.clear();
         ui.emit();
         return false;
@@ -494,14 +499,14 @@ export const GameFlow = {
     }
     function openHeroSelect() {
       if (run.mode !== 'menu') return;
-      const owned = Object.keys(heroDefinitions).filter((id) => progression.owned(id));
+      const owned = Object.keys(heroDefinitions).filter((id) => shop.owned(id));
       if (!owned.length) throw new Error('Нет доступных героев для нового забега');
       run.pendingHero = owned.includes(run.selected) ? run.selected : owned[0];
       if (!baClientIds.includes(run.baClient)) run.baClient = baClientIds[0];
       show('heroSelect');
     }
     function chooseHero(id) {
-      if (!progression.owned(id)) return;
+      if (!shop.owned(id)) return;
       run.pendingHero = id;
       run.selectedLoad = clampLoad(id, run.selectedLoad);
       ui.emit();
@@ -554,14 +559,14 @@ export const GameFlow = {
       return false;
     }
     function buyHero(id) {
-      if (!progression.owned(id) && progression.buyHero(id)) ui.emit();
+      if (!shop.owned(id) && shop.buyHero(id)) ui.emit();
     }
     function buyUpgrade(id) {
-      if (progression.buyUpgrade(id)) ui.emit();
+      if (shop.buyUpgrade(id)) ui.emit();
     }
     function respec() {
       if (run.mode !== 'menu') return 0;
-      const refund = progression.respec();
+      const refund = shop.respec();
       if (refund) {
         audio.effect('pickup');
         ui.emit();
@@ -569,7 +574,7 @@ export const GameFlow = {
       return refund;
     }
     function claimAchievement(id) {
-      if (progression.claimAchievement(id, run.best)) {
+      if (achievements.claimAchievement(id, run.best)) {
         audio.effect('pickup');
         ui.emit();
       }

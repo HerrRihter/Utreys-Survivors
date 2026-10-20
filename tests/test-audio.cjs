@@ -148,7 +148,8 @@ async function main() {
   const combat = h.env.CombatSystem.create({
       run,
       corpses: { add() {} },
-      progression: h.env.Progression,
+      wallet: h.env.Progression.wallet,
+      records: h.env.Progression.records,
       world: { arena: { clear: () => true } },
       audio: { effect: (name) => sounds.push(name) },
       cosmetic: () => 0.5,

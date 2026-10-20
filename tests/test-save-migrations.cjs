@@ -20,17 +20,17 @@ const { loadModule } = require('./helpers/load-modules.cjs');
     }),
   );
   const p = await load();
-  assert.equal(p.codes, 170);
-  assert(p.owned('qa'));
+  assert.equal(p.wallet.codes, 170);
+  assert(p.shop.owned('qa'));
   assert.equal(p.data.levels.power, 2);
-  assert(p.isClaimed('codes_100'));
-  assert(!p.claimAchievement('codes_100'), 'migration cannot re-award achievement');
-  assert(p.buyHero('traceability'));
+  assert(p.achievements.isClaimed('codes_100'));
+  assert(!p.achievements.claimAchievement('codes_100'), 'migration cannot re-award achievement');
+  assert(p.shop.buyHero('traceability'));
   const migrated = JSON.parse(saved.get('utreys-progression-v1'));
   assert.equal(migrated.codes, 90);
   assert(!('helmets' in migrated));
   saved.set('utreys-progression-v1', JSON.stringify({ codes: 0, helmets: 900 }));
-  assert.equal((await load()).codes, 0, 'new zero balance takes precedence');
+  assert.equal((await load()).wallet.codes, 0, 'new zero balance takes precedence');
   const { AudioSystem } = await loadModule({}, path.resolve('src/core/audio.js'));
   const target = { addEventListener() {}, removeEventListener() {} };
   const c = {

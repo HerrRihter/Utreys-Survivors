@@ -207,8 +207,8 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
   };
 
   // Signed out: runs stay local; only the latest one waits for a sign-in.
-  local.recordRunResult(entry({ runId: 'old-guest', map: 'serverRoom' }));
-  local.recordRunResult(entry({ runId: 'guest', time: 30 }));
+  local.records.recordRunResult(entry({ runId: 'old-guest', map: 'serverRoom' }));
+  local.records.recordRunResult(entry({ runId: 'guest', time: 30 }));
   await settle();
   assert.equal(docs.has('stats/u1'), false);
   assert.equal(sender.queued, 0);
@@ -221,7 +221,7 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
   assert.deepEqual(docs.get('stats/u1').lastRun, { map: 'empty', runId: 'guest' });
   assert.equal(sender.state.guestRun, '');
   docs.delete('stats/u1');
-  local.recordRunResult(entry());
+  local.records.recordRunResult(entry());
   await settle();
   const doc = docs.get('stats/u1');
   assert.equal(doc.login, 'Вася', 'the login comes from the profile');
@@ -234,7 +234,7 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
   assert.equal(sender.state.last.map, 'empty');
 
   // A second map adds its own scope and grows the overall one.
-  local.recordRunResult(entry({ runId: 'r2', map: 'serverRoom', kills: 9, addKills: 9 }));
+  local.records.recordRunResult(entry({ runId: 'r2', map: 'serverRoom', kills: 9, addKills: 9 }));
   await settle();
   assert.equal(docs.get('stats/u1').all.games, 2);
   assert.equal(docs.get('stats/u1').all.totalKills, 59);
@@ -254,7 +254,7 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
 
   // Offline: the run waits in the queue and goes up on retry.
   online = false;
-  local.recordRunResult(entry({ runId: 'r3' }));
+  local.records.recordRunResult(entry({ runId: 'r3' }));
   await settle();
   assert.equal(sender.state.status, 'offline');
   assert.equal(sender.queued, 1);
@@ -266,7 +266,7 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
 
   // Refused by the rules: dropped, so the queue never jams.
   refuse = true;
-  local.recordRunResult(entry({ runId: 'r4' }));
+  local.records.recordRunResult(entry({ runId: 'r4' }));
   const warn = console.warn;
   console.warn = () => {};
   await settle();

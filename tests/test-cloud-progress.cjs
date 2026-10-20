@@ -139,7 +139,7 @@ function device(cloud) {
 const settle = async () => {
   for (let i = 0; i < 20; i++) await new Promise((resolve) => setTimeout(resolve, 0));
 };
-const win = (p) => p.recordRunStats({ win: true, hero: 'utrace', time: 400 });
+const win = (p) => p.records.recordRunStats({ win: true, hero: 'utrace', time: 400 });
 const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
 
 (async () => {
@@ -147,7 +147,7 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
 
   // Signed out: nothing leaves the device.
   const a = device(cloud);
-  a.progression.earn(120);
+  a.progression.wallet.earn(120);
   win(a.progression);
   await settle();
   assert.equal(a.sync.state.status, 'off');
@@ -169,12 +169,12 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
   b.account.signIn('u1');
   await settle();
   assert.equal(b.sync.state.status, 'synced');
-  assert.equal(b.progression.codes, 120);
+  assert.equal(b.progression.wallet.codes, 120);
   assert.equal(b.replaced, 1, 'menus are told to re-render');
   assert.equal(JSON.parse(b.map.get('utreys-progression-v1')).codes, 120, 'kept locally too');
 
   // A run result on B goes up after the delay, as revision 2.
-  b.progression.earn(30);
+  b.progression.wallet.earn(30);
   win(b.progression);
   assert.equal(b.timers.pending.length, 1);
   assert.equal(b.timers.pending[0].ms, 5000);
@@ -184,20 +184,20 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
   assert.equal(remote(cloud).data.codes, 150);
 
   // Combat income alone does not sync.
-  b.progression.earn(5);
+  b.progression.wallet.earn(5);
   assert.equal(b.timers.pending.length, 0);
 
   // A has not changed since revision 1, so it simply takes revision 2.
   await a.sync.sync();
   await settle();
-  assert.equal(a.progression.codes, 150);
+  assert.equal(a.progression.wallet.codes, 150);
   assert.equal(a.progression.data.stats.wins, 2);
   assert.equal(a.replaced, 1);
 
   // Both changed: A must choose. Keeping A's save writes it over B's.
-  a.progression.earn(1000);
+  a.progression.wallet.earn(1000);
   win(a.progression);
-  b.progression.earn(7);
+  b.progression.wallet.earn(7);
   win(b.progression);
   b.timers.runAll();
   await settle();
@@ -223,12 +223,12 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
   // B had nothing new since its own write, so it follows.
   await b.sync.sync();
   await settle();
-  assert.equal(b.progression.codes, 1150);
+  assert.equal(b.progression.wallet.codes, 1150);
 
   // The other answer: the cloud save replaces this device's one.
-  a.progression.earn(1);
+  a.progression.wallet.earn(1);
   win(a.progression);
-  b.progression.earn(2);
+  b.progression.wallet.earn(2);
   win(b.progression);
   b.timers.runAll();
   await settle();
@@ -237,29 +237,29 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
   assert.equal(a.sync.state.status, 'conflict');
   await a.sync.resolve('cloud');
   await settle();
-  assert.equal(a.progression.codes, 1152);
+  assert.equal(a.progression.wallet.codes, 1152);
   assert.equal(stableKey(a.progression.data), stableKey(remote(cloud).data));
 
   // A device that has its own progress but never synced with this account asks first.
   const c = device(cloud);
-  c.progression.earn(9);
+  c.progression.wallet.earn(9);
   win(c.progression);
   c.account.signIn('u1');
   await settle();
   assert.equal(c.sync.state.status, 'conflict');
-  assert.equal(c.progression.codes, 9, 'nothing is overwritten before the answer');
+  assert.equal(c.progression.wallet.codes, 9, 'nothing is overwritten before the answer');
   // Signing out drops the question and keeps the local save.
   c.account.signOut();
   await settle();
   assert.equal(c.sync.state.status, 'off');
   assert.equal(c.sync.state.conflict, null);
-  assert.equal(c.progression.codes, 9);
+  assert.equal(c.progression.wallet.codes, 9);
 
   // Another device writes between our read and our write: we read again and follow.
   const d = device(cloud);
   d.account.signIn('u1');
   await settle();
-  d.progression.earn(40);
+  d.progression.wallet.earn(40);
   win(d.progression);
   cloud.interleave(() => {
     const doc = remote(cloud);

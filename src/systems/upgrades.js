@@ -27,7 +27,7 @@ const fill = (template, values) => template.replace(/\{(\w+)\}/g, (_, key) => va
 // with the `weaponSlots` stat) and `passiveSlots` passives; once the slots are full only owned
 // items keep levelling.
 export const UpgradeSystem = {
-  create(Progression) {
+  create({ wallet, achievements }) {
     const add = (key, value) => (s) => (s.stats[key] = (s.stats[key] || 0) + value);
     // One rank of a card's `effect` (data/upgrades.js).
     function applyEffect(s, effect) {
@@ -37,7 +37,7 @@ export const UpgradeSystem = {
       if (effect.heal) s.p.hp = Math.min(s.p.max, s.p.hp + effect.heal);
       if (effect.fullHeal) s.p.hp = s.p.max;
       if (effect.codes) {
-        Progression.earn(effect.codes);
+        wallet.earn(effect.codes);
         s.earned += effect.codes;
       }
     }
@@ -84,7 +84,7 @@ export const UpgradeSystem = {
       icon: def.icon,
       max: weaponMaxLevel,
       kind: 'weapon',
-      available: () => Progression.weaponUnlocked(id),
+      available: () => achievements.weaponUnlocked(id),
       apply: (s) => {
         const owned = s.weapons.find((w) => w.id === id);
         if (owned) owned.level++;

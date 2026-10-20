@@ -65,7 +65,7 @@ const { hudScale } = require('../src/app/run-state.js');
   s.weapons.push({ id: 'orbit', level: 6, cd: 1, evolved: true, phase: 0 });
   s.stats.heroEvo = true;
   game.menu();
-  assert(P.evolutionSeen('orbit') && P.evolutionSeen('hero_utrace'));
+  assert(P.records.evolutionSeen('orbit') && P.records.evolutionSeen('hero_utrace'));
   codex = view();
   assert.equal(codex.found, 2);
   assert.equal(codex.weapons.find((w) => w.id === 'orbit').evolution.name, 'Кольцо валидации');

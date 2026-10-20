@@ -26,7 +26,13 @@ async function main() {
   const weaponIds = U.weapons.map((u) => u.id);
   // Four weapons are open from the start; the rest come from achievements.
   assert.equal(U.pool('utrace', state()).filter((u) => u.kind === 'weapon').length, 4);
-  P.weaponUnlocked = () => true;
+  // Every achievement that opens a weapon done.
+  P.replace({
+    ...P.data,
+    kills: 500,
+    weaponKills: { mine: 500 },
+    stats: { ...P.data.stats, bossKills: 1, maxTime: 300 },
+  });
   // Card texts are filled in from data/upgrades.js templates.
   {
     const s = state();
@@ -90,9 +96,9 @@ async function main() {
   });
   assert.equal(build.weapons.map((w) => w.id).join(), 'hero,mine');
   assert.equal(build.passives[0].level, 2);
-  P.earn(1000);
-  assert(!P.buyUpgrade('training_panoramix'), 'Cannot train locked hero');
-  assert(P.buyUpgrade('training_utrace'));
+  P.wallet.earn(1000);
+  assert(!P.shop.buyUpgrade('training_panoramix'), 'Cannot train locked hero');
+  assert(P.shop.buyUpgrade('training_utrace'));
   const a = state(),
     o = state();
   applyPermanentUpgrades(a, 'utrace', P.data.levels);
@@ -100,7 +106,7 @@ async function main() {
   assert.equal(a.stats.weaponBonus, 0.06, 'Utrace training strengthens its passive');
   assert.equal(a.stats.weaponSlots, 1, 'Utrace passive: extra weapon slot');
   assert.equal(o.stats.weaponBonus, undefined);
-  assert(P.buyUpgrade('armor'));
+  assert(P.shop.buyUpgrade('armor'));
   assert.equal(P.data.levels.armor, 1);
   const reload = { localStorage: e.localStorage };
   reload.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
@@ -122,7 +128,7 @@ async function main() {
   assert.equal(reload.Progression.data.codes, 44);
   assert.equal(reload.Progression.data.levels.health, 2);
   assert.equal(reload.Progression.data.levels.training_panoramix, undefined);
-  assert(!reload.Progression.owned('panoramix'));
+  assert(!reload.Progression.shop.owned('panoramix'));
   console.log(
     'PASS: weapon and passive slots, guaranteed weapon offer, unique cards, caps, hero evolution, bans, run reset, locked training, permanent bonuses and legacy saves.',
   );

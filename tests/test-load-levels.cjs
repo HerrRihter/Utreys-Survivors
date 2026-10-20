@@ -38,9 +38,9 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
 
   // A win opens the next level, for this hero only.
   game.finish(true);
-  assert.equal(P.loadCleared('utrace'), 1);
-  assert.equal(P.loadAvailable('utrace'), 2);
-  assert.equal(P.loadAvailable('qa'), 1, 'levels are tracked per hero');
+  assert.equal(P.loads.loadCleared('utrace'), 1);
+  assert.equal(P.loads.loadAvailable('utrace'), 2);
+  assert.equal(P.loads.loadAvailable('qa'), 1, 'levels are tracked per hero');
   assert.match(game.views.run().result.text, /Открыта нагрузка 2/);
   assert(game.views.run().result.canContinue);
 
@@ -56,10 +56,10 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   const scaled = Math.round(Math.round(unitDefinitions.l3.hp * opening) * enemyHpScale);
   assert.equal(enemy.max, Math.round(scaled * 1.2));
   s.earned = 100;
-  const codes = P.codes;
+  const codes = P.wallet.codes;
   game.finish(true);
   const bonus = Math.floor(100 * rewardPerLevel);
-  assert.equal(P.codes - codes, bonus, 'load bonus is paid in codes');
+  assert.equal(P.wallet.codes - codes, bonus, 'load bonus is paid in codes');
   assert.equal(s.earned, 100 + bonus);
   assert.match(game.views.run().result.tag, /НАГРУЗКА 2/);
 
@@ -99,9 +99,9 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   const result = game.views.run().result;
   assert.equal(result.title, 'Продакшен упал');
   assert(!result.canContinue);
-  const record = P.productionRecord('utrace', 2);
+  const record = P.loads.productionRecord('utrace', 2);
   assert(record && record.time > 120 && record.kills >= 7);
-  assert.equal(P.productionRecord('utrace', 1), null);
+  assert.equal(P.loads.productionRecord('utrace', 1), null);
   assert.match(game.views.heroSelect().loadProgress, /Рекорд продакшена/);
   h.session.dispose();
 
@@ -121,12 +121,12 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
     events: null,
     document: null,
   });
-  assert.equal(reload.loadCleared('utrace'), 3);
-  assert.equal(reload.loadCleared('qa'), maxLoad, 'clamped to the top level');
-  assert.equal(reload.loadCleared('ba'), 0);
-  assert.deepEqual(reload.productionRecord('utrace', 2), { time: 61, kills: 4 });
-  assert.equal(reload.productionRecord('utrace', 0), null);
-  assert.equal(reload.loadAvailable('utrace'), 4);
+  assert.equal(reload.loads.loadCleared('utrace'), 3);
+  assert.equal(reload.loads.loadCleared('qa'), maxLoad, 'clamped to the top level');
+  assert.equal(reload.loads.loadCleared('ba'), 0);
+  assert.deepEqual(reload.loads.productionRecord('utrace', 2), { time: 61, kills: 4 });
+  assert.equal(reload.loads.productionRecord('utrace', 0), null);
+  assert.equal(reload.loads.loadAvailable('utrace'), 4);
 
   console.log('PASS: load levels, per-hero unlocks, rewards, production mode and records');
 })().catch((error) => {

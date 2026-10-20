@@ -41,8 +41,8 @@ export function clock(time) {
 
 function unclaimedAchievements(progression, best) {
   const data = progression.data;
-  return progression.achievements.filter(
-    (a) => a.getProgress(data, best) >= a.target && !progression.isClaimed(a.id),
+  return progression.achievements.list.filter(
+    (a) => a.getProgress(data, best) >= a.target && !progression.achievements.isClaimed(a.id),
   ).length;
 }
 
@@ -54,17 +54,17 @@ function collection(progression) {
   return [
     {
       label: 'Герои',
-      have: heroIds.filter((id) => progression.owned(id)).length,
+      have: heroIds.filter((id) => progression.shop.owned(id)).length,
       total: heroIds.length,
     },
     {
       label: 'Оружие',
-      have: weaponIds.filter((id) => progression.weaponUnlocked(id)).length,
+      have: weaponIds.filter((id) => progression.achievements.weaponUnlocked(id)).length,
       total: weaponIds.length,
     },
     {
       label: 'Эволюции',
-      have: evolutions.filter((id) => progression.evolutionSeen(id)).length,
+      have: evolutions.filter((id) => progression.records.evolutionSeen(id)).length,
       total: evolutions.length,
     },
   ];
@@ -76,7 +76,7 @@ export function menuView({ run, progression, snapshot = null }) {
   return {
     collection: collection(progression),
     resume: hero ? `${hero.name} · ${clock(snapshot.state.t)} · ур. ${snapshot.state.level}` : null,
-    wallet: 'КОДЫ: ' + progression.codes,
+    wallet: 'КОДЫ: ' + progression.wallet.codes,
     record: run.best.time
       ? `ЛУЧШЕЕ ВРЕМЯ: ${clock(run.best.time)}`
       : 'Лучшее время появится после первого забега.',
@@ -98,8 +98,8 @@ export function heroSelectView({ run, progression }) {
       name: heroDefinitions[id].name,
       weapon: heroDefinitions[id].weapon,
       role: heroPassives[id]?.role || '',
-      locked: !progression.owned(id),
-      price: progression.prices[id] || 0,
+      locked: !progression.shop.owned(id),
+      price: progression.shop.prices[id] || 0,
     })),
     pending: run.pendingHero,
     role: passive ? `${passive.role.toUpperCase()} · ${passive.roleDesc}` : '',
@@ -138,10 +138,10 @@ export function heroSelectView({ run, progression }) {
 // Load level picker for the pending hero: open levels, what the chosen one adds, records.
 function loadView(run, progression) {
   const hero = run.pendingHero,
-    available = progression.loadAvailable(hero),
-    cleared = progression.loadCleared(hero),
+    available = progression.loads.loadAvailable(hero),
+    cleared = progression.loads.loadCleared(hero),
     load = Math.min(Math.max(1, run.selectedLoad || 1), available),
-    record = progression.productionRecord(hero, load);
+    record = progression.loads.productionRecord(hero, load);
   return {
     loads: loadLevels.map((entry) => ({
       level: entry.level,
@@ -164,9 +164,9 @@ function loadView(run, progression) {
 /** @typedef {{ id: string, label: string, disabled: boolean }} ShopItem */
 
 export function shopView({ progression }) {
-  const codes = progression.codes;
+  const codes = progression.wallet.codes;
   const heroCards = Object.entries(heroDefinitions).map(([id, hero]) => {
-    const owned = progression.owned(id);
+    const owned = progression.shop.owned(id);
     return {
       id,
       name: hero.name,
@@ -178,30 +178,30 @@ export function shopView({ progression }) {
         hero.speed +
         (heroPassives[id] ? ' · Пассивка: ' + heroPassives[id].name : ''),
       owned,
-      label: owned ? 'Доступен для забега' : 'Купить · ' + progression.prices[id] + ' кодов',
-      disabled: owned || codes < progression.prices[id],
+      label: owned ? 'Доступен для забега' : 'Купить · ' + progression.shop.prices[id] + ' кодов',
+      disabled: owned || codes < progression.shop.prices[id],
     };
   });
   /** @type {{ title: string, items: ShopItem[] }[]} */
   const groups = [];
-  for (const [id, u] of Object.entries(progression.upgrades)) {
+  for (const [id, u] of Object.entries(progression.shop.upgrades)) {
     const title = u.hero ? 'Личные усиления' : 'Общие усиления';
     if (groups.at(-1)?.title !== title) groups.push({ title, items: [] });
     const level = progression.data.levels[id],
-      lock = progression.upgradeLock(id),
+      lock = progression.shop.upgradeLock(id),
       locked = !!lock;
     groups.at(-1).items.push({
       id,
       label:
         (u.hero ? heroDefinitions[u.hero].name + ' · ' : '') +
         `${u.name} ${level}/${u.max} · ${u.desc} · ` +
-        (level >= u.max ? 'Максимум' : progression.cost(id) + ' кодов') +
+        (level >= u.max ? 'Максимум' : progression.shop.cost(id) + ' кодов') +
         (lock === 'hero' ? ' · Сначала открой героя' : '') +
         (lock === 'win' ? ' · Откроется после первой победы' : ''),
-      disabled: locked || level >= u.max || codes < progression.cost(id),
+      disabled: locked || level >= u.max || codes < progression.shop.cost(id),
     });
   }
-  const refund = progression.upgradeSpent();
+  const refund = progression.shop.upgradeSpent();
   return {
     heroes: heroCards,
     groups,
@@ -225,7 +225,7 @@ export function shopView({ progression }) {
 export function encyclopediaView({ progression, upgrades }) {
   const passiveName = Object.fromEntries(upgrades.common.map((u) => [u.id, u.name]));
   const evolution = (id, evo, recipe) => {
-    const discovered = progression.evolutionSeen(id);
+    const discovered = progression.records.evolutionSeen(id);
     return {
       name: discovered ? evo.name : '???',
       desc: discovered ? evo.desc : 'Собери эволюцию, чтобы узнать её эффект.',
@@ -234,8 +234,8 @@ export function encyclopediaView({ progression, upgrades }) {
     };
   };
   const weapons = Object.entries(weaponDefinitions).map(([id, def]) => {
-    const locked = !progression.weaponUnlocked(id);
-    const gate = progression.achievements.find((a) => a.unlocks?.weapon === id);
+    const locked = !progression.achievements.weaponUnlocked(id);
+    const gate = progression.achievements.list.find((a) => a.unlocks?.weapon === id);
     return {
       id,
       icon: def.icon,
@@ -290,10 +290,10 @@ export function encyclopediaView({ progression, upgrades }) {
  */
 export function achievementsView({ run, progression }) {
   const data = progression.data;
-  const cards = progression.achievements.map((ach) => {
+  const cards = progression.achievements.list.map((ach) => {
     const progress = ach.getProgress(data, run.best);
     const done = progress >= ach.target,
-      claimed = progression.isClaimed(ach.id);
+      claimed = progression.achievements.isClaimed(ach.id);
     const time = ach.format === 'time';
     const percent = Math.min(100, Math.floor((progress / ach.target) * 100));
     const codeToken = !ach.rewardType || ach.rewardType === 'codes';
@@ -456,7 +456,7 @@ export function hudView({ run, progression, settings, upgrades }) {
       ` · Нагрузка ${s.load || 1}` +
       (s.endless ? ` · Продакшен ${productionMinutes(s)} мин` : '') +
       (ba ? ` · Клиент: ${unitDefinitions[ba.client].name} · +${ba.bonus} HP` : ''),
-    codes: `КОДЫ: ${progression.codes} (+${s.earned})`,
+    codes: `КОДЫ: ${progression.wallet.codes} (+${s.earned})`,
     progress: nodeProgress(s),
     event: eventLabel(s),
     boss: boss

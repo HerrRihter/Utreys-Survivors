@@ -22,15 +22,15 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
   };
   let p = await load();
   for (const [id, price] of Object.entries(heroUnlockPrices)) {
-    assert(!p.owned(id));
-    assert(!p.buyHero(id), 'insufficient funds');
-    assert(!p.buyUpgrade('training_' + id), 'locked training');
-    p.earn(price);
-    assert(p.buyHero(id));
+    assert(!p.shop.owned(id));
+    assert(!p.shop.buyHero(id), 'insufficient funds');
+    assert(!p.shop.buyUpgrade('training_' + id), 'locked training');
+    p.wallet.earn(price);
+    assert(p.shop.buyHero(id));
     assert.equal(p.data.codes, 0);
-    assert(!p.buyHero(id), 'duplicate purchase');
+    assert(!p.shop.buyHero(id), 'duplicate purchase');
     p = await load();
-    assert(p.owned(id), 'purchase survives reload');
+    assert(p.shop.owned(id), 'purchase survives reload');
   }
   for (const id of Object.keys(heroDefinitions)) {
     assert.equal(abilityDefinitions[id].length, 2);
@@ -39,8 +39,8 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
       h.session.select(id);
       h.session.start();
       assert.equal(h.session.state.p.max, heroDefinitions.utrace.hp, 'locked selection falls back');
-      h.env.Progression.earn(heroUnlockPrices[id]);
-      assert(h.env.Progression.buyHero(id));
+      h.env.Progression.wallet.earn(heroUnlockPrices[id]);
+      assert(h.env.Progression.shop.buyHero(id));
     }
     h.session.select(id);
     h.session.start();
@@ -139,8 +139,8 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
   assert(ba.enemies[0].hp < 100 && ba.enemies[1].hp === 100, 'BA wider forward sector');
   assert.equal(attack('serialization', []).shots.length, 1);
   const h = await createHarness();
-  h.env.Progression.earn(100);
-  h.env.Progression.buyHero('serialization');
+  h.env.Progression.wallet.earn(100);
+  h.env.Progression.shop.buyHero('serialization');
   h.session.select('serialization');
   h.session.start();
   const s = h.session.state;

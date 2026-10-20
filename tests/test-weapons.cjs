@@ -93,8 +93,8 @@ const { weaponDefinitions } = require('../data/weapons.js');
   // Hero evolutions: each hero's level-6 attack still lands.
   for (const hero of ['utrace', 'traceability', 'serialization', 'ba', 'qa']) {
     const check = await createHarness();
-    check.env.Progression.earn(1e6);
-    check.env.Progression.buyHero(hero);
+    check.env.Progression.wallet.earn(1e6);
+    check.env.Progression.shop.buyHero(hero);
     const g = check.session;
     g.select(hero);
     g.start();

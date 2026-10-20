@@ -16,28 +16,28 @@ async function main() {
   }
   let p = await load();
   assert.equal(p.data.codes, 0);
-  assert(p.owned('utrace'));
-  assert(!p.buyHero('cacofonix'));
-  for (let i = 0; i < 9; i++) assert.equal(p.kill(), 0);
-  assert.equal(p.kill(), 1);
+  assert(p.shop.owned('utrace'));
+  assert(!p.shop.buyHero('cacofonix'));
+  for (let i = 0; i < 9; i++) assert.equal(p.wallet.kill(), 0);
+  assert.equal(p.wallet.kill(), 1);
   assert.equal(p.data.codes, 1);
-  p.earn(39);
-  assert(!p.buyHero('cacofonix'));
+  p.wallet.earn(39);
+  assert(!p.shop.buyHero('cacofonix'));
   assert.equal(p.data.codes, 40);
-  assert(p.buyUpgrade('health'));
+  assert(p.shop.buyUpgrade('health'));
   assert.equal(p.data.codes, 10);
-  assert.equal(p.cost('health'), 60);
-  assert(!p.buyUpgrade('health'));
-  assert(!p.buyHero('__proto__'));
+  assert.equal(p.shop.cost('health'), 60);
+  assert(!p.shop.buyUpgrade('health'));
+  assert(!p.shop.buyHero('__proto__'));
   p = await load();
-  assert(p.owned('utrace'));
-  assert(!p.owned('cacofonix'));
+  assert(p.shop.owned('utrace'));
+  assert(!p.shop.owned('cacofonix'));
   assert.equal(p.data.levels.health, 1);
   assert.equal(p.data.codes, 10);
   assert.equal(p.data.kills, 10);
-  p.earn(2000);
-  for (let i = 0; i < 4; i++) assert(p.buyUpgrade('health'));
-  assert(!p.buyUpgrade('health'));
+  p.wallet.earn(2000);
+  for (let i = 0; i < 4; i++) assert(p.shop.buyUpgrade('health'));
+  assert(!p.shop.buyUpgrade('health'));
   assert.equal(p.data.levels.health, 5);
   storage.set(
     'utreys-progression-v1',
@@ -52,7 +52,7 @@ async function main() {
   assert.equal(p.data.codes, 0);
   assert.equal(p.data.kills, 0);
   assert.equal(p.data.levels.health, 5);
-  assert(!p.owned('unknown'));
+  assert(!p.shop.owned('unknown'));
   storage.set('utreys-progression-v1', 'broken');
   assert.equal((await load()).data.codes, 0);
   const e = {
@@ -67,7 +67,7 @@ async function main() {
   vm.createContext(e);
   await loadModule(e, projectRoot + '/src/systems/progression/index.js', { fresh: false });
   e.Progression = e.createProgression({ storage: e.localStorage });
-  e.Progression.earn(3);
+  e.Progression.wallet.earn(3);
   assert.equal(e.Progression.data.codes, 3);
   assert.equal(e.Progression.persistent, false);
   console.log(
@@ -109,8 +109,8 @@ async function main() {
   await loadModule(batched, projectRoot + '/src/systems/progression/index.js');
   batched.Progression = batched.createProgression({ storage: batched.localStorage });
   const rewards = batched.Progression;
-  for (let i = 0; i < 100; i++) rewards.kill();
-  rewards.earn(30);
+  for (let i = 0; i < 100; i++) rewards.wallet.kill();
+  rewards.wallet.earn(30);
   assert.equal(writes, 0, 'Mass kills must not write storage in the combat frame');
   assert.equal(timers.size, 1);
   assert.equal(rewards.data.kills, 100);
@@ -126,25 +126,25 @@ async function main() {
   assert.equal(writes, 1);
   assert.equal(snapshot.kills, 100);
   assert.equal(snapshot.codes, 40);
-  rewards.kill();
+  rewards.wallet.kill();
   events.pagehide();
   assert.equal(snapshot.kills, 101);
   assert.equal(timers.size, 0);
-  rewards.earn(3);
+  rewards.wallet.earn(3);
   batched.document.hidden = true;
   docEvents.visibilitychange();
   assert.equal(snapshot.codes, 43);
-  rewards.earn(100);
-  assert(rewards.buyUpgrade('health'));
+  rewards.wallet.earn(100);
+  assert(rewards.shop.buyUpgrade('health'));
   assert.equal(snapshot.codes, 113);
   assert.equal(timers.size, 0);
-  rewards.kill();
+  rewards.wallet.kill();
   timers.values().next().value();
   timers.clear();
   assert.equal(idleJobs.size, 1);
   rewards.flush();
   assert.equal(idleJobs.size, 0);
-  rewards.kill();
+  rewards.wallet.kill();
   fail = true;
   rewards.flush();
   assert.equal(rewards.persistent, false);
@@ -156,21 +156,21 @@ async function main() {
   rewards.flush();
   assert.equal(writes, savedWrites, 'Clean flush does not write');
   const beforeStats = writes;
-  rewards.recordBossKill();
+  rewards.records.recordBossKill();
   assert.equal(writes, beforeStats, 'Combat stats do not write storage in a combat frame');
   events.pagehide();
   assert(writes > beforeStats, 'Deferred stats are saved on pagehide');
-  assert.equal(rewards.codes, snapshot.codes);
+  assert.equal(rewards.wallet.codes, snapshot.codes);
   console.log(
     'PASS: combat rewards coalesce into idle saves; lifecycle and purchases flush; failed saves can retry.',
   );
 
   // Every active achievement can be earned and claimed once.
-  const platinum = rewards.achievements.find((achievement) => achievement.id === 'platinum');
-  const others = rewards.achievements.filter((achievement) => achievement.id !== 'platinum');
+  const platinum = rewards.achievements.list.find((achievement) => achievement.id === 'platinum');
+  const others = rewards.achievements.list.filter((achievement) => achievement.id !== 'platinum');
   assert.equal(platinum.target, others.length, 'Platinum excludes itself from the target');
   assert.equal(platinum.getProgress({}), 0, 'Empty saves have no platinum progress');
-  assert(!rewards.claimAchievement('platinum'), 'Cannot claim platinum early');
+  assert(!rewards.achievements.claimAchievement('platinum'), 'Cannot claim platinum early');
   const earnedIds = others.map((achievement) => achievement.id);
   assert.equal(
     platinum.getProgress({ claimedAchievements: [...earnedIds.slice(1), 'platinum', 'unknown'] }),
@@ -182,26 +182,35 @@ async function main() {
     others.length,
     'Claimed achievements still count after spending codes',
   );
-  rewards.earn(10000);
-  for (const id of Object.keys(rewards.upgrades)) while (rewards.buyUpgrade(id));
+  rewards.wallet.earn(10000);
+  for (const id of Object.keys(rewards.shop.upgrades)) while (rewards.shop.buyUpgrade(id));
 
-  for (const achievement of rewards.achievements) {
+  for (const achievement of rewards.achievements.list) {
     const before = rewards.data.codes;
-    for (let i = 0; i < 1000; i++) rewards.recordAbility();
-    rewards.recordTime(10000);
-    rewards.recordLevel(100);
-    for (let i = 0; i < 3000; i++) rewards.kill();
-    for (let i = 0; i < 100; i++) rewards.recordBossKill();
-    for (let i = 0; i < 600; i++) rewards.kill('orbit');
-    for (let level = 1; level <= 10; level++) rewards.recordLoadWin('utrace', level);
-    rewards.recordProduction('utrace', 10, 400, 50);
+    for (let i = 0; i < 1000; i++) rewards.records.recordAbility();
+    rewards.records.recordTime(10000);
+    rewards.records.recordLevel(100);
+    for (let i = 0; i < 3000; i++) rewards.wallet.kill();
+    for (let i = 0; i < 100; i++) rewards.records.recordBossKill();
+    for (let i = 0; i < 600; i++) rewards.wallet.kill('orbit');
+    for (let level = 1; level <= 10; level++) rewards.loads.recordLoadWin('utrace', level);
+    rewards.loads.recordProduction('utrace', 10, 400, 50);
     for (const hero of ['utrace', 'traceability', 'serialization', 'ba', 'qa'])
-      rewards.recordRunStats({ win: true, hero, time: 300, cleanSweep: true, noFood: true });
-    rewards.recordRunStats({ win: true, hero: 'qa', untouched: true, allWorkaround: true });
-    rewards.recordRunStats({ win: false, hero: 'qa', evolutions: 3 });
+      rewards.records.recordRunStats({
+        win: true,
+        hero,
+        time: 300,
+        cleanSweep: true,
+        noFood: true,
+      });
+    rewards.records.recordRunStats({ win: true, hero: 'qa', untouched: true, allWorkaround: true });
+    rewards.records.recordRunStats({ win: false, hero: 'qa', evolutions: 3 });
     assert(achievement.getProgress(rewards.data) >= achievement.target, achievement.id);
-    assert(rewards.claimAchievement(achievement.id), achievement.id);
-    assert(!rewards.claimAchievement(achievement.id), 'duplicate claim ' + achievement.id);
+    assert(rewards.achievements.claimAchievement(achievement.id), achievement.id);
+    assert(
+      !rewards.achievements.claimAchievement(achievement.id),
+      'duplicate claim ' + achievement.id,
+    );
     assert(rewards.data.codes >= before + achievement.reward);
   }
   console.log('PASS: active achievement rewards and duplicate prevention.');

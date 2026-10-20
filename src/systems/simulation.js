@@ -28,7 +28,7 @@ export const Simulation = {
     run,
     world,
     corpses,
-    progression,
+    wallet,
     audio,
     abilities,
     combat,
@@ -274,7 +274,7 @@ export const Simulation = {
           codeToken.y += ((p.y - codeToken.y) / Math.max(1, d)) * step;
         }
         if (dist(codeToken, p) < 20) {
-          s.earned += progression.earn(codeToken.value);
+          s.earned += wallet.earn(codeToken.value);
           codeToken.dead = true;
           if (codeToken.event) runEvents?.collectCode(s);
           s.texts.push({ x: p.x, y: p.y - 30, v: '+' + codeToken.value + ' кодов', life: 1 });

@@ -9,8 +9,8 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   }
   assert(!baClientIds.includes('vetis') && !baClientIds.includes('l3'));
   const h = await createHarness();
-  h.env.Progression.earn(120);
-  h.env.Progression.buyHero('ba');
+  h.env.Progression.wallet.earn(120);
+  h.env.Progression.shop.buyHero('ba');
   h.session.select('ba');
   h.session.commands.chooseBaClient('multon');
   h.session.start();

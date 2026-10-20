@@ -96,7 +96,8 @@ export const GameSession = {
     const combat = CombatSystem.create({
       run,
       corpses,
-      progression,
+      wallet: progression.wallet,
+      records: progression.records,
       world,
       audio,
       cosmetic,
@@ -108,11 +109,18 @@ export const GameSession = {
       run,
       world,
       damage: combat.damage,
-      progression,
+      records: progression.records,
       audio,
     });
     const spawning = EnemySpawning.create({ run, world, toast, audio });
-    const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio });
+    const runEvents = RunEvents.create({
+      run,
+      world,
+      spawning,
+      wallet: progression.wallet,
+      toast,
+      audio,
+    });
     // Saves the run journal as a JSON file; returns the file's text (tests read it).
     function exportRunLog() {
       const text = runLog.json();
@@ -177,7 +185,7 @@ export const GameSession = {
       run,
       world,
       corpses,
-      progression,
+      wallet: progression.wallet,
       audio,
       abilities,
       combat,

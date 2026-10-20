@@ -13,7 +13,7 @@ import { dropTable } from '../../data/pickups.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
-  create({ run, corpses, progression, world, audio, cosmetic, toast, settings = {} }) {
+  create({ run, corpses, wallet, records, world, audio, cosmetic, toast, settings = {} }) {
     // `tag` names the source (hero, an ability or a weapon id) for the result screen.
     function damage(e, n, dx = 0, dy = 0, source = run.state.p, tag = 'hero') {
       if (e.hp <= 0 || n <= 0) return;
@@ -75,7 +75,7 @@ export const CombatSystem = {
             s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${gain} HP`, life: 0.8 });
         }
         run.state.kills++;
-        run.state.earned += progression.kill(tag);
+        run.state.earned += wallet.kill(tag);
         const luck = run.state.stats.luck || 0;
         if (run.state.rng.random() < dropTable.code.chance + luck * dropTable.code.luck)
           run.state.codes.push({ x: e.x, y: e.y, value: dropTable.code.value });
@@ -114,17 +114,17 @@ export const CombatSystem = {
         }
         if (e.boss && run.state.endless) {
           // Production CRPTs pay codes; the run goes on.
-          run.state.earned += progression.earn(production.bossReward);
+          run.state.earned += wallet.earn(production.bossReward);
           toast(
             `${unitDefinitions[e.unit].name} повержен в продакшене! +${production.bossReward} кодов`,
           );
           audio.effect('boss');
-          progression.recordBossKill();
+          records.recordBossKill();
         } else if (e.boss) {
           run.state.bossDead = true;
           toast(unitDefinitions[e.unit].name + ' повержен! Заверши валидацию контура!');
           audio.effect('boss');
-          progression.recordBossKill();
+          records.recordBossKill();
         }
       }
     }

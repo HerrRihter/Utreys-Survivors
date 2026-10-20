@@ -39,7 +39,7 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
     };
     const P = h.env.Progression;
     for (const map of Object.keys(mapDefinitions))
-      P.recordRunStats({ win: true, hero: 'utrace', map, time: 600 });
+      P.records.recordRunStats({ win: true, hero: 'utrace', map, time: 600 });
     P.replace({ ...P.data, unlocked: [...P.data.unlocked, v1.hero] });
 
     // The menu offers the old save; reading it converts it once to the current version.

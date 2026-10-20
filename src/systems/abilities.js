@@ -6,7 +6,7 @@ import { abilityKinds } from './abilities/index.js';
 // Each ability's `kind` (src/systems/abilities/) says what it does; rendering/abilities.js
 // draws them.
 export const AbilitySystem = {
-  create({ run, world, damage, progression, audio }) {
+  create({ run, world, damage, records, audio }) {
     const context = {
       run,
       world,
@@ -31,7 +31,7 @@ export const AbilitySystem = {
       a.direction = { ...p.facing };
       a.hit = new Set();
       kind.cast?.(context, s, a);
-      progression.recordAbility();
+      records.recordAbility();
       audio.effect('magic');
       return true;
     }

@@ -41,7 +41,7 @@ const SECONDS = 180,
   const P = h.env.Progression;
   const heroes = Object.keys(heroDefinitions),
     maps = Object.keys(mapDefinitions);
-  for (const map of maps) P.recordRunStats({ win: true, hero: 'utrace', map, time: 600 });
+  for (const map of maps) P.records.recordRunStats({ win: true, hero: 'utrace', map, time: 600 });
   // `P.data` is a copy: heroes are opened through a replaced save.
   P.replace({ ...P.data, unlocked: heroes });
 

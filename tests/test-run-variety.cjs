@@ -84,7 +84,7 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   game.selectMap('serverRoom');
   game.start();
   assert.equal(game.state.map, 'empty', 'locked map falls back');
-  P.recordRunStats({ win: true, hero: 'utrace', time: 600 });
+  P.records.recordRunStats({ win: true, hero: 'utrace', time: 600 });
   game.selectMap('serverRoom');
   game.start();
   s = game.state;
