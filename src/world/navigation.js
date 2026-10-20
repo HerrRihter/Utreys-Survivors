@@ -68,14 +68,9 @@ export const ArenaNavigation = {
       queries.set(r, { x: p.x, y: p.y, flow });
       return flow;
     }
-    function computeField(p, r) {
-      const { free, edges } = grid(r),
-        tx = Math.floor(p.x / cell),
-        ty = Math.floor(p.y / cell),
-        target = tx + ty * cols;
-      const cached = maps.get(r);
-      if (cached && cached.target === target && clear(center(cached.seed), p, 2)) return cached;
-      // A hero can stand in a gap that siege units cannot enter: route to the nearest reachable approach.
+    // A hero can stand in a gap that siege units cannot enter: the flow starts at the nearest
+    // free cell that sees `from`.
+    function nearestSeed(free, tx, ty, from) {
       let seed = -1,
         best = Infinity;
       for (let y = Math.max(0, ty - 7); y <= Math.min(cols - 1, ty + 7); y++)
@@ -83,17 +78,36 @@ export const ArenaNavigation = {
           const k = x + y * cols;
           if (!free[k]) continue;
           const c = center(k),
-            d = Math.hypot(c.x - p.x, c.y - p.y);
-          if (d < best && clear(c, p, 2)) {
+            d = Math.hypot(c.x - from.x, c.y - from.y);
+          if (d < best && clear(c, from, 2)) {
             best = d;
             seed = k;
           }
         }
+      return seed;
+    }
+    // The field toward the hero's cell depends on that cell alone (on the hero's exact position
+    // only where the cell's centre is walled in), never on earlier calls: a resumed run with
+    // fresh caches routes enemies exactly as the running one did.
+    function computeField(p, r) {
+      const { free, edges } = grid(r),
+        tx = Math.floor(p.x / cell),
+        ty = Math.floor(p.y / cell),
+        target = tx + ty * cols;
+      const cached = maps.get(r);
+      if (cached && cached.target === target && cached.byCell) return cached;
+      let seed = nearestSeed(free, tx, ty, center(target)),
+        byCell = true;
+      if (seed < 0) {
+        seed = nearestSeed(free, tx, ty, p);
+        byCell = false;
+      }
       if (seed < 0) return null;
       const old = maps.get(r);
       if (old && old.seed === seed) {
-        old.target = target;
-        return old;
+        const out = { seed, costs: old.costs, target, byCell };
+        maps.set(r, out);
+        return out;
       }
       const costs = new Int16Array(cols * cols).fill(-1);
       let n = 1;
@@ -132,7 +146,7 @@ export const ArenaNavigation = {
           }
         }
       }
-      const out = { seed, costs, target };
+      const out = { seed, costs, target, byCell };
       maps.set(r, out);
       return out;
     }
