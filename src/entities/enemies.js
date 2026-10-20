@@ -166,20 +166,6 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     g.restore();
   }
 
-  function projectile(g, b) {
-    if (b.wait > 0) return;
-    g.save();
-    g.translate(b.x, b.y);
-    g.fillStyle = units[b.kind]?.color || '#ff5252';
-    g.beginPath();
-    g.arc(0, 0, 6, 0, Math.PI * 2);
-    g.fill();
-    g.strokeStyle = '#ffeb3b';
-    g.lineWidth = 2;
-    g.stroke();
-    g.restore();
-  }
-
   // Body art drawn around the origin (feet at 0,0). Everything here depends only on the
   // sprite key (unit, facing, hit flash, LED phase), so it is cached per device ratio below.
   function paintBody(g, e, u) {
@@ -280,7 +266,7 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     drawLabel(g, u, e.x, e.y - labelOffset, ratio || 2);
   }
 
-  return { units, mitigation, telegraph, draw, projectile, hazard };
+  return { units, mitigation, telegraph, draw, hazard };
 }
 
 // Shared instance for React previews (bestiary, arena view); the game session makes its own.

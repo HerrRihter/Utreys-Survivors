@@ -205,7 +205,6 @@ export const GameSession = {
       run,
       world,
       corpses,
-      heroes,
       enemies,
       abilities,
       weapons,

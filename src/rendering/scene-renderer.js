@@ -1,11 +1,12 @@
 import { drawNodes } from './node-objectives.js';
 import { drawEnemySpeech } from './enemy-speech.js';
-import { neonStroke } from './neon.js';
 import { orderActors } from './depth-order.js';
 import { cameraOrigin } from './camera.js';
 import { drawEdgeArrows } from './edge-arrows.js';
 import { drawEvent } from './events.js';
-import { drawPickup, drawEliteAura } from './pickups.js';
+import { drawPickup, drawEliteAura, drawGem, drawCodeToken } from './pickups.js';
+import { drawFx } from './fx.js';
+import { drawShot, drawEnemyShot } from './projectiles.js';
 
 // The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
 const noScenery = [];
@@ -18,7 +19,6 @@ export const SceneRenderer = {
     run,
     world,
     corpses,
-    heroes,
     enemies,
     abilities,
     weapons,
@@ -78,21 +78,11 @@ export const SceneRenderer = {
         corpses.draw(ctx, s.corpses, cx, cy, view.W, view.H);
         for (const h of s.codes) {
           if (h.x < minX || h.x > maxX || h.y < minY || h.y > maxY) continue;
-          heroes.codeToken(ctx, h.x, h.y);
+          drawCodeToken(ctx, h.x, h.y);
         }
         for (const g of s.gems) {
           if (g.x < minX || g.x > maxX || g.y < minY || g.y > maxY) continue;
-          ctx.fillStyle = '#142d25';
-          ctx.fillRect(g.x - 4, g.y, 9, 5);
-          ctx.fillStyle = g.v > 3 ? '#d4e890' : '#8bd3ac';
-          ctx.beginPath();
-          ctx.moveTo(g.x, g.y - 6);
-          ctx.lineTo(g.x + 4, g.y - 1);
-          ctx.lineTo(g.x, g.y + 4);
-          ctx.lineTo(g.x - 4, g.y - 1);
-          ctx.fill();
-          ctx.fillStyle = '#d2f6c5';
-          ctx.fillRect(g.x - 1, g.y - 4, 2, 3);
+          drawGem(ctx, g);
         }
         for (const a of s.pickups) {
           if (a.x < minX || a.x > maxX || a.y < minY || a.y > maxY) continue;
@@ -169,106 +159,10 @@ export const SceneRenderer = {
             ctx.fillRect(e.x - 12, e.y - (unitR + 21), (24 * Math.max(0, e.hp)) / e.max, 2);
           }
         }
-        for (const b of s.enemyShots) enemies.projectile(ctx, b);
-        for (const b of s.shots) {
-          const g = ctx;
-          g.save();
-          g.translate(b.x, b.y);
-          g.rotate(Math.atan2(b.vy, b.vx));
-          g.fillStyle = b.color || '#009dbb';
-          g.fillRect(-10, -6, 20, 12);
-          g.beginPath();
-          g.rect(-10, -6, 20, 12);
-          neonStroke(g, b.color || '#00e5ff', 1, 5);
-          g.fillStyle = '#ffffff';
-          for (let i = 0; i < 4; i++) g.fillRect(-7 + i * 4, -4, 2, 8);
-          g.restore();
-        }
+        for (const b of s.enemyShots) drawEnemyShot(ctx, b);
+        for (const b of s.shots) drawShot(ctx, b);
         weapons?.draw(ctx, bounds, 'air');
-        for (const f of s.fx) {
-          ctx.save();
-          ctx.globalAlpha = f.life / f.max;
-          if (f.kind === 'link') {
-            ctx.strokeStyle = f.color;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(f.x, f.y);
-            ctx.lineTo(f.toX, f.toY);
-            neonStroke(ctx, f.color, 4, 10);
-            const g = ctx;
-            const progress = 1 - f.life / f.max;
-            g.fillStyle = '#d1fff1';
-            for (let i = 0; i < 3; i++) {
-              const t = (progress * 2 + i / 3) % 1;
-              const x = f.x + (f.toX - f.x) * t;
-              const y = f.y + (f.toY - f.y) * t;
-              g.fillRect(x - 3, y - 3, 6, 6);
-            }
-            g.beginPath();
-            g.arc(f.toX, f.toY, 8, 0, Math.PI * 2);
-            neonStroke(g, f.color, 2, 5);
-          } else if (f.kind === 'scan' || f.kind === 'scanTarget') {
-            const g = ctx;
-            const r = f.r;
-            g.beginPath();
-            g.rect(f.x - r, f.y - r, r * 2, r * 2);
-            neonStroke(g, f.color, 2, 6);
-            if (f.kind === 'scan') {
-              const y = f.y - r + 2 * r * (1 - f.life / f.max);
-              g.fillStyle = '#79edbd12';
-              g.fillRect(f.x - r, f.y - r, r * 2, r * 2);
-              g.beginPath();
-              g.moveTo(f.x - r, y);
-              g.lineTo(f.x + r, y);
-              neonStroke(g, f.color, 3, 5);
-            } else {
-              g.beginPath();
-              g.moveTo(f.x - 6, f.y);
-              g.lineTo(f.x + 6, f.y);
-              g.moveTo(f.x, f.y - 6);
-              g.lineTo(f.x, f.y + 6);
-              neonStroke(g, f.color, 1, 3);
-            }
-          } else if (f.kind === 'line') {
-            ctx.strokeStyle = f.color;
-            ctx.lineWidth = f.width * (f.life / f.max);
-            ctx.beginPath();
-            ctx.moveTo(f.x, f.y);
-            ctx.lineTo(f.toX, f.toY);
-            neonStroke(ctx, f.color, f.width * 0.5 * (f.life / f.max), 6);
-          } else if (f.kind === 'spark') {
-            ctx.fillStyle = f.color || '#00e5ff';
-            ctx.fillRect(f.x, f.y, 3, 3);
-          } else {
-            ctx.strokeStyle =
-              f.color ||
-              (f.kind === 'slash' ? '#00e5ff' : f.kind === 'ring' ? '#64ffda' : '#ff5252');
-            ctx.lineWidth = f.kind === 'slash' ? 7 : 3;
-            ctx.beginPath();
-            const r = f.r * (1 - (f.life / f.max) * 0.3);
-            ctx.arc(
-              f.x,
-              f.y,
-              r,
-              f.kind === 'slash' ? f.angle - (f.half || Math.PI / 4) : 0,
-              f.kind === 'slash' ? f.angle + (f.half || Math.PI / 4) : Math.PI * 2,
-            );
-            neonStroke(ctx, ctx.strokeStyle, f.kind === 'slash' ? 3 : 1.5, 6);
-            if (f.kind === 'slash') {
-              ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.arc(
-                f.x,
-                f.y,
-                r - 12,
-                f.angle - (f.half || Math.PI / 4),
-                f.angle + (f.half || Math.PI / 4),
-              );
-              ctx.stroke();
-            }
-          }
-          ctx.restore();
-        }
+        drawFx(ctx, s.fx);
         ctx.font = 'bold 12px monospace';
         ctx.textAlign = 'center';
         for (const t of s.texts) {

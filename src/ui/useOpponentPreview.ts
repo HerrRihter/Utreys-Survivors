@@ -7,6 +7,7 @@ import { unitDefinitions } from '../../data/enemies/units.js';
 import { Enemies } from '../entities/enemies.js';
 import { createArenas } from '../world/arenas.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
+import { drawEnemyShot } from '../rendering/projectiles.js';
 import { ALL_UNIT_KEYS } from './opponent-details';
 
 export function useOpponentPreview({
@@ -147,7 +148,7 @@ export function useOpponentPreview({
           } else if ('attack' in u && u.attack === 'projectile') {
             const prog = (phase * 1.8) % 1;
             const px = cx + (reverse ? -1 : 1) * (prog * 115);
-            Enemies.projectile(g, { x: px, y: cy - 10, kind: unit });
+            drawEnemyShot(g, { x: px, y: cy - 10, kind: unit });
           }
         }
 

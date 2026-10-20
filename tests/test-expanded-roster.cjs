@@ -3,6 +3,7 @@ const { unitDefinitions } = require('../data/enemies/units.js');
 const { waveSchedules } = require('../data/enemies/waves.js');
 const { validateUnits } = require('../tools/check-game-contracts.cjs');
 const { createHarness } = require('./helpers/game-harness.cjs');
+const { drawEnemyShot } = require('../src/rendering/projectiles.js');
 
 (async () => {
   const added = [
@@ -56,7 +57,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
     h.env.Enemies.draw(h.context, e);
     e.action = { aim: p, hit: false };
     h.env.Enemies.telegraph(h.context, e);
-    h.env.Enemies.projectile(h.context, { x: 0, y: 0, kind: id });
+    drawEnemyShot(h.context, { x: 0, y: 0, kind: id });
     if (u.frontDamageMultiplier) {
       assert.equal(h.env.Enemies.mitigation(e, { x: e.x + 20, y: e.y }), u.frontDamageMultiplier);
       assert.equal(h.env.Enemies.mitigation(e, { x: e.x - 20, y: e.y }), 1);

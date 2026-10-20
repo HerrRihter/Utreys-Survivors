@@ -1,4 +1,4 @@
-// Map pickups and the elite aura. `t` is the run clock for pulsing.
+// Map pickups, gems, dropped codes and the elite aura. `t` is the run clock for pulsing.
 const TAU = Math.PI * 2;
 
 export function drawPickup(g, a, t = 0) {
@@ -64,5 +64,39 @@ export function drawEliteAura(g, e, t = 0) {
   g.beginPath();
   g.ellipse(e.x, e.y, e.r + 10, (e.r + 10) * 0.45, 0, 0, TAU);
   g.stroke();
+  g.restore();
+}
+
+// An experience gem; bigger ones (`v > 3`) are pale yellow.
+export function drawGem(g, gem) {
+  g.fillStyle = '#142d25';
+  g.fillRect(gem.x - 4, gem.y, 9, 5);
+  g.fillStyle = gem.v > 3 ? '#d4e890' : '#8bd3ac';
+  g.beginPath();
+  g.moveTo(gem.x, gem.y - 6);
+  g.lineTo(gem.x + 4, gem.y - 1);
+  g.lineTo(gem.x, gem.y + 4);
+  g.lineTo(gem.x - 4, gem.y - 1);
+  g.fill();
+  g.fillStyle = '#d2f6c5';
+  g.fillRect(gem.x - 1, gem.y - 4, 2, 3);
+}
+
+// A dropped code: a DataMatrix marker.
+export function drawCodeToken(g, x, y, scale = 1) {
+  g.save();
+  g.translate(x, y);
+  g.scale(scale, scale);
+  g.fillStyle = '#00e5ff';
+  g.fillRect(-10, -10, 20, 20);
+  g.fillStyle = '#0a192f';
+  g.fillRect(-8, -8, 16, 16);
+  // DataMatrix mini pattern
+  g.fillStyle = '#00e5ff';
+  g.fillRect(-6, -6, 4, 4);
+  g.fillRect(2, -6, 4, 4);
+  g.fillRect(-6, 2, 4, 4);
+  g.fillRect(0, 0, 3, 3);
+  g.fillRect(3, 3, 3, 3);
   g.restore();
 }
