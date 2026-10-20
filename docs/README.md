@@ -25,4 +25,4 @@
 
 Исторические планы и отчёты (docs/archive: IMPLEMENTATION-PLAN, ACTIVE-ABILITIES-PLAN, PROJECT-STRUCTURE-AUDIT, ART-SOURCES, ADDING-CHARACTERS, CHARACTER-FRAMES, NEW-MAPS, отчёты COMBAT/MICROFREEZE/FRAME/DEPTH/PERFORMANCE, дампы бенчмарков) убраны из дерева на этапе 7 рефакторинга и остаются в истории git (`git log --diff-filter=D -- docs/archive` находит коммит удаления). Это история решений, не инструкции для текущего продукта.
 
-Исходные PNG, промпты и лицензии сохраняются в assets. Старые профили не являются baseline производительности текущей React/Vite-версии. Новые измерения должны указывать commit, сценарий, браузер, устройство и окружение.
+Лицензии звуков лежат рядом с ними в assets/runtime/audio. Старые профили не являются baseline производительности текущей React/Vite-версии. Новые измерения должны указывать commit, сценарий, браузер, устройство и окружение.
