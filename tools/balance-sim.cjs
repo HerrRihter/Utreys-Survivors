@@ -3,11 +3,13 @@
 // only dodges, collects experience and picks cards by a fixed priority, so compare runs
 // against each other, not against human play. Each run starts from its seed (1000, 8919, ...),
 // so the same options repeat the same runs exactly.
-//   node --experimental-vm-modules tools/balance-sim.cjs [--load N] [--seeds N] [--time S]
+//   node tools/balance-sim.cjs [--load N] [--seeds N] [--time S]
 //        [--boss S] [--hero id] [--map id|all] [--json file] [--passive]
 // `--boss S` resolves all nodes at S seconds so the CRPT arrives and its fight is measured.
 const fs = require('node:fs');
-const { createHarness } = require('../tests/helpers/game-harness.cjs');
+// The test harness is an ES module: loaded on first use.
+const createHarness = async (options) =>
+  (await import('../tests/helpers/game-harness.js')).createHarness(options);
 const { heroDefinitions } = require('../data/characters/heroes.js');
 const { nodeGuardian } = require('../src/systems/node-objectives.js');
 const { mapDefinitions } = require('../data/maps/maps.js');

@@ -3,7 +3,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { performance } = require('node:perf_hooks');
 const { execFileSync } = require('node:child_process');
-const { createHarness } = require('../tests/helpers/game-harness.cjs');
+// The test harness is an ES module: loaded on first use.
+const createHarness = async (options) =>
+  (await import('../tests/helpers/game-harness.js')).createHarness(options);
 
 const stressUnits = ['l3', 'pepsi', 'inbev', 'mars', 'baltika', 'multon', 'loreal', 'ferrero'];
 

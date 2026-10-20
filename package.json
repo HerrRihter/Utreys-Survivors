@@ -16,7 +16,7 @@
     "check:structure": "node tools/check-structure.cjs",
     "check:contracts": "node tools/check-game-contracts.cjs",
     "check": "npm run lint && npm run format:check && npm test && npm run build",
-    "benchmark": "node --experimental-vm-modules tools/benchmark-current.cjs",
+    "benchmark": "node tools/benchmark-current.cjs",
     "benchmark:render": "node tools/benchmark-render.cjs",
     "stats": "node tools/run-stats.cjs",
     "admin:reset-password": "node tools/reset-password.cjs",
