@@ -1,63 +1,44 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { heroDefinitions } = require('../data/characters/heroes.js');
 const { mapDefinitions } = require('../data/maps/maps.js');
 const { abilityDefinitions } = require('../data/characters/abilities.js');
+const { runFields, persistentKeys, reducedKeys } = require('../src/systems/run-model.js');
+const { RUN_SNAPSHOT_KEY } = require('../src/systems/run-snapshot.js');
 
-// Every field of `run.state` is either saved by snapshotRun or listed here as runtime-only.
-// A new field must be put in one of the two lists on purpose, so a save never drops it silently.
-const RUNTIME_KEYS = [
-  // Rebuilt by start() from the map, seed and hero.
-  'eventPlan',
-  'attack',
-  'heroWeaponName',
-  'abilities',
-  'nodes',
-  'p',
-  'weapons',
-  // Live world, dropped or saved in reduced form.
-  'enemies',
-  'corpses',
-  'enemyShots',
-  'hazards',
-  'shots',
-  'codes',
-  'gems',
-  'fx',
-  'texts',
-  'pickups',
-  'bossDead',
-  'shake',
-  // Saved at the snapshot's top level, not inside `state`.
-  'map',
-  // Live weapon effects, and the caches of the running simulation.
-  'wfx',
-  'runtime',
-  // Enemy ids continue from the saved enemies' ids.
-  'nextEnemyId',
-  // Not saved today: a resumed run starts it over.
-  'eventsDone',
-  // Ending bookkeeping: a run that has ended is never saved.
-  'resultRecorded',
-  'recordsImproved',
-];
+// Every field of `run.state` comes from the run model's schema (runFields): copied into the
+// save, saved in a reduced form or rebuilt. Only `runtime` holds the simulation's caches.
+// A field outside the schema fails here, so a save never drops it silently.
+const RUNTIME_KEYS = ['runtime'];
 
-// The plain keys snapshotRun copies, read from its source so the test follows the save format.
-function snapshotKeys() {
-  const source = fs.readFileSync(path.join(__dirname, '../src/systems/run-snapshot.js'), 'utf8');
-  const list = source.match(/\.\.\.pick\(s, \[([\s\S]*?)\]\)/);
-  assert(list, 'snapshotRun key list not found');
-  return [...list[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-}
+// What a resumed run must have as saved: every copied field, the hero's health, owned items,
+// nodes with their guardians and the enemies with their links.
+const shape = (s) =>
+  JSON.parse(
+    JSON.stringify({
+      ...Object.fromEntries(persistentKeys.map((key) => [key, s[key]])),
+      hp: s.p.hp,
+      max: s.p.max,
+      weapons: s.weapons.map((w) => [w.id, w.level, w.evolved]),
+      abilities: s.abilities.map((a) => [a.id, a.cd]),
+      nodes: s.nodes.map((n) => [n.id, n.status, n.progress, n.guardianId]),
+      guardians: s.enemies.filter((e) => e.nodeId).map((e) => [e.id, e.nodeId, e.hp]),
+      enemies: s.enemies
+        .filter((e) => e.hp > 0 && !e.nodeId)
+        .map((e) => [e.id, e.unit, e.hp, e.summonerId]),
+    }),
+  );
 
 const SECONDS = 180,
   DT = 1 / 60;
 
 (async () => {
-  const saved = new Set(snapshotKeys());
-  const known = new Set([...saved, ...RUNTIME_KEYS]);
+  const known = new Set(Object.keys(runFields));
+  for (const key of RUNTIME_KEYS) assert.equal(runFields[key], 'rebuild', key + ' is never saved');
+  assert.equal(
+    new Set([...persistentKeys, ...reducedKeys]).size,
+    persistentKeys.length + reducedKeys.length,
+  );
   const h = await createHarness({ createSession: false });
   const store = new Map();
   h.env.localStorage = {
@@ -106,47 +87,22 @@ const SECONDS = 180,
       // Round trip: save on pause, back to the menu, continue the saved run.
       assert.equal(game.mode, 'play', label + ' still running');
       game.pause();
-      const snapshot = store.get('utreys-run-v1');
+      const snapshot = store.get(RUN_SNAPSHOT_KEY);
       assert(snapshot, label + ' pause saves the run');
-      const expected = JSON.parse(
-        JSON.stringify({
-          t: s.t,
-          kills: s.kills,
-          level: s.level,
-          xp: s.xp,
-          stats: s.stats,
-          upgradeRanks: s.upgradeRanks,
-          weapons: s.weapons.map((w) => [w.id, w.level, w.evolved]),
-          hp: s.p.hp,
-          max: s.p.max,
-          nodes: s.nodes.map((n) => [n.id, n.status, n.progress]),
-        }),
+      const saved = JSON.parse(snapshot).state;
+      assert.deepEqual(
+        Object.keys(saved).sort(),
+        [...persistentKeys, ...reducedKeys].sort(),
+        label + ' the save holds the schema fields',
       );
+      const expected = shape(s);
       game.menu();
       assert.equal(game.state, null);
-      store.set('utreys-run-v1', snapshot);
+      store.set(RUN_SNAPSHOT_KEY, snapshot);
       game.dispose();
       game = h.createSession();
       assert(game.resume(), label + ' resumes');
-      const r = game.state;
-      assert.deepEqual(
-        JSON.parse(
-          JSON.stringify({
-            t: r.t,
-            kills: r.kills,
-            level: r.level,
-            xp: r.xp,
-            stats: r.stats,
-            upgradeRanks: r.upgradeRanks,
-            weapons: r.weapons.map((w) => [w.id, w.level, w.evolved]),
-            hp: r.p.hp,
-            max: r.p.max,
-            nodes: r.nodes.map((n) => [n.id, n.status, n.progress]),
-          }),
-        ),
-        expected,
-        label + ' round trip keeps the saved fields',
-      );
+      assert.deepEqual(shape(game.state), expected, label + ' round trip keeps the saved fields');
       game.menu();
       game.dispose();
     }
@@ -154,12 +110,12 @@ const SECONDS = 180,
   assert.equal(
     unknown.size,
     0,
-    'run.state fields neither saved nor listed in RUNTIME_KEYS: ' +
+    'run.state fields missing from runFields in src/systems/run-model.js: ' +
       [...unknown].map(([key, where]) => key + ' (' + where[0] + ')').join(', '),
   );
-  // Stale entries make the list lie; every runtime key must still exist somewhere.
-  const unused = RUNTIME_KEYS.filter((key) => !seen.has(key));
-  assert.deepEqual(unused, [], 'RUNTIME_KEYS lists fields no run has');
+  // Stale entries make the schema lie; every field must exist in a run.
+  const unused = [...known].filter((key) => !seen.has(key));
+  assert.deepEqual(unused, [], 'runFields lists fields no run has');
   console.log(
     'PASS: run.state shape for ' + heroes.length * maps.length + ' hero/map runs, save round trip',
   );

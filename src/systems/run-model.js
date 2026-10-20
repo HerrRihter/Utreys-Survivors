@@ -99,6 +99,89 @@ export function createRunRuntime() {
   };
 }
 
+// How each field of the run is saved (src/systems/run-snapshot.js builds saves from this):
+//   save    copied into the snapshot as it is (plain data)
+//   reduce  saved in a reduced form: the hero's position and health, owned items, node
+//           status, living enemies, drops
+//   rebuild not saved: rebuilt by start() from the hero, map and seed, live world that a
+//           resumed run starts without, ending bookkeeping, and the runtime caches
+/** @type {Record<keyof RunModel, 'save' | 'reduce' | 'rebuild'>} */
+export const runFields = {
+  t: 'save',
+  step: 'save',
+  runId: 'save',
+  map: 'rebuild', // kept at the snapshot's top level
+  seed: 'save',
+  load: 'save',
+  healFactor: 'save',
+  eventPlan: 'rebuild',
+  eventIndex: 'save',
+  event: 'save',
+  eventsDone: 'save',
+  spawn: 'save',
+  waveNext: 'save',
+  bossSpawned: 'save',
+  eliteNext: 'save',
+  kills: 'save',
+  level: 'save',
+  xp: 'save',
+  need: 'save',
+  earned: 'save',
+  attack: 'rebuild',
+  p: 'reduce',
+  stats: 'save',
+  heroWeaponName: 'rebuild',
+  abilities: 'reduce',
+  weapons: 'reduce',
+  evoTokens: 'save',
+  evolutions: 'save',
+  upgradeRanks: 'save',
+  banned: 'save',
+  rerolls: 'save',
+  skips: 'save',
+  banishes: 'save',
+  offers: 'save',
+  offersLogged: 'save',
+  baSpecialization: 'save',
+  damageBy: 'save',
+  lastHitBy: 'save',
+  firstHurtAt: 'save',
+  foodTaken: 'save',
+  doneBefore: 'save',
+  enemies: 'reduce',
+  nextEnemyId: 'save',
+  nodes: 'reduce',
+  gems: 'reduce',
+  codes: 'reduce',
+  pickups: 'reduce',
+  corpses: 'rebuild',
+  enemyShots: 'rebuild',
+  hazards: 'rebuild',
+  shots: 'rebuild',
+  wfx: 'rebuild',
+  fx: 'rebuild',
+  texts: 'rebuild',
+  bossDead: 'rebuild',
+  shake: 'rebuild',
+  endless: 'save',
+  endlessStart: 'save',
+  endlessKills: 'save',
+  productionBossNext: 'save',
+  productionBosses: 'save',
+  resultRecorded: 'rebuild', // a run that has ended is never saved
+  recordedTime: 'save',
+  statsRecorded: 'save',
+  statsCounted: 'save',
+  earnedPaid: 'save',
+  recordsImproved: 'rebuild',
+  runtime: 'rebuild',
+};
+const fieldsOf = (/** @type {string} */ kind) =>
+  Object.keys(runFields).filter((key) => runFields[/** @type {keyof RunModel} */ (key)] === kind);
+// Fields a snapshot copies as they are, and fields it saves in a reduced form.
+export const persistentKeys = fieldsOf('save');
+export const reducedKeys = fieldsOf('reduce');
+
 /**
  * A new run with every field in place.
  * @param {{ hero: string, heroDef: { hp: number, speed: number, weapon: string },

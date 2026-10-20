@@ -84,7 +84,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   guardian.hp = 123;
   s.nodes[1].status = 'workaround';
   game.pause();
-  assert(store.has('utreys-run-v1'), 'pausing saves the run');
+  assert(store.has('utreys-run-v2'), 'pausing saves the run');
   const enemies = s.enemies.filter((e) => !e.nodeId).length;
   game.dispose();
 
@@ -106,7 +106,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   game.pause();
   game.update(0.05);
   game.finish(false);
-  assert(!store.has('utreys-run-v1'), 'a finished run is not offered again');
+  assert(!store.has('utreys-run-v2'), 'a finished run is not offered again');
   assert.equal(game.views.menu().resume, null);
 
   // Tips: shown once, only with hints on.
