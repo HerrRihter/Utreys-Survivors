@@ -7,15 +7,13 @@ import type { Account, Session } from '../app/types';
 import type { CloudProgress } from '../app/useGameSession';
 import { CloudContext } from './cloud-context';
 import { GameHud } from './GameHud';
-import {
-  Achievements,
-  Encyclopedia,
-  HeroSelect,
-  MainMenu,
-  Settings,
-  Shop,
-  SoundButton,
-} from './GameMenus';
+import { Achievements } from './menus/Achievements';
+import { Encyclopedia } from './menus/Encyclopedia';
+import { HeroSelect } from './menus/HeroSelect';
+import { MainMenu } from './menus/MainMenu';
+import { Settings } from './menus/Settings';
+import { Shop } from './menus/Shop';
+import { SoundButton } from './menus/SoundButton';
 import { createPortal } from 'react-dom';
 import { EndScreen, LevelUpScreen, PauseScreen } from './GameRunScreens';
 import { SessionContext, useUiVersion } from './session';
