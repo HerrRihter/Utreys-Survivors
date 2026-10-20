@@ -3,7 +3,9 @@
 В каталоге 15 обычных противников, пять багов-минибоссов на узлах и босс ЦРПТ.
 Характеристики и механики лежат в `data/enemies/units.js`, состав волн — в `waves.js`,
 позиции и привязки компонентов — в `nodes.js`. Поведение по полям юнита собрано
-в `src/systems/enemy-behaviors.js`, удары — в `src/systems/enemy-attacks.js`.
+в `src/systems/enemy-behaviors.js`, удары — в `src/systems/enemy-attacks.js`. Тексты бестиария —
+`data/enemies/bestiary.js` (числа берутся из `units.js`; экран читает их через
+`src/ui/opponent-details.ts`).
 
 ## Роли
 

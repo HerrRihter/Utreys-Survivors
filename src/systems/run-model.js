@@ -32,7 +32,7 @@ import { loadModifiers } from '../../data/difficulty.js';
  *   id: number, summonerId: number | null, nodeId: string | null }} EnemyCore
  * Behaviours keep their own timers on the enemy (summonCd, wcd, speech...).
  * @typedef {EnemyCore & Record<string, unknown>} Enemy
- * @typedef {{ id: string, kind?: string, bug: string, x: number, y: number, need: number,
+ * @typedef {{ id: string, label: string, kind?: string, bug: string, x: number, y: number, need: number,
  *   status: string, progress: number,
  *   guardianId: number | null }} RunNode
  * @typedef {{ id: string, level: number, cd: number, evolved: boolean, phase: number,

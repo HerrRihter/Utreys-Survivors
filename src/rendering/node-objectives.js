@@ -15,7 +15,7 @@ function drawDesk(g, node, guardian) {
   g.fillStyle = g.strokeStyle;
   g.font = 'bold 12px monospace';
   g.textAlign = 'center';
-  g.fillText(node.id, 0, -118);
+  g.fillText(node.label, 0, -118);
   g.font = '11px monospace';
   g.fillText(open ? 'Снеси, чтобы закрыть бэклог' : 'Бэклог закрыт', 0, 78);
   if (open && guardian) {
@@ -50,7 +50,7 @@ export function drawNodes(g, nodes, enemies = []) {
     g.fillStyle = g.strokeStyle;
     g.font = 'bold 12px monospace';
     g.textAlign = 'center';
-    g.fillText(node.id, 0, -90);
+    g.fillText(node.label, 0, -90);
     g.font = '11px monospace';
     g.fillText(
       guarded

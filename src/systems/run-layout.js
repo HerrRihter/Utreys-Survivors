@@ -30,7 +30,8 @@ export function layoutNodes(mapId, seed) {
   return nodeDefinitions.map((n, i) => ({ ...n, ...placed[i], bug: bugs[i] }));
 }
 
-function layoutDesks({ unit, count }, zones, rng) {
+// Desks are `desk-1`, `desk-2`... and shown as the objective's label with their number.
+function layoutDesks({ unit, count, label }, zones, rng) {
   const placed = [];
   for (const [x, y, w, h] of zones) {
     if (placed.length === count) break;
@@ -42,7 +43,13 @@ function layoutDesks({ unit, count }, zones, rng) {
       }
     }
   }
-  return placed.map((p, i) => ({ id: 'Сервисдеск ' + (i + 1), kind: 'desk', bug: unit, ...p }));
+  return placed.map((p, i) => ({
+    id: 'desk-' + (i + 1),
+    label: label + ' ' + (i + 1),
+    kind: 'desk',
+    bug: unit,
+    ...p,
+  }));
 }
 
 // Event order for one seed: every type once, then repeats, at the schedule's times.

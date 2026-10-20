@@ -25,6 +25,23 @@ async function main() {
   // Four weapons are open from the start; the rest come from achievements.
   assert.equal(U.pool('utrace', state()).filter((u) => u.kind === 'weapon').length, 4);
   P.weaponUnlocked = () => true;
+  // Card texts are filled in from data/upgrades.js templates.
+  {
+    const s = state();
+    s.weapons.push({ id: 'mine', level: 5, evolved: false });
+    s.upgradeRanks.might = 2;
+    const cards = U.pool('utrace', s);
+    const byId = (id) => cards.find((c) => c.id === id);
+    assert.equal(byId('heroWeapon').detail, 'Ур. 1 → 2');
+    assert.equal(byId('heroWeapon').group, 'Оружие героя');
+    assert.equal(byId('w_mine').detail, 'Ур. 5 → 6');
+    assert.equal(byId('w_mine').hint, 'Эволюция: Минное поле агрегации (+ Второе дыхание)');
+    assert.equal(byId('w_orbit').detail, 'Новое');
+    assert.equal(byId('might').detail, 'Ранг 2 → 3 из 5');
+    assert.equal(byId('ability_overclock').detail, 'Ранг 0 → 1 из 3');
+    s.upgradeRanks.heroWeapon = 4;
+    assert.match(U.pool('utrace', s)[0].desc, /^Эволюция: Двойная трассировка\. /);
+  }
   for (const hero of Object.keys(U.heroes)) {
     const s = state();
     assert.equal(U.pool(hero, s).length, 1 + 8 + 8 + 2, 'hero attack, weapons, passives, Q/E');

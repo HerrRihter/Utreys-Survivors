@@ -1,10 +1,17 @@
 import { nodeGuardian } from './queries/nodes.js';
-import { nodeDefinitions, workaroundSeconds, workaroundRadius } from '../../data/enemies/nodes.js';
+import {
+  nodeDefinitions,
+  nodeToasts,
+  workaroundSeconds,
+  workaroundRadius,
+} from '../../data/enemies/nodes.js';
 
 // `seconds` is the workaround time on this run's load level; `layout` gives positions and bugs.
+// A node is shown by its `label`; components keep their project identifiers as labels.
 export function createNodeState(seconds = workaroundSeconds, layout = nodeDefinitions) {
   return layout.map((node) => ({
     ...node,
+    label: node.label ?? node.id,
     need: seconds,
     status: 'guarded',
     progress: 0,
@@ -50,7 +57,7 @@ export function updateNodes(context, dt) {
     const guardian = nodeGuardian(s, node);
     if (!guardian || guardian.hp <= 0) {
       node.status = 'destroyed';
-      context.toast(node.id + (node.kind === 'desk' ? ': закрыт' : ': баг уничтожен'));
+      context.toast(node.label + (node.kind === 'desk' ? nodeToasts.closed : nodeToasts.destroyed));
       continue;
     }
     // A desk has no workaround: it must be destroyed.
@@ -63,7 +70,7 @@ export function updateNodes(context, dt) {
       node.status = 'workaround';
       // Bypassing a bug grants no kill, XP, boss reward or corpse.
       s.enemies = s.enemies.filter((enemy) => enemy !== guardian);
-      context.toast(node.id + ': воркэраунд найден');
+      context.toast(node.label + nodeToasts.workaround);
     }
   }
 }

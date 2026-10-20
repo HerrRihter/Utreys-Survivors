@@ -64,7 +64,8 @@ export const mapDefinitions = {
       'Три сервисдеска выпускают Пепси, и чем дольше они работают, тем больше за раз. Снеси все три, чтобы закрыть бэклог, — тогда придёт ЦРПТ.',
     unlock: { winOn: 'serverRoom' },
     unlockHint: 'Сервисдеск Пепси откроется после победы в Серверном зале.',
-    objective: { type: 'desks', unit: 'pepsi_desk', count: 3 },
+    // Desks are shown as `label` and their number.
+    objective: { type: 'desks', unit: 'pepsi_desk', count: 3, label: 'Сервисдеск' },
     // Office desks: short cover in the middle ring, open lanes between them.
     racks: [
       [700, 640, 220, 50],

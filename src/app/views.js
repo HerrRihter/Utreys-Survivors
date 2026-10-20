@@ -405,7 +405,7 @@ function nodeProgress(s) {
       ? `Сервисдески: ${resolved}/${s.nodes.length} · бэклог ${openTickets(s)}`
       : `Узлы: ${resolved}/${s.nodes.length}`) +
     (next
-      ? ` · ${next.id} ${arrow} ${Math.round(nextDistance / 10) * 10} px`
+      ? ` · ${next.label} ${arrow} ${Math.round(nextDistance / 10) * 10} px`
       : ' · Шлюз ЦРПТ разблокирован')
   );
 }

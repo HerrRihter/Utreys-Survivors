@@ -2,6 +2,7 @@ import { makeElite } from './difficulty.js';
 import { guardianPoint, nodeGuardian } from './node-objectives.js';
 import { persistentKeys, reducedKeys } from './run-model.js';
 import { currentAbilityId, currentCardId } from '../../data/characters/abilities.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
 
 // A paused or interrupted run, kept in storage so a closed tab does not lose it.
 // Only plain data is stored: the run model (src/systems/run-model.js) says which fields are
@@ -88,15 +89,23 @@ const migrations = {
   },
   // Version 2 → 3: renamed content ids. Utrace's ability `potion` is `overclock`: its id in
   // the abilities and its level-up card `ability_potion` in ranks, bans and logged offers.
+  // Service desks were named by their label (`Сервисдеск 1`); their ids are `desk-1`...
   2(saved) {
     const state = saved.state;
     const cards = (list) => (Array.isArray(list) ? list.map(currentCardId) : list);
+    const objective = mapDefinitions[saved.map]?.objective;
+    const deskNumber = (id) =>
+      objective?.type === 'desks' && typeof id === 'string' && id.startsWith(objective.label + ' ')
+        ? id.slice(objective.label.length + 1)
+        : '';
+    const nodeId = (id) => (/^\d+$/.test(deskNumber(id)) ? 'desk-' + deskNumber(id) : id);
     return {
       ...saved,
       version: 3,
       state: {
         ...state,
         abilities: state.abilities.map((a) => ({ ...a, id: currentAbilityId(a.id) })),
+        nodes: state.nodes.map((n) => ({ ...n, id: nodeId(n.id) })),
         upgradeRanks: Object.fromEntries(
           Object.entries(state.upgradeRanks).map(([id, rank]) => [currentCardId(id), rank]),
         ),

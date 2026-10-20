@@ -39,7 +39,7 @@ export function edgeTargets(s) {
       node = n;
     }
   }
-  if (node) out.push({ x: node.x, y: node.y, label: node.id, color: '#ffd54f', distance: best });
+  if (node) out.push({ x: node.x, y: node.y, label: node.label, color: '#ffd54f', distance: best });
   const marker = eventSpec(s)?.marker;
   if (marker)
     out.push({

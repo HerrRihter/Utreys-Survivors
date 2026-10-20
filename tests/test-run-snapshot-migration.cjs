@@ -49,6 +49,12 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
     // Renamed content ids: no old ability id or card id is left anywhere in the save.
     const text = JSON.stringify(v2);
     assert(!/potion/.test(text), label + ' no potion left');
+    assert(!/Сервисдеск \d/.test(JSON.stringify(v2.state.nodes)), label + ' desk ids renamed');
+    if (v1.map === 'pepsiDesk')
+      assert.deepEqual(
+        v2.state.nodes.map((n) => n.id),
+        ['desk-1', 'desk-2', 'desk-3'],
+      );
     if (/potion/.test(JSON.stringify(v1))) {
       assert(
         v2.state.abilities.some((a) => a.id === 'overclock'),
@@ -101,6 +107,7 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
     );
     for (const node of v2.state.nodes) {
       const restored = s.nodes.find((n) => n.id === node.id);
+      assert(restored, label + ' node ' + node.id);
       assert.equal(restored.status, node.status, label + ' ' + node.id);
       const guardian = nodeGuardian(s, restored);
       if (node.guardianHp === null) assert.equal(guardian, null);
