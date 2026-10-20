@@ -193,7 +193,6 @@ export const GameSession = {
       spawning,
       weapons,
       runEvents,
-      settings,
       events: { finish: flow.finish, levelUp: flow.levelUp, openBundle: flow.openBundle, toast },
     });
     const { sprite } = SpriteRenderer.create({ run, heroes });
@@ -234,9 +233,14 @@ export const GameSession = {
       saveClock = 0,
       tipClock = 0;
     const SAVE_EVERY = 30;
+    // One simulation step reads the movement intent the input layer combines right before it.
+    function step(dt) {
+      input.updateMove();
+      simulation.update(dt);
+    }
     function frame(now, dt) {
       if (run.mode === 'play') {
-        simulation.update(dt);
+        step(dt);
         saveClock += dt;
         if (saveClock >= SAVE_EVERY) {
           saveClock = 0;
@@ -294,7 +298,7 @@ export const GameSession = {
       finish: flow.finish,
       continueProduction: flow.continueProduction,
       activateAbility,
-      update: simulation.update,
+      update: step,
       draw: renderer.draw,
       spawn: spawning.spawn,
       damage: combat.damage,

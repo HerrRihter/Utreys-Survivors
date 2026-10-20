@@ -13,7 +13,6 @@ import {
 import { advanceAction } from '../core/action-timeline.js';
 import { protectedMove, blocksAttack, effectiveStats, pacified } from './ability-state.js';
 import { countCrowd } from './hero-passives.js';
-import { defaultBindings } from '../app/run-state.js';
 
 const isLive = (item) => item.life > 0,
   isPresent = (item) => !item.dead,
@@ -36,7 +35,6 @@ export const Simulation = {
     spawning,
     weapons,
     runEvents,
-    settings,
     events,
   }) {
     const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -105,10 +103,9 @@ export const Simulation = {
       s.shake = Math.max(0, s.shake - dt * 20);
       p.inv = Math.max(0, p.inv - dt);
       p.hp = Math.min(p.max, p.hp + st.regen * s.healFactor * dt);
-      const keys = settings?.bindings || defaultBindings,
-        held = (action, arrow) => (run.keys.has(keys[action]) || run.keys.has(arrow) ? 1 : 0);
-      let mx = held('right', 'ArrowRight') - held('left', 'ArrowLeft') + run.stick.x,
-        my = held('down', 'ArrowDown') - held('up', 'ArrowUp') + run.stick.y;
+      // Movement intent from the input layer: keys, arrows and the touch stick combined.
+      let mx = run.move.x,
+        my = run.move.y;
       if (abilityMoving) {
         mx = 0;
         my = 0;

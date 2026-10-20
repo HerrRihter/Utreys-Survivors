@@ -1,6 +1,7 @@
 import { createEventScope } from './lifecycle.js';
 
-// Keyboard and touch-stick input. Writes raw input into `run` (keys, stick) and calls
+// Keyboard and touch-stick input. Writes raw input into `run` (keys, stick), combines it into
+// the movement intent `run.move` (see updateMove) and calls
 // `actions` for commands: { pause, pickUpgrade, activateAbility, closeScreen, captureKey,
 // reroll, skip, banish }. `closeScreen()` returns true when Escape closed a menu screen instead
 // of pausing; `captureKey(code)` returns true when the key was taken by the rebinding screen.
@@ -12,7 +13,15 @@ export const InputSystem = {
     canvas,
     run,
     actions,
-    bindings = () => ({ abilityQ: 'KeyQ', abilityE: 'KeyE', pause: 'KeyP' }),
+    bindings = () => ({
+      up: 'KeyW',
+      down: 'KeyS',
+      left: 'KeyA',
+      right: 'KeyD',
+      abilityQ: 'KeyQ',
+      abilityE: 'KeyE',
+      pause: 'KeyP',
+    }),
     onStick = () => {},
   }) {
     const events = createEventScope();
@@ -20,10 +29,18 @@ export const InputSystem = {
       run.keys.clear();
       run.pointer = null;
       run.stick = { x: 0, y: 0 };
+      run.move = { x: 0, y: 0 };
       if (run.stickView) {
         run.stickView = null;
         onStick();
       }
+    }
+    // Held movement keys (bound key or arrow) plus the stick; the simulation clamps the length.
+    function updateMove() {
+      const keys = bindings(),
+        held = (action, arrow) => (run.keys.has(keys[action]) || run.keys.has(arrow) ? 1 : 0);
+      run.move.x = held('right', 'ArrowRight') - held('left', 'ArrowLeft') + run.stick.x;
+      run.move.y = held('down', 'ArrowDown') - held('up', 'ArrowUp') + run.stick.y;
     }
     function onKeyDown(e) {
       // Other views (bestiary, arena preview) own the keyboard.
@@ -101,6 +118,7 @@ export const InputSystem = {
     }
     return {
       resetInput,
+      updateMove,
       bind,
       dispose() {
         events.dispose();

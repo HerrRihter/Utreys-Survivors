@@ -24,7 +24,8 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  *   best: { kills: number, time: number }, toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
- *   stick: { x: number, y: number }, stickView: StickView | null,
+ *   stick: { x: number, y: number }, move: { x: number, y: number },
+ *   stickView: StickView | null,
  * }} RunState
  */
 
@@ -60,6 +61,7 @@ export function createRunState({ storage }) {
     keys: new Set(),
     pointer: null,
     stick: { x: 0, y: 0 },
+    move: { x: 0, y: 0 }, // movement intent combined by the input layer each step
     stickView: null, // { x, y, knobX, knobY } while a touch stick is engaged
   };
 }
