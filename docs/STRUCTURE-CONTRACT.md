@@ -70,6 +70,15 @@ tests/test-structure-layers.cjs. Учитываются статические, 
   вид сам — сессия и бестиарий держат свои экземпляры, общих синглтонов нет.
 - В src/systems и src/world нет вызовов Canvas API (`getContext`, `fillRect`, `strokeRect`,
   `beginPath`, `arc(`, `drawImage`, `fillText`); проверяет `checkNoCanvas` в tools/check-structure.cjs.
+- Правила игры и отрисовка не ветвятся по id контента: в src/systems и src/rendering нет строковых
+  литералов, равных id оружия, героя, умения, юнита, карты, события или подбираемого предмета
+  (`=== 'orbit'`, `case 'friday'`, `abilityActive(s, 'overclock')`). Поведение берётся из данных и
+  реестров видов: оружие `src/systems/weapons/` (`kind` в data/weapons.js), снаряды
+  `src/systems/projectiles.js`, атаки героя `attackKinds`, умения `src/systems/abilities/`, события
+  `eventKinds`, предметы `pickupKinds` (data/pickups.js); рисовальщики — по тем же видам. Арт по id
+  (unitArt, heroAccessories) — ключи объектов, не литералы. Проверяет `checkContentIds` в
+  tools/check-game-contracts.cjs (тест tests/test-content-ids.cjs); исключения — списком с причиной
+  там же, неиспользуемое исключение — ошибка.
 - То, что зависит от экрана (кто из врагов говорит), вызывается из сессии с видимым прямоугольником
   мира, а не из шага симуляции.
 - Типы, которые app отдаёт React (Session, Account), живут в src/app/types.ts.

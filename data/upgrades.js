@@ -1,6 +1,12 @@
 import { heroPassives } from './characters/hero-passives.js';
 
+import { heroDefinitions } from './characters/heroes.js';
+
 export const heroUnlockPrices = { traceability: 80, serialization: 100, ba: 120, qa: 140 };
+// Heroes without a price are open from the start.
+export const starterHeroes = Object.keys(heroDefinitions).filter(
+  (id) => !Object.hasOwn(heroUnlockPrices, id),
+);
 
 export const permanentUpgradeDefinitions = {
   health: {

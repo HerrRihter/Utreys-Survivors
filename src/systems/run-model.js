@@ -186,7 +186,7 @@ export const reducedKeys = fieldsOf('reduce');
 
 /**
  * A new run with every field in place.
- * @param {{ hero: string, heroDef: { hp: number, speed: number, weapon: string },
+ * @param {{ hero: string, heroDef: { hp: number, speed: number, weapon: string, keyClient?: boolean },
  *   levels: Record<string, number>, load: number, seed: number, runId: string, map: string,
  *   schedule: Parameters<typeof createWaveState>[0] & Parameters<typeof planEvents>[0],
  *   arenaSize: number, baClient?: string, doneBefore?: string[] }} options
@@ -269,13 +269,12 @@ export function createRunModel({
     banishes: 1,
     offers: [],
     offersLogged: 0,
-    baSpecialization:
-      hero === 'ba'
-        ? {
-            client: baClient && baClientIds.includes(baClient) ? baClient : baClientIds[0],
-            bonus: 0,
-          }
-        : null,
+    baSpecialization: heroDef.keyClient
+      ? {
+          client: baClient && baClientIds.includes(baClient) ? baClient : baClientIds[0],
+          bonus: 0,
+        }
+      : null,
     damageBy: {},
     lastHitBy: null,
     firstHurtAt: null,

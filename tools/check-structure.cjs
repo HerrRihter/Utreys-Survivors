@@ -175,4 +175,11 @@ function checkStructure({
 }
 
 if (require.main === module) console.log('Structure contract OK:', checkStructure());
-module.exports = { checkStructure, checkLayers, checkNoCanvas, validateAssetPath };
+module.exports = {
+  checkStructure,
+  checkLayers,
+  checkNoCanvas,
+  validateAssetPath,
+  stripComments,
+  walk,
+};

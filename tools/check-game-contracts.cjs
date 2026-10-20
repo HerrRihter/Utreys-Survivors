@@ -1,5 +1,8 @@
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { stripComments, walk } = require('./check-structure.cjs');
 
 // Fields each kind of mid-run event needs besides the common ones (src/systems/run-events.js).
 const eventFields = {
@@ -309,6 +312,9 @@ function checkGameContracts() {
   const { clientEmblems } = require('../src/rendering/art/client-emblems.js');
   for (const id of [...Object.keys(unitArt), ...Object.keys(clientEmblems)])
     assert(Object.hasOwn(unitDefinitions, id), 'Art contract: art for unknown unit ' + id);
+  const { heroAccessories } = require('../src/rendering/art/utrace-hero.js');
+  for (const id of Object.keys(heroAccessories))
+    assert(Object.hasOwn(heroDefinitions, id), 'Art contract: accessory for unknown hero ' + id);
   assert.equal(
     new Set(nodeDefinitions.map((node) => node.id)).size,
     nodeDefinitions.length,
@@ -329,6 +335,7 @@ function checkGameContracts() {
       'Node contract: position outside arena',
     );
   }
+  checkContentIds();
   return validateSchedules(waveSchedules, mapDefinitions, unitDefinitions);
 }
 function validateUnits(units) {
@@ -403,5 +410,82 @@ function validateUnits(units) {
     }
   }
 }
+// Rules and drawing do not branch on content ids: no string literal in `roots` equals the id
+// of a weapon, hero, ability, unit, map, event type or pickup type (`=== 'orbit'`,
+// `case 'friday'`, `abilityActive(s, 'overclock')`). Behaviour comes from the content's data
+// and kind registries; art keyed by id uses object keys, which are not literals. Comments do
+// not count.
+const contentIdRoots = ['src/systems', 'src/rendering'];
+// Literals that are allowed, each with its reason. An exception that no longer matches fails.
+const contentIdExceptions = [
+  // The Multon logo is lettered with the word «multon»: text drawn, not a comparison.
+  { file: 'src/rendering/art/client-emblems.js', id: 'multon' },
+];
+function contentIds() {
+  const ids = new Map();
+  const add = (kind, keys) => {
+    for (const id of keys) if (!ids.has(id)) ids.set(id, kind);
+  };
+  add('weapon', Object.keys(require('../data/weapons.js').weaponDefinitions));
+  add('hero', Object.keys(require('../data/characters/heroes.js').heroDefinitions));
+  const { abilityDefinitions } = require('../data/characters/abilities.js');
+  add(
+    'ability',
+    Object.values(abilityDefinitions)
+      .flat()
+      .map((a) => a.id),
+  );
+  add('unit', Object.keys(require('../data/enemies/units.js').unitDefinitions));
+  add('map', Object.keys(require('../data/maps/maps.js').mapDefinitions));
+  for (const schedule of Object.values(require('../data/enemies/waves.js').waveSchedules))
+    add(
+      'event',
+      Object.keys(schedule.events || {}).filter((key) => key !== 'times' && key !== 'types'),
+    );
+  add('pickup', Object.keys(require('../data/pickups.js').pickupDefinitions));
+  return ids;
+}
+function checkContentIds({
+  root = path.resolve(__dirname, '..'),
+  roots = contentIdRoots,
+  ids = contentIds(),
+  exceptions = contentIdExceptions,
+} = {}) {
+  const literal = /(['"`])([A-Za-z_][\w-]*)\1/g;
+  const violations = [],
+    used = new Set();
+  const files = roots
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const lines = stripComments(fs.readFileSync(path.join(root, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      for (const [, , id] of line.matchAll(literal)) {
+        if (!ids.has(id)) continue;
+        const exception = exceptions.find((x) => x.file === file && x.id === id);
+        if (exception) used.add(exception);
+        else violations.push(`${file}:${i + 1} '${id}' (${ids.get(id)} id)`);
+      }
+    });
+  }
+  for (const exception of exceptions)
+    if (!used.has(exception))
+      violations.push(`stale exception: '${exception.id}' in ${exception.file}`);
+  if (violations.length)
+    throw new Error(
+      'Content id in game rules or drawing (use the content data or a kind registry; see ' +
+        'tools/check-game-contracts.cjs):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
 if (require.main === module) console.log('Game contracts OK:', checkGameContracts(), 'maps');
-module.exports = { validateUnits, validateSchedules, checkGameContracts };
+module.exports = {
+  validateUnits,
+  validateSchedules,
+  checkGameContracts,
+  checkContentIds,
+  contentIds,
+};

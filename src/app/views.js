@@ -114,7 +114,7 @@ export function heroSelectView({ run, progression }) {
         .join('\n') +
       (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
     ...loadView(run, progression),
-    showBaClients: run.pendingHero === 'ba',
+    showBaClients: !!heroDefinitions[run.pendingHero]?.keyClient,
     baClients: baClientIds.map((id) => ({ id, name: unitDefinitions[id].name })),
     baClient: run.baClient,
     maps: Object.entries(arenaDefinitions).map(([id, map]) => ({

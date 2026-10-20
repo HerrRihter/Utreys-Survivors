@@ -1,4 +1,4 @@
-import { heroUnlockPrices, permanentUpgrades } from '../../data/upgrades.js';
+import { heroUnlockPrices, permanentUpgrades, starterHeroes } from '../../data/upgrades.js';
 import { achievementDefinitions } from '../../data/achievements.js';
 import { maxLoad } from '../../data/difficulty.js';
 import { addRunToStats, normalizeRunEntry, normalizeRunStats } from './run-records.js';
@@ -12,7 +12,7 @@ export function normalizeProgression(saved) {
   const data = {
     codes: 0,
     kills: 0,
-    unlocked: ['utrace'],
+    unlocked: [...starterHeroes],
     levels: { health: 0, power: 0, speed: 0 },
     stats: {
       totalTime: 0,
@@ -51,7 +51,10 @@ export function normalizeProgression(saved) {
       data.kills = integer(saved.kills);
       if (Array.isArray(saved.unlocked))
         data.unlocked = [
-          ...new Set(['utrace', ...saved.unlocked.filter((id) => Object.hasOwn(prices, id))]),
+          ...new Set([
+            ...starterHeroes,
+            ...saved.unlocked.filter((id) => Object.hasOwn(prices, id)),
+          ]),
         ];
       for (const id of Object.keys(upgrades))
         data.levels[id] = integer(saved.levels?.[id], upgrades[id].max);

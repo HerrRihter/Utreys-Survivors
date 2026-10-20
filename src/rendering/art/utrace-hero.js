@@ -97,81 +97,100 @@ export function drawUtraceHero(g, id, x, y, size, flip, phase, attackCharge = nu
   g.fillRect(-8, -4, 3, 2 + Math.abs(bob));
   g.fillRect(5, -4, 3, 2 + Math.abs(bob));
   g.lineWidth = 1;
-  if (id === 'traceability') {
-    const charge = attackCharge?.charge || 0;
-    const flash = attackCharge?.flash || 0;
-    const energy = Math.max(charge, flash);
-    g.save();
-    g.globalAlpha *= attackCharge ? 0.25 + energy * 0.75 : 1;
-    g.strokeStyle = '#539e92';
-    g.beginPath();
-    g.ellipse(0, -17, 16, 11, -0.3, 0, Math.PI * 2);
-    neonStroke(g, flash > 0 ? '#d1fff1' : '#64d9bd', 0.6 + energy * 1.2, 1 + energy * 4);
-    if (charge > 0) {
-      g.beginPath();
-      g.ellipse(0, -17, 16, 11, -0.3, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
-      neonStroke(g, '#b0f5db', 1.1, 2);
-    }
-    for (const [px, py] of [
-      [-15, -14],
-      [0, -28],
-      [15, -20],
-    ]) {
-      g.fillStyle = flash > 0 ? '#e2fff4' : energy > 0.7 ? '#b0f5db' : '#539e92';
-      g.fillRect(px - 1.5, py - 1.5, 3, 3);
-    }
-    g.restore();
-  } else if (id === 'serialization') {
-    g.fillStyle = '#9dbbbc';
-    g.fillRect(-7, -18, 14, 6);
-    g.fillStyle = '#292e49';
-    for (const px of [-6, -4, -1, 1, 4, 5]) g.fillRect(px, -17, 1, 4);
-    g.strokeStyle = '#b94d46';
-    g.strokeRect(-15, -22, 3, 10);
-    g.strokeRect(12, -22, 3, 10);
-  } else if (id === 'ba') {
-    face(
-      [
-        [-18, -23],
-        [-8, -21],
-        [-8, -9],
-        [-18, -11],
-      ],
-      '#343653',
-    );
-    g.fillStyle = '#b49a5e';
-    for (let i = 0; i < 3; i++) g.fillRect(-16 + i * 2.5, -14 - i * 2, 1.5, 3 + i * 2);
-    g.strokeStyle = '#b49a5e';
-    g.beginPath();
-    g.moveTo(11, -20);
-    g.lineTo(17, -20);
-    g.lineTo(17, -12);
-    g.stroke();
-    g.fillStyle = '#b49a5e';
-    g.fillRect(15, -13, 4, 4);
-  } else if (id === 'qa') {
-    face(
-      [
-        [7, -23],
-        [17, -20],
-        [16, -11],
-        [12, -7],
-        [7, -11],
-      ],
-      '#174f4a',
-    );
-    g.strokeStyle = '#68ae91';
-    g.lineWidth = 1.5;
-    g.beginPath();
-    g.moveTo(9, -15);
-    g.lineTo(12, -12);
-    g.lineTo(16, -18);
-    g.stroke();
-    g.strokeStyle = '#68ae91';
-    g.beginPath();
-    g.arc(-10, -24, 5, 0, Math.PI * 2);
-    g.stroke();
-  }
+  heroAccessories[id]?.draw(g, face, attackCharge);
   g.restore();
   return true;
 }
+
+// What each hero wears over the shared U, by hero id (like the enemies' unitArt). `face`
+// paints a filled polygon; `attackCharge` is { charge, flash } for heroes with `charged`.
+export const heroAccessories = {
+  traceability: {
+    // The ring fills up with the attack cycle (rendering/hero-charge.js).
+    charged: true,
+    draw(g, face, attackCharge) {
+      const charge = attackCharge?.charge || 0;
+      const flash = attackCharge?.flash || 0;
+      const energy = Math.max(charge, flash);
+      g.save();
+      g.globalAlpha *= attackCharge ? 0.25 + energy * 0.75 : 1;
+      g.strokeStyle = '#539e92';
+      g.beginPath();
+      g.ellipse(0, -17, 16, 11, -0.3, 0, Math.PI * 2);
+      neonStroke(g, flash > 0 ? '#d1fff1' : '#64d9bd', 0.6 + energy * 1.2, 1 + energy * 4);
+      if (charge > 0) {
+        g.beginPath();
+        g.ellipse(0, -17, 16, 11, -0.3, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+        neonStroke(g, '#b0f5db', 1.1, 2);
+      }
+      for (const [px, py] of [
+        [-15, -14],
+        [0, -28],
+        [15, -20],
+      ]) {
+        g.fillStyle = flash > 0 ? '#e2fff4' : energy > 0.7 ? '#b0f5db' : '#539e92';
+        g.fillRect(px - 1.5, py - 1.5, 3, 3);
+      }
+      g.restore();
+    },
+  },
+  serialization: {
+    draw(g) {
+      g.fillStyle = '#9dbbbc';
+      g.fillRect(-7, -18, 14, 6);
+      g.fillStyle = '#292e49';
+      for (const px of [-6, -4, -1, 1, 4, 5]) g.fillRect(px, -17, 1, 4);
+      g.strokeStyle = '#b94d46';
+      g.strokeRect(-15, -22, 3, 10);
+      g.strokeRect(12, -22, 3, 10);
+    },
+  },
+  ba: {
+    draw(g, face) {
+      face(
+        [
+          [-18, -23],
+          [-8, -21],
+          [-8, -9],
+          [-18, -11],
+        ],
+        '#343653',
+      );
+      g.fillStyle = '#b49a5e';
+      for (let i = 0; i < 3; i++) g.fillRect(-16 + i * 2.5, -14 - i * 2, 1.5, 3 + i * 2);
+      g.strokeStyle = '#b49a5e';
+      g.beginPath();
+      g.moveTo(11, -20);
+      g.lineTo(17, -20);
+      g.lineTo(17, -12);
+      g.stroke();
+      g.fillStyle = '#b49a5e';
+      g.fillRect(15, -13, 4, 4);
+    },
+  },
+  qa: {
+    draw(g, face) {
+      face(
+        [
+          [7, -23],
+          [17, -20],
+          [16, -11],
+          [12, -7],
+          [7, -11],
+        ],
+        '#174f4a',
+      );
+      g.strokeStyle = '#68ae91';
+      g.lineWidth = 1.5;
+      g.beginPath();
+      g.moveTo(9, -15);
+      g.lineTo(12, -12);
+      g.lineTo(16, -18);
+      g.stroke();
+      g.strokeStyle = '#68ae91';
+      g.beginPath();
+      g.arc(-10, -24, 5, 0, Math.PI * 2);
+      g.stroke();
+    },
+  },
+};

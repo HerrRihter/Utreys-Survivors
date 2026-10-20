@@ -58,6 +58,8 @@ export const heroDefinitions = {
     half: 1.2566370614359172,
     range: 85,
     push: 230,
+    // Picks a key client before the run (data/characters/ba-specialization.js).
+    keyClient: true,
     attack: 'sector',
     color: '#f7ce70',
     weapon: 'Разбор требований',
