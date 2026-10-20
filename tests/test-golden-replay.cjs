@@ -49,6 +49,15 @@ if (process.argv.includes('--child')) {
       assert.equal(saved.end, run.hashes[s.steps], label(s) + ' a continued run ends the same');
       finals[label(s)] = run.hashes[s.steps];
     }
+    // The account's earlier kills change nothing in the run (codes for every tenth kill count
+    // the run's kills): hashes every ten seconds match a fresh account's.
+    {
+      const s = scenarios[1],
+        marks = Array.from({ length: s.steps / 600 - 1 }, (_, i) => (i + 1) * 600);
+      const fresh = await replayContinuous(s, marks),
+        seasoned = await replayContinuous({ ...s, accountKills: 5 }, marks);
+      assert.deepEqual(seasoned.hashes, fresh.hashes, label(s) + ' does not depend on the account');
+    }
     assert.deepEqual(await child, finals, 'another process replays the same runs');
     console.log(
       `PASS: ${scenarios.length} hero/map replays repeat in and across processes and after a save`,

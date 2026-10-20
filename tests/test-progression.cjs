@@ -18,9 +18,14 @@ async function main() {
   assert.equal(p.data.codes, 0);
   assert(p.shop.owned('utrace'));
   assert(!p.shop.buyHero('cacofonix'));
-  for (let i = 0; i < 9; i++) assert.equal(p.wallet.kill(), 0);
-  assert.equal(p.wallet.kill(), 1);
+  // Every tenth kill of a run pays a code, however many the account has.
+  for (let i = 1; i <= 9; i++) assert.equal(p.wallet.kill('hero', i), 0);
+  assert.equal(p.wallet.kill('hero', 10), 1);
   assert.equal(p.data.codes, 1);
+  assert.equal(p.wallet.kill('hero', 1), 0, 'a new run counts from its first kill');
+  assert.equal(p.wallet.kill(), 0, 'no run, no reward');
+  assert.equal(p.data.kills, 12);
+  p.replace({ ...p.data, kills: 10 });
   p.wallet.earn(39);
   assert(!p.shop.buyHero('cacofonix'));
   assert.equal(p.data.codes, 40);
@@ -109,7 +114,7 @@ async function main() {
   await loadModule(batched, projectRoot + '/src/systems/progression/index.js');
   batched.Progression = batched.createProgression({ storage: batched.localStorage });
   const rewards = batched.Progression;
-  for (let i = 0; i < 100; i++) rewards.wallet.kill();
+  for (let i = 1; i <= 100; i++) rewards.wallet.kill('hero', i);
   rewards.wallet.earn(30);
   assert.equal(writes, 0, 'Mass kills must not write storage in the combat frame');
   assert.equal(timers.size, 1);

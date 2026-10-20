@@ -75,7 +75,7 @@ export const CombatSystem = {
             s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${gain} HP`, life: 0.8 });
         }
         run.state.kills++;
-        run.state.earned += wallet.kill(tag);
+        run.state.earned += wallet.kill(tag, run.state.kills);
         const luck = run.state.stats.luck || 0;
         if (run.state.rng.random() < dropTable.code.chance + luck * dropTable.code.luck)
           run.state.codes.push({ x: e.x, y: e.y, value: dropTable.code.value });

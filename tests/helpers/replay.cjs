@@ -46,8 +46,9 @@ function stateHash(s) {
     .slice(0, 16);
 }
 
-// One account (harness) per replay: a resumed run continues on the same account.
-async function openAccount(hero) {
+// One account (harness) per replay: a resumed run continues on the same account. `accountKills`
+// starts it with enemies defeated in earlier runs.
+async function openAccount({ accountKills = 0 } = {}) {
   const h = await createHarness({ createSession: false });
   const store = new Map();
   h.env.localStorage = {
@@ -58,7 +59,7 @@ async function openAccount(hero) {
   const P = h.env.Progression;
   for (const map of Object.keys(mapDefinitions))
     P.records.recordRunStats({ win: true, hero: 'utrace', map, time: 600 });
-  P.replace({ ...P.data, unlocked: Object.keys(heroDefinitions) });
+  P.replace({ ...P.data, unlocked: Object.keys(heroDefinitions), kills: accountKills });
   return { h, store };
 }
 
@@ -101,7 +102,7 @@ function play(game, tape, from, to, cursor) {
 
 // The whole replay without a break; hashes at `marks` (steps).
 async function replayContinuous(scenario, marks = []) {
-  const { h } = await openAccount(scenario.hero);
+  const { h } = await openAccount(scenario);
   const game = startRun(h, scenario);
   const tape = recordTape(scenario.seed, scenario.steps);
   const cursor = { levelUps: 0 },
@@ -119,7 +120,7 @@ async function replayContinuous(scenario, marks = []) {
 
 // The replay saved at `saveAt` as a closing tab does, then continued in a new session.
 async function replaySaved(scenario, saveAt) {
-  const { h, store } = await openAccount(scenario.hero);
+  const { h, store } = await openAccount(scenario);
   let game = startRun(h, scenario);
   const tape = recordTape(scenario.seed, scenario.steps);
   const cursor = { levelUps: 0 };

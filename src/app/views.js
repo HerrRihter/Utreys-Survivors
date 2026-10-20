@@ -209,7 +209,7 @@ export function shopView({ progression }) {
     refund,
     refundLabel: refund ? `СБРОСИТЬ УЛУЧШЕНИЯ · +${refund} кодов` : 'Нечего сбрасывать',
     wallet:
-      `У тебя ${codes} кодов · до следующей награды: ${10 - (progression.data.kills % 10)} побед` +
+      `У тебя ${codes} кодов · каждая 10-я победа в забеге — +1 код` +
       (progression.persistent ? '' : ' · Не удалось сохранить прогресс. Не закрывай игру.'),
   };
 }
