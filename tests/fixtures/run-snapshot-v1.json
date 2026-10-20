@@ -1,0 +1,1255 @@
+{
+  "ba@pepsiDesk": {
+    "version": 1,
+    "hero": "ba",
+    "map": "pepsiDesk",
+    "baClient": "pepsi",
+    "pendingLevel": false,
+    "state": {
+      "t": 170.00000000002743,
+      "kills": 5,
+      "level": 2,
+      "xp": 9,
+      "need": 12,
+      "earned": 0,
+      "spawn": 1.789747333333274,
+      "waveNext": {
+        "inbev": 180,
+        "mars": 175
+      },
+      "bossSpawned": false,
+      "eliteNext": 180,
+      "step": 170.00000000002743,
+      "stats": {
+        "damage": 1.05,
+        "haste": 1.08,
+        "range": 1,
+        "speed": 1,
+        "magnet": 75,
+        "armor": 0,
+        "regen": 0,
+        "greed": 0,
+        "luck": 0,
+        "clientHp": 1,
+        "punchTempo": 0.3,
+        "punchReach": 12,
+        "punchForce": 55
+      },
+      "upgradeRanks": {
+        "ability_negotiate": 1,
+        "heroWeapon": 3
+      },
+      "evoTokens": 0,
+      "banned": [],
+      "rerolls": 2,
+      "skips": 1,
+      "banishes": 1,
+      "damageBy": {
+        "hero": 1565.123999999998
+      },
+      "baSpecialization": {
+        "client": "pepsi",
+        "bonus": 0
+      },
+      "load": 1,
+      "healFactor": 1,
+      "seed": 235298,
+      "offers": [
+        {
+          "level": 2,
+          "cards": ["w_homing", "ability_negotiate", "boots", "heroWeapon"],
+          "picked": "ability_negotiate",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        }
+      ],
+      "lastHitBy": "pepsi",
+      "eventIndex": 1,
+      "event": {
+        "type": "rush",
+        "left": 39.983333333333334,
+        "progress": 0,
+        "need": 12
+      },
+      "runId": "mvgddb9z-x5b6tc",
+      "firstHurtAt": 13.116666666666898,
+      "doneBefore": ["win_utrace"],
+      "weapons": [],
+      "p": {
+        "x": 1102.3,
+        "y": 1100,
+        "hp": 155,
+        "max": 155
+      },
+      "abilities": [
+        {
+          "id": "dash",
+          "cd": 0
+        },
+        {
+          "id": "negotiate",
+          "cd": 0
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Сервисдеск 1",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 1,
+          "summons": 24
+        },
+        {
+          "id": "Сервисдеск 2",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 1610,
+          "summons": 24
+        },
+        {
+          "id": "Сервисдеск 3",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 1610,
+          "summons": 24
+        }
+      ],
+      "enemies": [
+        {
+          "unit": "cherkizovo",
+          "x": 940.9,
+          "y": 1175.1,
+          "hp": 172.5,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 939.3,
+          "y": 1175.9,
+          "hp": 30.400000000000002,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 872.1,
+          "y": 1146.6,
+          "hp": 27.619999999999997,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 1001.8,
+          "y": 1041.7,
+          "hp": 71.3,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 960.2,
+          "y": 1133,
+          "hp": 56,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 960.2,
+          "y": 1133,
+          "hp": 10.36,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 991.2,
+          "y": 1110.5,
+          "hp": 40,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 991.2,
+          "y": 1110.5,
+          "hp": 19.099999999999998,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 991.2,
+          "y": 1110.5,
+          "hp": 40,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 964.6,
+          "y": 1183.3,
+          "hp": 63.16,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 863.1,
+          "y": 1067.5,
+          "hp": 33.079999999999984,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 979.3,
+          "y": 1135.4,
+          "hp": 69.96,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 904.8,
+          "y": 1187.7,
+          "hp": 64.5,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 896.8,
+          "y": 1110.1,
+          "hp": 71.3,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 982.4,
+          "y": 1132.2,
+          "hp": 48.11999999999999,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 864.7,
+          "y": 1033.1,
+          "hp": 85,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 912.2,
+          "y": 1181.5,
+          "hp": 85,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 868.4,
+          "y": 1029.6,
+          "hp": 85,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 862.2,
+          "y": 1064.6,
+          "hp": 33.079999999999984,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 974.9,
+          "y": 1141.8,
+          "hp": 64.5,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 975.1,
+          "y": 1141.4,
+          "hp": 64.5,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 961.1,
+          "y": 1115.7,
+          "hp": 54.91999999999999,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 983.1,
+          "y": 988.7,
+          "hp": 49.459999999999994,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 970.9,
+          "y": 988.7,
+          "hp": 49.459999999999994,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 943.8,
+          "y": 991.1,
+          "hp": 49.459999999999994,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 975.7,
+          "y": 1153.7,
+          "hp": 41.31999999999999,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 975.6,
+          "y": 1153.1,
+          "hp": 41.31999999999999,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mondelez",
+          "x": 995.9,
+          "y": 1108.5,
+          "hp": 81.78,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 963.1,
+          "y": 1268.9,
+          "hp": 80.46,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars_petfood",
+          "x": 969.1,
+          "y": 1240.5,
+          "hp": 127.2,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 969.3,
+          "y": 1262.6,
+          "hp": 53.160000000000004,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 991.2,
+          "y": 1110.5,
+          "hp": 26.06,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 991.2,
+          "y": 1110.5,
+          "hp": 46,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars_petfood",
+          "x": 952.6,
+          "y": 1238.5,
+          "hp": 121.74000000000001,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 960.2,
+          "y": 1133,
+          "hp": 46.94,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "baltika",
+          "x": 940.3,
+          "y": 1181.1,
+          "hp": 211.38,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "inbev",
+          "x": 940.3,
+          "y": 1190,
+          "hp": 221,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 990.4,
+          "y": 1241.2,
+          "hp": 107.75999999999999,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 972.4,
+          "y": 1121.6,
+          "hp": 736,
+          "boss": false,
+          "elite": true
+        },
+        {
+          "unit": "inbev",
+          "x": 930.9,
+          "y": 1190.3,
+          "hp": 234.89600000000002,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 904.8,
+          "y": 1187,
+          "hp": 109,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "vetis",
+          "x": 954.8,
+          "y": 1213.7,
+          "hp": 331,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 960.6,
+          "y": 1133.4,
+          "hp": 72,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 908.7,
+          "y": 1182.9,
+          "hp": 109,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 1071.9,
+          "y": 1191,
+          "hp": 85.62,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "ferrero",
+          "x": 778.7,
+          "y": 1011.8,
+          "hp": 117.7,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars_petfood",
+          "x": 949.2,
+          "y": 1222.3,
+          "hp": 155,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "ferrero",
+          "x": 1154.2,
+          "y": 1206.1,
+          "hp": 145,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars_petfood",
+          "x": 944.1,
+          "y": 1218.3,
+          "hp": 155,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mondelez",
+          "x": 994.2,
+          "y": 1115.7,
+          "hp": 114,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "progress",
+          "x": 1004.5,
+          "y": 1267.8,
+          "hp": 135,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 973.4,
+          "y": 1141.8,
+          "hp": 109,
+          "boss": false,
+          "elite": false
+        }
+      ],
+      "gems": [],
+      "codes": [
+        {
+          "x": 659.6,
+          "y": 1265.6,
+          "value": 1
+        },
+        {
+          "x": 666.1,
+          "y": 916.4,
+          "value": 1
+        },
+        {
+          "x": 1050.2,
+          "y": 1500.7,
+          "value": 1
+        },
+        {
+          "x": 831.2,
+          "y": 1219.3,
+          "value": 1
+        },
+        {
+          "x": 1243.1,
+          "y": 1440,
+          "value": 1
+        },
+        {
+          "x": 1158.5,
+          "y": 1579.3,
+          "value": 1
+        },
+        {
+          "x": 1222.7,
+          "y": 852.7,
+          "value": 1
+        },
+        {
+          "x": 1299.2,
+          "y": 1275.6,
+          "value": 1
+        },
+        {
+          "x": 1234.6,
+          "y": 1028.3,
+          "value": 1
+        },
+        {
+          "x": 1303.2,
+          "y": 1318.8,
+          "value": 1
+        },
+        {
+          "x": 1273.7,
+          "y": 971.9,
+          "value": 1
+        },
+        {
+          "x": 1220.5,
+          "y": 1586.4,
+          "value": 1
+        },
+        {
+          "x": 1035.7,
+          "y": 895.8,
+          "value": 1
+        },
+        {
+          "x": 1385.8,
+          "y": 1355.8,
+          "value": 1
+        },
+        {
+          "x": 743.3,
+          "y": 867.1,
+          "value": 1
+        },
+        {
+          "x": 1291.3,
+          "y": 1296.4,
+          "value": 1
+        }
+      ],
+      "pickups": []
+    }
+  },
+  "qa@serverRoom": {
+    "version": 1,
+    "hero": "qa",
+    "map": "serverRoom",
+    "baClient": null,
+    "pendingLevel": false,
+    "state": {
+      "t": 230.00000000007518,
+      "kills": 329,
+      "level": 14,
+      "xp": 89,
+      "need": 261,
+      "earned": 126,
+      "spawn": 0.17650699999983832,
+      "waveNext": {
+        "inbev": 240,
+        "mars": 235
+      },
+      "bossSpawned": false,
+      "eliteNext": 290,
+      "step": 230.00000000007518,
+      "stats": {
+        "damage": 1.05,
+        "haste": 1.5600000000000005,
+        "range": 1,
+        "speed": 1.08,
+        "magnet": 135,
+        "armor": 0,
+        "regen": 0,
+        "greed": 0,
+        "luck": 0,
+        "crit": 0.1,
+        "scanCrit": 0.35,
+        "punchTempo": 0.15
+      },
+      "upgradeRanks": {
+        "tempo": 4,
+        "vitality": 2,
+        "heroWeapon": 1,
+        "magnet": 2,
+        "boots": 1,
+        "ability_dash": 1
+      },
+      "evoTokens": 1,
+      "banned": [],
+      "rerolls": 2,
+      "skips": 1,
+      "banishes": 1,
+      "damageBy": {
+        "hero": 31616.714639999467,
+        "ping": 10351.867759999994,
+        "orbit": 3332.274799999991,
+        "mine": 242.76
+      },
+      "load": 1,
+      "healFactor": 1,
+      "seed": 235298,
+      "offers": [
+        {
+          "level": 2,
+          "cards": ["w_mine", "tempo", "w_ping", "w_orbit"],
+          "picked": "tempo",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 3,
+          "cards": ["w_mine", "vitality", "w_ping", "tempo"],
+          "picked": "vitality",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 4,
+          "cards": ["w_mine", "heroWeapon", "magnet", "w_orbit"],
+          "picked": "heroWeapon",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 5,
+          "cards": ["w_orbit", "recovery", "w_ping", "magnet"],
+          "picked": "magnet",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 6,
+          "cards": ["w_mine", "magnet", "tempo", "vitality"],
+          "picked": "tempo",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 7,
+          "cards": ["w_ping", "heroWeapon", "tempo", "ability_regress"],
+          "picked": "tempo",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 8,
+          "cards": ["w_ping", "heroWeapon", "vitality", "area"],
+          "picked": "w_ping",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 9,
+          "cards": ["w_ping", "armor", "might", "magnet"],
+          "picked": "w_ping",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 10,
+          "cards": ["w_orbit", "w_homing", "tempo", "armor"],
+          "picked": "tempo",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 11,
+          "cards": ["w_homing", "w_orbit", "w_mine", "ability_regress"],
+          "picked": "w_orbit",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 12,
+          "cards": ["heroWeapon", "tempo", "boots", "might"],
+          "picked": "boots",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 13,
+          "cards": ["w_orbit", "w_ping", "ability_dash", "w_homing"],
+          "picked": "ability_dash",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 14,
+          "cards": ["w_homing", "w_mine", "magnet", "heroWeapon"],
+          "picked": "w_mine",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        }
+      ],
+      "lastHitBy": "mars",
+      "eventIndex": 2,
+      "event": {
+        "type": "incident",
+        "left": 59.983333333333334,
+        "progress": 0,
+        "need": 15,
+        "radius": 90,
+        "x": 597.9325818545842,
+        "y": 2033.5510471946402
+      },
+      "runId": "mvgddcyw-x5b6tc",
+      "firstHurtAt": 9.683333333333394,
+      "foodTaken": 2,
+      "doneBefore": ["win_utrace"],
+      "weapons": [
+        {
+          "id": "ping",
+          "level": 3,
+          "cd": 1.166666666666668,
+          "evolved": false,
+          "phase": 0
+        },
+        {
+          "id": "orbit",
+          "level": 1,
+          "cd": 0.5,
+          "evolved": false,
+          "phase": 153.1199999999979
+        },
+        {
+          "id": "mine",
+          "level": 1,
+          "cd": 1.1910256410256415,
+          "evolved": false,
+          "phase": 0
+        }
+      ],
+      "p": {
+        "x": 249.2,
+        "y": 2184.5,
+        "hp": 175,
+        "max": 175
+      },
+      "abilities": [
+        {
+          "id": "dash",
+          "cd": 0
+        },
+        {
+          "id": "regress",
+          "cd": 0
+        }
+      ],
+      "nodes": [
+        {
+          "id": "production-aggreagtion",
+          "status": "destroyed",
+          "progress": 0,
+          "guardianHp": null,
+          "summons": 0
+        },
+        {
+          "id": "code-usage-report",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 575,
+          "summons": 16
+        },
+        {
+          "id": "inport-operation-processor",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 575,
+          "summons": 0
+        },
+        {
+          "id": "logistic-processor",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 575,
+          "summons": 0
+        },
+        {
+          "id": "goods-reports",
+          "status": "guarded",
+          "progress": 0,
+          "guardianHp": 575,
+          "summons": 0
+        }
+      ],
+      "enemies": [
+        {
+          "unit": "royal_canin",
+          "x": 663,
+          "y": 2098.6,
+          "hp": 99.68759999999999,
+          "boss": false,
+          "elite": true
+        },
+        {
+          "unit": "multon",
+          "x": 479.4,
+          "y": 2110.2,
+          "hp": 46.13159999999979,
+          "boss": false,
+          "elite": true
+        },
+        {
+          "unit": "ferrero",
+          "x": 670.2,
+          "y": 2132.3,
+          "hp": 43.02399999999999,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "ferrero",
+          "x": 680.9,
+          "y": 2147.8,
+          "hp": 35.29599999999997,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "cherkizovo",
+          "x": 550.4,
+          "y": 2142.5,
+          "hp": 104.44000000000003,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "cherkizovo",
+          "x": 582.3,
+          "y": 2116.8,
+          "hp": 218.05,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "loreal",
+          "x": 666.6,
+          "y": 2090,
+          "hp": 103,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "procter_gamble",
+          "x": 608.3,
+          "y": 2151.3,
+          "hp": 42.359999999999985,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 393.9,
+          "y": 2006.2,
+          "hp": 135,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "vetis",
+          "x": 447.7,
+          "y": 2048.1,
+          "hp": 76.18600000000004,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "procter_gamble",
+          "x": 698.1,
+          "y": 2108.8,
+          "hp": 228,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 436.3,
+          "y": 2140.5,
+          "hp": 73.3,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "cherkizovo",
+          "x": 594.6,
+          "y": 2149.9,
+          "hp": 18.382000000000037,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 443.1,
+          "y": 2141,
+          "hp": 73.3,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "cherkizovo",
+          "x": 848,
+          "y": 2146.4,
+          "hp": 238,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "procter_gamble",
+          "x": 855.4,
+          "y": 2146.5,
+          "hp": 228,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mondelez",
+          "x": 301.7,
+          "y": 1961.9,
+          "hp": 829,
+          "boss": false,
+          "elite": true
+        },
+        {
+          "unit": "inbev",
+          "x": 276.7,
+          "y": 1967.3,
+          "hp": 248,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 474,
+          "y": 2122.4,
+          "hp": 12.099999999999998,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "multon",
+          "x": 464.1,
+          "y": 2118.9,
+          "hp": 12.940000000000001,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mondelez",
+          "x": 358.7,
+          "y": 2076.1,
+          "hp": 114,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 474.7,
+          "y": 2123,
+          "hp": 52.05,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "vetis",
+          "x": 261.6,
+          "y": 1689.9,
+          "hp": 331,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 859.3,
+          "y": 1908.6,
+          "hp": 135,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 387.3,
+          "y": 2135.1,
+          "hp": 34.702,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 292.9,
+          "y": 2009,
+          "hp": 72,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars_petfood",
+          "x": 267.8,
+          "y": 1944,
+          "hp": 155,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "royal_canin",
+          "x": 260.6,
+          "y": 1846.2,
+          "hp": 155,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 848.7,
+          "y": 1840.9,
+          "hp": 72,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "vetis",
+          "x": 159.3,
+          "y": 1849.6,
+          "hp": 331,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 560.6,
+          "y": 2155.1,
+          "hp": 36.3,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 877.8,
+          "y": 2131.3,
+          "hp": 109,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "loreal",
+          "x": 654.8,
+          "y": 1663.2,
+          "hp": 103,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "mars",
+          "x": 109.3,
+          "y": 2164.3,
+          "hp": 135,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "loreal",
+          "x": 928.3,
+          "y": 2091.9,
+          "hp": 103,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "loreal",
+          "x": 757.6,
+          "y": 1685,
+          "hp": 103,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 189.5,
+          "y": 2162.9,
+          "hp": 72,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "l3",
+          "x": 687.9,
+          "y": 2162.9,
+          "hp": 72,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "vetis",
+          "x": 403.9,
+          "y": 1641.2,
+          "hp": 331,
+          "boss": false,
+          "elite": false
+        },
+        {
+          "unit": "pepsi",
+          "x": 151,
+          "y": 2131.9,
+          "hp": 109,
+          "boss": false,
+          "elite": false
+        }
+      ],
+      "gems": [],
+      "codes": [
+        {
+          "x": 499.9,
+          "y": 1629,
+          "value": 1
+        }
+      ],
+      "pickups": [
+        {
+          "x": 1058.6,
+          "y": 1265.2,
+          "type": "food"
+        },
+        {
+          "x": 903.7,
+          "y": 1601.2,
+          "type": "food"
+        },
+        {
+          "x": 805.9,
+          "y": 1741.4,
+          "type": "food"
+        },
+        {
+          "x": 914.6,
+          "y": 2003,
+          "type": "magnet"
+        },
+        {
+          "x": 654.5,
+          "y": 2093.9,
+          "type": "food"
+        },
+        {
+          "x": 621.7,
+          "y": 2050.4,
+          "type": "food"
+        },
+        {
+          "x": 692.2,
+          "y": 2099.4,
+          "type": "magnet"
+        },
+        {
+          "x": 489.8,
+          "y": 2054.4,
+          "type": "food"
+        },
+        {
+          "x": 644.8,
+          "y": 2063.4,
+          "type": "food"
+        }
+      ]
+    }
+  }
+}
