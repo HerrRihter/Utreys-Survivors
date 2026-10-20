@@ -2,9 +2,9 @@ import { drawNodes } from '../rendering/node-objectives.js';
 import { drawEnemySpeech } from '../rendering/enemy-speech.js';
 import { enemyPhrases, speechSettings } from '../../data/enemies/phrases.js';
 import { createNodeState } from '../systems/node-objectives.js';
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useMemo, type RefObject } from 'react';
 import { unitDefinitions } from '../../data/enemies/units.js';
-import { Enemies } from '../entities/enemies.js';
+import { createEnemyRenderer } from '../rendering/enemies.js';
 import { createArenas } from '../world/arenas.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
 import { drawEnemyShot } from '../rendering/projectiles.js';
@@ -29,6 +29,8 @@ export function useOpponentPreview({
   phaseRef: RefObject<number>;
   radarRef: RefObject<number>;
 }) {
+  // The bestiary's own renderer; its sprite caches live as long as the page.
+  const enemies = useMemo(() => createEnemyRenderer(), []);
   useEffect(() => {
     let animId: number;
     let phase = phaseRef.current;
@@ -103,14 +105,14 @@ export function useOpponentPreview({
         if (effectiveMotion === 'attack') {
           // Role previews: the charger's lunge line and the artillery mark.
           if ('dash' in u && u.dash)
-            Enemies.telegraph(g, {
+            enemies.telegraph(g, {
               ...mockEnemy,
               action: null,
               dash: { phase: 'wind', dx: reverse ? -1 : 1, dy: 0 },
             });
-          else Enemies.telegraph(g, mockEnemy);
+          else enemies.telegraph(g, mockEnemy);
           if ('mortar' in u && u.mortar)
-            Enemies.hazard(g, {
+            enemies.hazard(g, {
               kind: 'blast',
               x: aimX,
               y: cy,
@@ -152,7 +154,7 @@ export function useOpponentPreview({
           }
         }
 
-        Enemies.draw(g, mockEnemy);
+        enemies.draw(g, mockEnemy);
         const phrases = enemyPhrases[unit];
         const cycle = Math.floor(phase / 10);
         if (phrases?.length && phase % 10 < speechSettings.duration) {
@@ -181,7 +183,7 @@ export function useOpponentPreview({
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [motion, frozen, reverse, singleUnitAttacking]);
+  }, [enemies, motion, frozen, reverse, singleUnitAttacking]);
 
   // Mini-map radar animation render
   useEffect(() => {

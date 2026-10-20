@@ -9,10 +9,9 @@
 | src/components            | Весь React-интерфейс: меню, экраны забега, HUD, модальные панели                      |
 | src/core                  | Время, ввод, звук, пути ресурсов, наблюдаемый store, математика, подписки             |
 | src/systems               | Игровая механика; src/systems/queries — чистые запросы к состоянию забега             |
-| src/entities              | Реестры героев и врагов: данные юнитов вместе с их Canvas-артом                       |
 | src/services              | Облако (Firebase): вход, позже прогресс и таблицы лидеров; без конфигурации выключено |
 | src/world                 | Арены, геометрия и навигация                                                          |
-| src/rendering             | Canvas, кадры, арт, пол арены, камера                                                 |
+| src/rendering             | Вся отрисовка: сцена, арт, враги, эффекты, снаряды, оружие, трупы, пол арены, камера  |
 | src/ui                    | Портреты меню, бестиарий и предпросмотр противников                                   |
 | data                      | Определения контента, реплик и таймингов анимаций                                     |
 | styles                    | CSS и семантические токены                                                            |
@@ -36,7 +35,7 @@
 
 ## Слои и разрешённые импорты
 
-Порядок слоёв: `data → core → world → systems → services → rendering → entities → ui → app → components → src`
+Порядок слоёв: `data → core → world → systems → services → rendering → ui → app → components → src`
 (src — точки входа main.tsx и App.tsx). Файл может импортировать только свой слой и слои, перечисленные
 в его строке матрицы `layers` в tools/structure-contract.json. Проверяет `checkLayers` в
 tools/check-structure.cjs (часть `npm test` и `npm run check:structure`), тест —
@@ -52,9 +51,8 @@ tests/test-structure-layers.cjs. Учитываются статические, 
 | systems/queries | data, core, world (чистые вопросы к состоянию, без остальных systems) |
 | services        | data, core, systems                                                   |
 | rendering       | data, core, world, systems/queries                                    |
-| entities        | data, core, world, systems/queries, rendering                         |
-| ui              | data, core, world, systems, rendering, entities                       |
-| app             | data, core, world, systems, services, rendering, entities, ui         |
+| ui              | data, core, world, systems, rendering                                 |
+| app             | data, core, world, systems, services, rendering, ui                   |
 | components      | всё, кроме src                                                        |
 | src             | всё                                                                   |
 
@@ -67,14 +65,15 @@ tests/test-structure-layers.cjs. Учитываются статические, 
   `run.move` (клавиши, стрелки, стик) перед каждым шагом. Пока сессия спит за другой страницей,
   `input.disable()` выключает клавиатурные команды; страница вида (`body.dataset.view`) вводом не
   читается.
+- Определения героев и врагов системы берут прямо из data (data/characters/heroes.js,
+  data/enemies/units.js); рендереры (`createEnemyRenderer`, `createCorpseRenderer`) создаёт каждый
+  вид сам — сессия и бестиарий держат свои экземпляры, общих синглтонов нет.
 - То, что зависит от экрана (кто из врагов говорит), вызывается из сессии с видимым прямоугольником
   мира, а не из шага симуляции.
 - Типы, которые app отдаёт React (Session, Account), живут в src/app/types.ts.
 
 Осознанные исключения и долги:
 
-- entities стоит после rendering: это реестры юнитов вместе с их артом. systems получают их только
-  через внедрение (`enemies`, `heroes` в create), не импортом.
 - ui — превью для React (бестиарий, портреты меню) и поэтому стоит на уровне app: ему нужны полные
   systems (расписание волн, узлы), а не только queries.
 - Рисует только src/rendering: системы и мир меняют состояние и отдают геометрию данными

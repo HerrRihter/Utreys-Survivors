@@ -4,6 +4,7 @@ const { waveSchedules } = require('../data/enemies/waves.js');
 const { validateUnits } = require('../tools/check-game-contracts.cjs');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { drawEnemyShot } = require('../src/rendering/projectiles.js');
+const { mitigation } = require('../src/systems/enemy-behaviors.js');
 
 (async () => {
   const added = [
@@ -54,13 +55,14 @@ const { drawEnemyShot } = require('../src/rendering/projectiles.js');
     for (let i = 0; i < Math.ceil(settle / 0.05); i++) s.update(0.05);
     assert(p.hp < hp, `${id} actual attack damages player`);
     assert.equal(s.state.bossSpawned, false, `${id} does not trigger boss progression`);
-    h.env.Enemies.draw(h.context, e);
+    const enemies = h.env.createEnemyRenderer();
+    enemies.draw(h.context, e);
     e.action = { aim: p, hit: false };
-    h.env.Enemies.telegraph(h.context, e);
+    enemies.telegraph(h.context, e);
     drawEnemyShot(h.context, { x: 0, y: 0, kind: id });
     if (u.frontDamageMultiplier) {
-      assert.equal(h.env.Enemies.mitigation(e, { x: e.x + 20, y: e.y }), u.frontDamageMultiplier);
-      assert.equal(h.env.Enemies.mitigation(e, { x: e.x - 20, y: e.y }), 1);
+      assert.equal(mitigation(e, { x: e.x + 20, y: e.y }), u.frontDamageMultiplier);
+      assert.equal(mitigation(e, { x: e.x - 20, y: e.y }), 1);
     }
     const kills = s.state.kills;
     s.damage(e, e.hp / (u.frontDamageMultiplier || 1) + 1);

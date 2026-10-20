@@ -8,14 +8,14 @@ import {
 } from './wave-schedule.js';
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
-import { enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
+import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
-  create({ run, enemies, world, math, toast, audio }) {
+  create({ run, world, math, toast, audio }) {
     function spawn(unit, boss = false, position = null) {
       const s = run.state,
         p = s.p,
-        u = enemies.units[unit];
+        u = unitDefinitions[unit];
       if (!u) throw new Error('Unknown unit: ' + unit);
       let x, y;
       if (position) {
@@ -109,18 +109,18 @@ export const EnemySpawning = {
         const shares = schedule.normal.shares || {},
           roles = { shooter: 0, tank: 0, light: 0 },
           full = new Set();
-        for (const e of s.enemies) if (e.hp > 0) roles[unitRole(enemies.units[e.unit])]++;
+        for (const e of s.enemies) if (e.hp > 0) roles[unitRole(unitDefinitions[e.unit])]++;
         const check = () => {
           for (const [role, share] of Object.entries(shares))
             if (roles[role] >= Math.ceil(wave.cap * share)) full.add(role);
         };
         check();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++) {
-          const unit = selectWaveUnit(schedule, s.t, math.random(), enemies.units, full),
+          const unit = selectWaveUnit(schedule, s.t, math.random(), unitDefinitions, full),
             leader = track(spawn(unit)),
-            pack = enemies.units[unit].pack || 1;
+            pack = unitDefinitions[unit].pack || 1;
           if (leader) {
-            roles[unitRole(enemies.units[unit])]++;
+            roles[unitRole(unitDefinitions[unit])]++;
             check();
           }
           // Swarm units arrive as a pack around the first one.
@@ -140,7 +140,7 @@ export const EnemySpawning = {
         if (e) {
           makeElite(e);
           toast(
-            'Элитный клиент: ' + enemies.units[e.unit].name + '. С него падает пакет обновлений',
+            'Элитный клиент: ' + unitDefinitions[e.unit].name + '. С него падает пакет обновлений',
           );
         }
       }

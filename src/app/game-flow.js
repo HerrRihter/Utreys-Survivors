@@ -1,3 +1,5 @@
+import { unitDefinitions } from '../../data/enemies/units.js';
+import { heroDefinitions } from '../../data/characters/heroes.js';
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { createRunModel } from '../systems/run-model.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
@@ -19,8 +21,6 @@ export const GameFlow = {
     run,
     settings,
     progression,
-    heroes,
-    enemies,
     upgrades,
     world,
     abilities,
@@ -139,7 +139,7 @@ export const GameFlow = {
       run.selectedLoad = load;
       run.state = createRunModel({
         hero: run.selected,
-        heroDef: heroes.defs[run.selected],
+        heroDef: heroDefinitions[run.selected],
         levels,
         load,
         seed,
@@ -153,7 +153,7 @@ export const GameFlow = {
           .map((a) => a.id),
       });
       world.arena.prepare(
-        Object.values(enemies.units).map((unit) => unit.r),
+        Object.values(unitDefinitions).map((unit) => unit.r),
         run.state.p,
       );
       run.screen = null;
@@ -436,7 +436,7 @@ export const GameFlow = {
     function resume() {
       const snapshot = snapshots?.load();
       if (!snapshot || run.mode !== 'menu') return false;
-      if (!heroes.defs[snapshot.hero] || !progression.owned(snapshot.hero)) {
+      if (!heroDefinitions[snapshot.hero] || !progression.owned(snapshot.hero)) {
         snapshots.clear();
         ui.emit();
         return false;
@@ -474,7 +474,7 @@ export const GameFlow = {
         .sort((a, b) => b.amount - a.amount);
     }
     function sourceName(tag) {
-      if (tag === 'hero') return heroes.defs[run.selected].weapon;
+      if (tag === 'hero') return heroDefinitions[run.selected].weapon;
       const ability = run.state.abilities?.find((a) => a.id === tag);
       if (ability) return `${ability.name} (${run.state.abilities.indexOf(ability) ? 'E' : 'Q'})`;
       const w = run.state.weapons?.find((item) => item.id === tag);
@@ -489,7 +489,7 @@ export const GameFlow = {
     }
     function openHeroSelect() {
       if (run.mode !== 'menu') return;
-      const owned = Object.keys(heroes.defs).filter((id) => progression.owned(id));
+      const owned = Object.keys(heroDefinitions).filter((id) => progression.owned(id));
       if (!owned.length) throw new Error('Нет доступных героев для нового забега');
       run.pendingHero = owned.includes(run.selected) ? run.selected : owned[0];
       if (!baClientIds.includes(run.baClient)) run.baClient = baClientIds[0];

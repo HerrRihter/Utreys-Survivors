@@ -1,3 +1,4 @@
+import { unitDefinitions } from '../../data/enemies/units.js';
 import { drawNodes } from './node-objectives.js';
 import { drawEnemySpeech } from './enemy-speech.js';
 import { orderActors } from './depth-order.js';
@@ -141,7 +142,7 @@ export const SceneRenderer = {
             ctx.fillStyle = '#00e5ff';
             ctx.fillRect(e.x - 3, e.y - 45, 6, 2);
           } else if (e.hp < e.max && !e.boss) {
-            const unitR = enemies.units[e.unit]?.r || 18;
+            const unitR = unitDefinitions[e.unit]?.r || 18;
             ctx.fillStyle = '#08171a';
             ctx.fillRect(e.x - 13, e.y - (unitR + 22), 26, 4);
             ctx.fillStyle = '#ff5252';

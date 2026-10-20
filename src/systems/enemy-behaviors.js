@@ -2,6 +2,8 @@
 // movement (dash, flank, keep), support (heal, aura), enrage, summons, ground hazards and
 // boss phases. `c` = { arena, spawn, hurtPlayer, effect, toast, random, units }.
 
+import { unitDefinitions } from '../../data/enemies/units.js';
+
 const hazardColor = '#ff7043';
 
 // Where an enemy walks this frame: a point to approach, or null to hold its ground.
@@ -248,6 +250,15 @@ export function updateHazards(c, s, dt) {
 }
 
 // Damage share an enemy takes because a guard stands next to it.
+// A shielded unit (`frontDamageMultiplier`) takes less damage from hits that land on its
+// front; `p` is where the hit comes from.
+export function mitigation(e, p) {
+  const multiplier = unitDefinitions[e.unit]?.frontDamageMultiplier;
+  if (multiplier == null) return 1;
+  const a = Math.atan2(p.y - e.y, p.x - e.x);
+  return Math.cos(a - (e.heading || 0)) > 0.15 ? multiplier : 1;
+}
+
 export function auraFactor(s, e, units) {
   const guards = s.runtime.guards;
   if (!guards.length) return 1;

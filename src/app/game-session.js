@@ -25,8 +25,7 @@ import { UpgradeSystem } from '../systems/upgrades.js';
 import { WeaponSystem } from '../systems/weapons.js';
 import { createCorpses } from '../systems/corpses.js';
 import { createCorpseRenderer } from '../rendering/corpses.js';
-import { createEnemies } from '../entities/enemies.js';
-import { Heroes } from '../entities/heroes.js';
+import { createEnemyRenderer } from '../rendering/enemies.js';
 import { MenuPortraits } from '../ui/menu-portraits.js';
 import { createRunSnapshots } from '../systems/run-snapshot.js';
 import { createTips } from './tips.js';
@@ -43,7 +42,6 @@ export const GameSession = {
     cancelAnimationFrame,
     canvas,
     progression,
-    heroes = Heroes,
   }) {
     const events = createEventScope();
     let disposed = false;
@@ -78,7 +76,6 @@ export const GameSession = {
         this.arena = arenas.get(id);
       },
     };
-    const enemies = createEnemies({ createCanvas });
     const corpses = createCorpses();
     const upgrades = UpgradeSystem.create(progression);
     const audio = AudioSystem.create({
@@ -97,8 +94,6 @@ export const GameSession = {
 
     const combat = CombatSystem.create({
       run,
-      heroes,
-      enemies,
       corpses,
       progression,
       world,
@@ -114,10 +109,8 @@ export const GameSession = {
       damage: combat.damage,
       progression,
       audio,
-      heroes,
-      units: enemies.units,
     });
-    const spawning = EnemySpawning.create({ run, enemies, world, math, toast, audio });
+    const spawning = EnemySpawning.create({ run, world, math, toast, audio });
     const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio, math });
     // Saves the run journal as a JSON file; returns the file's text (tests read it).
     function exportRunLog() {
@@ -165,8 +158,6 @@ export const GameSession = {
       run,
       settings,
       progression,
-      heroes,
-      enemies,
       upgrades,
       world,
       abilities,
@@ -185,8 +176,6 @@ export const GameSession = {
     const simulation = Simulation.create({
       run,
       world,
-      heroes,
-      enemies,
       corpses,
       progression,
       audio,
@@ -198,7 +187,9 @@ export const GameSession = {
       runEvents,
       events: { finish: flow.finish, levelUp: flow.levelUp, openBundle: flow.openBundle, toast },
     });
-    const { sprite } = SpriteRenderer.create({ run, heroes });
+    const { sprite } = SpriteRenderer.create({ run });
+    // The session's own enemy renderer: its sprite caches follow this canvas's pixel ratio.
+    const enemies = createEnemyRenderer({ createCanvas });
     const renderer = SceneRenderer.create({
       ctx,
       floor: createArenaFloor({ createCanvas }),
@@ -298,7 +289,7 @@ export const GameSession = {
       events.dispose();
       progression.flush?.();
     }
-    const read = { run, progression, heroes, enemies, settings, upgrades };
+    const read = { run, progression, settings, upgrades };
 
     return {
       // Engine API (tests, tools)
@@ -315,7 +306,6 @@ export const GameSession = {
       spawn: spawning.spawn,
       damage: combat.damage,
       upgrades,
-      enemies,
       run() {
         if (disposed) return;
         input.enable();

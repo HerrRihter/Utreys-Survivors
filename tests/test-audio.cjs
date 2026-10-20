@@ -146,8 +146,6 @@ async function main() {
   const run = { selected: 'utrace', state: h.session.state };
   const combat = h.env.CombatSystem.create({
       run,
-      heroes: h.env.Heroes,
-      enemies: h.env.Enemies,
       corpses: { add() {} },
       progression: { kill: () => 0 },
       world: { arena: { clear: () => true } },

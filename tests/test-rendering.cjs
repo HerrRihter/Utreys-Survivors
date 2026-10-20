@@ -76,7 +76,7 @@ async function main() {
   };
   const { sprite } = SpriteRenderer.create({
     run: { state: null },
-    heroes: { draw: (context) => alphas.push(context.globalAlpha) },
+    drawHero: (context) => alphas.push(context.globalAlpha),
   });
   sprite(g, 'utrace', 0, 0, 3, false, false);
   sprite(g, 'utrace', 0, 0, 3, false, true);

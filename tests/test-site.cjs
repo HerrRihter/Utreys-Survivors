@@ -19,8 +19,8 @@ const assets = require('../tools/active-assets.json');
   };
   for (const file of [
     'src/app/game-session.js',
-    'src/entities/heroes.js',
-    'src/entities/enemies.js',
+    'src/rendering/enemies.js',
+    'src/rendering/corpses.js',
     'src/systems/corpses.js',
   ])
     await loadModule(env, path.resolve(file));

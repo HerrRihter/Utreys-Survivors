@@ -1,12 +1,14 @@
 import { unitDefinitions } from '../../data/enemies/units.js';
-import { neonStroke } from '../rendering/neon.js';
-import { clientEmblems, drawClientEmblem } from '../rendering/art/client-emblems.js';
-import { enemyArt } from '../rendering/art/enemy-art.js';
-import { browserCanvas, trimCanvas } from '../rendering/offscreen.js';
+import { neonStroke } from './neon.js';
+import { clientEmblems, drawClientEmblem } from './art/client-emblems.js';
+import { enemyArt } from './art/enemy-art.js';
+import { browserCanvas, trimCanvas } from './offscreen.js';
 
-// Enemy data plus rendering with per-device-ratio sprite caches. `createCanvas` makes the
-// offscreen canvases; without one (headless tests) everything is painted directly.
-export function createEnemies({ createCanvas = browserCanvas } = {}) {
+// Enemy bodies, name labels, attack telegraphs and ground hazards, with per-device-ratio
+// sprite and label caches. Each view (game session, bestiary) makes its own renderer.
+// `createCanvas` makes the offscreen canvases; without one (headless tests) everything is
+// painted directly.
+export function createEnemyRenderer({ createCanvas = browserCanvas } = {}) {
   const units = unitDefinitions;
   const labels = new Map();
 
@@ -49,13 +51,6 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
       g.textAlign = 'center';
       g.fillText(u.name, x, y);
     }
-  }
-
-  function mitigation(e, p) {
-    const multiplier = units[e.unit]?.frontDamageMultiplier;
-    if (multiplier == null) return 1;
-    const a = Math.atan2(p.y - e.y, p.x - e.x);
-    return Math.cos(a - (e.heading || 0)) > 0.15 ? multiplier : 1;
   }
 
   function telegraph(g, e) {
@@ -266,8 +261,5 @@ export function createEnemies({ createCanvas = browserCanvas } = {}) {
     drawLabel(g, u, e.x, e.y - labelOffset, ratio || 2);
   }
 
-  return { units, mitigation, telegraph, draw, hazard };
+  return { telegraph, draw, hazard };
 }
-
-// Shared instance for React previews (bestiary, arena view); the game session makes its own.
-export const Enemies = createEnemies();

@@ -1,4 +1,6 @@
 import { compact } from '../core/compact.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
+import { heroDefinitions } from '../../data/characters/heroes.js';
 import { resolveEnemyStrike } from './enemy-attacks.js';
 import {
   moveGoal,
@@ -22,8 +24,6 @@ export const Simulation = {
   create({
     run,
     world,
-    heroes,
-    enemies,
     corpses,
     progression,
     audio,
@@ -46,7 +46,7 @@ export const Simulation = {
       spawn: (...args) => spawning.spawn(...args),
       toast: (message) => events.toast?.(message),
       random: () => math.random(),
-      units: enemies.units,
+      units: unitDefinitions,
     };
     // Enemy speed grows with time, up to this multiplier.
     const timeSpeedCap = 1.2;
@@ -74,7 +74,7 @@ export const Simulation = {
       }
       if (item.type === 'freeze') {
         for (const e of s.enemies)
-          if (e.hp > 0 && !e.boss && !enemies.units[e.unit]?.miniboss) {
+          if (e.hp > 0 && !e.boss && !unitDefinitions[e.unit]?.miniboss) {
             e.abilityStun = Math.max(e.abilityStun || 0, 4);
             e.action = null;
           }
@@ -148,7 +148,7 @@ export const Simulation = {
       }
       advanceAction(p, dt, combat.heroImpact);
       weapons?.update(dt);
-      const heroSpec = heroes.defs[run.selected];
+      const heroSpec = heroDefinitions[run.selected];
       s.attack -= dt;
       if (!blocksAttack(s) && s.attack <= 0 && !p.action) {
         s.attack = Math.max(0.22, heroSpec.interval / (st.haste * (1 + (st.punchTempo || 0))));
@@ -163,10 +163,10 @@ export const Simulation = {
         p.action.flip = Math.abs(dir.x) > 0.01 ? dir.x < 0 : p.flip;
       }
       // Guards whose aura covers their neighbours, found once per step for combat.
-      s.runtime.guards = s.enemies.filter((e) => e.hp > 0 && enemies.units[e.unit]?.aura);
+      s.runtime.guards = s.enemies.filter((e) => e.hp > 0 && unitDefinitions[e.unit]?.aura);
       for (const e of s.enemies) {
         if (e.hp <= 0 || e.abilityStun > 0) continue;
-        const u = enemies.units[e.unit],
+        const u = unitDefinitions[e.unit],
           d = dist(e, p);
         e.hit = Math.max(0, e.hit - dt);
         if (e.visualHurt) {

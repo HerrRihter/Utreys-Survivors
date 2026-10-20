@@ -192,7 +192,7 @@ async function play(hero, seed) {
   game.start();
   const s = game.state,
     run = game.views.run(),
-    units = game.enemies.units,
+    units = h.env.unitDefinitions,
     size = 2200,
     spec = heroDefinitions[hero],
     reach = (spec?.attack === 'packet' ? 300 : (spec?.range || 80) * 1.4) + 20;

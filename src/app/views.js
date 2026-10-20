@@ -5,6 +5,8 @@ import {
   abilityUpgradeDescriptions,
 } from '../../data/characters/abilities.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
+import { heroDefinitions } from '../../data/characters/heroes.js';
 import { heroPassives } from '../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
 import { productionMinutes } from '../systems/difficulty.js';
@@ -44,8 +46,8 @@ function unclaimedAchievements(progression, best) {
 }
 
 // What the player has opened so far, counted from the data so it never goes stale.
-function collection(progression, heroes) {
-  const heroIds = Object.keys(heroes.defs),
+function collection(progression) {
+  const heroIds = Object.keys(heroDefinitions),
     weaponIds = Object.keys(weaponDefinitions),
     evolutions = [...weaponIds, ...heroIds.map((id) => 'hero_' + id)];
   return [
@@ -67,11 +69,11 @@ function collection(progression, heroes) {
   ];
 }
 
-export function menuView({ run, progression, heroes, snapshot = null }) {
+export function menuView({ run, progression, snapshot = null }) {
   const unclaimed = unclaimedAchievements(progression, run.best);
-  const hero = snapshot && heroes?.defs[snapshot.hero];
+  const hero = snapshot && heroDefinitions[snapshot.hero];
   return {
-    collection: collection(progression, heroes),
+    collection: collection(progression),
     resume: hero ? `${hero.name} · ${clock(snapshot.state.t)} · ур. ${snapshot.state.level}` : null,
     wallet: 'КОДЫ: ' + progression.codes,
     record: run.best.time
@@ -85,15 +87,15 @@ export function menuView({ run, progression, heroes, snapshot = null }) {
   };
 }
 
-export function heroSelectView({ run, progression, heroes, enemies }) {
-  const hero = heroes.defs[run.pendingHero],
+export function heroSelectView({ run, progression }) {
+  const hero = heroDefinitions[run.pendingHero],
     passive = heroPassives[run.pendingHero];
   return {
     // Locked heroes stay in the list with their price, so the player sees what to save for.
-    heroes: Object.keys(heroes.defs).map((id) => ({
+    heroes: Object.keys(heroDefinitions).map((id) => ({
       id,
-      name: heroes.defs[id].name,
-      weapon: heroes.defs[id].weapon,
+      name: heroDefinitions[id].name,
+      weapon: heroDefinitions[id].weapon,
       role: heroPassives[id]?.role || '',
       locked: !progression.owned(id),
       price: progression.prices[id] || 0,
@@ -112,7 +114,7 @@ export function heroSelectView({ run, progression, heroes, enemies }) {
       (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
     ...loadView(run, progression),
     showBaClients: run.pendingHero === 'ba',
-    baClients: baClientIds.map((id) => ({ id, name: enemies.units[id].name })),
+    baClients: baClientIds.map((id) => ({ id, name: unitDefinitions[id].name })),
     baClient: run.baClient,
     maps: Object.entries(arenaDefinitions).map(([id, map]) => ({
       id,
@@ -160,9 +162,9 @@ function loadView(run, progression) {
 
 /** @typedef {{ id: string, label: string, disabled: boolean }} ShopItem */
 
-export function shopView({ progression, heroes }) {
+export function shopView({ progression }) {
   const codes = progression.codes;
-  const heroCards = Object.entries(heroes.defs).map(([id, hero]) => {
+  const heroCards = Object.entries(heroDefinitions).map(([id, hero]) => {
     const owned = progression.owned(id);
     return {
       id,
@@ -190,7 +192,7 @@ export function shopView({ progression, heroes }) {
     groups.at(-1).items.push({
       id,
       label:
-        (u.hero ? heroes.defs[u.hero].name + ' · ' : '') +
+        (u.hero ? heroDefinitions[u.hero].name + ' · ' : '') +
         `${u.name} ${level}/${u.max} · ${u.desc} · ` +
         (level >= u.max ? 'Максимум' : progression.cost(id) + ' кодов') +
         (lock === 'hero' ? ' · Сначала открой героя' : '') +
@@ -219,7 +221,7 @@ export function shopView({ progression, heroes }) {
  */
 // Weapons, passives and evolutions. Locked weapons show their condition; an evolution shows
 // its recipe until the player assembles it once, then its name and effect.
-export function encyclopediaView({ progression, heroes, upgrades }) {
+export function encyclopediaView({ progression, upgrades }) {
   const passiveName = Object.fromEntries(upgrades.common.map((u) => [u.id, u.name]));
   const evolution = (id, evo, recipe) => {
     const discovered = progression.evolutionSeen(id);
@@ -259,7 +261,7 @@ export function encyclopediaView({ progression, heroes, upgrades }) {
       evolution: null,
     };
   });
-  const heroCards = Object.entries(heroes.defs).map(([id, hero]) => ({
+  const heroCards = Object.entries(heroDefinitions).map(([id, hero]) => ({
     id,
     icon: '⚔',
     name: hero.weapon,
@@ -433,10 +435,10 @@ function controlsHint(b = defaultBindings, desks = false) {
 }
 
 // Everything the in-run overlay shows; refreshed about ten times a second.
-export function hudView({ run, progression, heroes, enemies, settings, upgrades }) {
+export function hudView({ run, progression, settings, upgrades }) {
   const s = run.state;
   if (!s) return null;
-  const hero = heroes.defs[run.selected];
+  const hero = heroDefinitions[run.selected];
   const boss = s.enemies.find((e) => e.boss);
   const ba = s.baSpecialization;
   return {
@@ -452,13 +454,13 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
       arenaDefinitions[s.map]?.name +
       ` · Нагрузка ${s.load || 1}` +
       (s.endless ? ` · Продакшен ${productionMinutes(s)} мин` : '') +
-      (ba ? ` · Клиент: ${enemies.units[ba.client].name} · +${ba.bonus} HP` : ''),
+      (ba ? ` · Клиент: ${unitDefinitions[ba.client].name} · +${ba.bonus} HP` : ''),
     codes: `КОДЫ: ${progression.codes} (+${s.earned})`,
     progress: nodeProgress(s),
     event: eventLabel(s),
     boss: boss
       ? {
-          name: enemies.units[boss.unit]?.name || 'ШЛЮЗ ЦРПТ',
+          name: unitDefinitions[boss.unit]?.name || 'ШЛЮЗ ЦРПТ',
           pct: Math.round((boss.hp / boss.max) * 1000) / 10,
         }
       : null,

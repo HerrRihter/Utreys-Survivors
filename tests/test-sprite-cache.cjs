@@ -32,14 +32,14 @@ const assert = require('node:assert/strict');
   assert.equal(trimCanvas(canvas, createCanvas).canvas, canvas);
   const unsupported = { width: 28, height: 28, getContext: () => ({}) };
   assert.equal(trimCanvas(unsupported, createCanvas).canvas, unsupported);
-  const { createEnemies } = await import('../src/entities/enemies.js');
+  const { createEnemyRenderer } = await import('../src/rendering/enemies.js');
   const { canvasContext } = require('./helpers/canvas-context.cjs');
   const context = (overrides = {}) =>
     new Proxy(canvasContext(overrides), {
       get: (target, key) => target[key] || (() => {}),
     });
   let allocated = 0;
-  const enemies = createEnemies({
+  const enemies = createEnemyRenderer({
     createCanvas: (width, height) => {
       allocated++;
       return { width, height, getContext: () => context() };

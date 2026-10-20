@@ -1,4 +1,6 @@
 import { abilityRank } from '../../data/characters/abilities.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
+import { heroDefinitions } from '../../data/characters/heroes.js';
 import { effectiveStats } from './queries/abilities.js';
 
 const TAU = Math.PI * 2;
@@ -6,14 +8,14 @@ const TAU = Math.PI * 2;
 // Q/E abilities: casting, timers and their effects. Q is the shared dash; E is the hero's own
 // (overclock, registry, volley, negotiations or regression zone). rendering/abilities.js draws them.
 export const AbilitySystem = {
-  create({ run, world, damage, progression, audio, heroes, units }) {
-    const ordinary = (e) => !e.boss && !units?.[e.unit]?.miniboss;
+  create({ run, world, damage, progression, audio }) {
+    const ordinary = (e) => !e.boss && !unitDefinitions[e.unit]?.miniboss;
 
     // Instant effects at the moment of casting.
     const cast = {
       // Serialization: a fan of piercing packets in every direction.
       volley(s, a) {
-        const spec = heroes.defs[run.selected],
+        const spec = heroDefinitions[run.selected],
           st = effectiveStats(s);
         const power =
           spec.damage * st.damage * (1 + (st.heroPower || 0)) * a.power * (1 + 0.25 * a.castRank);
