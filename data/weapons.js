@@ -236,6 +236,7 @@ export const heroEvolutions = {
   serialization: {
     name: 'Пакетная фрагментация',
     desc: 'В конце пути пакет распадается на три.',
+    split: { turns: [-0.45, 0, 0.45], life: 0.45, damage: 0.6 },
   },
   ba: {
     name: 'Ключевой клиент',

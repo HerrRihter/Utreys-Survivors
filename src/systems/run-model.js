@@ -47,7 +47,9 @@ import { loadModifiers } from '../../data/difficulty.js';
  * @typedef {{ x: number, y: number, v: number, dead?: boolean, pull?: boolean }} Gem
  * @typedef {{ x: number, y: number, value: number, event?: boolean, dead?: boolean }} CodeToken
  * @typedef {{ x: number, y: number, type: string, dead?: boolean }} Pickup
- * Short-lived world objects (shots, effects, hazards, corpses): dropped on save.
+ * Short-lived world objects (shots, effects, hazards, corpses): dropped on save. The player's
+ * projectiles are `shots` (the hero's packets) and `wfx` (weapon shots, mines, zones), both
+ * moved by the projectile kinds of src/systems/projectiles.js.
  * @typedef {Record<string, unknown>} WorldObject
  * @typedef {{ client: string, bonus: number }} BaSpecialization
  *

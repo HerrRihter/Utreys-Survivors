@@ -35,7 +35,7 @@ export const AbilitySystem = {
             age: 0,
             angle,
             color: spec.color,
-            kind: 'code',
+            kind: 'packet',
             tag: 'volley',
           });
         }

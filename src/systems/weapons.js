@@ -1,10 +1,8 @@
 import { weaponDefinitions, weaponStats, weaponMaxLevel } from '../../data/weapons.js';
-import { compact } from '../core/compact.js';
 import { effectiveStats } from './queries/abilities.js';
 import { weaponEvolution } from './queries/weapons.js';
 import { weaponKinds, effectKinds } from './weapons/index.js';
-
-const isLive = (item) => item.life > 0;
+import { nearestEnemy, updateProjectiles } from './projectiles.js';
 
 // Extra weapons picked up during a run. State lives in `run.state`:
 //   weapons: [{ id, level, cd, evolved, phase }] — owned weapons in pickup order (the upgrade
@@ -42,19 +40,6 @@ export const WeaponSystem = {
       }
     }
 
-    function nearest(s, x, y, maxDistance = Infinity) {
-      let best = null,
-        bestD = maxDistance;
-      for (const e of s.enemies) {
-        if (e.hp <= 0) continue;
-        const d = Math.hypot(e.x - x, e.y - y);
-        if (d < bestD) {
-          best = e;
-          bestD = d;
-        }
-      }
-      return best;
-    }
     function hitArea(s, x, y, radius, n, push, tag, filter) {
       let hits = 0;
       for (const e of s.enemies) {
@@ -75,7 +60,7 @@ export const WeaponSystem = {
       audio,
       math,
       dt: 0,
-      nearest,
+      nearest: nearestEnemy,
       hitArea,
       enemyCd: (e, key) => e.wcd?.[key] || 0,
       setEnemyCd(e, key, until) {
@@ -100,14 +85,7 @@ export const WeaponSystem = {
         w.cd = Math.max(0.25, v.cooldown / st.haste);
         kind.fire(context, s, w, v, st, evo);
       }
-      updateEffects(s, dt);
-    }
-
-    function updateEffects(s, dt) {
-      const spawned = [];
-      for (const f of s.wfx) effectKinds[f.kind](context, s, f, dt, spawned);
-      for (const f of spawned) s.wfx.push(f);
-      compact(s.wfx, isLive);
+      updateProjectiles(context, s, s.wfx, dt, effectKinds);
     }
 
     return { update };

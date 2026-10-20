@@ -14,6 +14,7 @@ import {
 import { advanceAction } from '../core/action-timeline.js';
 import { protectedMove, blocksAttack, effectiveStats, pacified } from './queries/abilities.js';
 import { countCrowd } from './hero-passives.js';
+import { updateProjectiles } from './projectiles.js';
 
 const isLive = (item) => item.life > 0,
   isPresent = (item) => !item.dead,
@@ -36,7 +37,8 @@ export const Simulation = {
     events,
   }) {
     const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-    const fragments = [];
+    // The hero's packets (`s.shots`) move and split through the shared projectile kinds.
+    const shotContext = { damage: combat.damage, math };
     const strike = {
       get arena() {
         return world.arena;
@@ -251,49 +253,7 @@ export const Simulation = {
         b.life -= dt;
       }
       compact(s.enemyShots, isLive);
-      for (const b of s.shots) {
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
-        b.life -= dt;
-        // Serialization evolution: a packet ends by splitting into three fragments.
-        if (b.life <= 0 && b.split) {
-          b.split = false;
-          const a = Math.atan2(b.vy, b.vx),
-            v = Math.hypot(b.vx, b.vy);
-          for (const turn of [-0.45, 0, 0.45])
-            fragments.push({
-              ...b,
-              vx: Math.cos(a + turn) * v,
-              vy: Math.sin(a + turn) * v,
-              life: 0.45,
-              damage: b.damage * 0.6,
-              hit: new Set(),
-              split: false,
-            });
-        }
-        b.age = (b.age || 0) + dt;
-        b.angle += dt * 4.5;
-        for (const e of s.enemies) {
-          if (e.hp > 0 && !b.hit.has(e) && Math.hypot(e.x - b.x, e.y - 10 - b.y) < e.r + b.r) {
-            b.hit.add(e);
-            const impulse =
-              b.push === undefined ? 0.25 : b.push / Math.max(1, Math.hypot(b.vx, b.vy));
-            combat.damage(
-              e,
-              b.damage,
-              b.vx * impulse,
-              b.vy * impulse,
-              { x: e.x - b.vx, y: e.y - b.vy },
-              b.tag,
-            );
-          }
-        }
-      }
-      compact(s.shots, isLive);
-      if (fragments.length) {
-        for (const f of fragments) s.shots.push(f);
-        fragments.length = 0;
-      }
+      updateProjectiles(shotContext, s, s.shots, dt);
       for (const codeToken of s.codes) {
         const d = dist(codeToken, p);
         if (d < st.magnet && world.arena.clear(codeToken, p, 2)) {

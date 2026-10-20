@@ -1,4 +1,5 @@
 import { scanMarkSeconds } from '../../data/characters/hero-passives.js';
+import { heroEvolutions } from '../../data/weapons.js';
 
 // One hero strike. `c` holds exactly what a strike touches:
 // { state, hero, heroId, arena, units, effect, damage }. `stats.heroEvo` turns on the
@@ -27,8 +28,8 @@ export function heroAttack(c, action, stats) {
       age: 0,
       angle,
       color: spec.color,
-      kind: 'code',
-      split: evolved,
+      kind: 'packet',
+      split: evolved ? heroEvolutions[c.heroId].split : null,
     });
     c.effect('throw');
     return;

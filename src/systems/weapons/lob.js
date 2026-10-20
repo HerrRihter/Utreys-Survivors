@@ -44,18 +44,4 @@ export const lob = {
         });
     c.audio.effect('throw');
   },
-  effects: {
-    label(c, s, f, dt) {
-      f.vy += f.gravity * dt;
-      f.x += f.vx * dt;
-      f.y += f.vy * dt;
-      f.life -= dt;
-      for (const e of s.enemies) {
-        if (e.hp <= 0 || f.hit.has(e)) continue;
-        if (Math.hypot(e.x - f.x, e.y - 10 - f.y) > e.r + f.r) continue;
-        f.hit.add(e);
-        c.damage(e, f.damage, f.vx * 0.1, 40, { x: f.x, y: f.y }, f.tag);
-      }
-    },
-  },
 };

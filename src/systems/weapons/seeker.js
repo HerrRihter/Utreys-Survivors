@@ -29,41 +29,4 @@ export const seeker = {
     }
     c.audio.effect('throw');
   },
-  effects: {
-    seeker(c, s, f, dt, spawned) {
-      if (!f.target || f.target.hp <= 0) f.target = c.nearest(s, f.x, f.y, 420);
-      if (f.target) {
-        const want = Math.atan2(f.target.y - 10 - f.y, f.target.x - f.x),
-          have = Math.atan2(f.vy, f.vx);
-        const turn = Math.atan2(Math.sin(want - have), Math.cos(want - have));
-        const a = have + c.math.clamp(turn, -7 * dt, 7 * dt);
-        f.vx = Math.cos(a) * f.speed;
-        f.vy = Math.sin(a) * f.speed;
-      }
-      f.x += f.vx * dt;
-      f.y += f.vy * dt;
-      f.life -= dt;
-      for (const e of s.enemies) {
-        if (e.hp <= 0 || e === f.ignore) continue;
-        if (Math.hypot(e.x - f.x, e.y - 10 - f.y) > e.r + f.r) continue;
-        c.damage(e, f.damage, f.vx * 0.15, f.vy * 0.15, { x: f.x, y: f.y }, f.tag);
-        f.life = 0;
-        if (f.split && !f.child)
-          for (const turn of f.split.turns) {
-            const a = Math.atan2(f.vy, f.vx) + turn;
-            spawned.push({
-              ...f,
-              vx: Math.cos(a) * f.speed,
-              vy: Math.sin(a) * f.speed,
-              life: f.split.life,
-              damage: f.damage * f.split.damage,
-              target: null,
-              child: true,
-              ignore: e,
-            });
-          }
-        break;
-      }
-    },
-  },
 };

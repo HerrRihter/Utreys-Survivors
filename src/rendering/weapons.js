@@ -1,5 +1,6 @@
 import { weaponDefinitions } from '../../data/weapons.js';
 import { effectiveStats } from '../systems/queries/abilities.js';
+import { projectilePainters } from './projectiles.js';
 import { orbitShape, auraRadius, weaponEvolution } from '../systems/queries/weapons.js';
 
 const TAU = Math.PI * 2;
@@ -49,23 +50,9 @@ const weaponPainters = {
   },
 };
 
-// What the weapons spawned (`s.wfx`), by effect kind.
+// What the weapons spawned (`s.wfx`), by effect kind: their shots and the mines and zones.
 const effectPainters = {
-  seeker: {
-    layer: 'air',
-    draw(g, f) {
-      g.fillStyle = f.color;
-      g.beginPath();
-      g.arc(f.x, f.y, f.r, 0, TAU);
-      g.fill();
-      g.strokeStyle = f.color + '66';
-      g.lineWidth = f.r;
-      g.beginPath();
-      g.moveTo(f.x, f.y);
-      g.lineTo(f.x - f.vx * 0.04, f.y - f.vy * 0.04);
-      g.stroke();
-    },
-  },
+  ...projectilePainters,
   landmine: {
     layer: 'ground',
     draw(g, f) {
@@ -77,33 +64,6 @@ const effectPainters = {
       g.fillRect(f.x + 2, f.y - 6, 4, 4);
       g.fillRect(f.x - 6, f.y + 2, 4, 4);
       g.fillRect(f.x + 2, f.y + 2, 4, 4);
-    },
-  },
-  label: {
-    layer: 'air',
-    draw(g, f) {
-      g.save();
-      g.translate(f.x, f.y);
-      g.rotate(f.life * 9);
-      g.fillStyle = '#f5f5f5';
-      g.fillRect(-f.r, -f.r * 0.65, f.r * 2, f.r * 1.3);
-      g.fillStyle = f.color;
-      g.fillRect(-f.r + 2, -2, f.r * 2 - 4, 4);
-      g.restore();
-    },
-  },
-  boomerang: {
-    layer: 'air',
-    draw(g, f) {
-      g.save();
-      g.translate(f.x, f.y);
-      g.rotate(f.spin);
-      g.strokeStyle = f.color;
-      g.lineWidth = 4;
-      g.beginPath();
-      g.arc(0, 0, f.r, 0.3, Math.PI * 1.4);
-      g.stroke();
-      g.restore();
     },
   },
   zone: {
