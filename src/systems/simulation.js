@@ -230,7 +230,7 @@ export const Simulation = {
             speedFactor(e, u) *
             Math.min(timeSpeedCap, 1 + s.t / 1800) *
             (1 - (e.abilitySlow || 0)) *
-            (e.weaponSlowUntil > s.t ? 0.65 : 1),
+            (e.weaponSlowUntil > s.t ? 1 - e.weaponSlow : 1),
           dir = moving ? goalDirection(world.arena, e, goal, p) : null,
           ox = e.x,
           oy = e.y;

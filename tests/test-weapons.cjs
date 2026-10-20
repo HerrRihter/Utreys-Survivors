@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const { nodeGuardian } = require('../src/systems/node-objectives.js');
 const { createHarness } = require('./helpers/game-harness.cjs');
+const { weaponDefinitions } = require('../data/weapons.js');
 
 // Every extra weapon damages enemies, levels change its numbers, a bug archive evolves a
 // ready weapon, evolved forms keep working and live effects stay bounded.
@@ -80,6 +81,12 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   }
   for (const id of ids) assert(s.damageBy[id] > 0, 'evolved ' + id + ' deals damage');
   assert(s.wfx.length < 300, 'evolved effects stay bounded');
+  // Firewall: enemies in the aura lose the data's share of their speed.
+  const aura = weaponDefinitions.ping.evolution.aura;
+  assert.equal(aura.slow, 0.35);
+  const slowed = s.enemies.find((e) => e.hp > 0 && e.weaponSlowUntil > s.t);
+  assert(slowed, 'the aura slows enemies');
+  assert.equal(slowed.weaponSlow, aura.slow);
   game.draw();
   game.dispose();
 

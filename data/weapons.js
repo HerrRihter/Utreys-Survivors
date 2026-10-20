@@ -9,7 +9,8 @@
 //              turns, living `life` s with this damage share
 //   minefield  countFactor, limitFactor, chain { reach, delay }: a blast sets off mines
 //              within `reach` blast radii after `delay` s
-//   pulse      aura { every, damage, slowFor }: a standing aura instead of pulses
+//   pulse      aura { every, damage, slow, slowFor }: a standing aura instead of pulses; enemies
+//              inside lose `slow` of their speed for `slowFor` s
 //   lob        fan { count, speed, life }: straight out in every direction
 //   boomerang  persist (`count` stay alive for good), collect { reach }: carry experience
 //   zone       radiusFactor, heal (HP/s for the hero inside)
@@ -106,7 +107,7 @@ export const weaponDefinitions = {
       passive: 'armor',
       name: 'Firewall',
       desc: 'Постоянная аура: урон каждые 0,35 с и замедление врагов на 35%.',
-      aura: { every: 0.35, damage: 0.4, slowFor: 0.2 },
+      aura: { every: 0.35, damage: 0.4, slow: 0.35, slowFor: 0.2 },
     },
   },
   printer: {
