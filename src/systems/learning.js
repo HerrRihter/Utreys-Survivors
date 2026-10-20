@@ -1,7 +1,13 @@
 import { learningCourse } from '../../data/learning-questions.js';
-import { learningRules } from '../../data/learning-rules.js';
+import { learningRules, learningRooms } from '../../data/learning-rules.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { shuffle } from '../core/rng.js';
+
+// Questions asked and right answers needed: bonus terminals have their own, smaller quiz.
+const questionCount = (reason) =>
+  reason === 'bonus' ? learningRules.bonusQuestions : learningRules.questions;
+const passingCount = (reason) =>
+  reason === 'bonus' ? learningRules.bonusPassing : learningRules.passing;
 import { availableTerminal, availableExit, currentRoom } from './queries/learning.js';
 
 export function createLearningState(map) {
@@ -60,7 +66,7 @@ export function beginLearning(s, reason, nodeId = null) {
   // Prefer unseen questions, then mistakes; shuffle only once when creating the attempt.
   const questions = shuffle(pool, s.rng.random)
     .sort((a, b) => (l.answers[a.id]?.correct ? 1 : 0) - (l.answers[b.id]?.correct ? 1 : 0))
-    .slice(0, reason === 'bonus' ? 1 : learningRules.questions);
+    .slice(0, questionCount(reason));
   l.active = {
     id: l.nextAttempt++,
     reason,
@@ -132,7 +138,7 @@ export function advanceLearning(s, id) {
       a.selected = [];
       a.phase = 'question';
     } else {
-      a.passed = a.correct >= (a.reason === 'bonus' ? 1 : learningRules.passing);
+      a.passed = a.correct >= passingCount(a.reason);
       a.phase = 'result';
     }
   } else return false;
@@ -206,7 +212,7 @@ export function moveLearningRoom(s) {
     slowUntil: 0,
     slowAmount: 0,
     moving: false,
-    inv: 2,
+    inv: learningRules.roomEntryInvulnerability,
   });
   // Transient ability targets must not refer to actors in the previous room.
   for (const a of s.abilities) {
@@ -215,7 +221,7 @@ export function moveLearningRoom(s) {
     if ('hit' in a) a.hit = new Set();
     if ('endsAt' in a) a.endsAt = s.t;
   }
-  s.spawn = 2;
+  s.spawn = learningRules.roomEntryWave;
   for (const n of s.nodes)
     if (n.room === s.learning.roomIndex && n.status === 'locked') n.status = 'available';
   return true;
@@ -247,7 +253,7 @@ export function validLearning(l) {
     l.courseVersion !== learningCourse.version ||
     !Number.isInteger(l.roomIndex) ||
     l.roomIndex < 0 ||
-    l.roomIndex > 3 ||
+    l.roomIndex >= learningRooms.length ||
     typeof l.reviveUsed !== 'boolean' ||
     !l.answers ||
     !Array.isArray(l.rewards)
@@ -260,7 +266,7 @@ export function validLearning(l) {
     ['lesson', 'bonus', 'revive'].includes(a.reason) &&
     ['intro', 'question', 'feedback', 'result'].includes(a.phase) &&
     Array.isArray(a.questions) &&
-    a.questions.length === (a.reason === 'bonus' ? 1 : learningRules.questions) &&
+    a.questions.length === questionCount(a.reason) &&
     Number.isInteger(a.index) &&
     a.index >= 0 &&
     a.index < a.questions.length &&

@@ -197,33 +197,6 @@ const datacenter = {
 };
 
 export const waveSchedules = {
-  learningLab: {
-    ...datacenter,
-    normal: {
-      ...datacenter.normal,
-      firstDelay: 2,
-      stages: datacenter.normal.stages.map((stage) => ({
-        ...stage,
-        batch: 2,
-        cap: 14,
-        interval: 4,
-        minInterval: 3,
-        timeFactor: 0,
-        batchEvery: null,
-        weights: stage.weights,
-      })),
-    },
-    recurring: [],
-    elites: datacenter.elites,
-    events: { times: [], types: [] },
-    notifications: [],
-    boss: {
-      unit: 'batch_accounting',
-      condition: 'learning-rooms-complete',
-      message: 'ПАРТИОННЫЙ УЧЁТ: склеенные партии Пепси наступают!',
-      sound: 'boss',
-    },
-  },
   empty: datacenter,
   // Narrow corridors: fewer enemies at once, larger batches, a tougher CRPT.
   serverRoom: {
@@ -267,5 +240,32 @@ export const waveSchedules = {
       { time: 5, message: 'Сервисдески Пепси открыты: тикеты пошли. Снеси все три!' },
       { time: 90, message: 'Бэклог растёт: сервисдески выпускают всё больше тикетов!' },
     ],
+  },
+  learningLab: {
+    ...datacenter,
+    normal: {
+      ...datacenter.normal,
+      firstDelay: 2,
+      stages: datacenter.normal.stages.map((stage) => ({
+        ...stage,
+        batch: 2,
+        cap: 14,
+        interval: 4,
+        minInterval: 3,
+        timeFactor: 0,
+        batchEvery: null,
+        weights: stage.weights,
+      })),
+    },
+    recurring: [],
+    elites: datacenter.elites,
+    events: { times: [], types: [] },
+    notifications: [],
+    boss: {
+      unit: 'batch_accounting',
+      condition: 'learning-rooms-complete',
+      message: 'ПАРТИОННЫЙ УЧЁТ: склеенные партии Пепси наступают!',
+      sound: 'boss',
+    },
   },
 };

@@ -101,7 +101,6 @@ export const Simulation = {
       pickupKinds[spec.kind](s, spec, st, item.type);
     }
     function update(dt) {
-      if (run.mode === 'quiz') return;
       const s = run.state,
         p = s.p;
       const abilityMoving = protectedMove(s);

@@ -41,8 +41,11 @@ function hudBuild(run, upgrades) {
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
 function nodeProgress(s) {
-  if (s.learning)
-    return `Учебные терминалы: ${s.nodes.filter((n) => n.required && nodeResolved(n)).length}/3 · Комната ${s.learning.roomIndex + 1}/4`;
+  if (s.learning) {
+    const required = s.nodes.filter((n) => n.required);
+    const rooms = mapDefinitions[s.map].rooms.length;
+    return `Учебные терминалы: ${required.filter(nodeResolved).length}/${required.length} · Комната ${s.learning.roomIndex + 1}/${rooms}`;
+  }
   let next = null,
     nextDistance = Infinity,
     resolved = 0;

@@ -183,6 +183,7 @@ export const GameSession = {
     // world rectangle instead of inside the simulation.
     const visible = { x: 0, y: 0, width: 0, height: 0 };
     function step(dt) {
+      // A quiz stops the fight; tools calling update() directly are held too.
       if (run.mode === 'quiz') return;
       input.updateMove();
       simulation.update(dt);

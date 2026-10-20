@@ -77,7 +77,7 @@ test('three gated rooms lead to the new boss, rewards and result recorded once',
   const { game, h } = await open();
   try {
     assert.equal(game.commands.moveLearningRoom(), false);
-    assert.equal(game.commands.startLearningTest('lesson-2'), false);
+    assert.equal(game.commands.startLearningTest('lesson-errors'), false);
     for (let i = 0; i < 3; i++) {
       assert.equal(game.state.learning.roomIndex, i);
       startTest(game);
@@ -140,11 +140,11 @@ test('failed lesson retries; a successful terminal and bonus cannot farm rewards
     assert.equal(game.state.learning.points, 0);
     startTest(game);
     finishTest(game);
-    assert.equal(game.commands.startLearningTest('lesson-0'), false);
+    assert.equal(game.commands.startLearningTest('lesson-basics'), false);
     nextRoom(game);
     startTest(game, true);
     finishTest(game, false);
-    assert.equal(game.commands.startLearningTest('bonus-lesson'), false);
+    assert.equal(game.commands.startLearningTest('bonus-reserve'), false);
   } finally {
     game.dispose();
   }
