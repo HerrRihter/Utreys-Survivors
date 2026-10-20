@@ -1,7 +1,8 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { test } from 'vitest';
 
-(async () => {
+test('lifecycle', async () => {
   const h = await createHarness({ createSession: false });
   const baseline = h.eventCount();
   for (let mount = 0; mount < 3; mount++) {
@@ -21,7 +22,4 @@ const { createHarness } = require('./helpers/game-harness.cjs');
     assert.equal(h.scheduled.size, 0, 'disposed sessions cannot restart');
   }
   console.log('PASS: session mount/dispose, subscriptions, keyboard and RAF');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

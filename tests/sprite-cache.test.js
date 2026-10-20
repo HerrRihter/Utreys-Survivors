@@ -1,6 +1,8 @@
-const assert = require('node:assert/strict');
+import assert from 'node:assert/strict';
+import { canvasContext } from './helpers/canvas-context.js';
+import { test } from 'vitest';
 
-(async () => {
+test('sprite-cache', async () => {
   const { trimCanvas } = await import('../src/rendering/offscreen.js');
   const pixels = new Uint8ClampedArray(28 * 28 * 4);
   // The barely visible halo is part of the artwork and must survive cropping.
@@ -33,7 +35,6 @@ const assert = require('node:assert/strict');
   const unsupported = { width: 28, height: 28, getContext: () => ({}) };
   assert.equal(trimCanvas(unsupported, createCanvas).canvas, unsupported);
   const { createEnemyRenderer } = await import('../src/rendering/enemies.js');
-  const { canvasContext } = require('./helpers/canvas-context.cjs');
   const context = (overrides = {}) =>
     new Proxy(canvasContext(overrides), {
       get: (target, key) => target[key] || (() => {}),
@@ -65,7 +66,4 @@ const assert = require('node:assert/strict');
   console.log(
     'PASS: faint halos retained, native-resolution sprites and labels at five scales, cache reuse and fallback renderers',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

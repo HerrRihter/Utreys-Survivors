@@ -1,19 +1,20 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const {
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import {
   loadModifiers,
   loadLevels,
   maxLoad,
   production,
   rewardPerLevel,
-} = require('../data/difficulty.js');
-const { unitDefinitions, enemyHpScale } = require('../data/enemies/units.js');
-const { waveSchedules } = require('../data/enemies/waves.js');
-const { snapshotRun } = require('../src/systems/run-snapshot.js');
+} from '../data/difficulty.js';
+import { unitDefinitions, enemyHpScale } from '../data/enemies/units.js';
+import { waveSchedules } from '../data/enemies/waves.js';
+import { snapshotRun } from '../src/systems/run-snapshot.js';
+import { test } from 'vitest';
 
 // Stage 3: load levels open one by one per hero, modifiers stack, wins pay more, and the
 // production mode continues a won run with growing pressure and its own records.
-(async () => {
+test('load-levels', async () => {
   assert.equal(loadLevels.length, maxLoad);
   const base = loadModifiers(1);
   assert(
@@ -129,7 +130,4 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   assert.equal(reload.loads.loadAvailable('utrace'), 4);
 
   console.log('PASS: load levels, per-hero unlocks, rewards, production mode and records');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

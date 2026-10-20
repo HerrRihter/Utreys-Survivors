@@ -1,12 +1,13 @@
-const assert = require('node:assert/strict');
-const { unitDefinitions } = require('../data/enemies/units.js');
-const { waveSchedules } = require('../data/enemies/waves.js');
-const { validateUnits } = require('../tools/check-game-contracts.cjs');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { drawEnemyShot } = require('../src/rendering/projectiles.js');
-const { mitigation } = require('../src/systems/enemy-behaviors.js');
+import assert from 'node:assert/strict';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { waveSchedules } from '../data/enemies/waves.js';
+import { validateUnits } from '../tools/check-game-contracts.cjs';
+import { createHarness } from './helpers/game-harness.js';
+import { drawEnemyShot } from '../src/rendering/projectiles.js';
+import { mitigation } from '../src/systems/enemy-behaviors.js';
+import { test } from 'vitest';
 
-(async () => {
+test('expanded-roster', async () => {
   const added = [
     'mars_petfood',
     'baltika',
@@ -74,7 +75,4 @@ const { mitigation } = require('../src/systems/enemy-behaviors.js');
   console.log(
     'PASS: eleven opponents spawn, attack, render, reward XP and preserve boss progression',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

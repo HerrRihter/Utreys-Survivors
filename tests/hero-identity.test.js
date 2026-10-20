@@ -1,13 +1,15 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { abilityDefinitions } = require('../data/characters/abilities.js');
-const { heroPassives, critMultiplier } = require('../data/characters/hero-passives.js');
-const { heroTrainingDefinitions, heroUnlockPrices } = require('../data/upgrades.js');
-const { passiveDamage, countCrowd } = require('../src/systems/hero-passives.js');
+import assert from 'node:assert/strict';
+import { effectiveStats } from '../src/systems/queries/abilities.js';
+import { createHarness } from './helpers/game-harness.js';
+import { abilityDefinitions } from '../data/characters/abilities.js';
+import { heroPassives, critMultiplier } from '../data/characters/hero-passives.js';
+import { heroTrainingDefinitions, heroUnlockPrices } from '../data/upgrades.js';
+import { passiveDamage, countCrowd } from '../src/systems/hero-passives.js';
+import { test } from 'vitest';
 
 // Stage 2: every hero has a shared Q dash, an own E ability and an own passive that its
 // shop training strengthens.
-(async () => {
+test('hero-identity', async () => {
   const heroes = Object.keys(abilityDefinitions);
   assert(
     heroes.every((id) => abilityDefinitions[id][0].id === 'dash'),
@@ -102,7 +104,6 @@ const { passiveDamage, countCrowd } = require('../src/systems/hero-passives.js')
     const { h, s } = await session('traceability');
     assert(h.session.activateAbility(1));
     h.session.update(0.02);
-    const { effectiveStats } = require('../src/systems/queries/abilities.js');
     assert(effectiveStats(s).chainUnlimited, 'Registry lifts the chain cap');
     s.t += 10;
     assert(!effectiveStats(s).chainUnlimited, 'and ends');
@@ -161,7 +162,4 @@ const { passiveDamage, countCrowd } = require('../src/systems/hero-passives.js')
   }
 
   console.log('PASS: per-hero E abilities, passives, trainings and hero select data');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

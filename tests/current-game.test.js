@@ -1,9 +1,10 @@
-const assert = require('node:assert/strict');
-const { nodeGuardian } = require('../src/systems/node-objectives.js');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { unitDefinitions } = require('../data/enemies/units.js');
+import assert from 'node:assert/strict';
+import { nodeGuardian } from '../src/systems/node-objectives.js';
+import { createHarness } from './helpers/game-harness.js';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { test } from 'vitest';
 
-(async () => {
+test('current-game', async () => {
   const h = await createHarness();
   const s = h.session;
   // A fixed seed: the waves, drops and crits below are the same every run.
@@ -72,7 +73,4 @@ const { unitDefinitions } = require('../data/enemies/units.js');
     game.dispose();
   }
   console.log('PASS: active hero, abilities, armor, boss, rewards, victory and defeat');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

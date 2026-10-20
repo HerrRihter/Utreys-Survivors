@@ -1,9 +1,10 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { baClientIds, baHealthPerKill } = require('../data/characters/ba-specialization.js');
-const { unitDefinitions } = require('../data/enemies/units.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { baClientIds, baHealthPerKill } from '../data/characters/ba-specialization.js';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { test } from 'vitest';
 
-(async () => {
+test('ba-specialization', async () => {
   for (const id of baClientIds) {
     assert(unitDefinitions[id] && !unitDefinitions[id].boss && !unitDefinitions[id].miniboss);
   }
@@ -50,7 +51,4 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   assert.equal(h.session.state.baSpecialization, null);
   h.session.dispose();
   console.log('PASS: BA client selection, kill-only health, deduplication and per-run reset');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

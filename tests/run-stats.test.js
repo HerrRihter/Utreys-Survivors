@@ -1,8 +1,8 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { createStore } = require('../src/core/store.js');
-const { createProgression } = require('../src/systems/progression/index.js');
-const {
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { createStore } from '../src/core/store.js';
+import { createProgression } from '../src/systems/progression/index.js';
+import {
   applyRun,
   emptyScope,
   normalizeRunEntry,
@@ -10,68 +10,69 @@ const {
   victoryScore,
   victoryFromScore,
   MIN_COUNTED_RUN,
-} = require('../src/systems/run-records.js');
-const { createRunStats, STATS_QUEUE_KEY } = require('../src/services/run-stats.js');
+} from '../src/systems/run-records.js';
+import { createRunStats, STATS_QUEUE_KEY } from '../src/services/run-stats.js';
+import { test } from 'vitest';
 
-const entry = (more = {}) => ({
-  runId: 'r1',
-  map: 'empty',
-  hero: 'utrace',
-  load: 2,
-  newGame: true,
-  addKills: 50,
-  addCodes: 30,
-  time: 120,
-  kills: 50,
-  codes: 30,
-  victory: false,
-  production: 0,
-  ...more,
-});
+test('run-stats', async () => {
+  const entry = (more = {}) => ({
+    runId: 'r1',
+    map: 'empty',
+    hero: 'utrace',
+    load: 2,
+    newGame: true,
+    addKills: 50,
+    addCodes: 30,
+    time: 120,
+    kills: 50,
+    codes: 30,
+    victory: false,
+    production: 0,
+    ...more,
+  });
 
-// Entries: short runs and endings with nothing new do not count; values are clamped.
-assert.equal(normalizeRunEntry(entry({ time: MIN_COUNTED_RUN - 1 })), null);
-assert.equal(normalizeRunEntry(entry({ map: 'moon' })), null);
-assert.equal(normalizeRunEntry(entry({ runId: 'Bad Id' })), null);
-assert.equal(
-  normalizeRunEntry(entry({ newGame: false, addKills: 0, addCodes: 0 })),
-  null,
-  'a second ending with nothing new',
-);
-assert.equal(normalizeRunEntry(entry({ kills: -5 })).kills, 0);
-assert.equal(normalizeRunEntry(entry({ time: 1e9 })).time, 21600);
-assert.equal(normalizeRunEntry(entry({ hero: '<script>' })).hero, '');
+  // Entries: short runs and endings with nothing new do not count; values are clamped.
+  assert.equal(normalizeRunEntry(entry({ time: MIN_COUNTED_RUN - 1 })), null);
+  assert.equal(normalizeRunEntry(entry({ map: 'moon' })), null);
+  assert.equal(normalizeRunEntry(entry({ runId: 'Bad Id' })), null);
+  assert.equal(
+    normalizeRunEntry(entry({ newGame: false, addKills: 0, addCodes: 0 })),
+    null,
+    'a second ending with nothing new',
+  );
+  assert.equal(normalizeRunEntry(entry({ kills: -5 })).kills, 0);
+  assert.equal(normalizeRunEntry(entry({ time: 1e9 })).time, 21600);
+  assert.equal(normalizeRunEntry(entry({ hero: '<script>' })).hero, '');
 
-// Applying runs: one game, growing totals, records with who set them.
-let { scope, improved } = applyRun(emptyScope(), normalizeRunEntry(entry()));
-assert.equal(scope.games, 1);
-assert.equal(scope.totalKills, 50);
-assert.equal(scope.bestTime, 120);
-assert.equal(scope.bestTimeHero, 'utrace');
-assert.equal(scope.bestTimeLoad, 2);
-assert.deepEqual(improved, ['bestTime', 'bestKills', 'bestCodes']);
-({ scope, improved } = applyRun(
-  scope,
-  normalizeRunEntry(entry({ runId: 'r2', hero: 'qa', time: 60, kills: 80, addKills: 80 })),
-));
-assert.equal(scope.games, 2);
-assert.equal(scope.totalKills, 130);
-assert.equal(scope.bestTime, 120, 'a shorter run keeps the record');
-assert.equal(scope.bestTimeHero, 'utrace');
-assert.equal(scope.bestKillsHero, 'qa');
-assert.deepEqual(improved, ['bestKills']);
+  // Applying runs: one game, growing totals, records with who set them.
+  let { scope, improved } = applyRun(emptyScope(), normalizeRunEntry(entry()));
+  assert.equal(scope.games, 1);
+  assert.equal(scope.totalKills, 50);
+  assert.equal(scope.bestTime, 120);
+  assert.equal(scope.bestTimeHero, 'utrace');
+  assert.equal(scope.bestTimeLoad, 2);
+  assert.deepEqual(improved, ['bestTime', 'bestKills', 'bestCodes']);
+  ({ scope, improved } = applyRun(
+    scope,
+    normalizeRunEntry(entry({ runId: 'r2', hero: 'qa', time: 60, kills: 80, addKills: 80 })),
+  ));
+  assert.equal(scope.games, 2);
+  assert.equal(scope.totalKills, 130);
+  assert.equal(scope.bestTime, 120, 'a shorter run keeps the record');
+  assert.equal(scope.bestTimeHero, 'utrace');
+  assert.equal(scope.bestKillsHero, 'qa');
+  assert.deepEqual(improved, ['bestKills']);
 
-// Victory: higher load first, then faster.
-assert.ok(victoryScore(3, 900) > victoryScore(2, 300));
-assert.ok(victoryScore(2, 300) > victoryScore(2, 400));
-assert.deepEqual(victoryFromScore(victoryScore(4, 512.3)), { load: 4, time: 512.3 });
+  // Victory: higher load first, then faster.
+  assert.ok(victoryScore(3, 900) > victoryScore(2, 300));
+  assert.ok(victoryScore(2, 300) > victoryScore(2, 400));
+  assert.deepEqual(victoryFromScore(victoryScore(4, 512.3)), { load: 4, time: 512.3 });
 
-// Saved statistics keep known maps only.
-const stats = normalizeRunStats({ all: { games: 3 }, maps: { empty: { games: 3 }, moon: {} } });
-assert.equal(stats.all.games, 3);
-assert.deepEqual(Object.keys(stats.maps), ['empty']);
+  // Saved statistics keep known maps only.
+  const stats = normalizeRunStats({ all: { games: 3 }, maps: { empty: { games: 3 }, moon: {} } });
+  assert.equal(stats.all.games, 3);
+  assert.deepEqual(Object.keys(stats.maps), ['empty']);
 
-(async () => {
   // The game counts each ending: the run's map, a new game only once, production separately.
   const h = await createHarness();
   const store = new Map();
@@ -278,7 +279,4 @@ assert.deepEqual(Object.keys(stats.maps), ['empty']);
   assert.equal((await sender.remote()).all.games, 3);
   sender.dispose();
   console.log('Run statistics checks passed.');
-})().catch((e) => {
-  console.error(e);
-  process.exitCode = 1;
 });

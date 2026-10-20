@@ -1,16 +1,13 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const {
-  allNodesResolved,
-  openTickets,
-  nodeGuardian,
-} = require('../src/systems/node-objectives.js');
-const { mapDefinitions, mapUnlocked } = require('../data/maps/maps.js');
-const { unitDefinitions } = require('../data/enemies/units.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { allNodesResolved, openTickets, nodeGuardian } from '../src/systems/node-objectives.js';
+import { mapDefinitions, mapUnlocked } from '../data/maps/maps.js';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { test } from 'vitest';
 
 // The Pepsi service desk map: desks replace the nodes, never attack, release more Pepsi the
 // longer they stay open, and the CRPT comes once every desk is closed.
-(async () => {
+test('service-desk', async () => {
   const desk = mapDefinitions.pepsiDesk;
   // Unlock chain: the desk map needs a victory on the server room, not just any victory.
   assert.equal(mapUnlocked(mapDefinitions.empty, {}), true);
@@ -97,7 +94,4 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   console.log(
     'PASS: desk map unlock, passive desks, growing releases, tickets, boss gate and map wins',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

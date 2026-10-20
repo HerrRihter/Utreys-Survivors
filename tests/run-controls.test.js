@@ -1,9 +1,10 @@
-const assert = require('node:assert/strict');
-const { nodeGuardian } = require('../src/systems/node-objectives.js');
-const { createHarness } = require('./helpers/game-harness.cjs');
+import assert from 'node:assert/strict';
+import { nodeGuardian } from '../src/systems/node-objectives.js';
+import { createHarness } from './helpers/game-harness.js';
+import { test } from 'vitest';
 
 // Level-up controls (reroll, skip, ban), key rebinding, the saved run and first-run tips.
-(async () => {
+test('run-controls', async () => {
   const h = await createHarness({ createSession: false });
   const store = new Map();
   h.env.localStorage = {
@@ -145,7 +146,4 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.doesNotMatch(game.views.hud().tip || '', /движение/, 'a tip is shown once');
   game.dispose();
   console.log('PASS: reroll, ban, skip, key rebinding, settings, saved run and first-run tips');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

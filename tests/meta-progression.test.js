@@ -1,10 +1,11 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { achievementDefinitions } = require('../data/achievements.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { achievementDefinitions } from '../data/achievements.js';
+import { test } from 'vitest';
 
 // Stage 4: achievements open weapons, mastery stats feed new achievements, the shop gains
 // greed, luck and head start, level-up controls wait for the first win, and a respec refunds.
-(async () => {
+test('meta-progression', async () => {
   const { createProgression } = await import('../src/systems/progression/index.js');
   const make = (saved) => {
     const storage = new Map(saved ? [['utreys-progression-v1', JSON.stringify(saved)]] : []);
@@ -122,7 +123,4 @@ const { achievementDefinitions } = require('../data/achievements.js');
   h.session.dispose();
 
   console.log('PASS: unlocks, mastery stats, control gating, respec, greed, luck and head start');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

@@ -1,14 +1,11 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const {
-  updateNodes,
-  allNodesResolved,
-  nodeGuardian,
-} = require('../src/systems/node-objectives.js');
-const { nodeDefinitions } = require('../data/enemies/nodes.js');
-const { unitDefinitions } = require('../data/enemies/units.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { updateNodes, allNodesResolved, nodeGuardian } from '../src/systems/node-objectives.js';
+import { nodeDefinitions } from '../data/enemies/nodes.js';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { test } from 'vitest';
 
-(async () => {
+test('node-objectives', async () => {
   const h = await createHarness();
   const s = h.session;
   s.start();
@@ -54,7 +51,4 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   assert.equal(s.state.bossSpawned, false);
   s.dispose();
   console.log('PASS: nodes, interrupted workarounds, mixed resolution, boss gate and fresh run');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

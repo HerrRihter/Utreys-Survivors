@@ -1,32 +1,33 @@
-const assert = require('node:assert/strict');
-const { unitDefinitions } = require('../data/enemies/units.js');
-const { waveSchedules } = require('../data/enemies/waves.js');
-const { unitRole, selectWaveUnit } = require('../src/systems/wave-schedule.js');
-const { createHarness } = require('./helpers/game-harness.cjs');
+import assert from 'node:assert/strict';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { waveSchedules } from '../data/enemies/waves.js';
+import { unitRole, selectWaveUnit } from '../src/systems/wave-schedule.js';
+import { createHarness } from './helpers/game-harness.js';
+import { test } from 'vitest';
 
-const regular = Object.keys(unitDefinitions).filter(
-  (id) => !unitDefinitions[id].boss && !unitDefinitions[id].miniboss,
-);
+test('enemy-roles', async () => {
+  const regular = Object.keys(unitDefinitions).filter(
+    (id) => !unitDefinitions[id].boss && !unitDefinitions[id].miniboss,
+  );
 
-// A quiet run: no waves, no node guardians nearby, the player far from walls.
-async function quiet() {
-  const h = await createHarness();
-  const s = h.session;
-  s.start();
-  s.state.spawn = 9999;
-  s.state.attack = 9999;
-  s.state.eliteNext = Infinity;
-  for (const id of Object.keys(s.state.waveNext)) s.state.waveNext[id] = Infinity;
-  s.state.enemies = [];
-  for (const node of s.state.nodes) node.status = 'workaround';
-  s.state.p.x = s.state.p.y = 1100;
-  return { h, s, p: s.state.p };
-}
-const run = (s, seconds) => {
-  for (let i = 0; i < Math.ceil(seconds / 0.05); i++) s.update(0.05);
-};
+  // A quiet run: no waves, no node guardians nearby, the player far from walls.
+  async function quiet() {
+    const h = await createHarness();
+    const s = h.session;
+    s.start();
+    s.state.spawn = 9999;
+    s.state.attack = 9999;
+    s.state.eliteNext = Infinity;
+    for (const id of Object.keys(s.state.waveNext)) s.state.waveNext[id] = Infinity;
+    s.state.enemies = [];
+    for (const node of s.state.nodes) node.status = 'workaround';
+    s.state.p.x = s.state.p.y = 1100;
+    return { h, s, p: s.state.p };
+  }
+  const run = (s, seconds) => {
+    for (let i = 0; i < Math.ceil(seconds / 0.05); i++) s.update(0.05);
+  };
 
-(async () => {
   // Every stage of every map fields the whole roster, and every regular unit has one role.
   for (const schedule of Object.values(waveSchedules))
     for (const stage of schedule.normal.stages) {
@@ -241,7 +242,4 @@ const run = (s, seconds) => {
   console.log(
     'PASS: full roster in every stage, roles, shares, strength ramp, dash, pack, heal, aura, blast, enrage, slow, patterns, mortar, bug mechanics, poise and boss phases',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

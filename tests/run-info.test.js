@@ -1,12 +1,13 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { edgeMarker, edgeTargets } = require('../src/rendering/edge-arrows.js');
-const { runStats } = require('../src/app/views.js');
-const { hudScale } = require('../src/app/run-state.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { edgeMarker, edgeTargets } from '../src/rendering/edge-arrows.js';
+import { runStats } from '../src/app/views.js';
+import { hudScale } from '../src/app/run-state.js';
+import { test } from 'vitest';
 
 // Stage 5 leftovers: final stats on pause, edge arrows to the next node and the boss, and
 // the encyclopedia of weapons, passives and evolutions.
-(async () => {
+test('run-info', async () => {
   // The in-run HUD grows less than menus on small screens.
   assert.equal(hudScale(1.3, 1920, 1080), 1.3);
   assert.equal(hudScale(1.3, 844, 390), 1, 'short landscape phones cap at 100%');
@@ -72,7 +73,4 @@ const { hudScale } = require('../src/app/run-state.js');
   h.session.dispose();
 
   console.log('PASS: pause stats, edge arrows and encyclopedia');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

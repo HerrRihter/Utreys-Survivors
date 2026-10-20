@@ -1,16 +1,17 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { createRng, parseSeed, seedText } = require('../src/core/rng.js');
-const { layoutNodes, planEvents } = require('../src/systems/run-layout.js');
-const { mapDefinitions, nodeSpacing } = require('../data/maps/maps.js');
-const { nodeDefinitions } = require('../data/enemies/nodes.js');
-const { waveSchedules } = require('../data/enemies/waves.js');
-const { createArenas } = require('../src/world/arenas.js');
-const { snapshotRun } = require('../src/systems/run-snapshot.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { createRng, parseSeed, seedText } from '../src/core/rng.js';
+import { layoutNodes, planEvents } from '../src/systems/run-layout.js';
+import { mapDefinitions, nodeSpacing } from '../data/maps/maps.js';
+import { nodeDefinitions } from '../data/enemies/nodes.js';
+import { waveSchedules } from '../data/enemies/waves.js';
+import { createArenas } from '../src/world/arenas.js';
+import { snapshotRun } from '../src/systems/run-snapshot.js';
+import { test, vi } from 'vitest';
 
 // Stage 6: seeded node layouts and events, elites with update bundles, map pickups, mid-run
 // events and the second map.
-(async () => {
+test('run-variety', async () => {
   // Seeds.
   const a = createRng(42),
     b = createRng(42);
@@ -59,7 +60,9 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   const game = h.session,
     P = h.env.Progression;
   let seed = 11;
-  h.env.Math.random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+  vi.spyOn(Math, 'random').mockImplementation(
+    () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32,
+  );
 
   // Typed seed and replay.
   game.commands.chooseSeed('UTR4CE');
@@ -183,7 +186,4 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   h.session.dispose();
 
   console.log('PASS: seeds, procedural nodes, second map, elites, bundles, pickups and events');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

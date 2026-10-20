@@ -1,9 +1,10 @@
-const assert = require('node:assert/strict');
-const { traceabilityCharge } = require('../src/rendering/hero-charge.js');
-const { actionTiming } = require('../data/animations/action-timing.js');
-const { createHarness } = require('./helpers/game-harness.cjs');
+import assert from 'node:assert/strict';
+import { traceabilityCharge } from '../src/rendering/hero-charge.js';
+import { actionTiming } from '../data/animations/action-timing.js';
+import { createHarness } from './helpers/game-harness.js';
+import { test } from 'vitest';
 
-(async () => {
+test('hero-charge', async () => {
   const s = { t: 1, attack: 0.9, runtime: { attackCycle: 0.9 }, p: {} };
   assert.equal(traceabilityCharge(s).charge, 0);
   s.attack = 0.45;
@@ -47,7 +48,4 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.equal(h.session.state.p.chainImpactAt, null, 'new run clears flash');
   h.session.dispose();
   console.log('PASS: charge timing, windup, impact flash, pause, haste and run reset');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

@@ -1,11 +1,12 @@
-const assert = require('node:assert/strict');
-const { createFixedStep, STEP, MAX_STEPS } = require('../src/core/game-loop.js');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { toGraphJson } = require('../src/core/graph-json.js');
-const { persistentKeys } = require('../src/systems/run-model.js');
+import assert from 'node:assert/strict';
+import { createFixedStep, STEP, MAX_STEPS } from '../src/core/game-loop.js';
+import { createHarness } from './helpers/game-harness.js';
+import { toGraphJson } from '../src/core/graph-json.js';
+import { persistentKeys } from '../src/systems/run-model.js';
+import { test } from 'vitest';
 
 // The simulation steps 1/60 s whatever the frame rate; a stalled frame runs at most five steps.
-(async () => {
+test('fixed-step', async () => {
   assert.equal(STEP, 1 / 60);
   assert.equal(MAX_STEPS, 5);
   const count = (hz, seconds) => {
@@ -63,7 +64,4 @@ const { persistentKeys } = require('../src/systems/run-model.js');
   console.log(
     'PASS: fixed 1/60 s steps at any frame rate, stalled frames capped, same run at 30/60/120 Hz',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

@@ -1,11 +1,15 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { createRunLog, RUN_LOG_KEY, MAX_ENTRIES } = require('../src/systems/run-log.js');
-const { computeStats, readRuns, report } = require('../tools/run-stats.cjs');
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { createHarness } from './helpers/game-harness.js';
+import { createRunLog, RUN_LOG_KEY, MAX_ENTRIES } from '../src/systems/run-log.js';
+import { computeStats, readRuns, report } from '../tools/run-stats.cjs';
+import { test } from 'vitest';
 
 // The run journal records offers, picks and endings; tools/run-stats.cjs turns exports into
 // pick rates and win rates.
-(async () => {
+test('run-log', async () => {
   const h = await createHarness();
   // The harness storage drops writes; back it with a map for this test.
   const store = new Map();
@@ -118,10 +122,10 @@ const { computeStats, readRuns, report } = require('../tools/run-stats.cjs');
   assert.deepEqual(read.cards, ['ability_overclock', 'might']);
   assert.equal(read.picked, 'ability_overclock');
   assert.deepEqual(read.banned, ['ability_overclock']);
-  const file = require('node:path').join(require('node:os').tmpdir(), 'utreys-old-runs.json');
-  require('node:fs').writeFileSync(file, JSON.stringify({ runs: [old] }));
+  const file = path.join(os.tmpdir(), 'utreys-old-runs.json');
+  fs.writeFileSync(file, JSON.stringify({ runs: [old] }));
   assert.equal(readRuns(file)[0].offers[0].picked, 'ability_overclock', 'run-stats reads old ids');
-  require('node:fs').unlinkSync(file);
+  fs.unlinkSync(file);
 
   // Statistics.
   const offer = (cards, picked) => ({ cards, picked, action: picked ? 'pick' : 'skip' });
@@ -155,7 +159,4 @@ const { computeStats, readRuns, report } = require('../tools/run-stats.cjs');
   assert.match(report(stats, 10), /w_mine.*100%.*⚠/);
 
   console.log('PASS: run journal, export, production entries and run statistics');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

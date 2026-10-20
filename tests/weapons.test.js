@@ -1,14 +1,17 @@
-const assert = require('node:assert/strict');
-const { nodeGuardian } = require('../src/systems/node-objectives.js');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { weaponDefinitions } = require('../data/weapons.js');
+import assert from 'node:assert/strict';
+import { nodeGuardian } from '../src/systems/node-objectives.js';
+import { createHarness } from './helpers/game-harness.js';
+import { weaponDefinitions } from '../data/weapons.js';
+import { test, vi } from 'vitest';
 
 // Every extra weapon damages enemies, levels change its numbers, a bug archive evolves a
 // ready weapon, evolved forms keep working and live effects stay bounded.
-(async () => {
+test('weapons', async () => {
   const h = await createHarness();
   let seed = 7;
-  h.env.Math.random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+  vi.spyOn(Math, 'random').mockImplementation(
+    () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32,
+  );
   const game = h.session;
   game.start();
   const s = game.state;
@@ -122,7 +125,4 @@ const { weaponDefinitions } = require('../data/weapons.js');
     g.dispose();
   }
   console.log('PASS: eight weapons, level curve, bug archives, evolutions and hero evolutions');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

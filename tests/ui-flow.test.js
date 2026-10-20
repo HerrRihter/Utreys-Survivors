@@ -1,8 +1,9 @@
-const assert = require('node:assert/strict');
-const { createHarness } = require('./helpers/game-harness.cjs');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { test } from 'vitest';
 
 // Screen navigation, Escape handling, store notifications and read models used by React.
-(async () => {
+test('ui-flow', async () => {
   const h = await createHarness();
   const s = h.session,
     run = s.views.run(),
@@ -111,7 +112,4 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.equal(marks()['ПРОТИВНИКОВ ПОБЕЖДЕНО'], false);
   s.dispose();
   console.log('PASS: screen navigation, Escape routing, UI/HUD notifications and read models');
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

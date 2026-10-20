@@ -8,5 +8,6 @@ export default defineConfig({
     testTimeout: 180_000,
     // Suites log what they checked; show it only for a failing test.
     silent: 'passed-only',
+    restoreMocks: true,
   },
 });
