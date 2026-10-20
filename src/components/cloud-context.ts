@@ -1,9 +1,6 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
-import type { Account } from '../app/types';
+import type { Account, Leaderboard } from '../app/types';
 import type { CloudProgress, RunStats } from '../app/useGameSession';
-import type { createLeaderboard } from '../services/leaderboard.js';
-
-export type Leaderboard = ReturnType<typeof createLeaderboard>;
 type CloudServices = {
   account: Account;
   cloud: CloudProgress | null;

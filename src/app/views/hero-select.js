@@ -1,5 +1,5 @@
 import { abilityDefinitions } from '../../../data/characters/abilities.js';
-import { baClientIds } from '../../../data/characters/ba-specialization.js';
+import { baClientIds, baHealthPerKill } from '../../../data/characters/ba-specialization.js';
 import { unitDefinitions } from '../../../data/enemies/units.js';
 import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { heroPassives } from '../../../data/characters/hero-passives.js';
@@ -34,6 +34,7 @@ export function heroSelectView({ run, progression }) {
     showBaClients: !!heroDefinitions[run.pendingHero]?.keyClient,
     baClients: baClientIds.map((id) => ({ id, name: unitDefinitions[id].name })),
     baClient: run.baClient,
+    baHealthPerKill,
     maps: Object.entries(mapDefinitions).map(([id, map]) => ({
       id,
       name: map.name,

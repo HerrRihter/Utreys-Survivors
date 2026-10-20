@@ -1,7 +1,7 @@
 import { hudScale } from '../app/run-state.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
-import { createAccount } from '../services/auth.js';
+import { createAccount } from '../app/cloud.js';
 import { ConflictDialog } from './Account';
 import type { Account, Session } from '../app/types';
 import type { CloudProgress } from '../app/useGameSession';

@@ -32,3 +32,12 @@ export const withEmptySlots = (build) => ({
   emptyWeapons: Math.max(0, build.weaponSlots - build.weapons.length),
   emptyPassives: Math.max(0, build.passiveSlots - build.passives.length),
 });
+
+// A long duration: «1:02:05» from an hour on, «2:05» below.
+export const duration = (seconds) => {
+  const total = Math.floor(seconds),
+    h = Math.floor(total / 3600),
+    m = Math.floor((total % 3600) / 60),
+    s = String(total % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+};

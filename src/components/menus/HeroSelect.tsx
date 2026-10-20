@@ -1,4 +1,3 @@
-import { baHealthPerKill } from '../../../data/characters/ba-specialization.js';
 import { Overlay } from '../Overlay';
 import { Portrait } from '../Portrait';
 import { useSession } from '../session';
@@ -112,8 +111,8 @@ export function HeroSelect() {
               ))}
             </select>
             <p>
-              За каждое убийство выбранного клиента: +{baHealthPerKill} к текущему и максимальному
-              HP до конца забега.
+              За каждое убийство выбранного клиента: +{view.baHealthPerKill} к текущему и
+              максимальному HP до конца забега.
             </p>
           </div>
         )}

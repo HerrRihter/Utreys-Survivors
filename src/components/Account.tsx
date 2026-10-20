@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore, type FormEvent } from 'react';
 import type { CloudProgress } from '../app/useGameSession';
 import type { Account } from '../app/types';
-import { LOGIN_MAX, PASSWORD_MIN } from '../services/login.js';
+import { LOGIN_MAX, PASSWORD_MIN } from '../app/cloud.js';
 import { Dialog } from './Dialog';
 
 function useAccountState(account: Account) {
