@@ -4,6 +4,8 @@
 // on that map; `unlockHint` says so in the map picker.
 // `objective` is what clears the way to the CRPT (default: the five component nodes):
 //   { type: 'desks', unit, count }  — `count` structures of `unit` that must be destroyed.
+import { learningRooms } from '../learning-rules.js';
+
 export const nodeSpacing = 450;
 
 export const mapDefinitions = {
@@ -57,11 +59,11 @@ export const mapDefinitions = {
     ],
   },
   pepsiDesk: {
-    notes: 'Офис поддержки Пепси: сервисдески без остановки плодят тикеты.',
+    notes:
+      'Три сервисдеска выпускают Пепси, и чем дольше они работают, тем больше за раз. Когда все три снесены, приходит ЦРПТ.',
     victoryTag: 'БЭКЛОГ ЗАКРЫТ',
     name: 'Сервисдеск Пепси',
-    description:
-      'Три сервисдеска выпускают Пепси, и чем дольше они работают, тем больше за раз. Снеси все три, чтобы закрыть бэклог, — тогда придёт ЦРПТ.',
+    description: 'Снеси три сервисдеска, пока тикеты Пепси не завалили офис.',
     unlock: { winOn: 'serverRoom' },
     unlockHint: 'Сервисдеск Пепси откроется после победы в Серверном зале.',
     // Desks are shown as `label` and their number.
@@ -84,6 +86,29 @@ export const mapDefinitions = {
       [300, 1650, 300, 250],
       [950, 1750, 300, 200],
       [1600, 1650, 300, 250],
+    ],
+  },
+  learningLab: {
+    name: 'Учебный полигон',
+    description: 'Тесты открывают путь через три комнаты к боссу «Партионный учёт».',
+    notes:
+      'Три комнаты с мини-тестами: пройди тест у терминала, затем выход ведёт дальше. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
+    victoryTag: 'ПАРТИОННЫЙ УЧЁТ ОСВОЕН',
+    ranked: false,
+    objective: { type: 'learning', count: 3, label: 'Терминал' },
+    rooms: learningRooms,
+    racks: [
+      [40, 80, 2120, 40],
+      [40, 2120, 2120, 40],
+      [40, 80, 40, 2080],
+      [2120, 80, 40, 2080],
+      [1040, 80, 120, 2080],
+      [40, 1040, 2120, 120],
+    ],
+    nodeZones: [
+      [700, 650, 160, 160],
+      [1750, 650, 160, 160],
+      [1750, 1730, 160, 160],
     ],
   },
 };

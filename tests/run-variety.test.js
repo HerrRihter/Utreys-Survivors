@@ -35,7 +35,13 @@ test('run-variety', async () => {
       const nodes = layoutNodes(map, seed);
       const desks = mapDefinitions[map].objective;
       assert.deepEqual(nodes, layoutNodes(map, seed), 'same seed, same layout');
-      if (desks) {
+      if (desks?.type === 'learning') {
+        assert.equal(nodes.filter((n) => n.required).length, 3);
+        assert.equal(nodes.length, 4);
+        assert(
+          nodes.every((n) => n.kind === 'learning-terminal' && mapDefinitions[map].rooms[n.room]),
+        );
+      } else if (desks) {
         assert.equal(nodes.length, desks.count, `${map} places every desk`);
         assert(nodes.every((n) => n.kind === 'desk' && n.bug === desks.unit));
       } else {
@@ -48,7 +54,9 @@ test('run-variety', async () => {
       }
       positions.add(nodes.map((n) => `${n.x},${n.y}`).join(';'));
     }
-    assert(positions.size > 30, `${map} layouts vary between seeds`);
+    if (mapDefinitions[map].rooms)
+      assert.equal(positions.size, 1, 'room terminals have fixed safe positions');
+    else assert(positions.size > 30, `${map} layouts vary between seeds`);
   }
   const plan = planEvents(waveSchedules.empty, 7);
   assert.deepEqual(plan, planEvents(waveSchedules.empty, 7));

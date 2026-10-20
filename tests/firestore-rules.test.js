@@ -13,8 +13,10 @@ test('firestore-rules', async () => {
   assert.ok(maps, 'firestore.rules defines knownMaps()');
   assert.deepEqual(
     [...maps[1].matchAll(/'([^']+)'/g)].map((m) => m[1]).sort(),
-    Object.keys(mapDefinitions).sort(),
-    'knownMaps() in firestore.rules lists every map in data/maps/maps.js; redeploy the rules after changing it',
+    Object.keys(mapDefinitions)
+      .filter((id) => mapDefinitions[id].ranked !== false)
+      .sort(),
+    'knownMaps() in firestore.rules lists every ranked map in data/maps/maps.js; redeploy the rules after changing it',
   );
 
   console.log('Firestore rules contract passed.');

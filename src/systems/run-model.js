@@ -1,4 +1,6 @@
 // @ts-check
+import { createLearningState } from './learning.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
 import { createNodeState } from './node-objectives.js';
 import { createWaveState } from './wave-schedule.js';
 import { layoutNodes, planEvents } from './run-layout.js';
@@ -33,9 +35,9 @@ import { createGameRng } from '../core/rng.js';
  *   id: number, summonerId: number | null, nodeId: string | null }} EnemyCore
  * Behaviours keep their own timers on the enemy (summonCd, wcd, speech...).
  * @typedef {EnemyCore & Record<string, unknown>} Enemy
- * @typedef {{ id: string, label: string, kind?: string, bug: string, x: number, y: number, need: number,
+ * @typedef {{ id: string, label: string, kind?: string, bug?: string, x: number, y: number, need: number,
  *   status: string, progress: number,
- *   guardianId: number | null }} RunNode
+ *   guardianId: number | null, room?: number, topic?: number, required?: boolean }} RunNode
  * @typedef {{ id: string, level: number, cd: number, evolved: boolean, phase: number,
  *   tick?: number }} OwnedWeapon
  * @typedef {{ id: string, name: string, cooldown: number, duration: number, cd: number,
@@ -64,6 +66,7 @@ import { createGameRng } from '../core/rng.js';
  * @typedef {ReturnType<typeof createGameRng>} GameRng
  *
  * @typedef {{
+ *   learning: ReturnType<typeof createLearningState>,
  *   t: number, step: number, runId: string, map: string, seed: number, rng: GameRng,
  *   load: number,
  *   healFactor: number,
@@ -115,6 +118,7 @@ function createRunRuntime() {
 //           (corpses, effects, floating texts, screen shake) and ending bookkeeping
 /** @type {Record<keyof RunModel, 'save' | 'reduce' | 'rebuild'>} */
 export const runFields = {
+  learning: 'save',
   t: 'save',
   step: 'save',
   runId: 'save',
@@ -213,8 +217,11 @@ export function createRunModel({
   doneBefore = [],
 }) {
   const mods = loadModifiers(load);
+  const entry = /** @type {Record<string, { rooms?: { entry: Point }[] }>} */ (mapDefinitions)[map]
+    ?.rooms?.[0].entry;
   /** @type {RunModel} */
   const s = {
+    learning: createLearningState(map),
     t: 0,
     step: 0,
     // Identifies the run in the statistics, so a second ending never adds a game.
@@ -239,8 +246,8 @@ export function createRunModel({
     // Hero attack timer.
     attack: 0.2,
     p: {
-      x: arenaSize / 2,
-      y: arenaSize / 2,
+      x: entry?.x ?? arenaSize / 2,
+      y: entry?.y ?? arenaSize / 2,
       hp: heroDef.hp,
       max: heroDef.hp,
       speed: heroDef.speed,

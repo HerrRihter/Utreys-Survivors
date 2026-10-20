@@ -1,6 +1,7 @@
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { unitDefinitions, enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
 import { createArenas } from '../world/arenas.js';
+import { layoutNodes } from '../systems/run-layout.js';
 import { createNodeState } from '../systems/node-objectives.js';
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
@@ -17,7 +18,7 @@ const maps = Object.entries(mapDefinitions).map(([id, map]) => ({ id, name: map.
 export function createPreviewKit() {
   const arenas = createArenas();
   const floor = createArenaFloor();
-  const nodes = createNodeState();
+  const nodes = (map) => createNodeState(undefined, layoutNodes(map, 1));
   let enemies = null;
   const schedules = new Map();
   const schedule = (map) => {
@@ -48,10 +49,10 @@ export function createPreviewKit() {
       };
     },
     drawArenaPlan(g, map, { close, labels, bounds }) {
-      drawArenaPlan(g, { floor, arena: arenas.get(map), nodes, close, labels, bounds });
+      drawArenaPlan(g, { floor, arena: arenas.get(map), nodes: nodes(map), close, labels, bounds });
     },
     drawRadar(g, map, t) {
-      drawRadar(g, { floor, arena: arenas.get(map), nodes, t });
+      drawRadar(g, { floor, arena: arenas.get(map), nodes: nodes(map), t });
     },
     drawOpponent(g, unit, { motion, phase, reverse }) {
       enemies ??= createEnemyRenderer();

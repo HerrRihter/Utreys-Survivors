@@ -45,7 +45,7 @@ export const InputSystem = {
     // Off while another page (bestiary, arena preview) owns the keyboard; see disable().
     let enabled = true;
     function onKeyDown(e) {
-      if (!enabled) return;
+      if (!enabled || run.mode === 'quiz') return;
       if (
         e.code !== 'Escape' &&
         e.target?.matches?.('input,select,textarea,[contenteditable="true"]')

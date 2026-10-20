@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPreviewKit } from '../app/preview-kit.js';
+import { devToolsEnabled } from '../app/dev-tools.js';
 import type { MapId } from '../app/types';
 import { MapSelect } from './MapSelect';
+
+// ?dev adds the collision outlines toggle.
+const devTools = devToolsEnabled(window.location.search);
 
 export const ArenaView: React.FC = () => {
   const [selectedArena, setSelectedArena] = useState<MapId>('empty');
@@ -62,14 +66,16 @@ export const ArenaView: React.FC = () => {
             Узлы сети
           </label>
 
-          <label className="catalog-check">
-            <input
-              type="checkbox"
-              checked={showBounds}
-              onChange={(e) => setShowBounds(e.target.checked)}
-            />
-            Границы контура
-          </label>
+          {devTools && (
+            <label className="catalog-check">
+              <input
+                type="checkbox"
+                checked={showBounds}
+                onChange={(e) => setShowBounds(e.target.checked)}
+              />
+              Границы контура
+            </label>
+          )}
         </nav>
 
         {arena.notes && <p className="arena-notes">{arena.notes}</p>}

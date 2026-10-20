@@ -7,6 +7,7 @@ import { createRng, shuffle } from '../core/rng.js';
 // `desks` objective places its structures the same way instead of the nodes.
 export function layoutNodes(mapId, seed) {
   const map = mapDefinitions[mapId] || mapDefinitions.empty;
+  if (map.objective?.type === 'learning') return layoutTerminals(map.rooms);
   const rng = createRng(seed).random;
   const zones = shuffle(map.nodeZones, rng);
   if (map.objective?.type === 'desks') return layoutDesks(map.objective, zones, rng);
@@ -31,6 +32,23 @@ export function layoutNodes(mapId, seed) {
 }
 
 // Desks are `desk-1`, `desk-2`... and shown as the objective's label with their number.
+// Learning terminals stand where their rooms put them: the required ones in room order, then
+// the optional bonus terminals.
+function layoutTerminals(rooms) {
+  const terminal = (room, i, spec, required) => ({
+    label: room.name,
+    ...spec,
+    kind: 'learning-terminal',
+    required,
+    room: i,
+    topic: room.topic,
+  });
+  return [
+    ...rooms.flatMap((room, i) => (room.terminal ? [terminal(room, i, room.terminal, true)] : [])),
+    ...rooms.flatMap((room, i) => (room.bonus ? [terminal(room, i, room.bonus, false)] : [])),
+  ];
+}
+
 function layoutDesks({ unit, count, label }, zones, rng) {
   const placed = [];
   for (const [x, y, w, h] of zones) {

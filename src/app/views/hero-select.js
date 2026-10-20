@@ -4,7 +4,8 @@ import { unitDefinitions } from '../../../data/enemies/units.js';
 import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { heroPassives } from '../../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../../data/difficulty.js';
-import { mapDefinitions, mapUnlocked } from '../../../data/maps/maps.js';
+import { mapDefinitions } from '../../../data/maps/maps.js';
+import { mapOpen } from '../selection.js';
 import { clock, loadLabel, slotKey } from './format.js';
 
 export function heroSelectView({ run, progression }) {
@@ -22,12 +23,11 @@ export function heroSelectView({ run, progression }) {
     })),
     pending: run.pendingHero,
     role: passive ? `${passive.role.toUpperCase()} · ${passive.roleDesc}` : '',
+    // Short lines; exact numbers and cooldowns are in the encyclopedia.
     stats:
-      (hero.desc || '') +
-      ` Здоровье ${hero.hp} · скорость ${hero.speed}.` +
-      '\n' +
+      `${hero.summary} Здоровье ${hero.hp} · скорость ${hero.speed}.\n` +
       abilityDefinitions[run.pendingHero]
-        .map((a, i) => `${slotKey(i)} · ${a.name}: ${a.description} Перезарядка ${a.cooldown} с.`)
+        .map((a, i) => `${slotKey(i)} · ${a.name}: ${a.description}`)
         .join('\n') +
       (passive ? `\nПассивка · ${passive.name}: ${passive.desc}` : ''),
     ...loadView(run, progression),
@@ -38,7 +38,7 @@ export function heroSelectView({ run, progression }) {
     maps: Object.entries(mapDefinitions).map(([id, map]) => ({
       id,
       name: map.name,
-      locked: !mapUnlocked(map, progression.data.stats),
+      locked: !mapOpen(progression, id),
     })),
     map: run.selectedMap,
     seed: run.seedInput,
@@ -47,9 +47,9 @@ export function heroSelectView({ run, progression }) {
     mapLocked: Object.keys(mapDefinitions).length < 2,
     // The next map still closed, and what opens it.
     mapHint:
-      Object.values(mapDefinitions).find(
-        (map) => map.unlockHint && !mapUnlocked(map, progression.data.stats),
-      )?.unlockHint || '',
+      Object.entries(mapDefinitions).find(
+        ([id, map]) => map.unlockHint && !mapOpen(progression, id),
+      )?.[1].unlockHint || '',
   };
 }
 

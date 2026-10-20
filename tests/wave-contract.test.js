@@ -13,7 +13,7 @@ import {
 import { test } from 'vitest';
 
 test('wave-contract', async () => {
-  assert.equal(checkGameContracts(), 3);
+  assert.equal(checkGameContracts(), Object.keys(mapDefinitions).length);
   for (const mutate of [
     (s) => {
       delete s.empty;

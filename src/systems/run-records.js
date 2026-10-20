@@ -85,7 +85,8 @@ export function normalizeRunStats(saved) {
 export function normalizeRunEntry(entry) {
   if (!entry || typeof entry !== 'object') return null;
   if (typeof entry.runId !== 'string' || !/^[a-z0-9-]{1,40}$/.test(entry.runId)) return null;
-  if (!Object.hasOwn(mapDefinitions, entry.map)) return null;
+  if (!Object.hasOwn(mapDefinitions, entry.map) || mapDefinitions[entry.map].ranked === false)
+    return null;
   const time = seconds(entry.time);
   if (time < MIN_COUNTED_RUN) return null;
   const clean = {

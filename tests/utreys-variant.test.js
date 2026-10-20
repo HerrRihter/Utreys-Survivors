@@ -23,7 +23,12 @@ test('utreys-variant', async () => {
     ]);
     assert.equal(heroDefinitions.utrace.name, 'Utrace');
     assert.equal(abilityDefinitions.utrace.length, 2);
-    assert.deepEqual(Object.keys(mapDefinitions), ['empty', 'serverRoom', 'pepsiDesk']);
+    assert.deepEqual(Object.keys(mapDefinitions), [
+      'empty',
+      'serverRoom',
+      'pepsiDesk',
+      'learningLab',
+    ]);
 
     // Verify new enemies: L3, CRPT, Pepsi, InBev, Mars
     const expectedEnemies = ['l3', 'crpt', 'pepsi', 'inbev', 'mars'];

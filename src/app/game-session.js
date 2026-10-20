@@ -41,6 +41,7 @@ export const GameSession = {
     cancelAnimationFrame,
     canvas,
     progression,
+    devTools = false,
   }) {
     const events = createEventScope();
     let disposed = false;
@@ -153,7 +154,12 @@ export const GameSession = {
       spawning,
       weapons,
       runEvents,
-      events: { finish: flow.finish, levelUp: flow.levelUp, openBundle: flow.openBundle, toast },
+      events: {
+        finish: flow.resolveOutcome,
+        levelUp: flow.levelUp,
+        openBundle: flow.openBundle,
+        toast,
+      },
     });
     const { sprite } = SpriteRenderer.create({ run });
     // The session's own enemy renderer: its sprite caches follow this canvas's pixel ratio.
@@ -178,6 +184,8 @@ export const GameSession = {
     // world rectangle instead of inside the simulation.
     const visible = { x: 0, y: 0, width: 0, height: 0 };
     function step(dt) {
+      // A quiz stops the fight; tools calling update() directly are held too.
+      if (run.mode === 'quiz') return;
       input.updateMove();
       simulation.update(dt);
       const s = run.state;
@@ -215,7 +223,7 @@ export const GameSession = {
     input.bind();
     // Closing or hiding the tab keeps the run for "Continue".
     const keepRun = () => {
-      if (run.state && ['play', 'pause', 'level'].includes(run.mode)) snapshots.save(run);
+      if (run.state && ['play', 'pause', 'level', 'quiz'].includes(run.mode)) snapshots.save(run);
     };
     events.listen(window, 'pagehide', keepRun);
 
@@ -288,6 +296,7 @@ export const GameSession = {
         snapshots,
         audio,
         runLog,
+        devTools,
       }),
       commands: createSessionCommands({
         flow,

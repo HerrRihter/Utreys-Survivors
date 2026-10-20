@@ -31,6 +31,7 @@ function createDatacenterArena(map = mapDefinitions.empty) {
 
   return {
     size,
+    rooms: map.rooms || [],
     collision,
     ...navigation,
     blocked: collision.blocked,

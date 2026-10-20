@@ -1,4 +1,6 @@
+import { nodeResolved, nodeAvailable } from '../../systems/queries/nodes.js';
 import { eventSpec } from '../../systems/queries/events.js';
+import { learningActionNear } from '../../systems/queries/learning.js';
 import {
   abilityRank,
   abilityUpgradeMax,
@@ -40,14 +42,25 @@ function hudBuild(run, upgrades) {
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
 function nodeProgress(s) {
+  if (s.learning) {
+    const l = s.learning,
+      rooms = mapDefinitions[s.map].rooms,
+      required = s.nodes.filter((n) => n.required);
+    return (
+      `Комната ${l.roomIndex + 1}/${rooms.length} · ${rooms[l.roomIndex].name}` +
+      ` · Тесты ${required.filter(nodeResolved).length}/${required.length}` +
+      ` · ${l.points} очков · ${l.reviveUsed ? 'вторая жизнь использована' : 'вторая жизнь есть'}`
+    );
+  }
   let next = null,
     nextDistance = Infinity,
     resolved = 0;
   for (const n of s.nodes) {
-    if (n.status !== 'guarded') {
+    if (nodeResolved(n)) {
       resolved++;
       continue;
     }
+    if (!nodeAvailable(n)) continue;
     const d = Math.hypot(n.x - s.p.x, n.y - s.p.y);
     if (d < nextDistance) {
       next = n;
@@ -62,9 +75,7 @@ function nodeProgress(s) {
     (desks
       ? `Сервисдески: ${resolved}/${s.nodes.length} · бэклог ${openTickets(s)}`
       : `Узлы: ${resolved}/${s.nodes.length}`) +
-    (next
-      ? ` · ${next.label} ${arrow} ${Math.round(nextDistance / 10) * 10} px`
-      : ' · Шлюз ЦРПТ разблокирован')
+    (next ? ` · ${next.label} ${arrow}` : ' · Шлюз ЦРПТ разблокирован')
   );
 }
 
@@ -73,24 +84,24 @@ function abilityButtons(run) {
   return s.abilities.slice(0, 2).map((a, i) => {
     const status = a.left > 0 ? 'Активно' : a.cd > 0 ? Math.ceil(a.cd) + ' с' : 'Готово';
     return {
-      label: `${run.touchOnly ? '' : slotKey(i) + ' · '}${a.name} · ${abilityRank(s, a.id)}/${abilityUpgradeMax}\n${
+      label: `${run.touchOnly ? '' : slotKey(i) + ' · '}${a.name}\n${
         a.left > 0 ? 'Активно ' + a.left.toFixed(1) + ' с' : status
       }`,
       name: a.name,
       status,
-      title: a.description + ' Улучшение: ' + abilityUpgradeDescriptions[a.id],
+      // The rank and what it improves stay in the tooltip; the button shows name and state.
+      title: `${a.description} Ранг ${abilityRank(s, a.id)}/${abilityUpgradeMax}: ${abilityUpgradeDescriptions[a.id]}`,
       disabled: run.mode !== 'play' || a.cd > 0 || a.left > 0,
     };
   });
 }
 
-function controlsHint(b = defaultBindings, desks = false) {
+// The keys, shown in the first seconds of a run and on the pause screen. What to do on the map
+// is written on the map itself (node and desk labels) and in the progress line.
+export const HINT_SECONDS = 20;
+function controlsHint(b = defaultBindings) {
   const k = (action) => keyLabel(b[action]);
-  return (
-    `${k('up')}${k('left')}${k('down')}${k('right')} / СТРЕЛКИ — ПЕРЕМЕЩЕНИЕ · АТАКА И ОРУЖИЕ — АВТОМАТИЧЕСКИ · ` +
-    `${k('abilityQ')} / ${k('abilityE')} — УМЕНИЯ · ESC — ПАУЗА · ` +
-    (desks ? 'СНЕСИ ВСЕ СЕРВИСДЕСКИ' : 'УЗЛЫ: УБЕЙ БАГА ИЛИ СТОЙ В КРУГЕ 6 С')
-  );
+  return `${k('up')}${k('left')}${k('down')}${k('right')} / стрелки — движение · ${k('abilityQ')} / ${k('abilityE')} — умения · Esc — пауза`;
 }
 
 // Everything the in-run overlay shows; refreshed about ten times a second.
@@ -127,10 +138,13 @@ export function hudView({ run, progression, settings, upgrades }) {
     showAbilities: run.mode === 'play',
     // Pause only means something during play; the stick is shown with it.
     showPause: run.mode === 'play',
-    showHint: settings.hints,
-    hint: controlsHint(settings.bindings, s.nodes[0]?.kind === 'desk'),
+    showHint: settings.hints && s.t < HINT_SECONDS,
+    hint: controlsHint(settings.bindings),
+    // The same keys on the pause screen; a touch device has no keys to list.
+    controls: run.touchOnly ? '' : controlsHint(settings.bindings),
     stick: run.stickView,
     build: upgrades ? hudBuild(run, upgrades) : null,
-    tip: run.mode === 'play' && run.tip?.left > 0 ? run.tip.text : '',
+    // A test or a room exit within reach takes the tip's place under the hero.
+    tip: run.mode === 'play' && run.tip?.left > 0 && !learningActionNear(s) ? run.tip.text : '',
   };
 }

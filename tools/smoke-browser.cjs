@@ -84,6 +84,9 @@ const assets = require('./active-assets.json');
         await probe.keyboard.up('d');
         await probe.close();
         await page.getByRole('button', { name: 'ВРАГИ И КЛИЕНТЫ', exact: true }).click();
+        // Players get no animation controls; ?dev brings them for the checks below.
+        assert.equal(await page.getByRole('button', { name: '⏸ Пауза', exact: true }).count(), 0);
+        await page.goto(url + '?dev&view=opponents');
         await page.getByRole('button', { name: '⏸ Пауза', exact: true }).click();
         const { unitDefinitions } = require('../data/enemies/units.js');
         for (const unit of Object.values(unitDefinitions))
@@ -170,7 +173,8 @@ const assets = require('./active-assets.json');
         await page.getByRole('button', { name: '← В игру', exact: true }).click();
         await page.getByRole('button', { name: 'КАРТА', exact: true }).click();
         await page.getByRole('button', { name: '← В игру', exact: true }).click();
-        await page.reload();
+        // A fresh load of the game (the address still names the dev bestiary).
+        await page.goto(url);
         await page.locator('#settingsOpen').click();
         assert.equal(await page.locator('#musicVolume').inputValue(), '17');
         await page.locator('#settingsClose').click();

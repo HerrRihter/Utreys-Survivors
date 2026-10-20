@@ -1,6 +1,8 @@
 import { eventSpec } from '../systems/queries/events.js';
 import { inBox } from '../core/math.js';
 
+import { nodeAvailable } from '../systems/queries/nodes.js';
+
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
 // Where a marker for a world point sits on screen, or null when the point is visible.
@@ -33,14 +35,14 @@ export function edgeTargets(s) {
   let node = null,
     best = Infinity;
   for (const n of s.nodes) {
-    if (n.status !== 'guarded') continue;
+    if (!nodeAvailable(n)) continue;
     const d = Math.hypot(n.x - s.p.x, n.y - s.p.y);
     if (d < best) {
       best = d;
       node = n;
     }
   }
-  if (node) out.push({ x: node.x, y: node.y, label: node.label, color: '#ffd54f', distance: best });
+  if (node) out.push({ x: node.x, y: node.y, label: node.label, color: '#ffd54f' });
   const marker = eventSpec(s)?.marker;
   if (marker)
     out.push({
@@ -48,7 +50,6 @@ export function edgeTargets(s) {
       y: s.event.y,
       label: marker,
       color: '#ff8a65',
-      distance: Math.hypot(s.event.x - s.p.x, s.event.y - s.p.y),
     });
   for (const e of s.enemies)
     if (e.boss && e.hp > 0)
@@ -57,7 +58,6 @@ export function edgeTargets(s) {
         y: e.y,
         label: 'ЦРПТ',
         color: '#ff5252',
-        distance: Math.hypot(e.x - s.p.x, e.y - s.p.y),
       });
   return out;
 }
@@ -83,9 +83,8 @@ export function drawEdgeArrows(g, s, cx, cy, width, height) {
     g.font = 'bold 10px monospace';
     g.textAlign = 'center';
     g.fillStyle = '#08171a';
-    // Long node ids are shortened on small screens.
-    const label = width < 700 && t.label.length > 14 ? t.label.slice(0, 13) + '…' : t.label;
-    const text = `${label} · ${Math.round(t.distance / 10) * 10}`;
+    // Long labels are shortened on small screens.
+    const text = width < 700 && t.label.length > 14 ? t.label.slice(0, 13) + '…' : t.label;
     // Keep the whole label on screen next to a marker at the side.
     const half = (g.measureText?.(text).width || 0) / 2 + 4;
     const tx = Math.min(Math.max(0, half - m.x), width - half - m.x);

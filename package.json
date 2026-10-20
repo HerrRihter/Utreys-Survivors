@@ -11,7 +11,7 @@
     "format": "prettier --write src data styles tools tests vite.config.ts vitest.config.js",
     "format:check": "prettier --check src data styles tools tests vite.config.ts vitest.config.js",
     "test": "vitest run",
-    "test:browser": "node tools/smoke-browser.cjs",
+    "test:browser": "node tools/smoke-browser.cjs && node tools/learning-browser.cjs",
     "test:layout": "node tools/layout-check.cjs",
     "check:structure": "node tools/check-structure.cjs",
     "check:contracts": "node tools/check-game-contracts.cjs",

@@ -1,3 +1,4 @@
+import { createLearningFlow } from './learning-flow.js';
 import { createLevelUp } from './level-up.js';
 import { createRunLifecycle } from './run-lifecycle.js';
 import { createNavigation } from './navigation.js';
@@ -47,10 +48,21 @@ export const GameFlow = {
       setMode,
       changed,
     });
+    const learning = createLearningFlow({
+      run,
+      input,
+      snapshots,
+      toast,
+      setMode,
+      changed,
+      finish: lifecycle.finish,
+      levelUp: levels.levelUp,
+    });
     const navigation = createNavigation({ run, settings, progression, world, audio, ui, changed });
     const { levelUp, pickUpgrade, chooseCard, reroll, skip, armBanish } = levels;
     return {
       ...lifecycle,
+      ...learning,
       levelUp,
       pickUpgrade,
       chooseCard,

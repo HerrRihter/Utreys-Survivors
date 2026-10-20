@@ -15,6 +15,18 @@ const deskMaps = Object.values(mapDefinitions).filter((map) => map.objective?.ty
  * @type {Record<keyof typeof unitDefinitions, OpponentMeta>}
  */
 export const bestiary = {
+  batch_accounting: {
+    category: 'clients',
+    badge: 'УЧЕБНЫЙ БОСС · ПАРТИОННЫЙ УЧЁТ',
+    badgeColor: '#4da5ff',
+    role: 'Склеенные партии Пепси',
+    protocol: 'BATCH_CRPT',
+    aggregation: 'Номер партии и резервирование',
+    frequency: `Призыв каждые ${unitDefinitions.batch_accounting.summon.every} с`,
+    description:
+      'Множество склеенных значков Пепси. Ждёт в последней комнате учебного полигона после трёх тестов.',
+    tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
+  },
   l3: {
     category: 'regulators',
     badge: 'ПРОМЕЖУТОЧНЫЙ КОНТУР L3 · РОЙ',

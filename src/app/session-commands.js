@@ -9,6 +9,12 @@
  */
 export function createSessionCommands({ flow, audio, runLogFile, activateAbility, portraits }) {
   return {
+    startLearningTest: flow.startLearningTest,
+    selectLearningAnswer: flow.selectLearningAnswer,
+    submitLearningAnswer: flow.submitLearningAnswer,
+    advanceLearning: flow.advanceLearning,
+    closeLearning: flow.closeLearning,
+    moveLearningRoom: flow.moveLearningRoom,
     openHeroSelect: flow.openHeroSelect,
     closeHeroSelect: flow.closeHeroSelect,
     chooseHero: flow.chooseHero,

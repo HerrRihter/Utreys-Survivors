@@ -2388,6 +2388,8 @@ button:disabled {
   margin: 0;
   color: #b2cbcf;
   line-height: 1.5;
+  /* Hero entries list their attack, abilities and passive line by line. */
+  white-space: pre-line;
 }
 .codex-card.locked .codex-head i {
   color: #0d2a31;
@@ -3382,4 +3384,125 @@ button:disabled {
   padding: 5px 10px;
   border-radius: 4px;
   font: inherit;
+}
+.learning-modal {
+  width: min(760px, 94vw);
+  text-align: left;
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.learning-modal p {
+  line-height: 1.55;
+}
+.learning-options {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+  min-width: 0;
+}
+.learning-options legend {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.learning-option {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #45606c;
+  border-radius: 10px;
+  cursor: pointer;
+  line-height: 1.45;
+  background: #102530;
+  overflow-wrap: anywhere;
+}
+.learning-option input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cyan);
+}
+.learning-option.selected {
+  border-color: #78cfff;
+  background: #153c51;
+}
+.learning-option.correct {
+  border-color: #64ffda;
+}
+.learning-option:focus-within {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+.learning-counter {
+  color: #b6cbd5;
+  font-size: 0.85rem;
+}
+.learning-feedback,
+.learning-summary {
+  padding: 16px;
+  background: #102f36;
+  border-radius: 10px;
+  margin: 16px 0;
+}
+.learning-selfcheck {
+  margin: 14px 0 18px;
+}
+/* Test and room-exit buttons: just outside the fight around the screen centre (a quarter of
+   the shorter side), clear of the corner and bottom panels. */
+.learning-hud {
+  position: fixed;
+  top: calc(50% + 25vmin + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: min(320px, 80vw);
+  z-index: 20;
+  text-align: center;
+  pointer-events: auto;
+  font-size: 12px;
+}
+.learning-hud button {
+  min-height: 44px;
+  padding: 10px;
+  margin: 0;
+  font-size: 13px;
+}
+.learning-hud small {
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #c0d3dd;
+  background: #0b1c28d9;
+  border-radius: 4px;
+}
+body[data-mode='quiz'] #toast {
+  visibility: hidden;
+}
+@media (max-width: 600px) {
+  .learning-modal {
+    padding: 20px;
+  }
+  .learning-option {
+    padding: 10px;
+  }
+}
+/* Short landscape screens: the middle is the fight; the right edge between the corner buttons
+   and the stick is free. */
+@media (max-height: 500px) {
+  .learning-hud {
+    top: 50%;
+    left: auto;
+    right: 12px;
+    transform: translateY(-50%);
+    max-width: 200px;
+  }
+}
+.pause-controls {
+  margin: 14px 0 0;
+  color: #9fb8c2;
+  font-size: 12px;
 }

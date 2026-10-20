@@ -1,5 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { GameSession } from './game-session.js';
+import { devToolsEnabled } from './dev-tools.js';
 import { createProgression } from '../systems/progression/index.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
 import { createRunStats } from '../services/run-stats.js';
@@ -40,6 +41,7 @@ export function useGameSession(
       cancelAnimationFrame: (id: number) => window.cancelAnimationFrame(id),
       canvas,
       progression,
+      devTools: devToolsEnabled(window.location.search),
     });
     // Opt-in handle for tools/benchmark-render.cjs; inert without ?bench in the URL.
     if (new URLSearchParams(window.location.search).has('bench'))

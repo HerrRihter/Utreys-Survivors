@@ -1,3 +1,4 @@
+import { validLearning } from './learning.js';
 import { makeElite } from './difficulty.js';
 import { guardianPoint } from './node-objectives.js';
 import { persistentKeys, reducedKeys } from './run-model.js';
@@ -13,12 +14,17 @@ import { mapDefinitions } from '../../data/maps/maps.js';
 // exactly as the running one would have: the same enemies with their timers, projectiles and
 // ground hazards, the open level-up's cards and the game random source at its position.
 // `version` guards the format.
-export const RUN_SNAPSHOT_KEY = 'utreys-run-v4';
-const VERSION = 4;
+export const RUN_SNAPSHOT_KEY = 'utreys-run-v5';
+const VERSION = 5;
 // Saves of older builds, newest first. Version 1 had no enemy ids (summons and node
 // guardians were linked by object); version 2 used older content ids; version 3 kept a reduced
 // run (see migrations).
-export const LEGACY_RUN_SNAPSHOT_KEYS = ['utreys-run-v3', 'utreys-run-v2', 'utreys-run-v1'];
+export const LEGACY_RUN_SNAPSHOT_KEYS = [
+  'utreys-run-v4',
+  'utreys-run-v3',
+  'utreys-run-v2',
+  'utreys-run-v1',
+];
 
 const pick = (source, keys) => Object.fromEntries(keys.map((key) => [key, source[key]]));
 
@@ -39,7 +45,12 @@ const savedKeys = ['enemies', ...persistentKeys.filter((key) => key !== 'enemies
 
 export function snapshotRun(run) {
   const s = run.state;
-  if (!s || s.p.hp <= 0 || s.resultRecorded) return null;
+  const pendingRevive =
+    mapDefinitions[s?.map]?.objective?.type === 'learning' &&
+    s?.learning?.active?.reason === 'revive' &&
+    s.learning.reviveUsed &&
+    validLearning(s.learning);
+  if (!s || (s.p.hp <= 0 && !pendingRevive) || s.resultRecorded) return null;
   const level = run.mode === 'level';
   return {
     version: VERSION,
@@ -58,6 +69,9 @@ export function snapshotRun(run) {
 
 // Each step converts a save of its version to the next one.
 const migrations = {
+  4(saved) {
+    return { ...saved, version: 5, state: { ...saved.state, learning: null } };
+  },
   // Version 1 → 2: enemies and node guardians get ids. Version 1 did not save who summoned an
   // enemy, so its summons are not counted as desk tickets after the resume (as before).
   1(saved) {

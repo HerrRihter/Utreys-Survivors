@@ -27,6 +27,10 @@ const round = (n, digits = 1) => Math.round(n * 10 ** digits) / 10 ** digits;
 
 // `min`: offers a card needs before its pick rate is judged.
 function computeStats(runs, { min = 10, minRuns = 5 } = {}) {
+  const learning = runs
+    .filter((r) => r.learning)
+    .map((r) => ({ hero: r.hero, win: r.win, ...r.learning }));
+  runs = runs.filter((r) => !r.learning);
   // Production endings are logged as separate entries; they count toward production only.
   const base = runs.filter((r) => !r.endless);
   const production = runs.filter((r) => r.endless);
@@ -114,6 +118,7 @@ function computeStats(runs, { min = 10, minRuns = 5 } = {}) {
     }
 
   return {
+    learning,
     runs: runs.length,
     finished: base.length,
     wins: base.filter((r) => r.win).length,

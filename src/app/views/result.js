@@ -1,3 +1,4 @@
+import { learningSummary } from '../../systems/learning.js';
 import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { weaponDefinitions } from '../../../data/weapons.js';
 import { seedText } from '../../core/rng.js';
@@ -22,7 +23,8 @@ export function resultView({
   const endless = !!s.endless;
   return {
     ...resultHeader({ s, map, win, endless, opened, bonus }),
-    canContinue: win && !endless,
+    canContinue: win && !endless && !s.learning,
+    learning: learningSummary(s),
     stats: [
       ...resultStats({ s, endless, productionBest, before }),
       { value: String(s.level), label: 'УРОВЕНЬ' },
@@ -37,13 +39,20 @@ export function resultView({
 }
 
 function resultHeader({ s, map, win, endless, opened, bonus }) {
+  if (s.learning)
+    return {
+      win,
+      tag: win ? map.victoryTag : 'УЧЕБНЫЙ ЗАБЕГ ОКОНЧЕН',
+      title: win ? 'Партионный учёт освоен' : 'Практика продолжается',
+      text: 'Учебный забег не идёт в рейтинг.',
+    };
   const loadText = `НАГРУЗКА ${s.load}`;
   if (endless)
     return {
       win: false,
       tag: `ПРОДАКШЕН · ${loadText}`,
       title: 'Продакшен упал',
-      text: 'Забег уже засчитан как победа. Рекорд продакшена хранится по герою и нагрузке.',
+      text: 'Победа в забеге уже засчитана.',
     };
   return {
     win,
@@ -54,7 +63,7 @@ function resultHeader({ s, map, win, endless, opened, bonus }) {
         (opened ? ` Открыта нагрузка ${s.load + 1}.` : '') +
         (bonus ? ` Бонус нагрузки: +${codes(bonus)}.` : '') +
         ' Можно продолжить в продакшене: сложность растёт каждую минуту.'
-      : 'Попробуй другую сборку: другое оружие и пассивки меняют забег.',
+      : 'Попробуй другую сборку.',
   };
 }
 
@@ -70,8 +79,12 @@ function resultStats({ s, endless, productionBest, before }) {
       { value: clock(s.t), label: 'ВСЕГО' },
     ];
   return [
-    { value: clock(s.t), label: 'ВРЕМЯ', best: s.t > before.maxTime },
-    { value: String(s.kills), label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО', best: s.kills > before.maxKills },
+    { value: clock(s.t), label: 'ВРЕМЯ', best: !s.learning && s.t > before.maxTime },
+    {
+      value: String(s.kills),
+      label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО',
+      best: !s.learning && s.kills > before.maxKills,
+    },
   ];
 }
 
