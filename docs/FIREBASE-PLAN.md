@@ -111,7 +111,7 @@ FIREBASE-SETUP.md.
 
 ### Локальная статистика
 
-В `persistence.js` добавляется `mapStats`: те же показатели по картам. Она нужна для экрана
+В `persistence.js` (теперь `src/systems/progression/`) добавляется `mapStats`: те же показатели по картам. Она нужна для экрана
 «Моя статистика» без входа и синхронизируется вместе с прогрессом. Таблицы лидеров строятся
 только по `stats/{uid}`, который пополняется отправкой забегов.
 
@@ -127,7 +127,7 @@ users/{uid}
   createdAt: timestamp
 
 progress/{uid}
-  data: object                     — тот же объект, что пишет persistence.js
+  data: object                     — тот же объект, что пишет src/systems/progression/
   schema: 1
   rev: number                      — растёт на 1 при каждой записи
   device: string                   — случайный id устройства
@@ -178,7 +178,7 @@ stats/{uid}
    - есть оба и различаются, а устройство ещё не синхронизировалось с этим аккаунтом →
      диалог «Какой прогресс оставить?» со сводкой (коды, победы, герои, время). Без
      автоматического слияния: коды тратятся, и «максимум из двух» дал бы бесплатные коды.
-3. **Дальше.** Локальная запись не меняется (`deferSave` в `persistence.js`). Новый слой
+3. **Дальше.** Локальная запись не меняется (`deferSave` в `persistence.js` (теперь `src/systems/progression/`)). Новый слой
    `cloud-progress` раз в 30 с и в конце забега, покупки или сброса отправляет снимок, если
    он изменился. Запись идёт транзакцией: если в облаке `rev` больше последнего известного
    (играли на другом устройстве), выполняется шаг 2 с диалогом.
@@ -202,7 +202,7 @@ stats/{uid}
 | `src/services/run-stats.js`                                                         | расчёт прироста по забегу, транзакция `stats/{uid}`, очередь неотправленных забегов                                |
 | `src/services/leaderboard.js`                                                       | `top(metric, scope, n)`, `rank(metric, scope)`, кэш на 60 с                                                        |
 | `data/leaderboards.js`                                                              | список показателей: поле, подпись, сортировка, формат значения                                                     |
-| `src/systems/persistence.js`                                                        | `normalize`, `snapshot`, `replace`, `mapStats`, событие изменения                                                  |
+| `src/systems/progression/` (раньше src/systems/progression/)                                                        | `normalize`, `snapshot`, `replace`, `mapStats`, событие изменения                                                  |
 | `src/app/game-flow.js`                                                              | `runId`, учёт забега и отправка в конце `finish`                                                                   |
 | `src/app/game-session.js`, `useGameSession.ts`                                      | создание облачного слоя, команды для UI                                                                            |
 | `src/components/AccountPanel.tsx`                                                   | в меню: «Войти» или логин игрока, «Моя статистика», «Сменить пароль», «Выйти»                                      |
@@ -251,7 +251,7 @@ Firebase (`tests/test-account.cjs`) и в браузере с эмуляторо
 - `tests/test-firestore-rules.cjs` (в `npm test`) сверяет список карт в правилах с
   `data/maps/maps.js`.
 
-**Этап 3. Облачный прогресс.** Рефакторинг `persistence.js`, `cloud-progress.js`, диалог
+**Этап 3. Облачный прогресс.** Рефакторинг `persistence.js` (теперь `src/systems/progression/`), `cloud-progress.js`, диалог
 выбора. Готово, когда: прогресс переносится на второй браузер, конфликт показывает диалог,
 офлайн ничего не ломает.
 

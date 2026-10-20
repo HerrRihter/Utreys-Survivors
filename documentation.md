@@ -28,7 +28,7 @@ npm test автоматически запускает все верхнеуро
 
 ## Сохранения
 
-Ключи прогресса — utreys-progression-v1, utreys-best и utreys-settings. Незаконченный забег хранится в utreys-run-v4 (старые utreys-run-v1…v3 переводятся в v4 при чтении), показанные подсказки — в utreys-tips (см. [WEAPONS-AND-RUN](docs/WEAPONS-AND-RUN.md)). Валюта записывается в codes; при загрузке старого сохранения читается codes ?? helmets. Старое достижение helmets_100 переносится в codes_100 без повторной награды. Аудио записывается в utreys-audio; при отсутствии нового ключа настройки читаются из gaul-audio и копируются в новый. Доход от боя сохраняется пакетно; flush вызывается при уходе со страницы и disposal.
+Все ключи localStorage читаются и пишутся через persisted() из src/core/storage.js. Ключи прогресса — utreys-progression-v1 и utreys-settings (рекорд лучшего забега — stats.maxTime и stats.maxKills в прогрессии; прежний ключ utreys-best сливается в неё один раз и удаляется). Незаконченный забег хранится в utreys-run-v4 (старые utreys-run-v1…v3 переводятся в v4 при чтении), показанные подсказки — в utreys-tips (см. [WEAPONS-AND-RUN](docs/WEAPONS-AND-RUN.md)). Валюта записывается в codes; старые форматы (helmets → codes, helmets_100 → codes_100 без повторной награды, аудио из gaul-audio в utreys-audio) переводит src/core/migrations.js. Доход от боя сохраняется пакетно; flush вызывается при уходе со страницы и disposal.
 
 ## Аккаунт и облако
 

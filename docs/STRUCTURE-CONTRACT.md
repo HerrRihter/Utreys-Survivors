@@ -1,6 +1,6 @@
 # Контракт структуры
 
-Актуален для Utrace Survivors после миграции 15 октября 2026 года, слои — с 20 октября 2026 года. Машинные правила: tools/structure-contract.json; публикация: tools/active-assets.json.
+Актуален для Utrace Survivors после миграции 15 октября 2026 года, слои — с 20 октября 2026 года, хранилище и прогрессия — с этапа 6 рефакторинга (20 октября 2026 года). Машинные правила: tools/structure-contract.json; публикация: tools/active-assets.json.
 
 | Путь                      | Назначение                                                                            |
 | ------------------------- | ------------------------------------------------------------------------------------- |
@@ -95,6 +95,22 @@ tests/test-structure-layers.cjs. Учитываются статические, 
 - То, что зависит от экрана (кто из врагов говорит), вызывается из сессии с видимым прямоугольником
   мира, а не из шага симуляции.
 - Типы, которые app отдаёт React (Session, Account), живут в src/app/types.ts.
+- Всё, что игра хранит в localStorage, читается и пишется через `persisted(storage, key, { normalize,
+  migrate, legacyKeys })` из src/core/storage.js: ошибки хранилища и битый JSON не бросают исключений,
+  значение под старым ключом переводится один раз. Больше нигде в src и data нет `getItem`, `setItem`,
+  `removeItem` (единственное исключение — адаптер `window.localStorage` в src/app/useGameSession.ts);
+  проверяет tests/test-storage.cjs. Ключи: `utreys-progression-v1`, `utreys-settings`, `utreys-tips`,
+  `utreys-audio`, `utreys-run-v4`, `utreys-run-log-v1`, `utreys-stats-queue-v1`, `utreys-cloud-v1`.
+  Переводы старых форматов (helmets → codes, gaul-audio, utreys-best) собраны в src/core/migrations.js
+  с датой, после которой их можно удалить; цепочка снапшота забега v1…v4 — в src/systems/run-snapshot.js.
+- Прогрессия аккаунта (src/systems/progression/) — общее хранилище `store.js` (данные, запись,
+  подписчики) и модули над ним: `wallet` (коды и убийства), `shop` (герои, улучшения, сброс),
+  `records` (время, рекорды, факты забега, статистика, эволюции), `achievements`, `loads` (нагрузки и
+  продакшен); `normalize.js` чистит сохранение. Модуль меняет `store.data` и вызывает `save()` или
+  `deferSave()`, они же поднимают версию. Снаружи данные видны только как `progression.data` —
+  глубоко замороженная копия, общая для всех чтений до следующего изменения. Системы получают
+  только нужные модули (бой — wallet и records, умения — records, симуляция и события — wallet,
+  карточки — wallet и achievements).
 
 Осознанные исключения и долги:
 
