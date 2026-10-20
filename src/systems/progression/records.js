@@ -13,6 +13,13 @@ export function createRecords(store) {
       store.deferSave();
     }
   }
+  // Enemies defeated in one run, for the most-kills record.
+  function recordKills(kills) {
+    if (Number.isSafeInteger(kills) && kills > store.data.stats.maxKills) {
+      store.data.stats.maxKills = kills;
+      store.deferSave();
+    }
+  }
   function recordBossKill() {
     store.data.stats.bossKills++;
     store.deferSave();
@@ -63,6 +70,7 @@ export function createRecords(store) {
   }
   return {
     recordTime,
+    recordKills,
     recordBossKill,
     recordAbility,
     recordLevel,

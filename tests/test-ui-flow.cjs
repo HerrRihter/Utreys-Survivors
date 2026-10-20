@@ -84,6 +84,23 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.equal(s.mode, 'menu');
   assert.equal(s.views.hud(), null);
   assert.match(s.views.menu().record, /ЛУЧШЕЕ ВРЕМЯ/);
+
+  // «Record» marks compare with the progression's records from before the ending.
+  const marks = () => Object.fromEntries(run.result.stats.map((stat) => [stat.label, !!stat.best]));
+  const records = h.env.Progression.data.stats;
+  s.start();
+  s.state.t = records.maxTime + 60;
+  s.state.kills = records.maxKills + 5;
+  s.finish(false);
+  assert.equal(marks()['ВРЕМЯ'], true);
+  assert.equal(marks()['ПРОТИВНИКОВ ПОБЕЖДЕНО'], true);
+  assert.equal(h.env.Progression.data.stats.maxKills, records.maxKills + 5);
+  s.start();
+  s.state.t = 30;
+  s.state.kills = 1;
+  s.finish(false);
+  assert.equal(marks()['ВРЕМЯ'], false);
+  assert.equal(marks()['ПРОТИВНИКОВ ПОБЕЖДЕНО'], false);
   s.dispose();
   console.log('PASS: screen navigation, Escape routing, UI/HUD notifications and read models');
 })().catch((error) => {

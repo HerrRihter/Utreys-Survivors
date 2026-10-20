@@ -39,10 +39,10 @@ export function clock(time) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-function unclaimedAchievements(progression, best) {
+function unclaimedAchievements(progression) {
   const data = progression.data;
   return progression.achievements.list.filter(
-    (a) => a.getProgress(data, best) >= a.target && !progression.achievements.isClaimed(a.id),
+    (a) => a.getProgress(data) >= a.target && !progression.achievements.isClaimed(a.id),
   ).length;
 }
 
@@ -71,17 +71,18 @@ function collection(progression) {
 }
 
 export function menuView({ run, progression, snapshot = null }) {
-  const unclaimed = unclaimedAchievements(progression, run.best);
+  const unclaimed = unclaimedAchievements(progression);
   const hero = snapshot && heroDefinitions[snapshot.hero];
+  const maxTime = progression.data.stats.maxTime;
   return {
     collection: collection(progression),
     resume: hero ? `${hero.name} · ${clock(snapshot.state.t)} · ур. ${snapshot.state.level}` : null,
     wallet: 'КОДЫ: ' + progression.wallet.codes,
-    record: run.best.time
-      ? `ЛУЧШЕЕ ВРЕМЯ: ${clock(run.best.time)}`
+    record: maxTime
+      ? `ЛУЧШЕЕ ВРЕМЯ: ${clock(maxTime)}`
       : 'Лучшее время появится после первого забега.',
     achievementsLabel: unclaimed > 0 ? `ДОСТИЖЕНИЯ (${unclaimed}!)` : 'ДОСТИЖЕНИЯ',
-    goals: nearestGoals(progression, run.best, 3),
+    goals: nearestGoals(progression, 3),
     hint: run.touchOnly
       ? 'Джойстик справа внизу — движение · атака и оружие срабатывают сами · умения — кнопки слева внизу'
       : 'WASD или стрелки — перемещение · трассировка кодов выполняется автоматически · Q / E — умения',
@@ -288,10 +289,10 @@ export function encyclopediaView({ progression, upgrades }) {
  *   done: boolean, claimed: boolean, order: number, ratio: number }} AchievementCard
  * @returns {{ cards: AchievementCard[], total: number, completed: number, claimed: number, percent: number }}
  */
-export function achievementsView({ run, progression }) {
+export function achievementsView({ progression }) {
   const data = progression.data;
   const cards = progression.achievements.list.map((ach) => {
-    const progress = ach.getProgress(data, run.best);
+    const progress = ach.getProgress(data);
     const done = progress >= ach.target,
       claimed = progression.achievements.isClaimed(ach.id);
     const time = ach.format === 'time';

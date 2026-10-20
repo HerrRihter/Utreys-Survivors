@@ -18,6 +18,8 @@ export function normalizeProgression(saved) {
     stats: {
       totalTime: 0,
       maxTime: 0,
+      // Most enemies defeated in one run (the results screen marks a new record).
+      maxKills: 0,
       bossKills: 0,
       abilitiesUsed: 0,
       maxLevel: 0,
@@ -68,6 +70,7 @@ export function normalizeProgression(saved) {
           typeof saved.stats.maxTime === 'number' && saved.stats.maxTime >= 0
             ? saved.stats.maxTime
             : 0;
+        data.stats.maxKills = integer(saved.stats.maxKills);
         data.stats.bossKills = integer(saved.stats.bossKills);
         data.stats.abilitiesUsed = integer(saved.stats.abilitiesUsed);
         data.stats.maxLevel = integer(saved.stats.maxLevel);

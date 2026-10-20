@@ -1,4 +1,10 @@
 import { normalizeProgression } from './normalize.js';
+import {
+  LEGACY_BEST_KEY,
+  legacyBest,
+  mergeLegacyBest,
+  previousProgressionShape,
+} from '../../core/migrations.js';
 
 // The saved meta-progression shared by the progression modules (wallet, shop, records,
 // achievements, loads): one `data` object, its storage and who hears about saves. Modules
@@ -17,11 +23,17 @@ export function createProgressionStore({
   document = globalThis.document,
 }) {
   const key = 'utreys-progression-v1';
-  let data = normalizeProgression(readSaved()),
+  const stored = read(key);
+  let data = normalizeProgression(stored),
     persistent = true;
-  function readSaved() {
+  const previous = deepFreeze(previousProgressionShape(stored, data));
+  // This device's record from before it moved into the save; it also joins a save that
+  // replaces this one during the session (from the cloud), so it is never lost.
+  const best = legacyBest(read(LEGACY_BEST_KEY));
+  if (best) mergeLegacyBest(data, best);
+  function read(name) {
     try {
-      return JSON.parse(storage.getItem(key));
+      return JSON.parse(storage.getItem(name));
     } catch {
       return null;
     }
@@ -79,6 +91,7 @@ export function createProgressionStore({
   // Takes progression from elsewhere (the cloud) through the same checks as a local save.
   function replace(saved) {
     data = normalizeProgression(saved);
+    if (best) mergeLegacyBest(data, best);
     version++;
     dirty = true;
     flush();
@@ -122,12 +135,26 @@ export function createProgressionStore({
     events?.removeEventListener?.('pagehide', onHide);
     document?.removeEventListener?.('visibilitychange', onVisibility);
   }
+  // The old record is written into the save once; its key goes only when that write worked.
+  if (best) {
+    dirty = true;
+    flush();
+    if (persistent)
+      try {
+        if (storage.removeItem) storage.removeItem(LEGACY_BEST_KEY);
+        else storage.setItem(LEGACY_BEST_KEY, 'null');
+      } catch {}
+  }
   return {
     get data() {
       return data;
     },
     get persistent() {
       return persistent;
+    },
+    // The save as the previous build stored it, until anything changes it in this session.
+    get previous() {
+      return version === 0 ? previous : null;
     },
     snapshot,
     save,

@@ -21,7 +21,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  *   selectedMap: string, selectedLoad: number, seedInput: string,
  *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], banishArmed: boolean,
  *   capture: string | null, result: RunResult | null,
- *   best: { kills: number, time: number }, toast: { text: string, left: number },
+ *   toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
  *   stick: { x: number, y: number }, move: { x: number, y: number },
@@ -32,11 +32,7 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
 // Everything that describes "where the player is" between frames: the current run, which screen
 // is open, menu choices and raw input. Systems receive it explicitly and mutate it in place.
 /** @returns {RunState} */
-export function createRunState({ storage }) {
-  let best = { kills: 0, time: 0 };
-  try {
-    best = JSON.parse(storage.getItem('utreys-best')) || best;
-  } catch {}
+export function createRunState() {
   return {
     state: null, // the active run, null in the menu
     mode: 'menu', // menu | play | pause | level | end
@@ -54,7 +50,6 @@ export function createRunState({ storage }) {
     banishArmed: false, // the next card picked is banned instead of taken
     capture: null, // the action whose key the settings screen is waiting for
     result: null, // { win, ... } after a run ends
-    best,
     toast: { text: '', left: 0 },
     levelLock: 0, // seconds before a level-up card accepts player input
     tip: { text: '', left: 0 }, // first-run guidance banner

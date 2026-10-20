@@ -31,6 +31,47 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   assert(!('helmets' in migrated));
   saved.set('utreys-progression-v1', JSON.stringify({ codes: 0, helmets: 900 }));
   assert.equal((await load()).wallet.codes, 0, 'new zero balance takes precedence');
+
+  // The old best-run record ('utreys-best') joins the progression once and its key goes.
+  saved.set('utreys-progression-v1', JSON.stringify({ stats: { maxTime: 100 } }));
+  saved.set('utreys-best', JSON.stringify({ time: 250, kills: 400 }));
+  let best = await load();
+  assert.equal(best.data.stats.maxTime, 250);
+  assert.equal(best.data.stats.maxKills, 400);
+  assert(
+    best.achievements.isClaimed('survive_run_180') ||
+      best.achievements.claimAchievement('survive_run_180'),
+    'time achievements read the merged record',
+  );
+  assert.equal(JSON.parse(saved.get('utreys-best')), null, 'the old key is gone');
+  assert.equal(JSON.parse(saved.get('utreys-progression-v1')).stats.maxKills, 400);
+  assert.equal(best.previous, null, 'claiming changed the save');
+  best = await load();
+  assert.equal(best.data.stats.maxTime, 250, 'merged once, kept after reload');
+  // A larger record in the save wins; a save that cannot be written keeps the old key.
+  saved.set('utreys-best', JSON.stringify({ time: 90, kills: 3 }));
+  best = await load();
+  assert.equal(best.data.stats.maxTime, 250);
+  assert.equal(best.data.stats.maxKills, 400);
+  saved.set('utreys-best', JSON.stringify({ time: 900, kills: 3 }));
+  const blocked = {
+    getItem: storage.getItem,
+    setItem() {
+      throw Error('blocked');
+    },
+  };
+  const env = {};
+  await loadModule(env, path.resolve('src/systems/progression/index.js'));
+  assert.equal(env.createProgression({ storage: blocked }).data.stats.maxTime, 900);
+  assert.equal(JSON.parse(saved.get('utreys-best')).time, 900, 'kept for the next try');
+  saved.delete('utreys-best');
+  // The save as the previous build had it, for cloud sync: without the new field.
+  saved.set('utreys-progression-v1', JSON.stringify({ codes: 7, stats: { maxTime: 5 } }));
+  const fresh = await load();
+  assert.equal(fresh.previous.codes, 7);
+  assert(!('maxKills' in fresh.previous.stats));
+  fresh.wallet.earn(1);
+  assert.equal(fresh.previous, null, 'any change ends the allowance');
   const { AudioSystem } = await loadModule({}, path.resolve('src/core/audio.js'));
   const target = { addEventListener() {}, removeEventListener() {} };
   const c = {

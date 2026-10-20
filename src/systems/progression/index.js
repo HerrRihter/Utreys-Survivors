@@ -33,5 +33,9 @@ export function createProgression(options) {
     get persistent() {
       return store.persistent;
     },
+    // The save as the previous build stored it (cloud sync), until it changes.
+    get previous() {
+      return store.previous;
+    },
   };
 }

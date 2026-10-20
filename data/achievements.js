@@ -74,7 +74,7 @@ const standardAchievements = [
     format: 'time',
     reward: 5,
     rewardType: 'кодов',
-    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0)),
+    getProgress: (data) => Math.floor(data.stats?.maxTime || 0),
   },
   {
     id: 'survive_run_180',
@@ -86,7 +86,7 @@ const standardAchievements = [
     format: 'time',
     reward: 15,
     rewardType: 'кодов',
-    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0)),
+    getProgress: (data) => Math.floor(data.stats?.maxTime || 0),
   },
   {
     id: 'survive_run_300',
@@ -99,7 +99,7 @@ const standardAchievements = [
     reward: 35,
     rewardType: 'кодов',
     unlocks: { weapon: 'cache' },
-    getProgress: (data, best) => Math.floor(Math.max(data.stats?.maxTime || 0, best?.time || 0)),
+    getProgress: (data) => Math.floor(data.stats?.maxTime || 0),
   },
   {
     id: 'survive_total_600',
@@ -345,11 +345,11 @@ export const achievementDefinitions = [
     rewardType: 'кодов',
     // Claimed achievements stay earned even after their currency has been spent.
     // Keep this outside the base list so it never counts itself.
-    getProgress: (data, best) =>
+    getProgress: (data) =>
       standardAchievements.filter(
         (achievement) =>
           data.claimedAchievements?.includes(achievement.id) ||
-          achievement.getProgress(data, best) >= achievement.target,
+          achievement.getProgress(data) >= achievement.target,
       ).length,
   },
 ];

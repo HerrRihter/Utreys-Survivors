@@ -4,6 +4,7 @@ const { createProgression, normalizeProgression } = require('../src/systems/prog
 const {
   createCloudProgress,
   stableKey,
+  saveHash,
   CLOUD_META_KEY,
 } = require('../src/services/cloud-progress.js');
 
@@ -110,8 +111,8 @@ function fakeTimers() {
   };
 }
 
-function device(cloud) {
-  const map = new Map();
+function device(cloud, saved = []) {
+  const map = new Map(saved);
   const storage = { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) };
   const progression = createProgression({ storage, events: null, document: null });
   const account = fakeAccount(cloud);
@@ -287,6 +288,40 @@ const remote = (cloud, uid = 'u1') => cloud.docs.get('progress/' + uid);
   assert.equal(meta.uid, 'u2');
   assert.equal(meta.rev, 1);
   assert.ok(meta.hash.length < 20, 'only a fingerprint of the save is kept');
+
+  // A save only brought to the new format at load (stats.maxKills, the old 'utreys-best'
+  // merged in) is not a change of the player's: no conflict with a newer cloud save, and the
+  // device's old record joins the save it takes.
+  const oldSave = (codes) => {
+    const data = JSON.parse(JSON.stringify(normalizeProgression({ codes })));
+    delete data.stats.maxKills;
+    return data;
+  };
+  const synced = oldSave(10);
+  cloud.docs.set('progress/u3', { data: oldSave(25), schema: 1, rev: 2, device: 'x' });
+  const old = device(cloud, [
+    ['utreys-progression-v1', JSON.stringify(synced)],
+    ['utreys-best', JSON.stringify({ time: 50, kills: 70 })],
+    [CLOUD_META_KEY, JSON.stringify({ uid: 'u3', rev: 1, hash: saveHash(synced) })],
+  ]);
+  old.account.signIn('u3');
+  await settle();
+  assert.equal(old.sync.state.status, 'synced', 'no conflict over the format change');
+  assert.equal(old.progression.wallet.codes, 25, 'the newer cloud save is taken');
+  assert.equal(old.progression.data.stats.maxKills, 70, 'the old record is kept');
+  // The same device with the cloud unchanged sends its migrated save up.
+  const kept = oldSave(40);
+  cloud.docs.set('progress/u4', { data: kept, schema: 1, rev: 1, device: 'x' });
+  const same = device(cloud, [
+    ['utreys-progression-v1', JSON.stringify(kept)],
+    ['utreys-best', JSON.stringify({ time: 50, kills: 70 })],
+    [CLOUD_META_KEY, JSON.stringify({ uid: 'u4', rev: 1, hash: saveHash(kept) })],
+  ]);
+  same.account.signIn('u4');
+  await settle();
+  assert.equal(same.sync.state.status, 'synced');
+  assert.equal(remote(cloud, 'u4').rev, 2);
+  assert.equal(remote(cloud, 'u4').data.stats.maxKills, 70);
 
   // Disposal stops listening.
   e.sync.dispose();

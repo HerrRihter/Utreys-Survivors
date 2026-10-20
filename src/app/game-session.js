@@ -53,7 +53,7 @@ export const GameSession = {
     // Randomness that changes nothing in the run (sparks, screen shake, animation phases,
     // sound variants). Every game decision draws from the run's own `state.rng`.
     const cosmetic = () => Math.random();
-    const run = createRunState({ storage });
+    const run = createRunState();
     // No mouse and no hover: a phone or tablet. Keyboard hints and key settings are hidden.
     const touchQuery = window.matchMedia?.('(hover: none) and (pointer: coarse)');
     run.touchOnly = !!touchQuery?.matches;
@@ -176,7 +176,6 @@ export const GameSession = {
       runLog,
       audio,
       input,
-      storage,
       toast,
       ui,
       hud,

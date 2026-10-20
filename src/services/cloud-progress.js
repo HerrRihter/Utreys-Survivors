@@ -157,7 +157,11 @@ export function createCloudProgress({
       set({ status: 'synced' });
       return;
     }
-    const localChanged = !known || localHash !== meta.hash,
+    // A save only brought to the current format at load (src/core/migrations.js) is the one
+    // this device last synced, not a change of the player's.
+    const previous = progression.previous,
+      migratedOnly = !!previous && saveHash(previous) === meta.hash;
+    const localChanged = !known || (localHash !== meta.hash && !migratedOnly),
       remoteChanged = !known || remote.rev !== meta.rev;
     if (!remoteChanged) return push(sdk, owner, local, remote.rev);
     if (!localChanged || localKey === emptyKey) return take(owner, remote.rev, remoteData);

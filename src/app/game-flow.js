@@ -31,7 +31,6 @@ export const GameFlow = {
     runLog,
     audio,
     input,
-    storage,
     toast,
     ui,
     hud,
@@ -76,6 +75,7 @@ export const GameFlow = {
       if (!s || s.resultRecorded) return null;
       records.recordTime(s.t, s.recordedTime);
       records.recordLevel(s.level);
+      records.recordKills(s.kills);
       s.resultRecorded = true;
       s.recordedTime = s.t;
       // Evolutions assembled in this run open their encyclopedia entries.
@@ -150,7 +150,7 @@ export const GameFlow = {
         arenaSize: world.arena.size,
         baClient: run.baClient,
         doneBefore: achievements.list
-          .filter((a) => achievements.achievementDone(a, run.best))
+          .filter((a) => achievements.achievementDone(a))
           .map((a) => a.id),
       });
       world.arena.prepare(
@@ -288,6 +288,8 @@ export const GameFlow = {
       const s = run.state;
       if (!s || s.resultRecorded) return;
       const endless = !!s.endless;
+      // The records before this ending, for the «record» marks on the results screen.
+      const { maxTime, maxKills } = progression.data.stats;
       const productionBest = recordRun(win && !endless) || { time: false, kills: false };
       // A first win on the load level opens the next one; higher levels pay more codes.
       let opened = false,
@@ -308,7 +310,6 @@ export const GameFlow = {
       audio.finish(win);
       setMode('end');
       input.resetInput();
-      const previousBest = { ...run.best };
       const loadText = `НАГРУЗКА ${s.load}`;
       const header = endless
         ? {
@@ -346,11 +347,11 @@ export const GameFlow = {
             { value: clock(s.t), label: 'ВСЕГО' },
           ]
         : [
-            { value: clock(s.t), label: 'ВРЕМЯ', best: s.t > (previousBest.time || 0) },
+            { value: clock(s.t), label: 'ВРЕМЯ', best: s.t > maxTime },
             {
               value: String(s.kills),
               label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО',
-              best: s.kills > (previousBest.kills || 0),
+              best: s.kills > maxKills,
             },
           ];
       run.result = {
@@ -364,16 +365,9 @@ export const GameFlow = {
         damage: damageReport(s),
         build: upgrades.build(run.selected, s),
         seed: seedText(s.seed),
-        unlocked: newlyDone(progression, run.best, s.doneBefore),
-        goals: nearestGoals(progression, run.best, 2),
+        unlocked: newlyDone(progression, s.doneBefore),
+        goals: nearestGoals(progression, 2),
       };
-      run.best = {
-        kills: Math.max(run.best.kills || 0, s.kills),
-        time: Math.max(run.best.time || 0, s.t),
-      };
-      try {
-        storage.setItem('utreys-best', JSON.stringify(run.best));
-      } catch {}
       changed();
     }
 
@@ -574,7 +568,7 @@ export const GameFlow = {
       return refund;
     }
     function claimAchievement(id) {
-      if (achievements.claimAchievement(id, run.best)) {
+      if (achievements.claimAchievement(id)) {
         audio.effect('pickup');
         ui.emit();
       }
