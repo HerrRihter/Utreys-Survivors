@@ -171,36 +171,38 @@ export function Settings() {
               </select>
             </div>
           </div>
-          <div className="settings-card">
-            <h3>Журнал забегов</h3>
-            <p className="settings-note">
-              Каждый забег записывается на этом устройстве: герой, нагрузка, время, причина
-              поражения, выбранные карточки и урон по источникам.
-            </p>
-            <div className="settings-row">
-              <span id="runLogCount">Записей: {view.runLogCount}</span>
-              <span>
-                <button
-                  id="exportRunLog"
-                  className="small"
-                  type="button"
-                  disabled={!view.runLogCount}
-                  onClick={commands.exportRunLog}
-                >
-                  ЭКСПОРТ JSON
-                </button>{' '}
-                <button
-                  id="clearRunLog"
-                  className="small"
-                  type="button"
-                  disabled={!view.runLogCount}
-                  onClick={commands.clearRunLog}
-                >
-                  ОЧИСТИТЬ
-                </button>
-              </span>
+          {view.devTools && (
+            <div className="settings-card">
+              <h3>Журнал забегов</h3>
+              <p className="settings-note">
+                Каждый забег записывается на этом устройстве: герой, нагрузка, время, причина
+                поражения, выбранные карточки и урон по источникам.
+              </p>
+              <div className="settings-row">
+                <span id="runLogCount">Записей: {view.runLogCount}</span>
+                <span>
+                  <button
+                    id="exportRunLog"
+                    className="small"
+                    type="button"
+                    disabled={!view.runLogCount}
+                    onClick={commands.exportRunLog}
+                  >
+                    ЭКСПОРТ JSON
+                  </button>{' '}
+                  <button
+                    id="clearRunLog"
+                    className="small"
+                    type="button"
+                    disabled={!view.runLogCount}
+                    onClick={commands.clearRunLog}
+                  >
+                    ОЧИСТИТЬ
+                  </button>
+                </span>
+              </div>
             </div>
-          </div>
+          )}
           {view.keyboard && (
             <details className="settings-card settings-keys">
               <summary>

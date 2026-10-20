@@ -3,7 +3,11 @@ import { Dialog } from './Dialog';
 import React, { useRef, useState, useMemo } from 'react';
 import { createPreviewKit } from '../app/preview-kit.js';
 import type { MapId, UnitKey } from '../app/types';
+import { devToolsEnabled } from '../app/dev-tools.js';
 import { MapSelect } from './MapSelect';
+
+// ?dev adds the animation controls: motion, pause and mirroring.
+const devTools = devToolsEnabled(window.location.search);
 
 export const OpponentsView: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<'all' | 'regulators' | 'clients'>('all');
@@ -96,34 +100,38 @@ export const OpponentsView: React.FC = () => {
           {/* Animation Global Controls */}
           <div className="opponents-motion">
             <MapSelect maps={kit.maps} value={map} onChange={setMap} />
-            <label className="opponents-mode">
-              <span>Режим:</span>
-              <select
-                value={motion}
-                onChange={(e) => setMotion(e.target.value as 'walk' | 'attack' | 'hurt')}
-              >
-                <option value="walk">Движение</option>
-                <option value="attack">Атака / Запрос (Attack)</option>
-                <option value="hurt">Получение урона (Hurt)</option>
-              </select>
-            </label>
+            {devTools && (
+              <>
+                <label className="opponents-mode">
+                  <span>Режим:</span>
+                  <select
+                    value={motion}
+                    onChange={(e) => setMotion(e.target.value as 'walk' | 'attack' | 'hurt')}
+                  >
+                    <option value="walk">Движение</option>
+                    <option value="attack">Атака / Запрос (Attack)</option>
+                    <option value="hurt">Получение урона (Hurt)</option>
+                  </select>
+                </label>
 
-            <button
-              type="button"
-              className="small opponents-pause"
-              onClick={() => setFrozen(!frozen)}
-            >
-              {frozen ? '▶ Продолжить' : '⏸ Пауза'}
-            </button>
+                <button
+                  type="button"
+                  className="small opponents-pause"
+                  onClick={() => setFrozen(!frozen)}
+                >
+                  {frozen ? '▶ Продолжить' : '⏸ Пауза'}
+                </button>
 
-            <label className="catalog-check">
-              <input
-                type="checkbox"
-                checked={reverse}
-                onChange={(e) => setReverse(e.target.checked)}
-              />
-              Отразить влево
-            </label>
+                <label className="catalog-check">
+                  <input
+                    type="checkbox"
+                    checked={reverse}
+                    onChange={(e) => setReverse(e.target.checked)}
+                  />
+                  Отразить влево
+                </label>
+              </>
+            )}
           </div>
         </nav>
 

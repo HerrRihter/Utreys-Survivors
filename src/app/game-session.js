@@ -41,6 +41,7 @@ export const GameSession = {
     cancelAnimationFrame,
     canvas,
     progression,
+    devTools = false,
   }) {
     const events = createEventScope();
     let disposed = false;
@@ -295,6 +296,7 @@ export const GameSession = {
         snapshots,
         audio,
         runLog,
+        devTools,
       }),
       commands: createSessionCommands({
         flow,

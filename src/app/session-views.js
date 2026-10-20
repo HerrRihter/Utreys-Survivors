@@ -11,6 +11,7 @@ export function createSessionViews({
   snapshots,
   audio,
   runLog,
+  devTools,
 }) {
   const read = { run, progression, settings, upgrades };
   return {
@@ -25,7 +26,7 @@ export function createSessionViews({
     build: () => views.buildView(read),
     levelControls: () => views.levelControlsView(read),
     hud: () => views.hudView(read),
-    settings: () => views.settingsView({ run, settings, audio, runLog }),
+    settings: () => views.settingsView({ run, settings, audio, runLog, devTools }),
     // Totals and records per map for «Моя статистика».
     runStats: () => progression.data.runStats,
   };
