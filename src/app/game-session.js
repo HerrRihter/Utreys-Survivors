@@ -24,6 +24,7 @@ import { createRunLog } from '../systems/run-log.js';
 import { UpgradeSystem } from '../systems/upgrades.js';
 import { WeaponSystem } from '../systems/weapons.js';
 import { createCorpses } from '../systems/corpses.js';
+import { createCorpseRenderer } from '../rendering/corpses.js';
 import { createEnemies } from '../entities/enemies.js';
 import { Heroes } from '../entities/heroes.js';
 import { MenuPortraits } from '../ui/menu-portraits.js';
@@ -78,7 +79,7 @@ export const GameSession = {
       },
     };
     const enemies = createEnemies({ createCanvas });
-    const corpses = createCorpses({ enemies, createCanvas });
+    const corpses = createCorpses();
     const upgrades = UpgradeSystem.create(progression);
     const audio = AudioSystem.create({
       window,
@@ -204,10 +205,8 @@ export const GameSession = {
       view,
       run,
       world,
-      corpses,
+      corpses: createCorpseRenderer({ enemies, createCanvas }),
       enemies,
-      abilities,
-      weapons,
       sprite,
       settings,
       math,

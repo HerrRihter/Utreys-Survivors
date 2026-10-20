@@ -77,7 +77,7 @@ tests/test-structure-layers.cjs. Учитываются статические, 
   через внедрение (`enemies`, `heroes` в create), не импортом.
 - ui — превью для React (бестиарий, портреты меню) и поэтому стоит на уровне app: ему нужны полные
   systems (расписание волн, узлы), а не только queries.
-- Импорты уже чистые, но рисование ещё живёт в systems и world: `corpses.draw`, `abilities.draw`,
-  `weapons.draw`, отладочный `collision.draw`. Их выносит этап 3 (рендер из систем).
+- Рисует только src/rendering: системы и мир меняют состояние и отдают геометрию данными
+  (`collision.outlines`, `orbitShape` в systems/queries/weapons.js).
 
 Исторический аудит archive/legacy/PROJECT-STRUCTURE-AUDIT.md не является параллельным контрактом. Текущие команды: npm ci, npm run check, npm run test:browser.

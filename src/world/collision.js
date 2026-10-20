@@ -172,21 +172,9 @@ export const ArenaCollision = (() => {
       reusablePoint.y = y;
       return !clear(reusablePoint, reusablePoint, r);
     };
-    function draw(g) {
-      g.save();
-      g.lineWidth = 2;
-      for (const p of polygons) {
-        g.beginPath();
-        p.points.forEach((v, i) => (i ? g.lineTo(v.x, v.y) : g.moveTo(v.x, v.y)));
-        g.closePath();
-        g.fillStyle = '#f25d4540';
-        g.strokeStyle = '#ffcf85';
-        g.fill();
-        g.stroke();
-      }
-      g.restore();
-    }
-    return { blocked, clear, draw };
+    // Ground outlines as data (world points per polygon); rendering/collision.js draws them.
+    const outlines = polygons.map((p) => p.points);
+    return { blocked, clear, outlines };
   }
   return { create };
 })();

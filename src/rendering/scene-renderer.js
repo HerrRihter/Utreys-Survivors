@@ -6,26 +6,15 @@ import { drawEdgeArrows } from './edge-arrows.js';
 import { drawEvent } from './events.js';
 import { drawPickup, drawEliteAura, drawGem, drawCodeToken } from './pickups.js';
 import { drawFx } from './fx.js';
+import { drawWeapons } from './weapons.js';
+import { drawAbilities } from './abilities.js';
 import { drawShot, drawEnemyShot } from './projectiles.js';
 
 // The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
 const noScenery = [];
 // Draws one frame: arena floor, pickups, telegraphs, actors in depth order, effects and text.
 export const SceneRenderer = {
-  create({
-    ctx,
-    floor,
-    view,
-    run,
-    world,
-    corpses,
-    enemies,
-    abilities,
-    weapons,
-    sprite,
-    settings,
-    math,
-  }) {
+  create({ ctx, floor, view, run, world, corpses, enemies, sprite, settings, math }) {
     const visible = [];
     const bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
     let cachedVignette = null,
@@ -93,12 +82,12 @@ export const SceneRenderer = {
           if (e.elite) drawEliteAura(ctx, e, s.t);
           enemies.telegraph(ctx, e);
         }
-        abilities.draw(ctx);
+        drawAbilities(ctx, s);
         bounds.minX = minX;
         bounds.maxX = maxX;
         bounds.minY = minY;
         bounds.maxY = maxY;
-        weapons?.draw(ctx, bounds, 'ground');
+        drawWeapons(ctx, s, bounds, 'ground');
         // Sort only what can appear on screen.
         visible.length = 0;
         for (const e of s.enemies)
@@ -161,7 +150,7 @@ export const SceneRenderer = {
         }
         for (const b of s.enemyShots) drawEnemyShot(ctx, b);
         for (const b of s.shots) drawShot(ctx, b);
-        weapons?.draw(ctx, bounds, 'air');
+        drawWeapons(ctx, s, bounds, 'air');
         drawFx(ctx, s.fx);
         ctx.font = 'bold 12px monospace';
         ctx.textAlign = 'center';

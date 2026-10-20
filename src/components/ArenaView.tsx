@@ -3,6 +3,7 @@ import { createNodeState } from '../systems/node-objectives.js';
 import React, { useEffect, useRef, useState } from 'react';
 import { createArenas, arenaDefinitions } from '../world/arenas.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
+import { drawCollision } from '../rendering/collision.js';
 
 export const ArenaView: React.FC = () => {
   const selectedArena = 'empty';
@@ -34,7 +35,7 @@ export const ArenaView: React.FC = () => {
       drawNodes(g, createNodeState());
 
       if (showBounds && world.collision) {
-        world.collision.draw(g);
+        drawCollision(g, world.collision.outlines);
         g.strokeStyle = '#00e5ff';
         g.lineWidth = 5;
         g.strokeRect(0, 0, world.size, world.size);
