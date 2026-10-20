@@ -1,3 +1,4 @@
+import { clamp } from '../core/math.js';
 import { getWaveSchedule, selectWaveUnit } from './wave-schedule.js';
 
 const TAU = Math.PI * 2;
@@ -9,17 +10,17 @@ const TAU = Math.PI * 2;
 //   siege    a ring of `count` enemies arrives from `distance` away; survive `duration`
 //   hold     stand in a marked point for `hold` seconds within `duration`
 //   collect  pick up `need` of `tokens` scattered event codes within `duration`
-// `c` is { s, world, spawning, math }; `begin` sets the event's goal, `update` advances it,
+// `c` is { s, world, spawning }; `begin` sets the event's goal, `update` advances it,
 // `code` counts a picked event code, `survived` says whether running out of time is a success.
 export const eventKinds = {
   siege: {
     begin(c, event, spec) {
-      const { s, world, math } = c;
+      const { s, world } = c;
       for (let i = 0; i < spec.count; i++) {
         const a = (i / spec.count) * TAU,
-          x = math.clamp(s.p.x + Math.cos(a) * spec.distance, 40, world.arena.size - 40),
-          y = math.clamp(s.p.y + Math.sin(a) * spec.distance, 60, world.arena.size - 40);
-        c.spawning.spawn(selectWaveUnit(getWaveSchedule(s.map), s.t, math.random()), false, {
+          x = clamp(s.p.x + Math.cos(a) * spec.distance, 40, world.arena.size - 40),
+          y = clamp(s.p.y + Math.sin(a) * spec.distance, 60, world.arena.size - 40);
+        c.spawning.spawn(selectWaveUnit(getWaveSchedule(s.map), s.t, s.rng.random()), false, {
           x,
           y,
         });
@@ -29,13 +30,13 @@ export const eventKinds = {
   },
   hold: {
     begin(c, event, spec) {
-      const { s, world, math } = c;
+      const { s, world } = c;
       event.need = spec.hold;
       event.radius = spec.radius;
       for (let attempt = 0; attempt < 30; attempt++) {
-        const a = math.rand(0, TAU);
-        event.x = math.clamp(s.p.x + Math.cos(a) * spec.distance, 120, world.arena.size - 120);
-        event.y = math.clamp(s.p.y + Math.sin(a) * spec.distance, 140, world.arena.size - 120);
+        const a = s.rng.rand(0, TAU);
+        event.x = clamp(s.p.x + Math.cos(a) * spec.distance, 120, world.arena.size - 120);
+        event.y = clamp(s.p.y + Math.sin(a) * spec.distance, 140, world.arena.size - 120);
         if (!world.arena.blocked(event.x, event.y, spec.radius * 0.5)) break;
       }
     },
@@ -46,16 +47,16 @@ export const eventKinds = {
   },
   collect: {
     begin(c, event, spec) {
-      const { s, world, math } = c;
+      const { s, world } = c;
       event.need = spec.need;
       for (let i = 0; i < spec.tokens; i++) {
         let x = s.p.x,
           y = s.p.y;
         for (let attempt = 0; attempt < 20; attempt++) {
-          const a = math.rand(0, TAU),
-            d = math.rand(spec.near, spec.far);
-          x = math.clamp(s.p.x + Math.cos(a) * d, 60, world.arena.size - 60);
-          y = math.clamp(s.p.y + Math.sin(a) * d, 80, world.arena.size - 60);
+          const a = s.rng.rand(0, TAU),
+            d = s.rng.rand(spec.near, spec.far);
+          x = clamp(s.p.x + Math.cos(a) * d, 60, world.arena.size - 60);
+          y = clamp(s.p.y + Math.sin(a) * d, 80, world.arena.size - 60);
           if (!world.arena.blocked(x, y, 10)) break;
         }
         s.codes.push({ x, y, value: 1, event: true });
@@ -68,14 +69,14 @@ export const eventKinds = {
 };
 
 export const RunEvents = {
-  create({ run, world, spawning, progression, toast, audio, math }) {
+  create({ run, world, spawning, progression, toast, audio }) {
     const specOf = (s, type) => getWaveSchedule(s.map).events[type];
     const kindOf = (s, e) => eventKinds[specOf(s, e.type).kind];
 
     function begin(s, type) {
       const spec = specOf(s, type);
       const event = { type, left: spec.duration, progress: 0, need: 0 };
-      eventKinds[spec.kind].begin({ s, world, spawning, math }, event, spec);
+      eventKinds[spec.kind].begin({ s, world, spawning }, event, spec);
       s.event = event;
       toast(spec.message);
       audio.effect('boss');

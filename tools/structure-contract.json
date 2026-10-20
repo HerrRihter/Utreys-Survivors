@@ -24,6 +24,11 @@
     "roots": ["src/systems", "src/world"],
     "calls": ["getContext", "fillRect", "strokeRect", "beginPath", "arc", "drawImage", "fillText"]
   },
+  "noGlobalRandom": {
+    "$comment": "A run replays from its seed and input: the simulation draws random numbers from the run's state.rng and cosmetic ones from the injected source, and never reads the wall clock. These globals must not appear in the listed folders (comments excluded). See docs/STRUCTURE-CONTRACT.md.",
+    "roots": ["src/systems", "src/world"],
+    "globals": ["Math.random", "Date.now", "performance.now"]
+  },
   "runtimeAssetPatterns": [
     "^assets/runtime/audio/(music|sfx)/[a-z0-9-]+\\.(mp3|ogg|wav)$",
     "^assets/runtime/audio/(CREDITS\\.md|[A-Za-z0-9-]+-LICENSE\\.txt)$"

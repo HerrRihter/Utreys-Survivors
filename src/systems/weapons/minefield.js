@@ -13,8 +13,8 @@ export const minefield = {
       s.wfx.push({
         kind: 'landmine',
         tag: w.id,
-        x: s.p.x + (drops > 1 ? c.math.rand(-22, 22) : 0),
-        y: s.p.y + (drops > 1 ? c.math.rand(-14, 14) : 0),
+        x: s.p.x + (drops > 1 ? s.rng.rand(-22, 22) : 0),
+        y: s.p.y + (drops > 1 ? s.rng.rand(-14, 14) : 0),
         arm: 0.4,
         life: v.life,
         radius: v.radius * st.range,

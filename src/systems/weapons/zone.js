@@ -7,9 +7,9 @@ const TAU = Math.PI * 2;
 export const zone = {
   fire(c, s, w, v, st, evo) {
     for (let i = 0; i < v.count; i++) {
-      const target = c.nearest(s, s.p.x + c.math.rand(-60, 60), s.p.y + c.math.rand(-60, 60), 260);
-      const a = c.math.rand(0, TAU),
-        d = c.math.rand(40, 150);
+      const target = c.nearest(s, s.p.x + s.rng.rand(-60, 60), s.p.y + s.rng.rand(-60, 60), 260);
+      const a = s.rng.rand(0, TAU),
+        d = s.rng.rand(40, 150);
       s.wfx.push({
         kind: 'zone',
         tag: w.id,

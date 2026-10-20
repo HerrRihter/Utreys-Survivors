@@ -13,7 +13,7 @@ import { dropTable } from '../../data/pickups.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
-  create({ run, corpses, progression, world, audio, math, toast, settings = {} }) {
+  create({ run, corpses, progression, world, audio, cosmetic, toast, settings = {} }) {
     // `tag` names the source (hero, an ability or a weapon id) for the result screen.
     function damage(e, n, dx = 0, dy = 0, source = run.state.p, tag = 'hero') {
       if (e.hp <= 0 || n <= 0) return;
@@ -21,7 +21,7 @@ export const CombatSystem = {
       n *= mitigation(e, source) * auraFactor(st, e, unitDefinitions);
       // A mark of the hero's evolution (the QA scan).
       if (e.markedUntil > st.t) n *= heroEvolutions[run.selected]?.mark?.factor ?? 1;
-      const passive = passiveDamage(st, e, n, tag, math.random);
+      const passive = passiveDamage(st, e, n, tag, st.rng.random);
       n = passive.n;
       st.damageBy[tag] = (st.damageBy[tag] || 0) + Math.min(n, e.hp);
       e.hp -= n;
@@ -77,7 +77,7 @@ export const CombatSystem = {
         run.state.kills++;
         run.state.earned += progression.kill(tag);
         const luck = run.state.stats.luck || 0;
-        if (math.random() < dropTable.code.chance + luck * dropTable.code.luck)
+        if (run.state.rng.random() < dropTable.code.chance + luck * dropTable.code.luck)
           run.state.codes.push({ x: e.x, y: e.y, value: dropTable.code.value });
         run.state.gems.push({
           x: e.x,
@@ -87,7 +87,7 @@ export const CombatSystem = {
         // Elites leave an update bundle; ordinary kills rarely drop a map pickup.
         if (e.elite) run.state.pickups.push({ x: e.x, y: e.y, type: dropTable.elite });
         else {
-          const roll = math.random();
+          const roll = run.state.rng.random();
           const rare = dropTable.rare.find((drop) => roll < drop.below);
           if (rare) run.state.pickups.push({ x: e.x + 12, y: e.y, type: rare.type });
         }
@@ -96,13 +96,13 @@ export const CombatSystem = {
             kind: 'spark',
             x: e.x,
             y: e.y - 10,
-            vx: math.rand(-65, 65),
-            vy: math.rand(-70, 20),
+            vx: -65 + cosmetic() * 130,
+            vy: -70 + cosmetic() * 90,
             life: 0.3,
             max: 0.3,
             color: i % 2 === 0 ? '#00e5ff' : '#64ffda',
           });
-        if (math.random() < dropTable.food.chance + luck * dropTable.food.luck)
+        if (run.state.rng.random() < dropTable.food.chance + luck * dropTable.food.luck)
           run.state.pickups.push({ x: e.x, y: e.y, type: dropTable.food.type });
         // A node guardian leaves a bug archive: it evolves a ready weapon now or later.
         if (unitDefinitions[e.unit]?.miniboss) {

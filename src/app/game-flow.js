@@ -8,6 +8,7 @@ import { mapUnlocked } from '../../data/maps/maps.js';
 import { weaponDefinitions } from '../../data/weapons.js';
 import { restoreRun } from '../systems/run-snapshot.js';
 import { nearestGoals, newlyDone } from './unlocks.js';
+import { clock } from './views.js';
 import { randomSeed, parseSeed, seedText } from '../core/rng.js';
 import { logOffer, logReoffer, logChoice, logEntry } from '../systems/run-log.js';
 import { maxLoad, rewardPerLevel, production } from '../../data/difficulty.js';
@@ -30,7 +31,6 @@ export const GameFlow = {
     runLog,
     audio,
     input,
-    math,
     storage,
     toast,
     ui,
@@ -130,7 +130,7 @@ export const GameFlow = {
         world.select('empty');
       }
       // The seed fixes the node layout, bug placement and event order of this run.
-      const seed = run.nextSeed ?? randomSeed(math.random);
+      const seed = run.nextSeed ?? randomSeed();
       run.nextSeed = null;
       const schedule = getWaveSchedule(run.selectedMap);
       const levels = progression.data.levels;
@@ -332,16 +332,16 @@ export const GameFlow = {
           };
       const stats = endless
         ? [
-            { value: math.clock(s.t - s.endlessStart), label: 'В ПРОДАКШЕНЕ', best: records.time },
+            { value: clock(s.t - s.endlessStart), label: 'В ПРОДАКШЕНЕ', best: records.time },
             {
               value: String(s.kills - s.endlessKills),
               label: 'ПОБЕЖДЕНО В ПРОДАКШЕНЕ',
               best: records.kills,
             },
-            { value: math.clock(s.t), label: 'ВСЕГО' },
+            { value: clock(s.t), label: 'ВСЕГО' },
           ]
         : [
-            { value: math.clock(s.t), label: 'ВРЕМЯ', best: s.t > (previousBest.time || 0) },
+            { value: clock(s.t), label: 'ВРЕМЯ', best: s.t > (previousBest.time || 0) },
             {
               value: String(s.kills),
               label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО',
@@ -377,14 +377,14 @@ export const GameFlow = {
     function openBundle() {
       const s = run.state;
       if (!s) return [];
-      const count = 1 + Math.floor(math.random() * 3),
+      const count = 1 + Math.floor(s.rng.random() * 3),
         names = [];
       for (let i = 0; i < count; i++) {
         const pool = upgrades.pool(run.selected, s).filter((u) => u.max);
         const owned = pool.filter((u) => !u.isNew && u.kind !== 'ability');
         const list = owned.length ? owned : pool;
         if (!list.length) break;
-        const card = list[Math.floor(math.random() * list.length)];
+        const card = list[Math.floor(s.rng.random() * list.length)];
         if (upgrades.apply(card, s)) names.push(card.name);
       }
       if (!names.length) {

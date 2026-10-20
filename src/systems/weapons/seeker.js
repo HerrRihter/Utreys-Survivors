@@ -10,7 +10,7 @@ export const seeker = {
       const target = c.nearest(s, s.p.x, s.p.y, 520);
       const a = target
         ? Math.atan2(target.y - s.p.y, target.x - s.p.x) + (i - (count - 1) / 2) * 0.35
-        : c.math.rand(0, TAU);
+        : s.rng.rand(0, TAU);
       s.wfx.push({
         kind: 'seeker',
         tag: w.id,

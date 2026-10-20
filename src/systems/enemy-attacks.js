@@ -39,7 +39,7 @@ function fire(s, e, angle, spec = {}) {
   }
 }
 
-// `c` = { arena, effect, hurtPlayer, random }; `s` is the running state.
+// `c` = { arena, effect, hurtPlayer }; `s` is the running state.
 export function resolveEnemyStrike(c, s, e, u, aim) {
   const p = s.p;
   const angle = Math.atan2(aim.y - e.y, aim.x - e.x),

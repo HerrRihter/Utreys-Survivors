@@ -190,7 +190,7 @@ export const UpgradeSystem = {
         .map((u) => describe(u, s, hero));
     }
     // Four cards; one of them is always a weapon (the hero's or an extra) while any remains.
-    function offer(hero, s, random = Math.random) {
+    function offer(hero, s, random = s.rng.random) {
       const all = pool(hero, s),
         armed = all.filter((u) => u.kind === 'weapon' || u.kind === 'hero'),
         result = [];

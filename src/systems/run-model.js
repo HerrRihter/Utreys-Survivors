@@ -9,6 +9,7 @@ import { heroPassives } from '../../data/characters/hero-passives.js';
 import { workaroundSeconds } from '../../data/enemies/nodes.js';
 import { speechSettings } from '../../data/enemies/phrases.js';
 import { loadModifiers } from '../../data/difficulty.js';
+import { createGameRng } from '../core/rng.js';
 
 /**
  * The state of one run (`run.state`). Every field exists from the start: systems change
@@ -59,8 +60,12 @@ import { loadModifiers } from '../../data/difficulty.js';
  *   speechPhraseIndex: Record<string, number>, speechCursor: number,
  *   nextSpeechAt: number }} RunRuntime
  *
+ * The run's game random source (src/core/rng.js), made from the seed.
+ * @typedef {ReturnType<typeof createGameRng>} GameRng
+ *
  * @typedef {{
- *   t: number, step: number, runId: string, map: string, seed: number, load: number,
+ *   t: number, step: number, runId: string, map: string, seed: number, rng: GameRng,
+ *   load: number,
  *   healFactor: number,
  *   eventPlan: PlannedEvent[], eventIndex: number, event: RunEvent | null, eventsDone: number,
  *   spawn: number, waveNext: Record<string, number>, bossSpawned: boolean, eliteNext: number,
@@ -114,6 +119,7 @@ export const runFields = {
   runId: 'save',
   map: 'rebuild', // kept at the snapshot's top level
   seed: 'save',
+  rng: 'rebuild',
   load: 'save',
   healFactor: 'save',
   eventPlan: 'rebuild',
@@ -215,6 +221,8 @@ export function createRunModel({
     map,
     // The seed fixes the node layout, bug placement and event order of this run.
     seed,
+    // Every random decision of the simulation draws from here.
+    rng: createGameRng(seed),
     load,
     healFactor: Math.max(0, 1 + mods.heal),
     eventPlan: planEvents(schedule, seed),

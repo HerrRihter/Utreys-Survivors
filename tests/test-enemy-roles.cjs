@@ -112,7 +112,7 @@ const run = (s, seconds) => {
   {
     const { h, s } = await quiet();
     s.state.t = 1;
-    h.env.Math.random = () => 0.2; // first weighted entries
+    s.state.rng.random = () => 0.2; // first weighted entries
     s.state.spawn = 0;
     const before = s.state.enemies.length;
     s.update(0.01);

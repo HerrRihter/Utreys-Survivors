@@ -1,4 +1,5 @@
 import { compact } from '../core/compact.js';
+import { clamp } from '../core/math.js';
 
 const TAU = Math.PI * 2;
 const isLive = (item) => item.life > 0;
@@ -12,7 +13,7 @@ const isLive = (item) => item.life > 0;
 //   label      flies under `gravity` and pierces
 //   boomerang  flies out for `out` s, comes back to the hero and pierces both ways; with
 //              `collect` it relaunches at the hero and carries nearby experience to them
-// A kind is `(c, s, b, dt, spawned)`; `c` holds { damage, math }, `spawned` collects new
+// A kind is `(c, s, b, dt, spawned)`; `c` holds { damage }, `spawned` collects new
 // projectiles that join the list after the update. `split` is { turns, life, damage }.
 export const projectileKinds = {
   packet(c, s, b, dt, spawned) {
@@ -30,7 +31,7 @@ export const projectileKinds = {
       const want = Math.atan2(f.target.y - 10 - f.y, f.target.x - f.x),
         have = Math.atan2(f.vy, f.vx);
       const turn = Math.atan2(Math.sin(want - have), Math.cos(want - have));
-      const a = have + c.math.clamp(turn, -7 * dt, 7 * dt);
+      const a = have + clamp(turn, -7 * dt, 7 * dt);
       f.vx = Math.cos(a) * f.speed;
       f.vy = Math.sin(a) * f.speed;
     }
@@ -68,7 +69,7 @@ export const projectileKinds = {
         if (f.collect) {
           // Relaunch toward the nearest enemy instead of despawning.
           const target = nearestEnemy(s, s.p.x, s.p.y, 480);
-          const a = target ? Math.atan2(target.y - s.p.y, target.x - s.p.x) : c.math.rand(0, TAU);
+          const a = target ? Math.atan2(target.y - s.p.y, target.x - s.p.x) : s.rng.rand(0, TAU);
           f.vx = Math.cos(a) * f.speed;
           f.vy = Math.sin(a) * f.speed;
           f.back = false;

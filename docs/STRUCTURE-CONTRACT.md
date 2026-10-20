@@ -70,6 +70,13 @@ tests/test-structure-layers.cjs. Учитываются статические, 
   вид сам — сессия и бестиарий держат свои экземпляры, общих синглтонов нет.
 - В src/systems и src/world нет вызовов Canvas API (`getContext`, `fillRect`, `strokeRect`,
   `beginPath`, `arc(`, `drawImage`, `fillText`); проверяет `checkNoCanvas` в tools/check-structure.cjs.
+- Забег воспроизводим по сиду и вводу. Всё, что меняет исход (карточки, спавн, элиты, дропы, криты,
+  поведение врагов, события, разброс мин и зон), берёт случайность из `state.rng` забега
+  (`createGameRng(seed)`, src/core/rng.js). Искры, тряска экрана, фазы анимации, варианты звука —
+  из косметического источника `cosmetic`, который сессия передаёт системам и рендереру. В src/systems
+  и src/world нет `Math.random`, `Date.now`, `performance.now`; проверяет `checkNoGlobalRandom` в
+  tools/check-structure.cjs (тест tests/test-structure-random.cjs). Кэши мира (поле навигации)
+  зависят только от текущего состояния, не от истории вызовов.
 - Правила игры и отрисовка не ветвятся по id контента: в src/systems и src/rendering нет строковых
   литералов, равных id оружия, героя, умения, юнита, карты, события или подбираемого предмета
   (`=== 'orbit'`, `case 'friday'`, `abilityActive(s, 'overclock')`). Поведение берётся из данных и

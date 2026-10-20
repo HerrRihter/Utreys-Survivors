@@ -1,3 +1,4 @@
+import { clamp } from '../core/math.js';
 import { updateNodes, allNodesResolved } from './node-objectives.js';
 import {
   getWaveSchedule,
@@ -11,7 +12,7 @@ import { production } from '../../data/difficulty.js';
 import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
-  create({ run, world, math, toast, audio }) {
+  create({ run, world, cosmetic, toast, audio }) {
     function spawn(unit, boss = false, position = null) {
       const s = run.state,
         p = s.p,
@@ -23,10 +24,10 @@ export const EnemySpawning = {
         y = position.y;
       }
       for (let i = 0; !position && i < 100; i++) {
-        const a = math.rand(0, Math.PI * 2),
-          r = math.rand(520, 640);
-        x = math.clamp(p.x + Math.cos(a) * r, u.r + 10, world.arena.size - u.r - 10);
-        y = math.clamp(p.y + Math.sin(a) * r, u.r + 10, world.arena.size - u.r - 10);
+        const a = s.rng.rand(0, Math.PI * 2),
+          r = s.rng.rand(520, 640);
+        x = clamp(p.x + Math.cos(a) * r, u.r + 10, world.arena.size - u.r - 10);
+        y = clamp(p.y + Math.sin(a) * r, u.r + 10, world.arena.size - u.r - 10);
         if (!world.arena.blocked(x, y, u.r) && Math.hypot(x - p.x, y - p.y) > 260) break;
       }
       if (world.arena.blocked(x, y, u.r)) return;
@@ -46,7 +47,7 @@ export const EnemySpawning = {
         boss,
         hit: 0,
         cd: 0,
-        phase: math.rand(0, 3),
+        phase: cosmetic() * 3,
         vx: 0,
         vy: 0,
         heading: Math.atan2(p.y - y, p.x - x),
@@ -116,7 +117,7 @@ export const EnemySpawning = {
         };
         check();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++) {
-          const unit = selectWaveUnit(schedule, s.t, math.random(), unitDefinitions, full),
+          const unit = selectWaveUnit(schedule, s.t, s.rng.random(), unitDefinitions, full),
             leader = track(spawn(unit)),
             pack = unitDefinitions[unit].pack || 1;
           if (leader) {
@@ -127,8 +128,8 @@ export const EnemySpawning = {
           for (let k = 1; leader && k < pack; k++)
             track(
               spawn(unit, false, {
-                x: leader.x + math.rand(-45, 45),
-                y: leader.y + math.rand(-45, 45),
+                x: leader.x + s.rng.rand(-45, 45),
+                y: leader.y + s.rng.rand(-45, 45),
               }),
             );
         }
@@ -136,7 +137,7 @@ export const EnemySpawning = {
       // Elites: a stronger copy of a unit from the current stage, on the schedule's timer.
       if (schedule.elites && s.t >= s.eliteNext) {
         s.eliteNext += schedule.elites.every;
-        const e = spawn(selectWaveUnit(schedule, s.t, math.random()));
+        const e = spawn(selectWaveUnit(schedule, s.t, s.rng.random()));
         if (e) {
           makeElite(e);
           toast(

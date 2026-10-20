@@ -31,8 +31,9 @@ export function unitRole(u) {
   return 'light';
 }
 
-// `units` + `full`: a set of roles whose share is used up; those are skipped.
-export function selectWaveUnit(schedule, time, roll = Math.random(), units = null, full = null) {
+// `roll` in [0, 1) picks by weight (the run draws it from `s.rng`). `units` + `full`: a set
+// of roles whose share is used up; those are skipped.
+export function selectWaveUnit(schedule, time, roll, units = null, full = null) {
   let { weights } = scheduleStage(schedule.normal.stages, time);
   if (full?.size && units) {
     const open = weights.filter(([id]) => !full.has(unitRole(units[id])));

@@ -15,7 +15,7 @@ import { drawShot, drawEnemyShot } from './projectiles.js';
 const noScenery = [];
 // Draws one frame: arena floor, pickups, telegraphs, actors in depth order, effects and text.
 export const SceneRenderer = {
-  create({ ctx, floor, view, run, world, corpses, enemies, sprite, settings, math }) {
+  create({ ctx, floor, view, run, world, corpses, enemies, sprite, settings, cosmetic }) {
     const visible = [];
     const bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
     let cachedVignette = null,
@@ -49,7 +49,7 @@ export const SceneRenderer = {
         { x: cx, y: cy } = cameraOrigin(p, view.W, view.H, world.arena.size);
       ctx.save();
       if (s && s.shake && run.mode === 'play' && settings.shake !== false)
-        ctx.translate(math.rand(-s.shake, s.shake), math.rand(-s.shake, s.shake));
+        ctx.translate((cosmetic() * 2 - 1) * s.shake, (cosmetic() * 2 - 1) * s.shake);
       background(cx, cy);
       ctx.save();
       ctx.translate(-cx, -cy);

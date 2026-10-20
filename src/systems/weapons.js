@@ -14,7 +14,7 @@ import { nearestEnemy, updateProjectiles } from './projectiles.js';
 // Each weapon's `kind` (src/systems/weapons/) says how it fires and what its effects do.
 // `damage(e, n, dx, dy, source, tag)` is the combat entry point; `tag` attributes the damage.
 export const WeaponSystem = {
-  create({ run, damage, audio, math }) {
+  create({ run, damage, audio }) {
     const passiveRank = (s, id) => s.upgradeRanks?.[id] || 0;
 
     // Weapons at max level whose passive is owned; the first one waiting is evolved.
@@ -58,7 +58,6 @@ export const WeaponSystem = {
     const context = {
       damage,
       audio,
-      math,
       dt: 0,
       nearest: nearestEnemy,
       hitArea,

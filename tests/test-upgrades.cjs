@@ -1,5 +1,6 @@
 const { loadModule } = require('./helpers/load-modules.cjs');
 const { applyPermanentUpgrades } = require('../src/systems/run-model.js');
+const { createRng } = require('../src/core/rng.js');
 async function main() {
   const projectRoot = require('node:path').resolve(__dirname, '..');
   const vm = require('node:vm'),
@@ -17,6 +18,7 @@ async function main() {
     stats: { damage: 1, haste: 1, range: 1, speed: 1, magnet: 75, regen: 0, armor: 0 },
     p: { max: 100, hp: 50 },
     earned: 0,
+    rng: createRng(7),
     weapons: [],
     upgradeRanks: {},
     banned: [],

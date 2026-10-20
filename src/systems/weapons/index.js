@@ -15,7 +15,7 @@ import { beam } from './beam.js';
 //                              (shots use the projectile kinds of src/systems/projectiles.js)
 // `w` is the owned weapon, `v` its stats at its level, `st` the hero's effective stats, `evo`
 // the weapon's evolution data once evolved (else null), `c` the weapon system's context
-// (damage, audio, math, dt, nearest, hitArea, enemyCd, setEnemyCd).
+// (damage, audio, dt, nearest, hitArea, enemyCd, setEnemyCd); random choices draw from `s.rng`.
 export const weaponKinds = { orbiter, seeker, minefield, pulse, lob, boomerang, zone, beam };
 
 // Every effect kind of `s.wfx`: the projectiles and what weapon kinds add (mines, zones).

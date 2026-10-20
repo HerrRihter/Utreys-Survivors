@@ -112,6 +112,34 @@ function checkNoCanvas({ root = path.resolve(__dirname, '..'), rule = contract.n
   return { files: files.length };
 }
 
+// A run replays from its seed and input: no global random source and no wall clock in the
+// contract's `noGlobalRandom.roots` (src/systems, src/world).
+function checkNoGlobalRandom({
+  root = path.resolve(__dirname, '..'),
+  rule = contract.noGlobalRandom,
+} = {}) {
+  const pattern = (name) => name.split('.').join('\\s*\\.\\s*');
+  const use = new RegExp(`\\b(${rule.globals.map(pattern).join('|')})\\b`, 'g');
+  const violations = [];
+  const files = rule.roots
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const lines = stripComments(fs.readFileSync(path.join(root, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      for (const match of line.matchAll(use))
+        violations.push(`${file}:${i + 1} uses ${match[1].replace(/\s+/g, '')}`);
+    });
+  }
+  if (violations.length)
+    throw new Error(
+      'Unseeded randomness or wall clock in the simulation (see docs/STRUCTURE-CONTRACT.md):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
 function checkStructure({
   root = path.resolve(__dirname, '..'),
   inventory = {
@@ -167,6 +195,7 @@ function checkStructure({
   }
   const { files: modules } = checkLayers({ root });
   checkNoCanvas({ root });
+  checkNoGlobalRandom({ root });
   return {
     assets: assets.length,
     modules,
@@ -179,6 +208,7 @@ module.exports = {
   checkStructure,
   checkLayers,
   checkNoCanvas,
+  checkNoGlobalRandom,
   validateAssetPath,
   stripComments,
   walk,

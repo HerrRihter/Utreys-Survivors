@@ -7,7 +7,7 @@ import { createRng, shuffle } from '../core/rng.js';
 // `desks` objective places its structures the same way instead of the nodes.
 export function layoutNodes(mapId, seed) {
   const map = mapDefinitions[mapId] || mapDefinitions.empty;
-  const rng = createRng(seed);
+  const rng = createRng(seed).random;
   const zones = shuffle(map.nodeZones, rng);
   if (map.objective?.type === 'desks') return layoutDesks(map.objective, zones, rng);
   const bugs = shuffle(
@@ -56,7 +56,7 @@ function layoutDesks({ unit, count, label }, zones, rng) {
 export function planEvents(schedule, seed) {
   const spec = schedule.events;
   if (!spec?.times?.length) return [];
-  const rng = createRng(seed ^ 0x9e3779b9);
+  const rng = createRng(seed ^ 0x9e3779b9).random;
   let order = [];
   while (order.length < spec.times.length) order = order.concat(shuffle(spec.types, rng));
   return spec.times.map((time, i) => ({ time, type: order[i] }));

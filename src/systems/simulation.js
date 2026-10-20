@@ -1,4 +1,5 @@
 import { compact } from '../core/compact.js';
+import { clamp } from '../core/math.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
 import { pickupDefinitions } from '../../data/pickups.js';
@@ -29,7 +30,6 @@ export const Simulation = {
     corpses,
     progression,
     audio,
-    math,
     abilities,
     combat,
     spawning,
@@ -39,7 +39,7 @@ export const Simulation = {
   }) {
     const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
     // The hero's packets (`s.shots`) move and split through the shared projectile kinds.
-    const shotContext = { damage: combat.damage, math };
+    const shotContext = { damage: combat.damage };
     const strike = {
       get arena() {
         return world.arena;
@@ -48,7 +48,6 @@ export const Simulation = {
       hurtPlayer: (e) => combat.hurtPlayer(e),
       spawn: (...args) => spawning.spawn(...args),
       toast: (message) => events.toast?.(message),
-      random: () => math.random(),
       units: unitDefinitions,
     };
     // Enemy speed grows with time, up to this multiplier.
@@ -145,8 +144,8 @@ export const Simulation = {
         my * p.speed * st.speed * slowed * dt,
         14,
       );
-      p.x = math.clamp(p.x, 52, world.arena.size - 52);
-      p.y = math.clamp(p.y, 100, world.arena.size - 12);
+      p.x = clamp(p.x, 52, world.arena.size - 52);
+      p.y = clamp(p.y, 100, world.arena.size - 12);
       const travel = Math.hypot(p.x - oldX, p.y - oldY);
       p.moving = travel > 0.01;
       p.walk += travel / 55;
@@ -207,7 +206,7 @@ export const Simulation = {
         if (!e.action) {
           const target = Math.atan2(p.y - e.y, p.x - e.x),
             delta = Math.atan2(Math.sin(target - e.heading), Math.cos(target - e.heading));
-          e.heading += math.clamp(delta, -dt * (e.r > 30 ? 0.8 : 6), dt * (e.r > 30 ? 0.8 : 6));
+          e.heading += clamp(delta, -dt * (e.r > 30 ? 0.8 : 6), dt * (e.r > 30 ? 0.8 : 6));
         }
         e.animationTime = s.t;
         advanceAction(e, dt, (a) => resolveEnemyStrike(strike, s, e, u, a.aim));

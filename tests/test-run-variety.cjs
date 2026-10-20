@@ -14,7 +14,12 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   // Seeds.
   const a = createRng(42),
     b = createRng(42);
-  for (let i = 0; i < 5; i++) assert.equal(a(), b());
+  for (let i = 0; i < 5; i++) assert.equal(a.random(), b.random());
+  // A saved position continues the same sequence.
+  const position = a.getState(),
+    next = [a.random(), a.random()];
+  b.setState(position);
+  assert.deepEqual([b.random(), b.random()], next);
   assert.equal(parseSeed(seedText(123456789)), 123456789);
   assert.equal(parseSeed('zik0zj'), parseInt('zik0zj', 36));
   assert.equal(parseSeed('bad seed!'), null);

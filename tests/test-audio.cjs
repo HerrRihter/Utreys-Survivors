@@ -144,13 +144,14 @@ async function main() {
   h.session.start();
   const sounds = [];
   const run = { selected: 'utrace', state: h.session.state };
+  run.state.rng.random = () => 0.5;
   const combat = h.env.CombatSystem.create({
       run,
       corpses: { add() {} },
       progression: { kill: () => 0 },
       world: { arena: { clear: () => true } },
       audio: { effect: (name) => sounds.push(name) },
-      math: { random: () => 0.5, rand: () => 0 },
+      cosmetic: () => 0.5,
       toast() {},
     }),
     p = run.state.p;

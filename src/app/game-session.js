@@ -1,6 +1,5 @@
 import { createEventScope } from '../core/lifecycle.js';
 import { createArenas, arenaDefinitions } from '../world/arenas.js';
-import { createMath } from '../core/math.js';
 import { CanvasSystem } from '../rendering/canvas.js';
 import { SpriteRenderer } from '../rendering/sprite-renderer.js';
 import { SceneRenderer } from '../rendering/scene-renderer.js';
@@ -51,7 +50,9 @@ export const GameSession = {
     view.resize();
     events.listen(window, 'resize', view.resize);
 
-    const math = createMath(Math);
+    // Randomness that changes nothing in the run (sparks, screen shake, animation phases,
+    // sound variants). Every game decision draws from the run's own `state.rng`.
+    const cosmetic = () => Math.random();
     const run = createRunState({ storage });
     // No mouse and no hover: a phone or tablet. Keyboard hints and key settings are hidden.
     const touchQuery = window.matchMedia?.('(hover: none) and (pointer: coarse)');
@@ -83,7 +84,7 @@ export const GameSession = {
       document,
       storage,
       performance,
-      random: () => Math.random(),
+      random: cosmetic,
       getMode: () => run.mode,
       onChange: ui.emit,
     });
@@ -98,11 +99,11 @@ export const GameSession = {
       progression,
       world,
       audio,
-      math,
+      cosmetic,
       toast,
       settings,
     });
-    const weapons = WeaponSystem.create({ run, world, damage: combat.damage, audio, math });
+    const weapons = WeaponSystem.create({ run, world, damage: combat.damage, audio });
     const abilities = AbilitySystem.create({
       run,
       world,
@@ -110,8 +111,8 @@ export const GameSession = {
       progression,
       audio,
     });
-    const spawning = EnemySpawning.create({ run, world, math, toast, audio });
-    const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio, math });
+    const spawning = EnemySpawning.create({ run, world, cosmetic, toast, audio });
+    const runEvents = RunEvents.create({ run, world, spawning, progression, toast, audio });
     // Saves the run journal as a JSON file; returns the file's text (tests read it).
     function exportRunLog() {
       const text = runLog.json();
@@ -167,7 +168,6 @@ export const GameSession = {
       runLog,
       audio,
       input,
-      math,
       storage,
       toast,
       ui,
@@ -179,7 +179,6 @@ export const GameSession = {
       corpses,
       progression,
       audio,
-      math,
       abilities,
       combat,
       spawning,
@@ -200,7 +199,7 @@ export const GameSession = {
       enemies,
       sprite,
       settings,
-      math,
+      cosmetic,
     });
 
     // Hero portraits in menus: React attaches canvases, the loop animates them in the menu.
