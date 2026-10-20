@@ -24,7 +24,6 @@ export const SceneRenderer = {
     sprite,
     settings,
     math,
-    performance,
   }) {
     const visible = [];
     const bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
@@ -126,11 +125,6 @@ export const SceneRenderer = {
           ctx.beginPath();
           ctx.ellipse(e.x, e.y, (12 * size) / 2, (4 * size) / 2, 0, 0, Math.PI * 2);
           ctx.fill();
-          const bob = e.player
-            ? p.moving
-              ? Math.sin(s.step * 15) * 1.7
-              : 0
-            : Math.sin(s.step * 9 + e.phase) * 1.4;
           if (e.player)
             sprite(
               ctx,
@@ -139,9 +133,7 @@ export const SceneRenderer = {
               e.y,
               size,
               e.flip,
-              bob,
               p.inv > 0 && Math.floor(p.inv * 15) % 2 === 0,
-              e.phase || 0,
               e,
             );
           else if (e.elite) {
@@ -302,7 +294,6 @@ export const SceneRenderer = {
             890 + Math.floor(i / 5) * 60,
             2,
             i % 2 === 0,
-            Math.sin(performance.now() / 300 + i),
           );
       }
       ctx.restore();

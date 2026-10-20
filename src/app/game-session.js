@@ -210,7 +210,6 @@ export const GameSession = {
       sprite,
       settings,
       math,
-      performance,
     });
 
     // Hero portraits in menus: React attaches canvases, the loop animates them in the menu.

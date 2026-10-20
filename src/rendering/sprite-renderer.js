@@ -5,23 +5,17 @@ import { blocksAttack } from '../systems/ability-state.js';
 export const SpriteRenderer = {
   create({ run, heroes }) {
     return {
-      sprite(
-        context,
-        name,
-        x,
-        y,
-        size = 2,
-        flip = false,
-        bob = 0,
-        flash = false,
-        phase = 0,
-        actor = null,
-      ) {
+      // `flash` marks the blinking frames of the hero's invulnerability.
+      sprite(context, name, x, y, size = 2, flip = false, flash = false, actor = null) {
         const charge =
           actor?.player && name === 'traceability'
             ? traceabilityCharge(run.state, blocksAttack(run.state))
             : null;
+        if (!flash) return heroes.draw(context, name, x, y, size, flip, actor?.walk || 0, charge);
+        context.save();
+        context.globalAlpha *= 0.35;
         heroes.draw(context, name, x, y, size, flip, actor?.walk || 0, charge);
+        context.restore();
       },
     };
   },

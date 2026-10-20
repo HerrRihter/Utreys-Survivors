@@ -8,7 +8,7 @@ async function main() {
   const env = {
     AnimationArt: { status: { heroes: 'ready' } },
     HeroArt: { status: 'ready' },
-    sprite(g, name, x, y, size, flip, bob, flash, phase, actor) {
+    sprite(g, name, x, y, size, flip, flash, actor) {
       g.pose = actor;
     },
     document: {

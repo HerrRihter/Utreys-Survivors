@@ -1,0 +1,66 @@
+{
+  "purpose": "Baseline before the architecture refactor (stage 0); compare after stage 3 (render out of systems). Same machine, same commands.",
+  "baseCommit": "f9cad49636a713fc3eab8061e314f4dd46988899",
+  "commands": {
+    "simulation": "npm run benchmark",
+    "render": "npm run build && BROWSER_CHANNEL=msedge npm run benchmark:render"
+  },
+  "simulation": {
+    "node": "v24.20.0",
+    "platform": "win32/x64",
+    "baseCommit": "f9cad49636a713fc3eab8061e314f4dd46988899",
+    "date": "2026-10-20",
+    "waves": {
+      "scenario": "300 s of natural waves; seed=123456; stationary invulnerable Utrace",
+      "steps": 18000,
+      "maxEnemies": 121,
+      "milliseconds": {
+        "median": 0.1353999999998905,
+        "p95": 0.32560000000012224,
+        "p99": 0.4542999999998756,
+        "maximum": 2.632000000000005
+      }
+    },
+    "stress": {
+      "scenario": "60 s with 300 enemies around a moving Traceability hero; seed=424242",
+      "steps": 3600,
+      "milliseconds": {
+        "median": 0.8589000000001761,
+        "p95": 1.8512999999993554,
+        "p99": 6.684500000000298,
+        "maximum": 11.725300000000061
+      }
+    }
+  },
+  "render": {
+    "date": "2026-10-20",
+    "browser": "msedge 155.0.4283.62",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "deviceScaleFactor": 1,
+    "duration": 8,
+    "cadence": "uncapped",
+    "50 enemies": {
+      "fps": 395.9,
+      "jsMedianMs": 0.4,
+      "jsP95Ms": 0.7,
+      "jsMaxMs": 883,
+      "gapP95Ms": 1.6,
+      "gapMaxMs": 879.5,
+      "gapsOver50Ms": 15,
+      "simulatedSeconds": 4.276400000000063
+    },
+    "300 enemies": {
+      "fps": 81.6,
+      "jsMedianMs": 2,
+      "jsP95Ms": 3.4,
+      "jsMaxMs": 885.1,
+      "gapP95Ms": 16.5,
+      "gapMaxMs": 876,
+      "gapsOver50Ms": 15,
+      "simulatedSeconds": 3.3461999999999974
+    }
+  }
+}

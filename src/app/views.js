@@ -447,7 +447,10 @@ export function hudView({ run, progression, heroes, enemies, settings, upgrades 
     progress: nodeProgress(s),
     event: eventLabel(s),
     boss: boss
-      ? { name: boss.name || 'ШЛЮЗ ЦРПТ', pct: Math.round((boss.hp / boss.max) * 1000) / 10 }
+      ? {
+          name: enemies.units[boss.unit]?.name || 'ШЛЮЗ ЦРПТ',
+          pct: Math.round((boss.hp / boss.max) * 1000) / 10,
+        }
       : null,
     abilities: abilityButtons(run),
     showAbilities: run.mode === 'play',

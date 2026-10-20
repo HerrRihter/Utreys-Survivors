@@ -34,6 +34,7 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   s.update(0.01);
   const unlockedBoss = s.state.enemies.find((e) => e.unit === 'crpt');
   assert(unlockedBoss?.boss, 'CRPT follows resolved nodes');
+  assert.equal(s.views.hud().boss.name, unitDefinitions.crpt.name, 'HUD names the boss unit');
   s.update(0.01);
   assert.equal(s.state.enemies.filter((e) => e.unit === 'crpt').length, 1);
   s.damage(unlockedBoss, unlockedBoss.hp + 1);

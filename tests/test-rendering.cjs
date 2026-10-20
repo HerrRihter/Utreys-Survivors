@@ -61,8 +61,30 @@ async function main() {
   assert.equal(hits, 2, 'Skipped frames dispatch hit once');
   advanceAction(actor, 2, () => hits++);
   assert.equal(hits, 2, 'Interrupted/completed action does not dispatch again');
+  // Invulnerability frames draw the hero faded, then the alpha is restored.
+  const { SpriteRenderer } = await import('../src/rendering/sprite-renderer.js');
+  const alphas = [];
+  const g = {
+    globalAlpha: 1,
+    stack: [],
+    save() {
+      this.stack.push(this.globalAlpha);
+    },
+    restore() {
+      this.globalAlpha = this.stack.pop();
+    },
+  };
+  const { sprite } = SpriteRenderer.create({
+    run: { state: null },
+    heroes: { draw: (context) => alphas.push(context.globalAlpha) },
+  });
+  sprite(g, 'utrace', 0, 0, 3, false, false);
+  sprite(g, 'utrace', 0, 0, 3, false, true);
+  assert.equal(alphas[0], 1, 'a normal frame is opaque');
+  assert(alphas[1] < 1, 'a flash frame is faded');
+  assert.equal(g.globalAlpha, 1, 'the flash restores the alpha');
   console.log(
-    'PASS: identical depth order across 75 scenes, stable ties, untouched actor arrays, third-frame hit once, skipped frames and completed actions.',
+    'PASS: identical depth order across 75 scenes, stable ties, untouched actor arrays, third-frame hit once, skipped frames and completed actions, invulnerability flash.',
   );
 }
 main().catch((e) => {
