@@ -29,6 +29,18 @@ export function createProgressionStore({
   let dirty = false,
     pending = null,
     idle = null;
+  // Every change goes through save, deferSave or replace, which bump the version; the
+  // read-only copy for other code is rebuilt on the first read after a change.
+  let version = 0,
+    view = null,
+    viewVersion = -1;
+  function snapshot() {
+    if (viewVersion !== version) {
+      view = deepFreeze(JSON.parse(JSON.stringify(data)));
+      viewVersion = version;
+    }
+    return view;
+  }
   function flush() {
     if (pending !== null) {
       clearTimeout(pending);
@@ -59,6 +71,7 @@ export function createProgressionStore({
     return () => listeners.delete(listener);
   }
   function save() {
+    version++;
     dirty = true;
     flush();
     notify('save');
@@ -66,12 +79,14 @@ export function createProgressionStore({
   // Takes progression from elsewhere (the cloud) through the same checks as a local save.
   function replace(saved) {
     data = normalizeProgression(saved);
+    version++;
     dirty = true;
     flush();
   }
   // Combat only updates memory. Coalesce rewards into one write outside the
   // simulation, preferably when the browser has idle time between frames.
   function deferSave() {
+    version++;
     dirty = true;
     if (pending !== null || idle !== null) return;
     if (typeof setTimeout !== 'function') {
@@ -114,6 +129,7 @@ export function createProgressionStore({
     get persistent() {
       return persistent;
     },
+    snapshot,
     save,
     deferSave,
     flush,
@@ -122,4 +138,12 @@ export function createProgressionStore({
     onChange,
     dispose,
   };
+}
+
+function deepFreeze(value) {
+  if (value && typeof value === 'object') {
+    for (const item of Object.values(value)) deepFreeze(item);
+    Object.freeze(value);
+  }
+  return value;
 }

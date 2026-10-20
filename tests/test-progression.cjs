@@ -214,6 +214,31 @@ async function main() {
     assert(rewards.data.codes >= before + achievement.reward);
   }
   console.log('PASS: active achievement rewards and duplicate prevention.');
+
+  // `data` is one read-only copy until the save changes: reads do not clone, and other code
+  // cannot change the progression through it.
+  // The save lives in the module realm: compare error names, not constructors.
+  const isTypeError = (error) => error.name === 'TypeError';
+  const view = rewards.data;
+  assert.equal(rewards.data, view, 'Reads between changes share one copy');
+  assert(Object.isFrozen(view) && Object.isFrozen(view.stats) && Object.isFrozen(view.levels));
+  assert(Object.isFrozen(view.unlocked) && Object.isFrozen(view.runStats));
+  const codes = view.codes;
+  assert.throws(() => {
+    'use strict';
+    view.codes = 1e9;
+  }, isTypeError);
+  assert.throws(() => view.unlocked.push('qa'), isTypeError);
+  assert.throws(() => {
+    'use strict';
+    view.levels.health = 0;
+  }, isTypeError);
+  assert.equal(rewards.wallet.codes, codes, 'A write through data does not reach the save');
+  rewards.wallet.earn(1);
+  assert.notEqual(rewards.data, view, 'A change makes a new copy');
+  assert.equal(rewards.data.codes, codes + 1);
+  assert.equal(view.codes, codes, 'An old copy keeps what it showed');
+  console.log('PASS: progression data is a shared read-only copy rebuilt after changes.');
 }
 main().catch((error) => {
   console.error(error);

@@ -26,8 +26,9 @@ export function createProgression(options) {
     replace: store.replace,
     onChange: store.onChange,
     dispose: store.dispose,
+    // A deep-frozen copy of the save, shared by every read until the next change.
     get data() {
-      return JSON.parse(JSON.stringify(store.data));
+      return store.snapshot();
     },
     get persistent() {
       return store.persistent;
