@@ -346,7 +346,7 @@ export function runStats(s) {
     { label: 'Область', value: percent(st.range) },
     { label: 'Скорость', value: percent(st.speed) },
     { label: 'Броня', value: String(st.armor || 0) },
-    { label: 'Реген', value: decimal((st.regen || 0) * (s.healFactor ?? 1)) + ' HP/с' },
+    { label: 'Реген', value: decimal((st.regen || 0) * s.healFactor) + ' HP/с' },
     { label: 'Притяжение', value: String(Math.round(st.magnet)) },
   ];
   if (st.crit) rows.push({ label: 'Крит', value: percent(st.crit) });
@@ -399,7 +399,7 @@ function nodeProgress(s) {
 
 function abilityButtons(run) {
   const s = run.state;
-  return (s.abilities || []).slice(0, 2).map((a, i) => {
+  return s.abilities.slice(0, 2).map((a, i) => {
     const status = a.left > 0 ? 'Активно' : a.cd > 0 ? Math.ceil(a.cd) + ' с' : 'Готово';
     return {
       label: `${run.touchOnly ? '' : (i ? 'E' : 'Q') + ' · '}${a.name} · ${abilityRank(s, a.id)}/${abilityUpgradeMax}\n${

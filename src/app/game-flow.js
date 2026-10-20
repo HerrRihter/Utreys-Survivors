@@ -1,17 +1,14 @@
-import { createNodeState } from '../systems/node-objectives.js';
-import { getWaveSchedule, createWaveState } from '../systems/wave-schedule.js';
-import { permanentUpgradeDefinitions, levelUpControls } from '../../data/upgrades.js';
+import { getWaveSchedule } from '../systems/wave-schedule.js';
+import { createRunModel } from '../systems/run-model.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
 import { arenaDefinitions } from '../world/arenas.js';
 import { mapUnlocked } from '../../data/maps/maps.js';
 import { weaponDefinitions } from '../../data/weapons.js';
 import { restoreRun } from '../systems/run-snapshot.js';
 import { nearestGoals, newlyDone } from './unlocks.js';
-import { layoutNodes, planEvents } from '../systems/run-layout.js';
 import { randomSeed, parseSeed, seedText } from '../core/rng.js';
 import { logOffer, logReoffer, logChoice, logEntry } from '../systems/run-log.js';
-import { maxLoad, rewardPerLevel, production, loadModifiers } from '../../data/difficulty.js';
-import { workaroundSeconds } from '../../data/enemies/nodes.js';
+import { maxLoad, rewardPerLevel, production } from '../../data/difficulty.js';
 
 // Run lifecycle (start, pause, level-up, finish) and menu navigation. Only changes state:
 // React reads `run` through the session's stores, `ui.emit()` / `hud.emit()` announce changes.
@@ -53,7 +50,7 @@ export const GameFlow = {
     function countRun(victory = false) {
       const s = run.state;
       if (!s?.runId) return null;
-      const counted = s.statsCounted || { kills: 0, codes: 0 };
+      const counted = s.statsCounted ?? { kills: 0, codes: 0 };
       const improved = progression.recordRunResult?.({
         runId: s.runId,
         map: s.map,
@@ -76,18 +73,18 @@ export const GameFlow = {
     function recordRun(win = false) {
       const s = run.state;
       if (!s || s.resultRecorded) return null;
-      progression.recordTime(s.t, s.recordedTime || 0);
+      progression.recordTime(s.t, s.recordedTime);
       progression.recordLevel(s.level);
       s.resultRecorded = true;
       s.recordedTime = s.t;
       // Evolutions assembled in this run open their encyclopedia entries.
-      for (const w of s.weapons || []) if (w.evolved) progression.recordEvolution(w.id);
+      for (const w of s.weapons) if (w.evolved) progression.recordEvolution(w.id);
       if (s.stats.heroEvo) progression.recordEvolution('hero_' + run.selected);
       // The run journal: one entry per ending, with the offers made since the previous one.
-      const offers = s.offers || [];
+      const offers = s.offers;
       runLog?.record(
         logEntry({
-          s: { ...s, offers: offers.slice(s.offersLogged || 0) },
+          s: { ...s, offers: offers.slice(s.offersLogged) },
           hero: run.selected,
           win,
           build: upgrades.build(run.selected, s),
@@ -107,7 +104,7 @@ export const GameFlow = {
           cleanSweep: nodesMap && s.nodes.every((n) => n.status === 'destroyed'),
           allWorkaround: nodesMap && s.nodes.every((n) => n.status === 'workaround'),
           noFood: !s.foodTaken,
-          evolutions: (s.evolutions || 0) + (s.stats.heroEvo ? 1 : 0),
+          evolutions: s.evolutions + (s.stats.heroEvo ? 1 : 0),
         });
       }
       if (!s.endless) return null;
@@ -136,90 +133,26 @@ export const GameFlow = {
       const seed = run.nextSeed ?? randomSeed(math.random);
       run.nextSeed = null;
       const schedule = getWaveSchedule(run.selectedMap);
-      const hero = heroes.defs[run.selected],
-        levels = progression.data.levels,
-        health = hero.hp + levels.health * permanentUpgradeDefinitions.health.factor;
+      const levels = progression.data.levels;
       input.resetInput();
-      const load = clampLoad(run.selected, run.selectedLoad),
-        mods = loadModifiers(load);
+      const load = clampLoad(run.selected, run.selectedLoad);
       run.selectedLoad = load;
-      run.state = {
-        t: 0,
-        // Identifies the run in the statistics, so a second ending never adds a game.
-        runId: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      run.state = createRunModel({
+        hero: run.selected,
+        heroDef: heroes.defs[run.selected],
+        levels,
         load,
-        healFactor: Math.max(0, 1 + mods.heal),
-        map: run.selectedMap,
         seed,
-        eventPlan: planEvents(schedule, seed),
-        eventIndex: 0,
-        event: null,
-        ...createWaveState(schedule),
-        kills: 0,
-        level: 1,
-        xp: 0,
-        need: 8,
-        attack: 0.2,
-        enemies: [],
-        nodes: createNodeState(
-          workaroundSeconds * (1 + mods.workaround),
-          layoutNodes(run.selectedMap, seed),
-        ),
-        corpses: [],
-        enemyShots: [],
-        hazards: [],
-        shots: [],
-        codes: [],
-        earned: 0,
-        gems: [],
-        fx: [],
-        texts: [],
-        pickups: [],
-        bossDead: false,
-        shake: 0,
-        step: 0,
-        stats: {
-          damage: 1 + levels.power * permanentUpgradeDefinitions.power.factor,
-          haste: 1,
-          range: 1,
-          speed: 1 + levels.speed * permanentUpgradeDefinitions.speed.factor,
-          magnet: 75,
-          armor: 0,
-          regen: 0,
-        },
-        p: {
-          x: world.arena.size / 2,
-          y: world.arena.size / 2,
-          hp: health,
-          max: health,
-          speed: hero.speed,
-          inv: 0,
-          flip: false,
-          facing: { x: 1, y: 0 },
-        },
-      };
-      abilities.init();
-      weapons.init();
-      run.state.heroWeaponName = hero.weapon;
-      run.state.damageBy = {};
-      run.state.upgradeRanks = {};
-      run.state.banned = [];
-      for (const key of levelUpControls) run.state[key] = 1 + (levels[key] || 0);
-      if (run.selected === 'ba')
-        run.state.baSpecialization = {
-          client: baClientIds.includes(run.baClient) ? run.baClient : baClientIds[0],
-          bonus: 0,
-        };
+        runId: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+        map: run.selectedMap,
+        schedule,
+        arenaSize: world.arena.size,
+        baClient: run.baClient,
+        doneBefore: progression.achievements
+          .filter((a) => progression.achievementDone(a, run.best))
+          .map((a) => a.id),
+      });
       upgrades.permanent(run.state, run.selected, levels);
-      // Head start: enough experience for the first level-ups, taken one by one as usual.
-      for (let i = 0, need = run.state.need; i < (levels.headStart || 0); i++) {
-        run.state.xp += need;
-        need = Math.floor(need * 1.23 + 3);
-      }
-      // Achievements already done, to list what this run opens.
-      run.state.doneBefore = progression.achievements
-        .filter((a) => progression.achievementDone(a, run.best))
-        .map((a) => a.id);
       world.arena.prepare(
         Object.values(enemies.units).map((unit) => unit.r),
         run.state.p,
@@ -365,9 +298,7 @@ export const GameFlow = {
         s.earned += bonus;
       }
       // Greed: a share of the codes earned since the last ending.
-      const greed = progression.earn(
-        Math.floor((s.earned - (s.earnedPaid || 0)) * (s.stats.greed || 0)),
-      );
+      const greed = progression.earn(Math.floor((s.earned - s.earnedPaid) * (s.stats.greed || 0)));
       s.earned += greed;
       s.earnedPaid = s.earned;
       // After the bonuses: the codes of this ending are final.
@@ -533,8 +464,8 @@ export const GameFlow = {
 
     // Damage per source, largest first, with display names.
     function damageReport(s) {
-      const total = Object.values(s.damageBy || {}).reduce((sum, n) => sum + n, 0) || 1;
-      return Object.entries(s.damageBy || {})
+      const total = Object.values(s.damageBy).reduce((sum, n) => sum + n, 0) || 1;
+      return Object.entries(s.damageBy)
         .map(([tag, amount]) => ({
           tag,
           name: sourceName(tag),

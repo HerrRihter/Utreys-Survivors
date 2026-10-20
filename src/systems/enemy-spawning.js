@@ -58,7 +58,7 @@ export const EnemySpawning = {
       }
       e.hp = e.max = Math.max(1, Math.round(e.hp * enemyHpScale));
       e.damage = Math.max(1, Math.round(e.damage * enemyDamageScale));
-      scaleEnemy(e, runModifiers(s), boss ? s.productionBosses || 0 : 0);
+      scaleEnemy(e, runModifiers(s), boss ? s.productionBosses : 0);
       s.enemies.push(e);
       return e;
     }
@@ -87,7 +87,7 @@ export const EnemySpawning = {
         return e;
       };
       for (const spec of schedule.recurring) {
-        const next = s.waveNext[spec.unit] ?? spec.first;
+        const next = s.waveNext[spec.unit];
         if (s.t < next) continue;
         const stage = scheduleStage(spec.stages, s.t);
         s.waveNext[spec.unit] = next + stage.every;
@@ -131,8 +131,8 @@ export const EnemySpawning = {
         }
       }
       // Elites: a stronger copy of a unit from the current stage, on the schedule's timer.
-      if (schedule.elites && s.t >= (s.eliteNext ?? schedule.elites.first)) {
-        s.eliteNext = (s.eliteNext ?? schedule.elites.first) + schedule.elites.every;
+      if (schedule.elites && s.t >= s.eliteNext) {
+        s.eliteNext += schedule.elites.every;
         const e = spawn(selectWaveUnit(schedule, s.t, math.random()));
         if (e) {
           makeElite(e);
@@ -145,7 +145,7 @@ export const EnemySpawning = {
       if (boss && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
         s.bossSpawned = true;
         if (boss.heal) {
-          const gain = Math.round(s.p.max * boss.heal * (s.healFactor ?? 1));
+          const gain = Math.round(s.p.max * boss.heal * s.healFactor);
           s.p.hp = Math.min(s.p.max, s.p.hp + gain);
           s.texts.push({
             x: s.p.x,
@@ -161,7 +161,7 @@ export const EnemySpawning = {
       if (boss && s.endless && s.t >= s.productionBossNext) {
         s.productionBossNext += production.bossEvery;
         if (spawn(boss.unit, true)) {
-          s.productionBosses = (s.productionBosses || 0) + 1;
+          s.productionBosses++;
           toast('ПРОДАКШЕН: усиленный ЦРПТ №' + s.productionBosses);
           if (boss.sound) audio.effect(boss.sound);
         }

@@ -87,8 +87,8 @@ export const Simulation = {
         audio.effect('magic');
         return;
       }
-      const heal = Math.round(25 * (s.healFactor ?? 1));
-      s.foodTaken = (s.foodTaken || 0) + 1;
+      const heal = Math.round(25 * s.healFactor);
+      s.foodTaken++;
       p.hp = Math.min(p.max, p.hp + heal);
       s.texts.push({ x: p.x, y: p.y - 30, v: '+' + heal + ' ♥', life: 1 });
       audio.effect('heal');
@@ -104,7 +104,7 @@ export const Simulation = {
       s.corpses = corpses.update(s.corpses, dt);
       s.shake = Math.max(0, s.shake - dt * 20);
       p.inv = Math.max(0, p.inv - dt);
-      p.hp = Math.min(p.max, p.hp + st.regen * (s.healFactor ?? 1) * dt);
+      p.hp = Math.min(p.max, p.hp + st.regen * s.healFactor * dt);
       const keys = settings?.bindings || defaultBindings,
         held = (action, arrow) => (run.keys.has(keys[action]) || run.keys.has(arrow) ? 1 : 0);
       let mx = held('right', 'ArrowRight') - held('left', 'ArrowLeft') + run.stick.x,
@@ -128,7 +128,7 @@ export const Simulation = {
       const oldX = p.x,
         oldY = p.y;
       // Inspectors' waves slow the player for a moment.
-      const slowed = p.slowUntil > s.t ? 1 - (p.slowAmount || 0) : 1;
+      const slowed = p.slowUntil > s.t ? 1 - p.slowAmount : 1;
       world.arena.move(
         p,
         mx * p.speed * st.speed * slowed * dt,
@@ -139,7 +139,7 @@ export const Simulation = {
       p.y = math.clamp(p.y, 100, world.arena.size - 12);
       const travel = Math.hypot(p.x - oldX, p.y - oldY);
       p.moving = travel > 0.01;
-      p.walk = (p.walk || 0) + travel / 55;
+      p.walk += travel / 55;
       spawning.updateSpawning(dt);
       runEvents?.update(dt);
       s.crowd = countCrowd(s);
@@ -167,7 +167,6 @@ export const Simulation = {
         p.action.direction = dir;
         p.action.flip = Math.abs(dir.x) > 0.01 ? dir.x < 0 : p.flip;
       }
-      s.hazards ??= [];
       // Guards whose aura covers their neighbours, found once per step for combat.
       s.guards = s.enemies.filter((e) => e.hp > 0 && enemies.units[e.unit]?.aura);
       for (const e of s.enemies) {

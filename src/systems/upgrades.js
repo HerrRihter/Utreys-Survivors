@@ -93,7 +93,6 @@ export const UpgradeSystem = {
       kind: 'weapon',
       available: () => Progression.weaponUnlocked?.(id) ?? true,
       apply: (s) => {
-        s.weapons ??= [];
         const owned = s.weapons.find((w) => w.id === id);
         if (owned) owned.level++;
         else s.weapons.push({ id, level: 1, cd: 0.5, evolved: false, phase: 0 });
@@ -240,7 +239,6 @@ export const UpgradeSystem = {
     }
     function apply(u, s) {
       if (u.available && !u.available(s)) return false;
-      s.upgradeRanks ??= {};
       if (u.max && rank(s, u) >= u.max) return false;
       u.apply(s);
       if (u.max && u.kind !== 'weapon') s.upgradeRanks[u.id] = (s.upgradeRanks[u.id] || 0) + 1;

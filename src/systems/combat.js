@@ -18,7 +18,6 @@ export const CombatSystem = {
       if (e.markedUntil > st.t) n *= 1.3;
       const passive = passiveDamage(st, e, n, tag, math.random);
       n = passive.n;
-      st.damageBy ??= {};
       st.damageBy[tag] = (st.damageBy[tag] || 0) + Math.min(n, e.hp);
       e.hp -= n;
       audio.effect('hit');
@@ -102,7 +101,7 @@ export const CombatSystem = {
           run.state.pickups.push({ x: e.x, y: e.y, type: 'food' });
         // A node guardian leaves a bug archive: it evolves a ready weapon now or later.
         if (enemies.units[e.unit]?.miniboss) {
-          run.state.evoTokens = (run.state.evoTokens || 0) + 1;
+          run.state.evoTokens++;
           toast(
             (enemies.units[e.unit].archiveName || 'Архив бага') +
               ' получен: эволюция готового оружия',
@@ -143,7 +142,7 @@ export const CombatSystem = {
         p.slowUntil = run.state.t + slow.duration;
         p.slowAmount = slow.amount;
       }
-      run.state.firstHurtAt ??= run.state.t;
+      if (run.state.firstHurtAt === null) run.state.firstHurtAt = run.state.t;
       run.state.lastHitBy = e.unit || e.kind || 'unknown';
       p.inv = 0.7;
       p.hurt = { elapsed: 0, duration: 0.34, flip: p.flip };

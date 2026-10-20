@@ -15,11 +15,12 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
- *   state: any, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
+ *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
  *   selectedMap: string, selectedLoad: number, seedInput: string,
- *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], result: RunResult | null,
+ *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], banishArmed: boolean,
+ *   capture: string | null, result: RunResult | null,
  *   best: { kills: number, time: number }, toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
@@ -49,6 +50,8 @@ export function createRunState({ storage }) {
     touchOnly: false, // a touch device without mouse or keyboard (set by the session)
     nextSeed: null, // seed for the next start (typed, repeated or resumed)
     choice: [],
+    banishArmed: false, // the next card picked is banned instead of taken
+    capture: null, // the action whose key the settings screen is waiting for
     result: null, // { win, ... } after a run ends
     best,
     toast: { text: '', left: 0 },

@@ -1,0 +1,221 @@
+// @ts-check
+import { createNodeState } from './node-objectives.js';
+import { createWaveState } from './wave-schedule.js';
+import { layoutNodes, planEvents } from './run-layout.js';
+import { abilityDefinitions } from '../../data/characters/abilities.js';
+import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { permanentUpgradeDefinitions } from '../../data/upgrades.js';
+import { workaroundSeconds } from '../../data/enemies/nodes.js';
+import { speechSettings } from '../../data/enemies/phrases.js';
+import { loadModifiers } from '../../data/difficulty.js';
+
+/**
+ * The state of one run (`run.state`). Every field exists from the start: systems change
+ * values, they never add fields.
+ *
+ * @typedef {{ x: number, y: number }} Point
+ * @typedef {{ elapsed: number, duration: number, flip: boolean }} HurtTimer
+ * @typedef {{ elapsed: number, duration: number, hit: boolean, flip: boolean, aim: Point,
+ *   direction?: Point }} ActorAction
+ * @typedef {{ x: number, y: number, hp: number, max: number, speed: number, inv: number,
+ *   flip: boolean, facing: Point, walk: number, moving: boolean, hurt: HurtTimer | null,
+ *   action: ActorAction | null, slowUntil: number, slowAmount: number,
+ *   chainImpactAt: number | null }} Player
+ * @typedef {{ damage: number, haste: number, range: number, speed: number, magnet: number,
+ *   armor: number, regen: number }} BaseStats
+ * Level-ups, passives and trainings add more modifiers by name (crit, weaponSlots, heroEvo...).
+ * @typedef {BaseStats & Record<string, number | boolean>} RunStats
+ * @typedef {{ x: number, y: number, unit: string, type: 'enemy' | 'boss', hp: number,
+ *   max: number, r: number, speed: number, damage: number, boss: boolean, hit: number,
+ *   cd: number, phase: number, vx: number, vy: number, heading: number, elite?: boolean,
+ *   nodeId?: string }} EnemyCore
+ * Behaviours keep their own timers on the enemy (summonCd, wcd, speech...).
+ * @typedef {EnemyCore & Record<string, unknown>} Enemy
+ * @typedef {{ id: string, kind?: string, bug: string, x: number, y: number, need: number,
+ *   status: string, progress: number,
+ *   guardian: Enemy | null }} RunNode
+ * @typedef {{ id: string, level: number, cd: number, evolved: boolean, phase: number,
+ *   tick?: number }} OwnedWeapon
+ * @typedef {{ id: string, name: string, cooldown: number, duration: number, cd: number,
+ *   left: number } & Record<string, unknown>} RunAbility
+ * @typedef {{ time: number, type: string }} PlannedEvent
+ * @typedef {{ type: string, left: number, progress: number, need: number, x?: number,
+ *   y?: number, radius?: number }} RunEvent
+ * @typedef {{ level: number, cards: string[], picked: string | null,
+ *   action: 'pick' | 'skip' | null, rerolls: number, banned: string[] }} OfferRecord
+ * @typedef {{ x: number, y: number, v: number, dead?: boolean, pull?: boolean }} Gem
+ * @typedef {{ x: number, y: number, value: number, event?: boolean, dead?: boolean }} CodeToken
+ * @typedef {{ x: number, y: number, type: string, dead?: boolean }} Pickup
+ * Short-lived world objects (shots, effects, hazards, corpses): dropped on save.
+ * @typedef {Record<string, unknown>} WorldObject
+ * @typedef {{ client: string, bonus: number }} BaSpecialization
+ *
+ * @typedef {{
+ *   t: number, step: number, runId: string, map: string, seed: number, load: number,
+ *   healFactor: number,
+ *   eventPlan: PlannedEvent[], eventIndex: number, event: RunEvent | null, eventsDone: number,
+ *   spawn: number, waveNext: Record<string, number>, bossSpawned: boolean, eliteNext: number,
+ *   kills: number, level: number, xp: number, need: number, earned: number,
+ *   attack: number, attackCycle: number, crowd: number, guards: Enemy[],
+ *   p: Player, stats: RunStats, heroWeaponName: string,
+ *   abilities: RunAbility[], weapons: OwnedWeapon[], evoTokens: number, evolutions: number,
+ *   upgradeRanks: Record<string, number>, banned: string[],
+ *   rerolls: number, skips: number, banishes: number,
+ *   offers: OfferRecord[], offersLogged: number,
+ *   baSpecialization: BaSpecialization | null,
+ *   damageBy: Record<string, number>, lastHitBy: string | null, firstHurtAt: number | null,
+ *   foodTaken: number, doneBefore: string[],
+ *   enemies: Enemy[], nodes: RunNode[], gems: Gem[], codes: CodeToken[], pickups: Pickup[],
+ *   corpses: WorldObject[], enemyShots: WorldObject[], hazards: WorldObject[],
+ *   shots: WorldObject[], wfx: WorldObject[], fx: WorldObject[], texts: WorldObject[],
+ *   bossDead: boolean, shake: number,
+ *   speechPhraseIndex: Record<string, number>, speechCursor: number, nextSpeechAt: number,
+ *   endless: boolean, endlessStart: number, endlessKills: number,
+ *   productionBossNext: number, productionBosses: number,
+ *   resultRecorded: boolean, recordedTime: number, statsRecorded: boolean,
+ *   statsCounted: { kills: number, codes: number } | null, earnedPaid: number,
+ *   recordsImproved: Record<string, string[]> | null,
+ * }} RunModel
+ */
+
+/**
+ * A new run with every field in place.
+ * @param {{ hero: string, heroDef: { hp: number, speed: number, weapon: string },
+ *   levels: Record<string, number>, load: number, seed: number, runId: string, map: string,
+ *   schedule: Parameters<typeof createWaveState>[0] & Parameters<typeof planEvents>[0],
+ *   arenaSize: number, baClient?: string, doneBefore?: string[] }} options
+ * @returns {RunModel}
+ */
+export function createRunModel({
+  hero,
+  heroDef,
+  levels,
+  load,
+  seed,
+  runId,
+  map,
+  schedule,
+  arenaSize,
+  baClient,
+  doneBefore = [],
+}) {
+  const mods = loadModifiers(load),
+    health = heroDef.hp + levels.health * permanentUpgradeDefinitions.health.factor;
+  /** @type {RunModel} */
+  const s = {
+    t: 0,
+    step: 0,
+    // Identifies the run in the statistics, so a second ending never adds a game.
+    runId,
+    map,
+    // The seed fixes the node layout, bug placement and event order of this run.
+    seed,
+    load,
+    healFactor: Math.max(0, 1 + mods.heal),
+    eventPlan: planEvents(schedule, seed),
+    eventIndex: 0,
+    event: null,
+    eventsDone: 0,
+    ...createWaveState(schedule),
+    kills: 0,
+    level: 1,
+    xp: 0,
+    need: 8,
+    earned: 0,
+    // Hero attack timer and the length of its current cycle (the charge ring).
+    attack: 0.2,
+    attackCycle: 0.2,
+    // Enemies near the hero and the aura guards, counted once per step.
+    crowd: 0,
+    guards: [],
+    p: {
+      x: arenaSize / 2,
+      y: arenaSize / 2,
+      hp: health,
+      max: health,
+      speed: heroDef.speed,
+      inv: 0,
+      flip: false,
+      facing: { x: 1, y: 0 },
+      walk: 0,
+      moving: false,
+      hurt: null,
+      action: null,
+      slowUntil: 0,
+      slowAmount: 0,
+      chainImpactAt: null,
+    },
+    stats: {
+      damage: 1 + levels.power * permanentUpgradeDefinitions.power.factor,
+      haste: 1,
+      range: 1,
+      speed: 1 + levels.speed * permanentUpgradeDefinitions.speed.factor,
+      magnet: 75,
+      armor: 0,
+      regen: 0,
+    },
+    heroWeaponName: heroDef.weapon,
+    abilities: abilityDefinitions[hero].map((a) => ({ ...a, cd: 0, left: 0 })),
+    weapons: [],
+    // Bug archives waiting for an eligible weapon, and weapons evolved so far.
+    evoTokens: 0,
+    evolutions: 0,
+    upgradeRanks: {},
+    banned: [],
+    // Level-up controls: one of each per run, permanent ranks add more.
+    rerolls: 1 + (levels.rerolls || 0),
+    skips: 1 + (levels.skips || 0),
+    banishes: 1 + (levels.banishes || 0),
+    offers: [],
+    offersLogged: 0,
+    baSpecialization:
+      hero === 'ba'
+        ? {
+            client: baClient && baClientIds.includes(baClient) ? baClient : baClientIds[0],
+            bonus: 0,
+          }
+        : null,
+    damageBy: {},
+    lastHitBy: null,
+    firstHurtAt: null,
+    foodTaken: 0,
+    // Achievements already done, to list what this run opens.
+    doneBefore,
+    enemies: [],
+    nodes: createNodeState(workaroundSeconds * (1 + mods.workaround), layoutNodes(map, seed)),
+    gems: [],
+    codes: [],
+    pickups: [],
+    corpses: [],
+    enemyShots: [],
+    hazards: [],
+    shots: [],
+    wfx: [],
+    fx: [],
+    texts: [],
+    bossDead: false,
+    shake: 0,
+    speechPhraseIndex: {},
+    speechCursor: 0,
+    nextSpeechAt: speechSettings.interval,
+    endless: false,
+    endlessStart: 0,
+    endlessKills: 0,
+    productionBossNext: 0,
+    productionBosses: 0,
+    // Bookkeeping of the run's endings (a run continued in production ends again).
+    resultRecorded: false,
+    recordedTime: 0,
+    statsRecorded: false,
+    statsCounted: null,
+    earnedPaid: 0,
+    // Which run statistics the last ending improved (for the result screen and tests).
+    recordsImproved: null,
+  };
+  // Head start: enough experience for the first level-ups, taken one by one as usual.
+  for (let i = 0, need = s.need; i < (levels.headStart || 0); i++) {
+    s.xp += need;
+    need = Math.floor(need * 1.23 + 3);
+  }
+  return s;
+}

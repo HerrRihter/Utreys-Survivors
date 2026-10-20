@@ -16,6 +16,9 @@ async function main() {
     stats: { damage: 1, haste: 1, range: 1, speed: 1, magnet: 75, regen: 0, armor: 0 },
     p: { max: 100, hp: 50 },
     earned: 0,
+    weapons: [],
+    upgradeRanks: {},
+    banned: [],
   });
   const weaponIds = U.weapons.map((u) => u.id);
   // Four weapons are open from the start; the rest come from achievements.

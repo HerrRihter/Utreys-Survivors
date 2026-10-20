@@ -51,7 +51,7 @@ export function createTips({ storage, settings, run }) {
         : node && show('node', tipTexts.node())
     )
       return true;
-    const ready = (s.weapons || []).find(
+    const ready = s.weapons.find(
       (w) =>
         !w.evolved &&
         w.level >= weaponMaxLevel &&

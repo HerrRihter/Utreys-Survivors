@@ -66,9 +66,9 @@ export function snapshotRun(run) {
         'evolutions',
         'doneBefore',
       ]),
-      weapons: (s.weapons || []).map((w) => pick(w, ['id', 'level', 'cd', 'evolved', 'phase'])),
+      weapons: s.weapons.map((w) => pick(w, ['id', 'level', 'cd', 'evolved', 'phase'])),
       p: { x: round(s.p.x), y: round(s.p.y), hp: s.p.hp, max: s.p.max },
-      abilities: (s.abilities || []).map((a) => ({ id: a.id, cd: a.cd })),
+      abilities: s.abilities.map((a) => ({ id: a.id, cd: a.cd })),
       nodes: s.nodes.map((n) => ({
         id: n.id,
         status: n.status,

@@ -44,7 +44,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   }
   assert(flashed, 'attack cycle produces an impact flash even with no targets');
   h.session.start();
-  assert.equal(h.session.state.p.chainImpactAt, undefined, 'new run clears flash');
+  assert.equal(h.session.state.p.chainImpactAt, null, 'new run clears flash');
   h.session.dispose();
   console.log('PASS: charge timing, windup, impact flash, pause, haste and run reset');
 })().catch((error) => {

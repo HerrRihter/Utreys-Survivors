@@ -47,7 +47,7 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   assert.equal(h.session.state.baSpecialization.client, 'pepsi', 'invalid selection falls back');
   h.session.select('utrace');
   h.session.start();
-  assert.equal(h.session.state.baSpecialization, undefined);
+  assert.equal(h.session.state.baSpecialization, null);
   h.session.dispose();
   console.log('PASS: BA client selection, kill-only health, deduplication and per-run reset');
 })().catch((error) => {

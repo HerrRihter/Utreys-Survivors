@@ -57,7 +57,7 @@ export const RunEvents = {
       const e = s.event;
       s.event = null;
       s.eventIndex++;
-      s.eventsDone = (s.eventsDone || 0) + (success ? 1 : 0);
+      if (success) s.eventsDone++;
       if (!success) {
         toast('Событие провалено');
         return;

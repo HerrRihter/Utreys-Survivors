@@ -1,4 +1,4 @@
-import { abilityDefinitions, abilityRank } from '../../data/characters/abilities.js';
+import { abilityRank } from '../../data/characters/abilities.js';
 import { abilityActive, effectiveStats } from './ability-state.js';
 
 const TAU = Math.PI * 2;
@@ -9,9 +9,6 @@ export const AbilitySystem = {
   create({ run, world, damage, progression, audio, heroes, units }) {
     const ordinary = (e) => !e.boss && !units?.[e.unit]?.miniboss;
 
-    function init() {
-      run.state.abilities = abilityDefinitions[run.selected].map((a) => ({ ...a, cd: 0, left: 0 }));
-    }
     // Instant effects at the moment of casting.
     const cast = {
       // Serialization: a fan of piercing packets in every direction.
@@ -176,6 +173,6 @@ export const AbilitySystem = {
         }
       }
     }
-    return { init, activate, update, draw };
+    return { activate, update, draw };
   },
 };

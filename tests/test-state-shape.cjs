@@ -4,6 +4,7 @@ const path = require('node:path');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { heroDefinitions } = require('../data/characters/heroes.js');
 const { mapDefinitions } = require('../data/maps/maps.js');
+const { abilityDefinitions } = require('../data/characters/abilities.js');
 
 // Every field of `run.state` is either saved by snapshotRun or listed here as runtime-only.
 // A new field must be put in one of the two lists on purpose, so a save never drops it silently.
@@ -41,6 +42,9 @@ const RUNTIME_KEYS = [
   'speechCursor',
   'nextSpeechAt',
   'eventsDone',
+  // Ending bookkeeping: a run that has ended is never saved.
+  'resultRecorded',
+  'recordsImproved',
 ];
 
 // The plain keys snapshotRun copies, read from its source so the test follows the save format.
@@ -67,8 +71,9 @@ const SECONDS = 180,
   const P = h.env.Progression;
   const heroes = Object.keys(heroDefinitions),
     maps = Object.keys(mapDefinitions);
-  for (const hero of heroes) if (!P.data.unlocked.includes(hero)) P.data.unlocked.push(hero);
   for (const map of maps) P.recordRunStats({ win: true, hero: 'utrace', map, time: 600 });
+  // `P.data` is a copy: heroes are opened through a replaced save.
+  P.replace({ ...P.data, unlocked: heroes });
 
   const seen = new Set();
   const unknown = new Map();
@@ -80,6 +85,7 @@ const SECONDS = 180,
       game.selectMap(map);
       game.start();
       assert.equal(game.state.map, map, label);
+      assert.equal(game.state.abilities[1].id, abilityDefinitions[hero][1].id, label + ' hero');
       const moves = ['KeyD', 'KeyS', 'KeyA', 'KeyW'];
       for (let i = 0, steps = SECONDS / DT; i < steps; i++) {
         if (game.mode === 'level') game.pickUpgrade(0);

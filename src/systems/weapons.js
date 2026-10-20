@@ -15,13 +15,6 @@ export const WeaponSystem = {
   create({ run, world, damage, audio, math }) {
     const passiveRank = (s, id) => s.upgradeRanks?.[id] || 0;
 
-    function init() {
-      const s = run.state;
-      s.weapons = [];
-      s.wfx = [];
-      s.evoTokens = 0;
-    }
-
     // Weapons at max level whose passive is owned; the first one waiting is evolved.
     function eligible(s) {
       return s.weapons.filter(
@@ -38,7 +31,7 @@ export const WeaponSystem = {
         if (!w) return;
         s.evoTokens--;
         w.evolved = true;
-        s.evolutions = (s.evolutions || 0) + 1;
+        s.evolutions++;
         const evo = weaponDefinitions[w.id].evolution;
         s.texts.push({ x: s.p.x, y: s.p.y - 50, v: 'ЭВОЛЮЦИЯ: ' + evo.name, life: 2 });
         audio.effect('level');
@@ -438,7 +431,7 @@ export const WeaponSystem = {
             hitArea(s, f.x, f.y, f.radius, f.damage, 0, f.tag);
           }
           if (f.heal && Math.hypot(s.p.x - f.x, s.p.y - f.y) < f.radius)
-            s.p.hp = Math.min(s.p.max, s.p.hp + f.heal * (s.healFactor ?? 1) * dt);
+            s.p.hp = Math.min(s.p.max, s.p.hp + f.heal * s.healFactor * dt);
         }
       }
       for (const f of spawned) s.wfx.push(f);
@@ -570,6 +563,6 @@ export const WeaponSystem = {
       }
     }
 
-    return { init, update, draw, grantArchive, eligible: () => eligible(run.state) };
+    return { update, draw, grantArchive, eligible: () => eligible(run.state) };
   },
 };

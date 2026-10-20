@@ -8,7 +8,14 @@ for (const phrases of Object.values(enemyPhrases))
 assert(enemyPhrases.l3.includes('Дубли!'));
 assert(enemyPhrases.progress.includes('Отгрузка!') && enemyPhrases.multon.includes('Отгрузка!'));
 const enemy = { unit: 'l3', hp: 100, x: 1100, y: 1100 };
-const state = { t: 0, p: { x: 1100, y: 1100 }, enemies: [enemy] };
+const state = {
+  t: 0,
+  p: { x: 1100, y: 1100 },
+  enemies: [enemy],
+  speechPhraseIndex: {},
+  speechCursor: 0,
+  nextSpeechAt: speechSettings.interval,
+};
 const view = { W: 800, H: 600 };
 // Speech is cosmetic: it must never consume the gameplay random source.
 Math.random = () => {
