@@ -1,14 +1,16 @@
 // Headless balance runs: a simple kiting bot plays each hero on natural waves and reports
 // survival, level, who dealt the damage and who got killed. Not a skill benchmark: the bot
 // only dodges, collects experience and picks cards by a fixed priority, so compare runs
-// against each other, not against human play.
+// against each other, not against human play. Each run starts from its seed (1000, 8919, ...),
+// so the same options repeat the same runs exactly.
 //   node --experimental-vm-modules tools/balance-sim.cjs [--load N] [--seeds N] [--time S]
-//        [--boss S] [--hero id] [--json file] [--passive]
+//        [--boss S] [--hero id] [--map id|all] [--json file] [--passive]
 // `--boss S` resolves all nodes at S seconds so the CRPT arrives and its fight is measured.
 const fs = require('node:fs');
 const { createHarness } = require('../tests/helpers/game-harness.cjs');
 const { heroDefinitions } = require('../data/characters/heroes.js');
 const { nodeGuardian } = require('../src/systems/node-objectives.js');
+const { mapDefinitions } = require('../data/maps/maps.js');
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -20,6 +22,8 @@ const load = Number(option('load', 1)),
   duration = Number(option('time', 600)),
   bossAt = option('boss', null) === null ? null : Number(option('boss')),
   onlyHero = option('hero', null),
+  mapOption = option('map', 'empty'),
+  mapIds = mapOption === 'all' ? Object.keys(mapDefinitions) : [mapOption],
   jsonFile = option('json', null),
   objectiveAt = Number(option('objective', 25)),
   // `--passive`: no dodging at all, only walking to experience, nodes and the boss.
@@ -47,13 +51,6 @@ function pickCard(cards) {
     if (v > score) ((best = i), (score = v));
   });
   return best;
-}
-
-function seeded(env, seed) {
-  env.Math.random = () => {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed / 4294967296;
-  };
 }
 
 // Steering: away from nearby enemies (weighted by their hit), across incoming shots, out of
@@ -182,13 +179,18 @@ function steer(s, units, size, reachOf) {
   return l > 0.5 ? { x: x / l, y: y / l } : { x: 0, y: 0 };
 }
 
-async function play(hero, seed) {
+async function play(hero, map, seed) {
   const h = await createHarness();
-  seeded(h.env, seed);
-  h.env.Progression.earn(1e6);
-  for (const id of heroIds) h.env.Progression.buyHero?.(id);
+  const P = h.env.Progression;
+  P.earn(1e6);
+  for (const id of heroIds) P.buyHero?.(id);
+  // Every map open, as after the first win.
+  for (const id of Object.keys(mapDefinitions))
+    P.recordRunStats({ win: true, hero: 'utrace', map: id, time: 600 });
   const game = h.session;
   game.select(hero);
+  game.selectMap(map);
+  game.views.run().nextSeed = seed;
   game.start();
   const s = game.state,
     run = game.views.run(),
@@ -274,7 +276,11 @@ async function play(hero, seed) {
   }
   const result = {
     hero,
+    map,
     seed,
+    win: !!s.bossDead,
+    // Damage dealt by source (hero, weapons, abilities) for the comparison of builds.
+    damageBy: { ...s.damageBy },
     time: Math.round(s.t),
     died: s.p.hp <= 0,
     level: s.level,
@@ -293,15 +299,16 @@ async function play(hero, seed) {
 
 (async () => {
   const results = [];
-  for (const hero of onlyHero ? [onlyHero] : heroIds)
-    for (let i = 0; i < seeds; i++) {
-      const r = await play(hero, 1000 + i * 7919);
-      results.push(r);
-      console.log(
-        `${hero.padEnd(14)} seed ${r.seed}: ${r.died ? 'died ' + r.time + 's by ' + r.killedBy : 'alive ' + r.time + 's'}, lvl ${r.level}, kills ${r.kills}` +
-          (r.bossSpawnedAt !== null ? `, boss ${r.bossSpawnedAt}s→${r.bossKilledAt ?? '-'}` : ''),
-      );
-    }
+  for (const map of mapIds)
+    for (const hero of onlyHero ? [onlyHero] : heroIds)
+      for (let i = 0; i < seeds; i++) {
+        const r = await play(hero, map, 1000 + i * 7919);
+        results.push(r);
+        console.log(
+          `${map.padEnd(11)} ${hero.padEnd(14)} seed ${r.seed}: ${r.win ? 'won ' + r.time + 's' : r.died ? 'died ' + r.time + 's by ' + r.killedBy : 'alive ' + r.time + 's'}, lvl ${r.level}, kills ${r.kills}` +
+            (r.bossSpawnedAt !== null ? `, boss ${r.bossSpawnedAt}s→${r.bossKilledAt ?? '-'}` : ''),
+        );
+      }
   const sum = (key) => {
     const out = {};
     for (const r of results)
@@ -323,9 +330,14 @@ async function play(hero, seed) {
       String(Math.round(hurt[unit] || 0)).padStart(12),
       (((hurt[unit] || 0) / total) * 100).toFixed(1).padStart(5) + '%',
     );
-  const died = results.filter((r) => r.died);
+  const died = results.filter((r) => r.died),
+    won = results.filter((r) => r.win);
+  const median = (list) =>
+    list.length
+      ? list.map((r) => r.time).sort((a, b) => a - b)[Math.floor(list.length / 2)] + 's'
+      : '-';
   console.log(
-    `\nload ${load}: ${died.length}/${results.length} died, median death ${died.length ? died.map((r) => r.time).sort((a, b) => a - b)[Math.floor(died.length / 2)] + 's' : '-'}, mean level ${(results.reduce((a, r) => a + r.level, 0) / results.length).toFixed(1)}`,
+    `\nload ${load}: ${won.length}/${results.length} won (median ${median(won)}), ${died.length} died (median ${median(died)}), mean level ${(results.reduce((a, r) => a + r.level, 0) / results.length).toFixed(1)}`,
   );
   if (jsonFile) fs.writeFileSync(jsonFile, JSON.stringify(results, null, 2));
 })().catch((error) => {

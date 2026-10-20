@@ -252,7 +252,8 @@ export const GameSession = {
       else {
         const due = fixedStep.advance(frameDt);
         let played = 0;
-        // A step can end the play mode (a level-up, the end of the run): the rest waits.
+        // A step can end the play mode (a level-up, the end of the run): this frame's other
+        // steps are dropped, as time spent in a level-up is.
         for (let i = 0; i < due && run.mode === 'play'; i++) {
           step(STEP);
           played += STEP;
