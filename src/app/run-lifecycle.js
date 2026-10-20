@@ -9,6 +9,7 @@ import { randomSeed, parseSeed } from '../core/rng.js';
 import { createRunRecording } from './run-recording.js';
 import { clampLoad, mapOpen } from './selection.js';
 import { resultView } from './views/result.js';
+import { codes } from './views/format.js';
 
 // A run from start to its ending: start, menu, pause, finish, the production continuation,
 // update bundles and resuming a saved run. Level-up screens belong to `levels` (level-up.js).
@@ -168,7 +169,7 @@ export function createRunLifecycle({
     }
     if (!names.length) {
       s.earned += wallet.earn(10);
-      names.push('+10 кодов');
+      names.push('+' + codes(10));
     }
     s.fx.push({
       kind: 'ring',

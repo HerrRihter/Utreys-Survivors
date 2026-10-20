@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHarness } from './helpers/game-harness.js';
 import { edgeMarker, edgeTargets } from '../src/rendering/edge-arrows.js';
-import { runStats } from '../src/app/views.js';
+import { runStats } from '../src/app/views/index.js';
 import { hudScale } from '../src/app/run-state.js';
 import { test } from 'vitest';
 

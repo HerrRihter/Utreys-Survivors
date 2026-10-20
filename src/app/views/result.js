@@ -2,7 +2,7 @@ import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { weaponDefinitions } from '../../../data/weapons.js';
 import { seedText } from '../../core/rng.js';
 import { nearestGoals, newlyDone } from '../unlocks.js';
-import { clock } from '../views.js';
+import { clock, codes, slotKey } from './format.js';
 
 // The results screen of one ending, built once by finish() and kept in `run.result`.
 // `before` holds the records as they were before this ending (for the «record» marks),
@@ -52,7 +52,7 @@ function resultHeader({ s, map, win, endless, opened, bonus }) {
     text: win
       ? 'Шлюз ЦРПТ пройден.' +
         (opened ? ` Открыта нагрузка ${s.load + 1}.` : '') +
-        (bonus ? ` Бонус нагрузки: +${bonus} кодов.` : '') +
+        (bonus ? ` Бонус нагрузки: +${codes(bonus)}.` : '') +
         ' Можно продолжить в продакшене: сложность растёт каждую минуту.'
       : 'Попробуй другую сборку: другое оружие и пассивки меняют забег.',
   };
@@ -91,7 +91,7 @@ export function damageReport(s, hero) {
 function sourceName(s, hero, tag) {
   if (tag === 'hero') return heroDefinitions[hero].weapon;
   const ability = s.abilities?.find((a) => a.id === tag);
-  if (ability) return `${ability.name} (${s.abilities.indexOf(ability) ? 'E' : 'Q'})`;
+  if (ability) return `${ability.name} (${slotKey(s.abilities.indexOf(ability))})`;
   const w = s.weapons?.find((item) => item.id === tag);
   const def = weaponDefinitions[tag];
   return def ? (w?.evolved ? def.evolution.name : def.name) : tag;

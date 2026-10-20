@@ -13,7 +13,7 @@ import { GameLoop, createFixedStep, STEP } from '../core/game-loop.js';
 import { GameFlow } from './game-flow.js';
 import { createStore } from '../core/store.js';
 import { createRunState, createGameSettings } from './run-state.js';
-import * as views from './views.js';
+import * as views from './views/index.js';
 import { EnemySpawning } from '../systems/enemy-spawning.js';
 import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
