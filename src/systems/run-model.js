@@ -92,7 +92,7 @@ import { createGameRng } from '../core/rng.js';
  */
 
 /** @returns {RunRuntime} */
-export function createRunRuntime() {
+function createRunRuntime() {
   return {
     // Enemies near the hero and the aura guards, counted once per step.
     crowd: 0,

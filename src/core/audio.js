@@ -4,7 +4,7 @@ import { persisted } from './storage.js';
 import { LEGACY_AUDIO_KEYS } from './migrations.js';
 
 // The saved mix: sound on or off and the two volumes in 0..1.
-export function normalizeAudio(saved) {
+function normalizeAudio(saved) {
   const settings = { enabled: true, music: 0.3, effects: 0.65 };
   if (saved && typeof saved === 'object') {
     if (typeof saved.enabled === 'boolean') settings.enabled = saved.enabled;

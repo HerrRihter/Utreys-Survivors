@@ -4,7 +4,7 @@ import type { CloudProgress, RunStats } from '../app/useGameSession';
 import type { createLeaderboard } from '../services/leaderboard.js';
 
 export type Leaderboard = ReturnType<typeof createLeaderboard>;
-export type CloudServices = {
+type CloudServices = {
   account: Account;
   cloud: CloudProgress | null;
   runStats: RunStats | null;

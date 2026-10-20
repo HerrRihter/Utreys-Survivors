@@ -23,7 +23,7 @@ import { weaponDefinitions, weaponMaxLevel, heroEvolutions } from '../../data/we
 // returns plain data; React renders it, the session's commands change the underlying state.
 
 // HUD line for the running event; '' when none.
-export function eventLabel(s) {
+function eventLabel(s) {
   const spec = eventSpec(s);
   if (!spec) return '';
   const e = s.event;
@@ -479,7 +479,7 @@ export function hudView({ run, progression, settings, upgrades }) {
 }
 
 const keyNames = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Space: 'Пробел' };
-export const keyLabel = (code) =>
+const keyLabel = (code) =>
   keyNames[code] ||
   (code || '')
     .replace(/^Key/, '')

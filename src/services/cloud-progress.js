@@ -44,7 +44,7 @@ export function saveHash(data) {
 }
 
 // What the conflict dialog shows for each save.
-export const progressSummary = (data) => ({
+const progressSummary = (data) => ({
   codes: data.codes,
   wins: data.stats.wins,
   heroes: data.unlocked.length,

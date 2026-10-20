@@ -9,7 +9,7 @@ import { statPath } from '../services/leaderboard.js';
 type Metric = (typeof statMetrics)[number];
 type Row = { place: number; uid: string; login: string; scope: Record<string, number | string> };
 
-export const placeText = (place: number | null) =>
+const placeText = (place: number | null) =>
   place === null ? '' : Number.isFinite(place) ? `${place}-е место` : 'дальше 1000-го места';
 
 const scopes = [{ id: 'all', name: 'Все карты' }, ...mapColumns];

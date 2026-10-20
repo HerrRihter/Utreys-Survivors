@@ -15,7 +15,7 @@ import { maxLoad, rewardPerLevel, production } from '../../data/difficulty.js';
 
 // Run lifecycle (start, pause, level-up, finish) and menu navigation. Only changes state:
 // React reads `run` through the session's stores, `ui.emit()` / `hud.emit()` announce changes.
-export const LEVEL_LOCK = 0.4;
+const LEVEL_LOCK = 0.4;
 
 export const GameFlow = {
   create({

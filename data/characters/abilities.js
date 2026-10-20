@@ -93,7 +93,7 @@ export const abilityUpgradeDescriptions = Object.fromEntries(
 );
 export const abilityUpgradeMax = 3;
 // Ability ids renamed since older saves and run journals: old id → current id.
-export const renamedAbilityIds = { potion: 'overclock' };
+const renamedAbilityIds = { potion: 'overclock' };
 export const currentAbilityId = (id) => renamedAbilityIds[id] ?? id;
 // A level-up card id (`ability_<id>` for abilities) from an older save under its current name.
 export const currentCardId = (id) =>

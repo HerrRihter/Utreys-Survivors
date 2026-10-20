@@ -8,7 +8,7 @@ const seenIds = (saved) =>
   Array.isArray(saved) ? saved.filter((id) => typeof id === 'string') : [];
 const TIP_SECONDS = 7;
 
-export const tipTexts = {
+const tipTexts = {
   move: (keys) =>
     `${keys} — движение. Атака и оружие срабатывают сами. Собирай опыт — на новом уровне выбирай улучшение.`,
   desk: () =>

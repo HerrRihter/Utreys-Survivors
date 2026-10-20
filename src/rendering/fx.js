@@ -69,7 +69,7 @@ function spark(g, f) {
 
 // Rings, slashes, hurt marks and any kind without its own painter: an arc that grows as it
 // fades; a slash is a wide arc with an inner edge.
-export function drawArcFx(g, f) {
+function drawArcFx(g, f) {
   const slash = f.kind === 'slash';
   g.strokeStyle = f.color || (slash ? '#00e5ff' : f.kind === 'ring' ? '#64ffda' : '#ff5252');
   g.lineWidth = slash ? 7 : 3;
@@ -86,7 +86,7 @@ export function drawArcFx(g, f) {
   }
 }
 
-export const fxPainters = {
+const fxPainters = {
   link,
   scan,
   scanTarget,

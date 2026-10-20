@@ -100,7 +100,7 @@ export function hudScale(uiScale, width, height) {
 
 // Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings),
 // persisted separately from progress.
-export function normalizeSettings(saved) {
+function normalizeSettings(saved) {
   const settings = {
     shake: true,
     hints: true,

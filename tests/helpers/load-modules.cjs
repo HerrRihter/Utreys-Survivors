@@ -46,7 +46,6 @@ async function loadModule(env, file, { fresh = false } = {}) {
   Object.assign(env, module.namespace);
   return module.namespace;
 }
-const moduleFiles = (env) => [...realm(env).modules.keys()];
 const resourcePath = (value) =>
   value.startsWith('file:') ? fileURLToPath(value) : path.resolve(__dirname, '../..', value);
-module.exports = { loadModule, linkModule, moduleFiles, resourcePath };
+module.exports = { loadModule, resourcePath };
