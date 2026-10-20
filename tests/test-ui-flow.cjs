@@ -57,6 +57,8 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   for (let t = 16; t <= 1000; t += 16) h.tick(t);
   assert(hudChanges - hudBefore >= 8 && hudChanges - hudBefore <= 12, 'HUD at ~10 Hz');
 
+  const hudBuild = s.views.hud().build;
+  assert.equal(s.views.hud().build, hudBuild, 'the HUD reuses the build until it changes');
   s.state.xp = s.state.need;
   s.update(0.01);
   assert.equal(s.mode, 'level');
@@ -70,6 +72,12 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   for (let t = 1016; t <= 1500; t += 16) h.tick(t);
   commands.pickUpgrade(0);
   assert.equal(s.mode, 'play');
+  assert.notEqual(s.views.hud().build, hudBuild, 'a picked card rebuilds the HUD build');
+  assert.equal(
+    JSON.stringify(s.views.hud().build),
+    JSON.stringify((({ stats, archives, ...rest }) => rest)(s.views.build())),
+    'the HUD build matches the full build without its stats',
+  );
 
   s.finish(true);
   assert.equal(s.mode, 'end');

@@ -379,6 +379,28 @@ export function buildView({ run, upgrades }) {
   };
 }
 
+// The HUD's build row (no stats): rebuilt only when upgrades.buildKey changes, so the ten
+// HUD refreshes a second reuse one object and the row skips rendering.
+const hudBuilds = new WeakMap();
+function hudBuild(run, upgrades) {
+  const s = run.state,
+    key = upgrades.buildKey(run.selected, s);
+  let cached = hudBuilds.get(s);
+  if (cached?.key !== key) {
+    const build = upgrades.build(run.selected, s);
+    cached = {
+      key,
+      view: {
+        ...build,
+        emptyWeapons: Math.max(0, build.weaponSlots - build.weapons.length),
+        emptyPassives: Math.max(0, build.passiveSlots - build.passives.length),
+      },
+    };
+    hudBuilds.set(s, cached);
+  }
+  return cached.view;
+}
+
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
 function nodeProgress(s) {
@@ -472,7 +494,7 @@ export function hudView({ run, progression, settings, upgrades }) {
     showHint: settings.hints,
     hint: controlsHint(settings.bindings, s.nodes[0]?.kind === 'desk'),
     stick: run.stickView,
-    build: upgrades ? buildView({ run, upgrades }) : null,
+    build: upgrades ? hudBuild(run, upgrades) : null,
     tip: run.mode === 'play' && run.tip?.left > 0 ? run.tip.text : '',
   };
 }

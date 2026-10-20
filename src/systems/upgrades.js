@@ -222,6 +222,23 @@ export const UpgradeSystem = {
       return true;
     }
     // The run's build for HUD, pause and result screens.
+    // Everything build() reads, as a string: equal keys give equal builds.
+    function buildKey(hero, s) {
+      let key =
+        hero +
+        '|' +
+        (s.upgradeRanks?.heroWeapon || 0) +
+        '|' +
+        (s.heroWeaponName || '') +
+        '|' +
+        (s.stats.heroEvo ? 1 : 0) +
+        '|' +
+        extraSlots(s);
+      for (const w of s.weapons || []) key += '|' + w.id + ':' + w.level + (w.evolved ? '*' : '');
+      for (const u of common)
+        if (s.upgradeRanks?.[u.id]) key += '|' + u.id + ':' + s.upgradeRanks[u.id];
+      return key;
+    }
     function build(hero, s) {
       const heroRank = s.upgradeRanks?.heroWeapon || 0;
       return {
@@ -262,6 +279,18 @@ export const UpgradeSystem = {
         passiveSlots,
       };
     }
-    return { common, heroes, weapons, abilities, pool, offer, cards, apply, build, describe };
+    return {
+      common,
+      heroes,
+      weapons,
+      abilities,
+      pool,
+      offer,
+      cards,
+      apply,
+      build,
+      buildKey,
+      describe,
+    };
   },
 };
