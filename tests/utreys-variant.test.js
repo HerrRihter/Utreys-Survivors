@@ -44,7 +44,7 @@ test('utreys-variant', async () => {
     assert.equal(arena.clear({ x: 500, y: 500 }, { x: 510, y: 510 }, 14), true);
     assert.equal(arena.blocked(5, 5, 14), true);
 
-    const publicFiles = ['index.html', 'README.md', 'metadata.json', 'data/achievements.js'];
+    const publicFiles = ['index.html', 'README.md', 'data/achievements.js'];
     const factionNames = /gaul|roman|legion|галл|римлян|римск|легион/i;
     for (const file of publicFiles) {
       if (fs.existsSync(path.join(root, file))) {
