@@ -1,9 +1,8 @@
 const assert = require('node:assert/strict');
-const path = require('node:path');
 const fs = require('node:fs');
 fs.mkdirSync('test-results', { recursive: true });
 const { chromium, firefox } = require('playwright');
-const { createServer } = require('./server.cjs');
+const { startPreview } = require('./preview-server.cjs');
 const assets = require('./active-assets.json');
 
 (async () => {
@@ -14,8 +13,7 @@ const assets = require('./active-assets.json');
   });
   try {
     for (const prefix of ['/', '/utreys-survivors/']) {
-      const server = createServer({ root: path.resolve(__dirname, '../dist'), prefix });
-      await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const server = await startPreview({ base: prefix });
       const context = await browser.newContext();
       const page = await context.newPage();
       const errors = [];
@@ -23,7 +21,7 @@ const assets = require('./active-assets.json');
       page.on('response', (response) => {
         if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
       });
-      const url = `http://127.0.0.1:${server.address().port}${prefix}`;
+      const url = server.url;
       try {
         await page.goto(url);
         await page.locator('#start').waitFor();
@@ -259,7 +257,7 @@ const assets = require('./active-assets.json');
         throw error;
       } finally {
         await context.close();
-        await new Promise((resolve) => server.close(resolve));
+        await server.close();
       }
     }
   } finally {
