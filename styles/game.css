@@ -3444,34 +3444,40 @@ button:disabled {
   border-radius: 10px;
   margin: 16px 0;
 }
+.learning-selfcheck {
+  margin: 14px 0 18px;
+}
+/* Test and room-exit buttons: just outside the fight around the screen centre (a quarter of
+   the shorter side), clear of the corner and bottom panels. */
 .learning-hud {
   position: fixed;
-  bottom: 105px;
+  top: calc(50% + 25vmin + 8px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
-  width: min(410px, 65vw);
-  padding: 10px 14px;
-  background: #0b1c28eb;
-  border: 1px solid #416e89;
-  border-radius: 12px;
+  width: max-content;
+  max-width: min(320px, 80vw);
   z-index: 20;
   text-align: center;
   pointer-events: auto;
   font-size: 12px;
 }
 .learning-hud button {
+  min-height: 44px;
   padding: 10px;
   margin: 0;
   font-size: 13px;
 }
 .learning-hud small {
+  padding: 2px 6px;
   font-size: 10px;
   color: #c0d3dd;
+  background: #0b1c28d9;
+  border-radius: 4px;
 }
-body[data-mode='quiz'] .actions,
 body[data-mode='quiz'] #toast {
   visibility: hidden;
 }
@@ -3479,18 +3485,18 @@ body[data-mode='quiz'] #toast {
   .learning-modal {
     padding: 20px;
   }
-  .learning-hud {
-    bottom: 100px;
-    font-size: 10px;
-    padding: 8px;
-  }
   .learning-option {
     padding: 10px;
   }
 }
+/* Short landscape screens: the middle is the fight; the right edge between the corner buttons
+   and the stick is free. */
 @media (max-height: 500px) {
   .learning-hud {
-    bottom: 10px;
-    width: min(360px, 45vw);
+    top: 50%;
+    left: auto;
+    right: 12px;
+    transform: translateY(-50%);
+    max-width: 200px;
   }
 }

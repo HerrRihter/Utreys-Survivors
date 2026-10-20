@@ -1,5 +1,6 @@
 import { nodeResolved, nodeAvailable } from '../../systems/queries/nodes.js';
 import { eventSpec } from '../../systems/queries/events.js';
+import { learningActionNear } from '../../systems/queries/learning.js';
 import {
   abilityRank,
   abilityUpgradeMax,
@@ -42,9 +43,14 @@ const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
 function nodeProgress(s) {
   if (s.learning) {
-    const required = s.nodes.filter((n) => n.required);
-    const rooms = mapDefinitions[s.map].rooms.length;
-    return `Учебные терминалы: ${required.filter(nodeResolved).length}/${required.length} · Комната ${s.learning.roomIndex + 1}/${rooms}`;
+    const l = s.learning,
+      rooms = mapDefinitions[s.map].rooms,
+      required = s.nodes.filter((n) => n.required);
+    return (
+      `Комната ${l.roomIndex + 1}/${rooms.length} · ${rooms[l.roomIndex].name}` +
+      ` · Тесты ${required.filter(nodeResolved).length}/${required.length}` +
+      ` · ${l.points} очков · ${l.reviveUsed ? 'вторая жизнь использована' : 'вторая жизнь есть'}`
+    );
   }
   let next = null,
     nextDistance = Infinity,
@@ -140,6 +146,7 @@ export function hudView({ run, progression, settings, upgrades }) {
       : controlsHint(settings.bindings, s.nodes[0]?.kind === 'desk'),
     stick: run.stickView,
     build: upgrades ? hudBuild(run, upgrades) : null,
-    tip: run.mode === 'play' && run.tip?.left > 0 ? run.tip.text : '',
+    // A test or a room exit within reach takes the tip's place under the hero.
+    tip: run.mode === 'play' && run.tip?.left > 0 && !learningActionNear(s) ? run.tip.text : '',
   };
 }

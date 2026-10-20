@@ -21,11 +21,7 @@ export function LearningScreen() {
         {a.phase === 'intro' && (
           <>
             <p>{a.note}</p>
-            <p>
-              {a.total === 1
-                ? 'Один вопрос — одна попытка. Верный ответ восстанавливает здоровье.'
-                : 'Три вопроса, минимум два верных ответа. После каждого — объяснение.'}
-            </p>
+            <p>{a.terms}</p>
             <p className="learning-source">{a.source}</p>
             <details className="learning-selfcheck">
               <summary>Открытые вопросы для самопроверки</summary>
@@ -36,9 +32,6 @@ export function LearningScreen() {
                 </div>
               ))}
             </details>
-            <button className="primary" onClick={() => commands.advanceLearning(a.id)}>
-              Начать тест
-            </button>
           </>
         )}
         {(a.phase === 'question' || feedback) && (
@@ -100,9 +93,7 @@ export function LearningScreen() {
             </p>
             <p>
               {a.passed
-                ? a.reason === 'revive'
-                  ? 'Вернись в бой с 50% здоровья и защитой на 3 секунды.'
-                  : 'Награда: лечение. Учебные очки начисляются за первый правильный ответ на каждый вопрос.'
+                ? a.reward
                 : a.reason === 'revive'
                   ? 'Попытка возрождения не удалась. Забег завершится.'
                   : a.reason === 'bonus'
@@ -113,6 +104,11 @@ export function LearningScreen() {
               {a.reason === 'revive' && !a.passed ? 'К результатам' : 'Продолжить'}
             </button>
           </>
+        )}
+        {a.phase === 'intro' && (
+          <button className="primary" onClick={() => commands.advanceLearning(a.id)}>
+            Начать тест
+          </button>
         )}
         {a.phase !== 'result' && (
           <button className="small" onClick={() => commands.closeLearning(a.id)}>

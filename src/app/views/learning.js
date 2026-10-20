@@ -1,6 +1,8 @@
 import { learningCourse } from '../../../data/learning-questions.js';
 import { learningRules } from '../../../data/learning-rules.js';
-import { availableTerminal, availableExit, currentRoom } from '../../systems/queries/learning.js';
+import { availableTerminal, availableExit } from '../../systems/queries/learning.js';
+
+const percent = (share) => Math.round(share * 100) + '%';
 
 export function learningView({ run }) {
   const s = run.state,
@@ -9,11 +11,9 @@ export function learningView({ run }) {
   const a = l.active;
   const q = a && learningCourse.questions.find((q) => q.id === a.questions[a.index].id);
   const reveal = a?.phase === 'feedback';
+  const r = learningRules,
+    revival = `вернёшься в бой с ${percent(r.reviveHealth)} здоровья и защитой на ${r.reviveInvulnerability} с`;
   return {
-    room: currentRoom(s).name,
-    roomNumber: l.roomIndex + 1,
-    points: l.points,
-    reviveAvailable: !l.reviveUsed,
     terminals: s.nodes
       .filter((n) => availableTerminal(s, n.id))
       .map((n) => ({ id: n.id, label: n.label })),
@@ -30,7 +30,7 @@ export function learningView({ run }) {
           total: a.questions.length,
           note:
             a.topic === null
-              ? 'Ответь правильно минимум на 2 вопроса из 3: вернёшься в бой с половиной здоровья. При провале или отказе забег закончится.'
+              ? `Ответь верно хотя бы на ${r.passing} из ${r.questions}: ${revival}. При провале или отказе забег закончится.`
               : learningCourse.topics[a.topic].note,
           title:
             a.reason === 'revive'
@@ -51,8 +51,16 @@ export function learningView({ run }) {
           passed: a.passed,
           lastCorrect: a.lastCorrect,
           explanation: reveal ? q.explanation : '',
+          // Quiz terms and rewards, from the rules.
+          terms:
+            a.reason === 'bonus'
+              ? `Вопросов: ${r.bonusQuestions}, нужно верных: ${r.bonusPassing}. Одна попытка: успех лечит на ${percent(r.bonusHeal)} здоровья.`
+              : `Вопросов: ${r.questions}, нужно верных: ${r.passing}. После каждого ответа — объяснение.`,
+          reward:
+            a.reason === 'revive'
+              ? revival[0].toUpperCase() + revival.slice(1) + '.'
+              : `Награда: лечение на ${percent(a.reason === 'bonus' ? r.bonusHeal : r.terminalHeal)} здоровья. Учебные очки (${r.points}) — за первый верный ответ на каждый вопрос.`,
           source: learningCourse.source,
-          pointsPerAnswer: learningRules.points,
         }
       : null,
   };

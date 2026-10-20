@@ -58,23 +58,19 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
         </div>
       </div>
 
-      {learning && run.mode === 'play' && (
+      {/* Near a terminal or the room exit only; the room summary is the progress line. */}
+      {learning && run.mode === 'play' && (learning.terminals.length > 0 || learning.exit) && (
         <div className="learning-hud">
-          <strong>
-            Комната {learning.roomNumber}/4 · {learning.room}
-          </strong>
-          <span>
-            {learning.points} очков ·{' '}
-            {learning.reviveAvailable ? 'Вторая жизнь доступна' : 'Вторая жизнь использована'}
-          </span>
           {learning.terminals.map((n: LearningTerminal) => (
-            <button key={n.id} onClick={() => commands.startLearningTest(n.id)}>
+            <button key={n.id} className="primary" onClick={() => commands.startLearningTest(n.id)}>
               Тест: {n.label}
             </button>
           ))}
           {learning.exit && (
             <>
-              <button onClick={commands.moveLearningRoom}>В следующую комнату →</button>
+              <button className="primary" onClick={commands.moveLearningRoom}>
+                В следующую комнату →
+              </button>
               <small>Неподобранные предметы останутся здесь</small>
             </>
           )}

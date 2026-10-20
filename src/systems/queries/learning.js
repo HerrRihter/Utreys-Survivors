@@ -27,3 +27,7 @@ export function availableExit(s) {
     s.nodes.some((n) => n.room === s.learning.roomIndex && n.required && n.status === 'completed')
   );
 }
+
+// Whether the HUD offers a test or the way to the next room right now.
+export const learningActionNear = (s) =>
+  !!s?.learning && (s.nodes.some((n) => availableTerminal(s, n.id)) || availableExit(s));

@@ -103,6 +103,49 @@ const screens = [
         .find((b) => b.textContent.trim() === 'КАРТА')
         .click(),
   },
+  // Learning map: the test button by a terminal, then a test's intro, question and revival.
+  {
+    name: 'learning-hud',
+    hud: true,
+    open: (s) => {
+      s.selectMap('learningLab');
+      s.start();
+      s.state.spawn = 9999;
+      const terminal = s.state.nodes.find((n) => n.status === 'available');
+      Object.assign(s.state.p, { x: terminal.x, y: terminal.y });
+      s.update(0.016);
+    },
+  },
+  {
+    name: 'learning-intro',
+    open: (s) => {
+      s.selectMap('learningLab');
+      s.start();
+      const terminal = s.state.nodes.find((n) => n.status === 'available');
+      Object.assign(s.state.p, { x: terminal.x, y: terminal.y });
+      s.commands.startLearningTest(terminal.id);
+    },
+  },
+  {
+    name: 'learning-question',
+    open: (s) => {
+      s.selectMap('learningLab');
+      s.start();
+      const terminal = s.state.nodes.find((n) => n.status === 'available');
+      Object.assign(s.state.p, { x: terminal.x, y: terminal.y });
+      s.commands.startLearningTest(terminal.id);
+      s.commands.advanceLearning(s.state.learning.active.id);
+    },
+  },
+  {
+    name: 'learning-revive',
+    open: (s) => {
+      s.selectMap('learningLab');
+      s.start();
+      s.state.p.hp = 0;
+      s.update(0.016);
+    },
+  },
   {
     name: 'result',
     open: (s) => {
@@ -201,6 +244,7 @@ function inspect({ minTouch, touch, hud, maxCover, maxCoverHero }) {
       '#hud .topcenter',
       '#nodeProgress',
       '#runEvent',
+      '.learning-hud',
       '#abilities',
       '#actions',
       '#stick',
@@ -377,7 +421,7 @@ async function main(argv) {
         const result = await page.evaluate(inspect, {
           minTouch: MIN_TOUCH,
           touch: !!size.touch,
-          hud: screen.name === 'hud',
+          hud: screen.hud ?? screen.name === 'hud',
           maxCover: MAX_COVER,
           maxCoverHero: MAX_COVER_HERO,
         });
