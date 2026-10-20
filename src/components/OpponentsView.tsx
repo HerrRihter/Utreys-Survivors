@@ -2,7 +2,7 @@ import { useOpponentPreview } from '../ui/useOpponentPreview';
 import { ALL_UNIT_KEYS, OPPONENTS_META, type UnitKey } from '../ui/opponent-details';
 import { Dialog } from './Dialog';
 import React, { useRef, useState, useMemo } from 'react';
-import { unitDefinitions, enemyDamageScale } from '../../data/enemies/units.js';
+import { unitDefinitions, enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { waveTiming } from '../ui/wave-preview.js';
 import { arenaDefinitions } from '../world/arenas.js';
@@ -342,7 +342,7 @@ export const OpponentsView: React.FC = () => {
                     fontWeight: 'bold',
                   }}
                 >
-                  <span>{u.hp} HP</span>
+                  <span>{Math.round(u.hp * enemyHpScale)} HP</span>
                   <span>·</span>
                   <span>{Math.max(1, Math.round(u.damage * enemyDamageScale))} УРОНА</span>
                   <span>·</span>

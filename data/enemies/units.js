@@ -22,8 +22,10 @@
 //   phases     boss only: at a health share `at`, summons adds and gains new attacks
 //   passive    never attacks (a structure that only summons)
 //   labelAbove height of the name tag over the feet, for art taller than the radius
-// Every enemy hit, bosses included, is this much stronger than the numbers below.
-export const enemyDamageScale = 1.1;
+// Every enemy, bosses included, has this much more health and hits this much harder than
+// the numbers below.
+export const enemyHpScale = 1.15;
+export const enemyDamageScale = 1.1 * 1.15;
 
 export const unitDefinitions = {
   l3: {

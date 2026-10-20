@@ -7,7 +7,7 @@ const {
   production,
   rewardPerLevel,
 } = require('../data/difficulty.js');
-const { unitDefinitions } = require('../data/enemies/units.js');
+const { unitDefinitions, enemyHpScale } = require('../data/enemies/units.js');
 const { waveSchedules } = require('../data/enemies/waves.js');
 const { snapshotRun } = require('../src/systems/run-snapshot.js');
 
@@ -51,9 +51,10 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
   assert.equal(s.load, 2);
   s.spawn = 9999;
   const enemy = game.spawn('l3', false, { x: s.p.x + 300, y: s.p.y });
-  // The opening stage's strength applies first, then the load level.
+  // The opening stage's strength applies first, then the global health scale, then the load.
   const opening = waveSchedules.empty.normal.stages[0].strength;
-  assert.equal(enemy.max, Math.round(Math.round(unitDefinitions.l3.hp * opening) * 1.2));
+  const scaled = Math.round(Math.round(unitDefinitions.l3.hp * opening) * enemyHpScale);
+  assert.equal(enemy.max, Math.round(scaled * 1.2));
   s.earned = 100;
   const codes = P.codes;
   game.finish(true);

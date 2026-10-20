@@ -11,9 +11,26 @@ export function App() {
   useEffect(() => {
     document.body.dataset.view = currentView;
   }, [currentView]);
+  // A pinch zoom in mobile Chrome can leave the page scrolled once it is back to 100%, with
+  // the top of the UI off screen and no way to scroll it back: return it to the origin.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const settle = () => {
+      if ((!viewport || viewport.scale <= 1.01) && (window.scrollX || window.scrollY))
+        window.scrollTo(0, 0);
+    };
+    viewport?.addEventListener('resize', settle);
+    window.addEventListener('scroll', settle);
+    return () => {
+      viewport?.removeEventListener('resize', settle);
+      window.removeEventListener('scroll', settle);
+    };
+  }, []);
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    // Pinned to the visible viewport: 100vh is taller than the screen in mobile Chrome while
+    // its address bar is shown, and the page could then scroll the top of the UI away.
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
       {/* Top Quick Navigation Bar when in menu or browsing */}
       {currentView !== 'game' && (
         <nav className="view-navigation" aria-label="Разделы игры">
@@ -60,8 +77,8 @@ export function App() {
       <div
         style={{
           display: currentView === 'game' ? 'block' : 'none',
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
         }}
       >
         <GameView
