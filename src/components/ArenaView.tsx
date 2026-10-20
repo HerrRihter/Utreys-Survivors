@@ -62,101 +62,34 @@ export const ArenaView: React.FC = () => {
   };
 
   return (
-    <div
-      className="overlay"
-      style={{
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        background: '#0a1619',
-        color: 'var(--ink)',
-        padding: '80px 24px 24px',
-      }}
-    >
-      <main style={{ maxWidth: '1220px', margin: '0 auto', width: '100%', flexShrink: 0 }}>
-        <header
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '20px',
-            marginBottom: '16px',
-          }}
-        >
+    <div id="arenaView" className="overlay catalog">
+      <main className="catalog-main">
+        <header className="catalog-header">
           <div>
-            <div
-              className="eyebrow"
-              style={{
-                color: 'var(--cyan)',
-                fontSize: '11px',
-                letterSpacing: '2px',
-                marginBottom: '4px',
-              }}
-            >
-              СЕРВЕРНАЯ ИНФРАСТРУКТУРА
-            </div>
-            <h1 style={{ margin: 0, fontSize: '32px', color: 'var(--cyan)' }}>{arena.name}</h1>
-            <p
-              style={{
-                color: '#a0bec7',
-                maxWidth: '880px',
-                margin: '8px 0 0',
-                fontSize: '14px',
-                lineHeight: 1.6,
-              }}
-            >
-              {arena.description}
-            </p>
+            <div className="eyebrow">СЕРВЕРНАЯ ИНФРАСТРУКТУРА</div>
+            <h1>{arena.name}</h1>
+            <p>{arena.description}</p>
           </div>
         </header>
 
-        <nav
-          style={{
-            display: 'flex',
-            gap: '14px',
-            flexWrap: 'wrap',
-            margin: '16px 0',
-            alignItems: 'center',
-          }}
-        >
+        <nav className="catalog-controls">
           <button
             type="button"
-            className="small"
+            className={!isClose ? 'small is-current' : 'small'}
             onClick={() => setIsClose(false)}
-            style={{
-              borderColor: !isClose ? 'var(--cyan)' : undefined,
-              color: !isClose ? 'var(--cyan)' : undefined,
-            }}
           >
             Весь кластер
           </button>
 
           <button
             type="button"
-            className="small"
+            className={isClose ? 'small is-current' : 'small'}
             onClick={() => setIsClose(true)}
-            style={{
-              borderColor: isClose ? 'var(--cyan)' : undefined,
-              color: isClose ? 'var(--cyan)' : undefined,
-            }}
           >
             Центральное ядро
           </button>
 
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              color: '#90b4bc',
-            }}
-          >
+          <label className="catalog-check">
             <input
               type="checkbox"
               checked={showLabels}
@@ -165,16 +98,7 @@ export const ArenaView: React.FC = () => {
             Узлы сети
           </label>
 
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              color: '#90b4bc',
-            }}
-          >
+          <label className="catalog-check">
             <input
               type="checkbox"
               checked={showBounds}
@@ -184,24 +108,14 @@ export const ArenaView: React.FC = () => {
           </label>
         </nav>
 
-        {arena.notes && (
-          <p style={{ fontSize: '12px', color: '#00e5ffaa', margin: '4px 0 16px' }}>
-            {arena.notes}
-          </p>
-        )}
+        {arena.notes && <p className="arena-notes">{arena.notes}</p>}
 
         <canvas
           ref={canvasRef}
           width={1320}
           height={1000}
           aria-label={`План дата-центра: ${arena.name}`}
-          style={{
-            display: 'block',
-            width: '100%',
-            border: '1px solid #1a5763',
-            background: '#0a1619',
-            borderRadius: '4px',
-          }}
+          className="arena-plan"
         />
       </main>
     </div>

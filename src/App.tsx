@@ -30,43 +30,24 @@ export function App() {
   return (
     // Pinned to the visible viewport: 100vh is taller than the screen in mobile Chrome while
     // its address bar is shown, and the page could then scroll the top of the UI away.
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
+    <div className="app-root">
       {/* Top Quick Navigation Bar when in menu or browsing */}
       {currentView !== 'game' && (
         <nav className="view-navigation" aria-label="Разделы игры">
-          <button
-            type="button"
-            className="small"
-            onClick={() => setCurrentView('game')}
-            style={{
-              borderColor: 'var(--cyan)',
-              color: 'var(--cyan)',
-              cursor: 'pointer',
-            }}
-          >
+          <button type="button" className="small is-current" onClick={() => setCurrentView('game')}>
             ← В игру
           </button>
           <button
             type="button"
-            className="small"
+            className={currentView === 'arena' ? 'small is-current' : 'small'}
             onClick={() => setCurrentView('arena')}
-            style={{
-              borderColor: currentView === 'arena' ? 'var(--cyan)' : undefined,
-              color: currentView === 'arena' ? 'var(--cyan)' : undefined,
-              cursor: 'pointer',
-            }}
           >
             Дата-центр Utrace
           </button>
           <button
             type="button"
-            className="small"
+            className={currentView === 'opponents' ? 'small is-current' : 'small'}
             onClick={() => setCurrentView('opponents')}
-            style={{
-              borderColor: currentView === 'opponents' ? 'var(--cyan)' : undefined,
-              color: currentView === 'opponents' ? 'var(--cyan)' : undefined,
-              cursor: 'pointer',
-            }}
           >
             Враги и клиенты
           </button>
@@ -74,13 +55,7 @@ export function App() {
       )}
 
       {/* Main Game View kept mounted to maintain canvas context, audio state and game session */}
-      <div
-        style={{
-          display: currentView === 'game' ? 'block' : 'none',
-          width: '100%',
-          height: '100%',
-        }}
-      >
+      <div className={currentView === 'game' ? 'game-frame' : 'game-frame is-hidden'}>
         <GameView
           active={currentView === 'game'}
           onNavigateToArena={() => setCurrentView('arena')}
@@ -89,13 +64,13 @@ export function App() {
       </div>
 
       {currentView === 'arena' && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
+        <div className="view-frame">
           <ArenaView />
         </div>
       )}
 
       {currentView === 'opponents' && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
+        <div className="view-frame">
           <OpponentsView />
         </div>
       )}

@@ -52,55 +52,21 @@ export const OpponentsView: React.FC = () => {
     description: 'Высоконагруженный контур валидации данных и стресс-тестирования сервисов Utrace.',
   };
 
+  const tab = (category: typeof filterCategory) =>
+    filterCategory === category ? 'small is-current' : 'small';
+  const inspected = inspectedUnit && {
+    meta: OPPONENTS_META[inspectedUnit],
+    unit: (unitDefinitions as Record<string, any>)[inspectedUnit],
+  };
+
   return (
-    <div
-      className="overlay"
-      style={{
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        background: '#081215',
-        color: 'var(--ink)',
-        padding: '80px 24px 24px',
-      }}
-    >
-      <main style={{ maxWidth: '1180px', margin: '0 auto', width: '100%', flexShrink: 0 }}>
-        {/* Header */}
-        <header
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '20px',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-          }}
-        >
+    <div id="opponentsView" className="overlay catalog">
+      <main className="catalog-main">
+        <header className="catalog-header">
           <div>
-            <div
-              className="eyebrow"
-              style={{ color: 'var(--cyan)', letterSpacing: '3px', fontSize: '12px' }}
-            >
-              РЕЕСТР КОНТУРОВ И КЛИЕНТОВ
-            </div>
-            <h1
-              style={{ fontSize: '38px', lineHeight: 1.15, margin: '8px 0', color: 'var(--cyan)' }}
-            >
-              Враги и клиенты Utrace
-            </h1>
-            <p
-              style={{
-                maxWidth: '850px',
-                color: '#9bb8bf',
-                margin: 0,
-                fontSize: '14px',
-                lineHeight: 1.6,
-              }}
-            >
+            <div className="eyebrow">РЕЕСТР КОНТУРОВ И КЛИЕНТОВ</div>
+            <h1>Враги и клиенты Utrace</h1>
+            <p>
               Полная база сущностей: регулятор ЦРПТ, промежуточный контур L3 и ключевые клиенты
               (Пепси, Инбев, Марс), формирующие высоконагруженный поток данных маркировки.
             </p>
@@ -108,59 +74,24 @@ export const OpponentsView: React.FC = () => {
         </header>
 
         {/* Navigation, Filter Tabs and Controls */}
-        <nav
-          style={{
-            display: 'flex',
-            gap: '12px',
-            flexWrap: 'wrap',
-            margin: '16px 0',
-            alignItems: 'center',
-            background: 'var(--panel)',
-            padding: '12px 16px',
-            borderRadius: '6px',
-            border: '1px solid #1a5763',
-          }}
-        >
+        <nav className="catalog-controls">
           {/* Category Filter Tabs */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="small"
-              onClick={() => setFilterCategory('all')}
-              style={{
-                borderColor: filterCategory === 'all' ? 'var(--cyan)' : 'var(--panel-border)',
-                background: filterCategory === 'all' ? '#13353e' : '#0e252b',
-                color: filterCategory === 'all' ? 'var(--cyan)' : '#d0e7eb',
-                fontWeight: filterCategory === 'all' ? 'bold' : 'normal',
-              }}
-            >
+          <div className="opponents-tabs">
+            <button type="button" className={tab('all')} onClick={() => setFilterCategory('all')}>
               Все сущности ({ALL_UNIT_KEYS.length})
             </button>
             <button
               type="button"
-              className="small"
+              className={tab('regulators')}
               onClick={() => setFilterCategory('regulators')}
-              style={{
-                borderColor:
-                  filterCategory === 'regulators' ? 'var(--cyan)' : 'var(--panel-border)',
-                background: filterCategory === 'regulators' ? '#13353e' : '#0e252b',
-                color: filterCategory === 'regulators' ? 'var(--cyan)' : '#d0e7eb',
-                fontWeight: filterCategory === 'regulators' ? 'bold' : 'normal',
-              }}
             >
               Регуляторы и баги (
               {ALL_UNIT_KEYS.filter((key) => OPPONENTS_META[key].category === 'regulators').length})
             </button>
             <button
               type="button"
-              className="small"
+              className={tab('clients')}
               onClick={() => setFilterCategory('clients')}
-              style={{
-                borderColor: filterCategory === 'clients' ? 'var(--cyan)' : 'var(--panel-border)',
-                background: filterCategory === 'clients' ? '#13353e' : '#0e252b',
-                color: filterCategory === 'clients' ? 'var(--cyan)' : '#d0e7eb',
-                fontWeight: filterCategory === 'clients' ? 'bold' : 'normal',
-              }}
             >
               Клиенты FMCG (
               {ALL_UNIT_KEYS.filter((key) => OPPONENTS_META[key].category === 'clients').length})
@@ -168,28 +99,12 @@ export const OpponentsView: React.FC = () => {
           </div>
 
           {/* Animation Global Controls */}
-          <div
-            style={{
-              marginLeft: 'auto',
-              display: 'flex',
-              gap: '12px',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
-              <span style={{ color: '#9bb8bf' }}>Режим:</span>
+          <div className="opponents-motion">
+            <label className="opponents-mode">
+              <span>Режим:</span>
               <select
                 value={motion}
                 onChange={(e) => setMotion(e.target.value as 'walk' | 'attack' | 'hurt')}
-                style={{
-                  background: '#0f272d',
-                  color: 'var(--cyan)',
-                  border: '1px solid #1a5763',
-                  padding: '5px 10px',
-                  borderRadius: '4px',
-                  font: 'inherit',
-                }}
               >
                 <option value="walk">Движение</option>
                 <option value="attack">Атака / Запрос (Attack)</option>
@@ -199,23 +114,13 @@ export const OpponentsView: React.FC = () => {
 
             <button
               type="button"
-              className="small"
+              className="small opponents-pause"
               onClick={() => setFrozen(!frozen)}
-              style={{ padding: '5px 12px' }}
             >
               {frozen ? '▶ Продолжить' : '⏸ Пауза'}
             </button>
 
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                color: '#9bb8bf',
-              }}
-            >
+            <label className="catalog-check">
               <input
                 type="checkbox"
                 checked={reverse}
@@ -227,14 +132,7 @@ export const OpponentsView: React.FC = () => {
         </nav>
 
         {/* Entities Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
-            gap: '18px',
-            margin: '22px 0',
-          }}
-        >
+        <div className="opponents-grid">
           {filteredUnits.map((unit) => {
             const u = (unitDefinitions as Record<string, any>)[unit];
             if (!u) return null;
@@ -249,41 +147,13 @@ export const OpponentsView: React.FC = () => {
             }
 
             return (
-              <article
-                key={unit}
-                style={{
-                  background: 'var(--panel)',
-                  border: `1px solid ${isBoss ? '#ffd600' : 'var(--panel-border)'}`,
-                  boxShadow: isBoss
-                    ? '0 0 20px rgba(255, 214, 0, 0.2)'
-                    : '0 4px 16px rgba(0,0,0,0.4)',
-                  padding: '20px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'border-color 0.2s',
-                }}
-              >
+              <article key={unit} className={isBoss ? 'opponent-card is-boss' : 'opponent-card'}>
                 {/* Header Badge */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '10px',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      color: meta.badgeColor,
-                      letterSpacing: '1px',
-                    }}
-                  >
+                <div className="opponent-badges">
+                  <span className="opponent-badge" style={{ color: meta.badgeColor }}>
                     {meta.badge}
                   </span>
-                  {isBoss && <span style={{ color: '#ffd600', fontSize: '18px' }}>★ БОСС</span>}
+                  {isBoss && <span className="opponent-boss">★ БОСС</span>}
                 </div>
 
                 {/* Interactive Canvas Preview */}
@@ -295,53 +165,19 @@ export const OpponentsView: React.FC = () => {
                   width={320}
                   height={195}
                   aria-label={u.name}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    height: 'auto',
-                    aspectRatio: '16/10',
-                    imageRendering: 'pixelated',
-                    borderRadius: '6px',
-                    border: '1px solid #163a43',
-                    marginBottom: '14px',
-                    background: '#08171a',
-                  }}
+                  className="opponent-preview"
                 />
 
                 {/* Unit Name and Role */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'baseline',
-                  }}
-                >
-                  <h2 style={{ fontSize: '24px', margin: '0 0 4px', color: u.color }}>{u.name}</h2>
-                  <span style={{ fontSize: '12px', color: 'var(--teal)', fontFamily: 'monospace' }}>
-                    +{u.xp} кодов
-                  </span>
+                <div className="opponent-name">
+                  <h2 style={{ color: u.color }}>{u.name}</h2>
+                  <span>+{u.xp} кодов</span>
                 </div>
 
-                <div style={{ fontSize: '12px', color: '#7e9fa8', marginBottom: '8px' }}>
-                  {meta.role}
-                </div>
+                <div className="opponent-role">{meta.role}</div>
 
                 {/* Stats Bar */}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '12px',
-                    fontSize: '12px',
-                    color: 'var(--teal)',
-                    background: '#0e252b',
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                    border: '1px solid #1a5763',
-                    marginBottom: '10px',
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                  }}
-                >
+                <div className="opponent-stats">
                   <span>{Math.round(u.hp * enemyHpScale)} HP</span>
                   <span>·</span>
                   <span>{Math.max(1, Math.round(u.damage * enemyDamageScale))} УРОНА</span>
@@ -352,60 +188,26 @@ export const OpponentsView: React.FC = () => {
                 </div>
 
                 {/* Timing */}
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--cyan)',
-                    margin: '4px 0 8px',
-                    fontWeight: 600,
-                  }}
-                >
-                  Тайминг: {timing}
-                </div>
+                <div className="opponent-timing">Тайминг: {timing}</div>
 
                 {/* Description */}
-                <p
-                  style={{
-                    fontSize: '13px',
-                    color: '#a4c1c9',
-                    margin: '0 0 16px',
-                    lineHeight: 1.55,
-                    minHeight: '60px',
-                  }}
-                >
-                  {meta.description}
-                </p>
+                <p className="opponent-description">{meta.description}</p>
 
                 {/* Interactive Action Buttons */}
-                <div style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+                <div className="opponent-actions">
                   <button
                     type="button"
-                    className="small"
+                    className="small opponent-attack"
                     aria-label={`Тест атаки: ${u.name}`}
                     onClick={() => triggerUnitAttack(unit)}
-                    style={{
-                      flex: 1,
-                      borderColor: 'var(--cyan)',
-                      color: 'var(--cyan)',
-                      padding: '7px 10px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
                   >
                     ⚡ Тест атаки
                   </button>
                   <button
                     type="button"
-                    className="small"
+                    className="small opponent-spec"
                     aria-label={`Спецификация: ${u.name}`}
                     onClick={() => setInspectedUnit(unit)}
-                    style={{
-                      borderColor: 'var(--panel-border)',
-                      color: 'var(--teal)',
-                      padding: '7px 12px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
                   >
                     Спецификация
                   </button>
@@ -416,211 +218,88 @@ export const OpponentsView: React.FC = () => {
         </div>
 
         {/* Datacenter Schema Map */}
-        <div
-          style={{
-            marginTop: '36px',
-            background: 'var(--panel)',
-            border: '1px solid #1a5763',
-            padding: '24px',
-            borderRadius: '8px',
-          }}
-        >
-          <div
-            className="eyebrow"
-            style={{ color: 'var(--cyan)', fontSize: '11px', marginBottom: '6px' }}
-          >
-            ТОПОЛОГИЯ КЛАСТЕРА
-          </div>
-          <h3 style={{ margin: '0 0 8px', color: 'var(--cyan)', fontSize: '22px' }}>
-            {currentArena.name}
-          </h3>
-          <p style={{ fontSize: '13px', color: '#8fb1b9', margin: '0 0 16px', maxWidth: '850px' }}>
+        <div className="opponents-schema">
+          <div className="eyebrow">ТОПОЛОГИЯ КЛАСТЕРА</div>
+          <h3>{currentArena.name}</h3>
+          <p>
             Центральное серверное ядро Utrace окружено кольцевыми шинами передачи данных и шлюзами
             валидации. Клиенты подключаются по периметру и создают входящий поток маркировки.
           </p>
-          <canvas
-            ref={canvasMapRef}
-            width={550}
-            height={550}
-            aria-label="Карта дата-центра"
-            style={{
-              width: '100%',
-              maxWidth: '440px',
-              display: 'block',
-              border: '1px solid #1a5763',
-              borderRadius: '6px',
-              background: '#0a1619',
-            }}
-          />
+          <canvas ref={canvasMapRef} width={550} height={550} aria-label="Карта дата-центра" />
         </div>
       </main>
 
       {/* Detail Technical Inspection Modal */}
-      {inspectedUnit && (
+      {inspectedUnit && inspected && (
         <Dialog titleId="opponent-title" onClose={() => setInspectedUnit(null)}>
           <div
-            style={{
-              background: 'var(--panel)',
-              border: `1px solid ${OPPONENTS_META[inspectedUnit].badgeColor}`,
-              boxShadow: `0 12px 48px rgba(0,0,0,0.8), 0 0 24px ${OPPONENTS_META[inspectedUnit].badgeColor}33`,
-              borderRadius: '10px',
-              padding: '28px',
-              maxWidth: '560px',
-              width: '100%',
-              color: 'var(--ink)',
-            }}
+            className="opponent-sheet"
+            style={
+              {
+                '--badge': inspected.meta.badgeColor,
+                '--badge-glow': inspected.meta.badgeColor + '33',
+              } as React.CSSProperties
+            }
             onClick={(e) => e.stopPropagation()}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '14px',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  color: OPPONENTS_META[inspectedUnit].badgeColor,
-                  letterSpacing: '1px',
-                }}
-              >
-                {OPPONENTS_META[inspectedUnit].badge}
+            <div className="opponent-sheet-head">
+              <span className="opponent-badge" style={{ color: inspected.meta.badgeColor }}>
+                {inspected.meta.badge}
               </span>
               <button
                 type="button"
-                className="small"
+                className="small opponent-close"
                 onClick={() => setInspectedUnit(null)}
-                style={{ padding: '4px 10px', fontSize: '12px' }}
               >
                 ✕
               </button>
             </div>
 
-            <h2
-              id="opponent-title"
-              style={{
-                fontSize: '28px',
-                margin: '0 0 6px',
-                color: (unitDefinitions as Record<string, any>)[inspectedUnit]?.color,
-              }}
-            >
-              {(unitDefinitions as Record<string, any>)[inspectedUnit]?.name}
+            <h2 id="opponent-title" style={{ color: inspected.unit?.color }}>
+              {inspected.unit?.name}
             </h2>
-            <div style={{ fontSize: '13px', color: '#7e9fa8', marginBottom: '16px' }}>
-              {OPPONENTS_META[inspectedUnit].role}
-            </div>
+            <div className="opponent-sheet-role">{inspected.meta.role}</div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '10px',
-                marginBottom: '18px',
-                fontSize: '12px',
-              }}
-            >
-              <div
-                style={{
-                  background: '#0e252b',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #1a5763',
-                }}
-              >
-                <span style={{ color: '#7e9fa8', display: 'block', marginBottom: '3px' }}>
-                  ПРОТОКОЛ ОБМЕНА:
-                </span>
-                <strong style={{ color: 'var(--cyan)' }}>
-                  {OPPONENTS_META[inspectedUnit].protocol}
-                </strong>
+            <div className="opponent-facts">
+              <div>
+                <span>ПРОТОКОЛ ОБМЕНА:</span>
+                <strong className="fact-protocol">{inspected.meta.protocol}</strong>
               </div>
-              <div
-                style={{
-                  background: '#0e252b',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #1a5763',
-                }}
-              >
-                <span style={{ color: '#7e9fa8', display: 'block', marginBottom: '3px' }}>
-                  ЧАСТОТА ЗАПРОСОВ:
-                </span>
-                <strong style={{ color: 'var(--teal)' }}>
-                  {OPPONENTS_META[inspectedUnit].frequency}
-                </strong>
+              <div>
+                <span>ЧАСТОТА ЗАПРОСОВ:</span>
+                <strong className="fact-frequency">{inspected.meta.frequency}</strong>
               </div>
-              <div
-                style={{
-                  background: '#0e252b',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #1a5763',
-                  gridColumn: 'span 2',
-                }}
-              >
-                <span style={{ color: '#7e9fa8', display: 'block', marginBottom: '3px' }}>
-                  УРОВЕНЬ АГРЕГАЦИИ:
-                </span>
-                <strong style={{ color: 'var(--ink)' }}>
-                  {OPPONENTS_META[inspectedUnit].aggregation}
-                </strong>
+              <div className="fact-wide">
+                <span>УРОВЕНЬ АГРЕГАЦИИ:</span>
+                <strong className="fact-aggregation">{inspected.meta.aggregation}</strong>
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ margin: '0 0 6px', color: 'var(--cyan)', fontSize: '14px' }}>
-                Описание контура
-              </h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#a4c1c9', lineHeight: 1.6 }}>
-                {OPPONENTS_META[inspectedUnit].description}
-              </p>
+            <div className="opponent-sheet-section">
+              <h4>Описание контура</h4>
+              <p>{inspected.meta.description}</p>
             </div>
 
-            <div style={{ marginBottom: '22px' }}>
-              <h4 style={{ margin: '0 0 6px', color: '#ffd600', fontSize: '14px' }}>
-                Рекомендации по тактике
-              </h4>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '13px',
-                  color: '#d0e7eb',
-                  lineHeight: 1.6,
-                  background: '#112930',
-                  padding: '10px 12px',
-                  borderRadius: '4px',
-                  border: '1px solid #1c4b56',
-                }}
-              >
-                {OPPONENTS_META[inspectedUnit].tactics}
-              </p>
+            <div className="opponent-sheet-section opponent-tactics">
+              <h4>Рекомендации по тактике</h4>
+              <p>{inspected.meta.tactics}</p>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div className="opponent-sheet-actions">
               <button
                 type="button"
-                className="small"
+                className="small opponent-attack-all"
                 onClick={() => {
                   triggerUnitAttack(inspectedUnit);
                   setInspectedUnit(null);
                 }}
-                style={{ borderColor: 'var(--cyan)', color: 'var(--cyan)' }}
               >
                 ⚡ Запустить тест атаки
               </button>
               <button
                 type="button"
-                className="primary"
+                className="primary opponent-done"
                 onClick={() => setInspectedUnit(null)}
-                style={{
-                  background: 'var(--cyan)',
-                  color: '#041724',
-                  padding: '8px 18px',
-                  fontSize: '13px',
-                }}
               >
                 Закрыть
               </button>
