@@ -6,6 +6,7 @@ import { unitDefinitions, enemyDamageScale, enemyHpScale } from '../../data/enem
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { waveTiming } from '../ui/wave-preview.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
+import { MapSelect, type MapId } from './MapSelect';
 
 export const OpponentsView: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<'all' | 'regulators' | 'clients'>('all');
@@ -20,7 +21,8 @@ export const OpponentsView: React.FC = () => {
   const canvasMapRef = useRef<HTMLCanvasElement>(null);
   const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map());
 
-  const schedule = getWaveSchedule('empty');
+  const [map, setMap] = useState<MapId>('empty');
+  const schedule = getWaveSchedule(map);
 
   const filteredUnits = useMemo(() => {
     return ALL_UNIT_KEYS.filter((key) => {
@@ -45,12 +47,10 @@ export const OpponentsView: React.FC = () => {
     canvasMapRef,
     phaseRef,
     radarRef,
+    map,
   });
 
-  const currentArena = mapDefinitions.empty || {
-    name: 'Дата-центр Utrace',
-    description: 'Высоконагруженный контур валидации данных и стресс-тестирования сервисов Utrace.',
-  };
+  const currentArena = mapDefinitions[map];
 
   const tab = (category: typeof filterCategory) =>
     filterCategory === category ? 'small is-current' : 'small';
@@ -100,6 +100,7 @@ export const OpponentsView: React.FC = () => {
 
           {/* Animation Global Controls */}
           <div className="opponents-motion">
+            <MapSelect value={map} onChange={setMap} />
             <label className="opponents-mode">
               <span>Режим:</span>
               <select
@@ -139,12 +140,7 @@ export const OpponentsView: React.FC = () => {
             const meta = OPPONENTS_META[unit];
             const isBoss = !!u.boss;
 
-            let timing = isBoss ? 'ГЛАВНЫЙ БОСС · ' : '';
-            try {
-              timing += schedule ? waveTiming(schedule, unit) : 'Активный поток';
-            } catch {
-              timing += 'Активный поток';
-            }
+            const timing = (isBoss ? 'ГЛАВНЫЙ БОСС · ' : '') + waveTiming(schedule, unit);
 
             return (
               <article key={unit} className={isBoss ? 'opponent-card is-boss' : 'opponent-card'}>

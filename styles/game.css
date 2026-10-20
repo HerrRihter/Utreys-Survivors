@@ -3365,3 +3365,21 @@ button:disabled {
   padding: 8px 18px;
   font-size: 13px;
 }
+/* Map choice on both catalog pages, styled like the bestiary's motion select. */
+.catalog .catalog-map {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.catalog .catalog-map span {
+  color: #9bb8bf;
+}
+.catalog .catalog-map select {
+  background: #0f272d;
+  color: var(--cyan);
+  border: 1px solid #1a5763;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font: inherit;
+}

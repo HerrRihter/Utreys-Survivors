@@ -5,9 +5,10 @@ import { createArenas } from '../world/arenas.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
 import { drawCollision } from '../rendering/collision.js';
+import { MapSelect, type MapId } from './MapSelect';
 
 export const ArenaView: React.FC = () => {
-  const selectedArena = 'empty';
+  const [selectedArena, setSelectedArena] = useState<MapId>('empty');
   const [isClose, setIsClose] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showBounds, setShowBounds] = useState<boolean>(false);
@@ -53,13 +54,8 @@ export const ArenaView: React.FC = () => {
     render();
   }, [selectedArena, isClose, showLabels, showBounds]);
 
-  const arena = (
-    mapDefinitions as Record<string, { name: string; description: string; notes?: string }>
-  )[selectedArena] || {
-    name: 'Дата-центр Utrace',
-    description: 'Высоконагруженный серверный контур',
-    notes: '',
-  };
+  const arena: { name: string; description: string; notes?: string } =
+    mapDefinitions[selectedArena];
 
   return (
     <div id="arenaView" className="overlay catalog">
@@ -73,6 +69,8 @@ export const ArenaView: React.FC = () => {
         </header>
 
         <nav className="catalog-controls">
+          <MapSelect value={selectedArena} onChange={setSelectedArena} />
+
           <button
             type="button"
             className={!isClose ? 'small is-current' : 'small'}

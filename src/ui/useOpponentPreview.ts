@@ -19,6 +19,7 @@ export function useOpponentPreview({
   canvasMapRef,
   phaseRef,
   radarRef,
+  map,
 }: {
   motion: 'walk' | 'attack' | 'hurt';
   frozen: boolean;
@@ -28,6 +29,7 @@ export function useOpponentPreview({
   canvasMapRef: RefObject<HTMLCanvasElement | null>;
   phaseRef: RefObject<number>;
   radarRef: RefObject<number>;
+  map: string;
 }) {
   // The bestiary's own renderer; its sprite caches live as long as the page.
   const enemies = useMemo(() => createEnemyRenderer(), []);
@@ -200,7 +202,7 @@ export function useOpponentPreview({
     const renderMap = () => {
       if (!frozen) t += 0.035;
       radarRef.current = t;
-      const world = arenas.get('empty');
+      const world = arenas.get(map);
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.clearRect(0, 0, canvas.width, canvas.height);
       g.setTransform(0.25, 0, 0, 0.25, 0, 0);
@@ -231,5 +233,5 @@ export function useOpponentPreview({
 
     renderMap();
     return () => cancelAnimationFrame(animId);
-  }, [frozen]);
+  }, [frozen, map]);
 }

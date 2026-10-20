@@ -140,7 +140,7 @@ const assets = require('./active-assets.json');
           .screenshot({ path: 'test-results/client-skins.png' });
         await page.locator('#skin-review-sheet').evaluate((element) => element.remove());
         for (const motion of ['attack', 'hurt', 'walk']) {
-          await page.getByRole('combobox').selectOption(motion);
+          await page.getByRole('combobox', { name: /^Режим/ }).selectOption(motion);
           await page.evaluate(
             () =>
               new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
