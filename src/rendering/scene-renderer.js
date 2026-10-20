@@ -101,18 +101,14 @@ export const SceneRenderer = {
             (e.x < minX - 100 || e.x > maxX + 100 || e.y < minY - 100 || e.y > maxY + 100)
           )
             continue;
-          const size = e.boss ? 3.5 : e.player ? 3 : 2.5;
-          ctx.fillStyle = '#14291e66';
-          ctx.beginPath();
-          ctx.ellipse(e.x, e.y, (12 * size) / 2, (4 * size) / 2, 0, 0, Math.PI * 2);
-          ctx.fill();
+          // The hero's and enemies' art draws its own shadow.
           if (e.player)
             sprite(
               ctx,
               e.type,
               e.x,
               e.y,
-              size,
+              3,
               e.flip,
               p.inv > 0 && Math.floor(p.inv * 15) % 2 === 0,
               e,
