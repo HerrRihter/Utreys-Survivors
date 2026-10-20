@@ -9,7 +9,7 @@ async function main() {
     e = { localStorage: { getItem: (k) => saved.get(k), setItem: (k, v) => saved.set(k, v) } };
   e.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
   vm.createContext(e);
-  for (const f of ['src/systems/upgrades.js', 'src/systems/persistence.js'])
+  for (const f of ['src/systems/upgrades.js', 'src/systems/progression/index.js'])
     await loadModule(e, projectRoot + '/' + f, { fresh: false });
   e.Progression = e.createProgression({ storage: e.localStorage });
   const P = e.Progression,
@@ -105,7 +105,7 @@ async function main() {
   const reload = { localStorage: e.localStorage };
   reload.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
   vm.createContext(reload);
-  await loadModule(reload, projectRoot + '/src/systems/persistence.js', { fresh: true });
+  await loadModule(reload, projectRoot + '/src/systems/progression/index.js', { fresh: true });
   reload.Progression = reload.createProgression({ storage: reload.localStorage });
   assert.equal(reload.Progression.data.levels.training_utrace, 1);
   saved.set(
@@ -117,7 +117,7 @@ async function main() {
       levels: { health: 2, power: 1, speed: 3 },
     }),
   );
-  await loadModule(reload, projectRoot + '/src/systems/persistence.js', { fresh: true });
+  await loadModule(reload, projectRoot + '/src/systems/progression/index.js', { fresh: true });
   reload.Progression = reload.createProgression({ storage: reload.localStorage });
   assert.equal(reload.Progression.data.codes, 44);
   assert.equal(reload.Progression.data.levels.health, 2);

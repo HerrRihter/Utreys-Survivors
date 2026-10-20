@@ -111,7 +111,7 @@ async function createHarness({ createSession: withSession = true } = {}) {
   };
   vm.createContext(env);
   for (const file of [
-    'src/systems/persistence.js',
+    'src/systems/progression/index.js',
     'data/enemies/units.js',
     'src/rendering/enemies.js',
     'src/systems/combat.js',

@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { createStore } = require('../src/core/store.js');
-const { createProgression, normalizeProgression } = require('../src/systems/persistence.js');
+const { createProgression, normalizeProgression } = require('../src/systems/progression/index.js');
 const {
   createCloudProgress,
   stableKey,

@@ -16,7 +16,7 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
         setItem: (key, value) => storage.set(key, value),
       },
     };
-    await loadModule(env, path.resolve(__dirname, '../src/systems/persistence.js'));
+    await loadModule(env, path.resolve(__dirname, '../src/systems/progression/index.js'));
     env.Progression = env.createProgression({ storage: env.localStorage });
     return env.Progression;
   };

@@ -6,7 +6,7 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   const storage = { getItem: (k) => saved.get(k) ?? null, setItem: (k, v) => saved.set(k, v) };
   const load = async () => {
     const env = { localStorage: storage };
-    await loadModule(env, path.resolve('src/systems/persistence.js'));
+    await loadModule(env, path.resolve('src/systems/progression/index.js'));
     env.Progression = env.createProgression({ storage: env.localStorage });
     return env.Progression;
   };

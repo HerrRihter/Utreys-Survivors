@@ -5,7 +5,7 @@ const { achievementDefinitions } = require('../data/achievements.js');
 // Stage 4: achievements open weapons, mastery stats feed new achievements, the shop gains
 // greed, luck and head start, level-up controls wait for the first win, and a respec refunds.
 (async () => {
-  const { createProgression } = await import('../src/systems/persistence.js');
+  const { createProgression } = await import('../src/systems/progression/index.js');
   const make = (saved) => {
     const storage = new Map(saved ? [['utreys-progression-v1', JSON.stringify(saved)]] : []);
     return createProgression({

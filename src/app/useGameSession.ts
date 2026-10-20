@@ -1,6 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { GameSession } from './game-session.js';
-import { createProgression } from '../systems/persistence.js';
+import { createProgression } from '../systems/progression/index.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
 import { createRunStats } from '../services/run-stats.js';
 import { createLeaderboard } from '../services/leaderboard.js';

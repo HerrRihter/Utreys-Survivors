@@ -301,7 +301,7 @@ export const GameSession = {
       input.dispose();
       audio.dispose();
       events.dispose();
-      progression.flush?.();
+      progression.flush();
     }
     const read = { run, progression, settings, upgrades };
 

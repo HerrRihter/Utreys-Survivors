@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { createStore } = require('../src/core/store.js');
-const { createProgression } = require('../src/systems/persistence.js');
+const { createProgression } = require('../src/systems/progression/index.js');
 const {
   applyRun,
   emptyScope,

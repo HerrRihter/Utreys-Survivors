@@ -1,5 +1,5 @@
 import { createStore } from '../core/store.js';
-import { normalizeProgression } from '../systems/persistence.js';
+import { normalizeProgression } from '../systems/progression/index.js';
 
 // Keeps progress/{uid} in Firestore in step with the local save (docs/FIREBASE-PLAN.md,
 // «Синхронизация прогресса»). localStorage stays the source the game reads; the cloud copy

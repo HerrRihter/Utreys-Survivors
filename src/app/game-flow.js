@@ -51,7 +51,7 @@ export const GameFlow = {
       const s = run.state;
       if (!s?.runId) return null;
       const counted = s.statsCounted ?? { kills: 0, codes: 0 };
-      const improved = progression.recordRunResult?.({
+      const improved = progression.recordRunResult({
         runId: s.runId,
         map: s.map,
         hero: run.selected,

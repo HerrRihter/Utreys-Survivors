@@ -119,12 +119,12 @@ export const CombatSystem = {
             `${unitDefinitions[e.unit].name} повержен в продакшене! +${production.bossReward} кодов`,
           );
           audio.effect('boss');
-          progression.recordBossKill?.();
+          progression.recordBossKill();
         } else if (e.boss) {
           run.state.bossDead = true;
           toast(unitDefinitions[e.unit].name + ' повержен! Заверши валидацию контура!');
           audio.effect('boss');
-          progression.recordBossKill?.();
+          progression.recordBossKill();
         }
       }
     }

@@ -183,7 +183,7 @@ async function play(hero, map, seed) {
   const h = await createHarness();
   const P = h.env.Progression;
   P.earn(1e6);
-  for (const id of heroIds) P.buyHero?.(id);
+  for (const id of heroIds) P.buyHero(id);
   // Every map open, as after the first win.
   for (const id of Object.keys(mapDefinitions))
     P.recordRunStats({ win: true, hero: 'utrace', map: id, time: 600 });

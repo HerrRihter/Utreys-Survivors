@@ -10,7 +10,7 @@ async function main() {
     };
     e.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
     vm.createContext(e);
-    await loadModule(e, projectRoot + '/src/systems/persistence.js', { fresh: false });
+    await loadModule(e, projectRoot + '/src/systems/progression/index.js', { fresh: false });
     e.Progression = e.createProgression({ storage: e.localStorage });
     return e.Progression;
   }
@@ -65,7 +65,7 @@ async function main() {
   };
   e.AssetPaths = { url: (relative) => 'assets/runtime/' + relative };
   vm.createContext(e);
-  await loadModule(e, projectRoot + '/src/systems/persistence.js', { fresh: false });
+  await loadModule(e, projectRoot + '/src/systems/progression/index.js', { fresh: false });
   e.Progression = e.createProgression({ storage: e.localStorage });
   e.Progression.earn(3);
   assert.equal(e.Progression.data.codes, 3);
@@ -106,7 +106,7 @@ async function main() {
     addEventListener: (name, fn) => (events[name] = fn),
     document: { hidden: false, addEventListener: (name, fn) => (docEvents[name] = fn) },
   };
-  await loadModule(batched, projectRoot + '/src/systems/persistence.js');
+  await loadModule(batched, projectRoot + '/src/systems/progression/index.js');
   batched.Progression = batched.createProgression({ storage: batched.localStorage });
   const rewards = batched.Progression;
   for (let i = 0; i < 100; i++) rewards.kill();

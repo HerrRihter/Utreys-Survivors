@@ -115,7 +115,7 @@ const { snapshotRun } = require('../src/systems/run-snapshot.js');
       }),
     ],
   ]);
-  const { createProgression } = await import('../src/systems/persistence.js');
+  const { createProgression } = await import('../src/systems/progression/index.js');
   const reload = createProgression({
     storage: { getItem: (k) => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v) },
     events: null,

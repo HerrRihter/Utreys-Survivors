@@ -84,7 +84,7 @@ export const UpgradeSystem = {
       icon: def.icon,
       max: weaponMaxLevel,
       kind: 'weapon',
-      available: () => Progression.weaponUnlocked?.(id) ?? true,
+      available: () => Progression.weaponUnlocked(id),
       apply: (s) => {
         const owned = s.weapons.find((w) => w.id === id);
         if (owned) owned.level++;

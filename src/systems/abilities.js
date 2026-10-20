@@ -31,7 +31,7 @@ export const AbilitySystem = {
       a.direction = { ...p.facing };
       a.hit = new Set();
       kind.cast?.(context, s, a);
-      progression.recordAbility?.();
+      progression.recordAbility();
       audio.effect('magic');
       return true;
     }
