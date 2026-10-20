@@ -28,7 +28,10 @@
 QA показывает квадрат сканирования с движущейся полосой и прицелами на поражённых целях;
 у Utrace остаётся короткий направленный бирюзовый сектор.
 Цены и характеристики — начальный баланс. Данные находятся в `data/characters/heroes.js`
-и `data/upgrades.js`, геометрия атак — в `src/systems/hero-attacks.js`.
+и `data/upgrades.js`, геометрия атак — в `src/systems/hero-attacks.js`: реестр `attackKinds`
+(sector, scan, chain, packet) по полю героя `attack`. Эволюции героев — данные `heroEvolutions`
+в `data/weapons.js` (`backSweep`, `returnChain`, `split`, `clientDamage`, `mark`); код атаки не
+сравнивает id героя. Звук замаха — поле героя `swingSound`.
 
 ## Роли, умения и пассивки (этап 2)
 

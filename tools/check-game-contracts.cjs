@@ -212,8 +212,15 @@ function checkGameContracts() {
       .sort(),
     'Hero contract: unlock prices',
   );
+  const { attackKinds } = require('../src/systems/hero-attacks.js');
+  const { heroEvolutions } = require('../data/weapons.js');
+  assert.deepEqual(
+    Object.keys(heroEvolutions).sort(),
+    Object.keys(heroDefinitions).sort(),
+    'Hero contract: evolutions',
+  );
   for (const [id, hero] of Object.entries(heroDefinitions)) {
-    assert(['sector', 'chain', 'packet', 'scan'].includes(hero.attack), 'Hero contract: attack');
+    assert(Object.hasOwn(attackKinds, hero.attack), 'Hero contract: attack ' + id);
     for (const field of ['hp', 'speed', 'interval', 'wind', 'damage', 'range', 'push'])
       assert(Number.isFinite(hero[field]) && hero[field] > 0, `Hero contract: ${id}.${field}`);
     assert.equal(abilityDefinitions[id].length, 2, 'Hero contract: two abilities');

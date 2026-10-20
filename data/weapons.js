@@ -227,11 +227,19 @@ export const heroWeaponLevels = [
   { desc: 'Эволюция атаки героя', evolve: true },
 ];
 
+// What each hero's evolution changes, read by the hero's attack kind (src/systems/hero-attacks.js)
+// and by combat:
+//   backSweep     the sector or scan strikes behind the hero as well
+//   returnChain   the chain runs back along its targets for this damage share
+//   split         { turns, life, damage }: the packet breaks apart at the end of its flight
+//   clientDamage  damage gained per kill of the BA client
+//   mark          { factor, seconds }: scanned targets take `factor` damage from every source
 export const heroEvolutions = {
-  utrace: { name: 'Двойная трассировка', desc: 'Второй сектор бьёт за спиной.' },
+  utrace: { name: 'Двойная трассировка', desc: 'Второй сектор бьёт за спиной.', backSweep: true },
   traceability: {
     name: 'Обратная цепь',
     desc: 'Цепь возвращается по тем же целям и наносит ещё 60% урона.',
+    returnChain: 0.6,
   },
   serialization: {
     name: 'Пакетная фрагментация',
@@ -241,9 +249,11 @@ export const heroEvolutions = {
   ba: {
     name: 'Ключевой клиент',
     desc: 'Каждое убийство выбранного клиента ещё и даёт +1% урона до конца забега.',
+    clientDamage: 0.01,
   },
   qa: {
     name: 'Баг-репорт',
     desc: 'Отмеченные сканом цели 3 с получают +30% урона от всех источников.',
+    mark: { factor: 1.3, seconds: 3 },
   },
 };

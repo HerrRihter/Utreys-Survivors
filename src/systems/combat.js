@@ -8,6 +8,7 @@ import { elite } from './difficulty.js';
 import { auraFactor, deathBlast, mitigation } from './enemy-behaviors.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
+import { heroEvolutions } from '../../data/weapons.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
@@ -17,7 +18,8 @@ export const CombatSystem = {
       if (e.hp <= 0 || n <= 0) return;
       const st = run.state;
       n *= mitigation(e, source) * auraFactor(st, e, unitDefinitions);
-      if (e.markedUntil > st.t) n *= 1.3;
+      // A mark of the hero's evolution (the QA scan).
+      if (e.markedUntil > st.t) n *= heroEvolutions[run.selected]?.mark?.factor ?? 1;
       const passive = passiveDamage(st, e, n, tag, math.random);
       n = passive.n;
       st.damageBy[tag] = (st.damageBy[tag] || 0) + Math.min(n, e.hp);
@@ -67,7 +69,7 @@ export const CombatSystem = {
           s.baSpecialization.bonus = Math.round((s.baSpecialization.bonus + gain) * 10) / 10;
           s.p.max = Math.round((s.p.max + gain) * 10) / 10;
           s.p.hp = Math.min(s.p.max, s.p.hp + gain);
-          if (s.stats.heroEvo) s.stats.damage += 0.01;
+          if (s.stats.heroEvo) s.stats.damage += heroEvolutions[run.selected]?.clientDamage ?? 0;
           if (s.texts.length < 45)
             s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${gain} HP`, life: 0.8 });
         }
@@ -133,7 +135,8 @@ export const CombatSystem = {
         flip: target.x < actor.x,
         aim: { x: target.x, y: target.y },
       };
-      if (actor === run.state.p && run.selected === 'utrace') audio.effect('punchSwing');
+      const swing = actor === run.state.p && heroDefinitions[run.selected].swingSound;
+      if (swing) audio.effect(swing);
     }
     function hurtPlayer(e) {
       const p = run.state.p;

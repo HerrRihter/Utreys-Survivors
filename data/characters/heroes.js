@@ -12,6 +12,8 @@ export const heroDefinitions = {
     damage: 28,
     half: Math.PI / 4,
     weapon: 'Трассировка кодов',
+    // Played when the hero starts an attack.
+    swingSound: 'punchSwing',
     desc: 'Система сквозной прослеживаемости Utrace. Обеспечивает высокоскоростную обработку запросов маркировки и защиту контуров валидации.',
   },
   traceability: {
