@@ -170,8 +170,6 @@ export const GameSession = {
       progression,
       upgrades,
       world,
-      abilities,
-      weapons,
       spawning,
       snapshots,
       runLog,

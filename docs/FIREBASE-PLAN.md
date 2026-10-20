@@ -85,11 +85,11 @@ FIREBASE-SETUP.md.
 ### Что считается забегом
 
 - Забег засчитывается при первом завершении: победа, смерть, выход в меню или перезапуск
-  (`countRun` в `game-flow.js` вызывается из `finish`, `menu` и `start`). Забеги короче
+  (`countRun` в `src/app/run-recording.js` вызывается из `finish`, `menu` и `start`). Забеги короче
   10 секунд не считаются, чтобы «старт → выход» не накручивал число игр.
 - Если после победы забег продолжается в «Продакшене», при следующем завершении в итоги
   добавляется только прирост убийств и кодов, а `games` не растёт.
-- Отправка — в конце `finish` (`src/app/game-flow.js`), после начисления бонусов за
+- Отправка — в конце `finish` (`src/app/run-lifecycle.js`), после начисления бонусов за
   нагрузку и «Жадность», чтобы `s.earned` был окончательным.
 - Забеги, сыгранные без входа, в таблицы не попадают. Забеги без сети ставятся в очередь в
   `localStorage` и отправляются, когда сеть появится.
@@ -203,7 +203,7 @@ stats/{uid}
 | `src/services/leaderboard.js`                                                      | `top(metric, scope, n)`, `rank(metric, scope)`, кэш на 60 с                                                        |
 | `data/leaderboards.js`                                                             | список показателей: поле, подпись, сортировка, формат значения                                                     |
 | `src/systems/progression/` (раньше src/systems/progression/)                       | `normalize`, `snapshot`, `replace`, `mapStats`, событие изменения                                                  |
-| `src/app/game-flow.js`                                                             | `runId`, учёт забега и отправка в конце `finish`                                                                   |
+| `src/app/run-lifecycle.js`, `run-recording.js`                                     | `runId`, учёт забега и отправка в конце `finish`                                                                   |
 | `src/app/game-session.js`, `useGameSession.ts`                                     | создание облачного слоя, команды для UI                                                                            |
 | `src/components/AccountPanel.tsx`                                                  | в меню: «Войти» или логин игрока, «Моя статистика», «Сменить пароль», «Выйти»                                      |
 | `src/components/AuthDialog.tsx`                                                    | окно с вкладками «Вход» / «Регистрация»: логин, пароль, повтор пароля, ошибки                                      |
