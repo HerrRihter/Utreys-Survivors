@@ -1,4 +1,4 @@
-import { heroUnlockPrices, permanentUpgrades } from '../../../data/upgrades.js';
+import { heroUnlockPrices, permanentUpgrades, priceOf } from '../../../data/upgrades.js';
 const prices = heroUnlockPrices,
   upgrades = permanentUpgrades;
 
@@ -6,9 +6,7 @@ const prices = heroUnlockPrices,
 export function createShop(store) {
   const owned = (id) => store.data.unlocked.includes(id);
   const cost = (id) =>
-    Object.hasOwn(upgrades, id)
-      ? (upgrades[id].hero ? 50 : 30) * (store.data.levels[id] + 1)
-      : prices[id];
+    Object.hasOwn(upgrades, id) ? priceOf(id, store.data.levels[id]) : prices[id];
   function buyHero(id) {
     const data = store.data;
     if (!Object.hasOwn(prices, id) || owned(id) || data.codes < prices[id]) return false;
@@ -39,12 +37,12 @@ export function createShop(store) {
     store.save();
     return true;
   }
-  // Codes spent on permanent upgrades: ranks 1..n cost base, 2·base, ..., n·base.
+  // Codes spent on permanent upgrades: the prices of every rank bought.
   function upgradeSpent() {
     let total = 0;
     for (const [id, level] of Object.entries(store.data.levels))
       if (Object.hasOwn(upgrades, id))
-        total += ((upgrades[id].hero ? 50 : 30) * level * (level + 1)) / 2;
+        for (let rank = 0; rank < level; rank++) total += priceOf(id, rank);
     return total;
   }
   // Returns every code spent on permanent upgrades and resets their ranks.

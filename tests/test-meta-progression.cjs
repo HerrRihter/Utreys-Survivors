@@ -64,6 +64,14 @@ const { achievementDefinitions } = require('../data/achievements.js');
   assert.equal(p.wallet.codes, before + 30);
   assert(Object.values(p.data.levels).every((n) => n === 0));
   assert.equal(p.shop.respec(), 0, 'nothing left to refund');
+  // One price formula: the shop's next price and the refund agree with priceOf.
+  const { priceOf } = await import('../data/upgrades.js');
+  assert.deepEqual(
+    [0, 1, 2].map((level) => priceOf('health', level)),
+    [30, 60, 90],
+  );
+  assert.equal(priceOf('training_utrace', 0), 50);
+  assert.equal(p.shop.cost('health'), priceOf('health', 0));
 
   // Old saves: earlier boss kills count as wins and open what they earned.
   const old = make({ codes: 5, kills: 600, stats: { bossKills: 1, maxTime: 320 } });

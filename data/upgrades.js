@@ -133,6 +133,12 @@ export const permanentUpgrades = {
   ),
 };
 
+// Price of the next rank of a permanent upgrade at `level` ranks: the base grows by itself each
+// rank (base, 2·base, 3·base, ...). Personal (hero) training costs more than general upgrades.
+export const upgradePriceBase = { general: 30, hero: 50 };
+export const priceOf = (id, level) =>
+  (permanentUpgrades[id].hero ? upgradePriceBase.hero : upgradePriceBase.general) * (level + 1);
+
 // Level-up cards (src/systems/upgrades.js). An `effect` says what one rank does:
 //   stat, value  adds `value` to the run stat `stat`
 //   maxHp        raises the hero's maximum health
