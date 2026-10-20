@@ -1,13 +1,12 @@
-const assert = require('node:assert/strict');
-const path = require('node:path');
-const { createHarness } = require('./helpers/game-harness.cjs');
-const { loadModule } = require('./helpers/load-modules.cjs');
-const { heroDefinitions } = require('../data/characters/heroes.js');
-const { heroUnlockPrices } = require('../data/upgrades.js');
-const { abilityDefinitions } = require('../data/characters/abilities.js');
-const { heroAttack } = require('../src/systems/hero-attacks.js');
+import assert from 'node:assert/strict';
+import { createHarness } from './helpers/game-harness.js';
+import { heroDefinitions } from '../data/characters/heroes.js';
+import { heroUnlockPrices } from '../data/upgrades.js';
+import { abilityDefinitions } from '../data/characters/abilities.js';
+import { heroAttack } from '../src/systems/hero-attacks.js';
+import { test } from 'vitest';
 
-(async () => {
+test('hero-roster', async () => {
   const storage = new Map();
   const load = async () => {
     const env = {
@@ -16,7 +15,7 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
         setItem: (key, value) => storage.set(key, value),
       },
     };
-    await loadModule(env, path.resolve(__dirname, '../src/systems/progression/index.js'));
+    Object.assign(env, await import('../src/systems/progression/index.js'));
     env.Progression = env.createProgression({ storage: env.localStorage });
     return env.Progression;
   };
@@ -162,7 +161,4 @@ const { heroAttack } = require('../src/systems/hero-attacks.js');
   console.log(
     'PASS: hero purchases, persistence, selection, abilities and distinct attack geometry',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });

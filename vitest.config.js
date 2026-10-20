@@ -9,5 +9,6 @@ export default defineConfig({
     // Suites log what they checked; show it only for a failing test.
     silent: 'passed-only',
     restoreMocks: true,
+    unstubGlobals: true,
   },
 });

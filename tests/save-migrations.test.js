@@ -1,12 +1,12 @@
-const assert = require('node:assert/strict'),
-  path = require('node:path');
-const { loadModule } = require('./helpers/load-modules.cjs');
-(async () => {
+import assert from 'node:assert/strict';
+import { test } from 'vitest';
+
+test('save-migrations', async () => {
   const saved = new Map();
   const storage = { getItem: (k) => saved.get(k) ?? null, setItem: (k, v) => saved.set(k, v) };
   const load = async () => {
     const env = { localStorage: storage };
-    await loadModule(env, path.resolve('src/systems/progression/index.js'));
+    Object.assign(env, await import('../src/systems/progression/index.js'));
     env.Progression = env.createProgression({ storage: env.localStorage });
     return env.Progression;
   };
@@ -61,7 +61,7 @@ const { loadModule } = require('./helpers/load-modules.cjs');
     },
   };
   const env = {};
-  await loadModule(env, path.resolve('src/systems/progression/index.js'));
+  Object.assign(env, await import('../src/systems/progression/index.js'));
   assert.equal(env.createProgression({ storage: blocked }).data.stats.maxTime, 900);
   assert.equal(JSON.parse(saved.get('utreys-best')).time, 900, 'kept for the next try');
   saved.delete('utreys-best');
@@ -72,7 +72,7 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   assert(!('maxKills' in fresh.previous.stats));
   fresh.wallet.earn(1);
   assert.equal(fresh.previous, null, 'any change ends the allowance');
-  const { AudioSystem } = await loadModule({}, path.resolve('src/core/audio.js'));
+  const { AudioSystem } = Object.assign({}, await import('../src/core/audio.js'));
   const target = { addEventListener() {}, removeEventListener() {} };
   const c = {
     storage,
@@ -109,7 +109,4 @@ const { loadModule } = require('./helpers/load-modules.cjs');
   console.log(
     'PASS: currency and audio migration, new-key precedence and achievement deduplication',
   );
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
 });
