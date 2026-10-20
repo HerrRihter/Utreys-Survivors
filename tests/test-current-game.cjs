@@ -6,6 +6,8 @@ const { unitDefinitions } = require('../data/enemies/units.js');
 (async () => {
   const h = await createHarness();
   const s = h.session;
+  // A fixed seed: the waves, drops and crits below are the same every run.
+  s.views.run().nextSeed = 20261020;
   s.start();
   assert.equal(s.state.map, 'empty');
   assert.equal(s.state.p.hp, 120);
@@ -31,9 +33,10 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   s.update(0.01);
   const boss = s.state.enemies.find((e) => e.unit === 'crpt');
   assert.equal(boss, undefined, 'time alone never spawns CRPT');
+  // A guard's aura or front armour of a wave unit nearby can soak part of a hit: strike hard.
   for (const node of s.state.nodes) {
     const guardian = nodeGuardian(s.state, node);
-    s.damage(guardian, guardian.hp + 1);
+    s.damage(guardian, guardian.hp * 10 + 1);
   }
   s.update(0.01);
   const unlockedBoss = s.state.enemies.find((e) => e.unit === 'crpt');
