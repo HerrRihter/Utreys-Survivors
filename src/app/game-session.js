@@ -8,7 +8,7 @@ import { cameraOrigin } from '../rendering/camera.js';
 import { canvasFactory } from '../rendering/offscreen.js';
 import { AudioSystem } from '../core/audio.js';
 import { InputSystem } from '../core/input.js';
-import { GameLoop } from '../core/game-loop.js';
+import { GameLoop, createFixedStep, STEP } from '../core/game-loop.js';
 import { GameFlow } from './game-flow.js';
 import { createStore } from '../core/store.js';
 import { createRunState, createGameSettings } from './run-state.js';
@@ -240,20 +240,34 @@ export const GameSession = {
       visible.y = origin.y;
       updateEnemySpeech(s, visible);
     }
-    function frame(now, dt) {
-      if (run.mode === 'play') {
-        step(dt);
-        saveClock += dt;
+    // The run advances in fixed steps (core/game-loop.js). Timers of play time (autosave,
+    // tips and how long a tip shows) count the simulated time; the interface's own timers (HUD
+    // refresh, the level-up lock, toasts, menu portraits) count real frame time, so they behave
+    // the same while the simulation is paused or drops time on a stalled frame.
+    const fixedStep = createFixedStep();
+    function frame(now, frameDt) {
+      // A hidden tab resumes with one long frame: interface timers move by at most a moment.
+      const dt = Math.min(frameDt, 0.1);
+      if (run.mode !== 'play') fixedStep.reset();
+      else {
+        const due = fixedStep.advance(frameDt);
+        let played = 0;
+        // A step can end the play mode (a level-up, the end of the run): the rest waits.
+        for (let i = 0; i < due && run.mode === 'play'; i++) {
+          step(STEP);
+          played += STEP;
+        }
+        saveClock += played;
         if (saveClock >= SAVE_EVERY) {
           saveClock = 0;
           snapshots.save(run);
         }
-        tipClock += dt;
+        tipClock += played;
         if (tipClock >= 0.25) {
           tipClock = 0;
           tips.check();
         }
-        if (run.tip.left > 0) run.tip.left -= dt;
+        if (run.tip.left > 0) run.tip.left -= played;
       }
       if (run.mode === 'level' && run.levelLock > 0) {
         run.levelLock -= dt;
