@@ -1,7 +1,6 @@
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { drawNodes } from './node-objectives.js';
 import { drawEnemySpeech } from './enemy-speech.js';
-import { orderActors } from './depth-order.js';
 import { cameraOrigin } from './camera.js';
 import { drawEdgeArrows } from './edge-arrows.js';
 import { drawEvent } from './events.js';
@@ -12,8 +11,8 @@ import { drawAbilities } from './abilities.js';
 import { drawShot, drawEnemyShot } from './projectiles.js';
 import { inBox } from '../core/math.js';
 
-// The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
-const noScenery = [];
+// Actors draw from the lowest y up; equal depths keep their update order, the hero last.
+const byDepth = (a, b) => a.y - b.y;
 // Draws one frame: arena floor, pickups, telegraphs, actors in depth order, effects and text.
 export const SceneRenderer = {
   create({ ctx, floor, view, run, world, corpses, enemies, sprite, settings, cosmetic }) {
@@ -88,14 +87,15 @@ export const SceneRenderer = {
         // Sort only what can appear on screen.
         visible.length = 0;
         for (const e of s.enemies) if (inBox(e, bounds, 100)) visible.push(e);
-        const actors = orderActors(noScenery, visible, p, run.selected);
-        for (const e of actors) {
-          if (!e.player && !inBox(e, bounds, 100)) continue;
+        visible.push(p);
+        visible.sort(byDepth);
+        for (const e of visible) {
+          const hero = e === p;
           // The hero's and enemies' art draws its own shadow.
-          if (e.player)
+          if (hero)
             sprite(
               ctx,
-              e.type,
+              run.selected,
               e.x,
               e.y,
               3,
@@ -112,7 +112,7 @@ export const SceneRenderer = {
             enemies.draw(ctx, e);
             ctx.restore();
           } else enemies.draw(ctx, e);
-          if (e.player) {
+          if (hero) {
             const aim = p.action?.direction || p.facing;
             ctx.save();
             ctx.translate(e.x, e.y);

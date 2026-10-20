@@ -3,8 +3,7 @@ import { heroDefinitions } from '../../data/characters/heroes.js';
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { createRunModel } from '../systems/run-model.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
-import { arenaDefinitions } from '../world/arenas.js';
-import { mapUnlocked } from '../../data/maps/maps.js';
+import { mapDefinitions, mapUnlocked } from '../../data/maps/maps.js';
 import { weaponDefinitions } from '../../data/weapons.js';
 import { restoreRun } from '../systems/run-snapshot.js';
 import { nearestGoals, newlyDone } from './unlocks.js';
@@ -94,7 +93,7 @@ export const GameFlow = {
       s.offersLogged = offers.length;
       if (!s.statsRecorded) {
         s.statsRecorded = true;
-        const nodesMap = !arenaDefinitions[s.map]?.objective;
+        const nodesMap = !mapDefinitions[s.map]?.objective;
         records.recordRunStats({
           win,
           hero: run.selected,
@@ -119,8 +118,7 @@ export const GameFlow = {
     const clampLoad = (hero, level) =>
       Math.max(1, Math.min(loads.loadAvailable(hero), Math.floor(level) || 1));
     const mapOpen = (id) =>
-      Object.hasOwn(arenaDefinitions, id) &&
-      mapUnlocked(arenaDefinitions[id], progression.data.stats);
+      Object.hasOwn(mapDefinitions, id) && mapUnlocked(mapDefinitions[id], progression.data.stats);
     function start() {
       recordRun();
       countRun();
@@ -161,7 +159,7 @@ export const GameFlow = {
       run.result = null;
       run.tip = { text: '', left: 0 };
       setMode('play');
-      const map = arenaDefinitions[run.selectedMap];
+      const map = mapDefinitions[run.selectedMap];
       toast(map.name.toUpperCase() + ' · ' + map.description);
       audio.effect('ui');
       changed();
@@ -321,7 +319,7 @@ export const GameFlow = {
         : {
             win,
             tag:
-              (win ? arenaDefinitions[run.selectedMap].victoryTag : 'ЗАБЕГ ОКОНЧЕН') +
+              (win ? mapDefinitions[run.selectedMap].victoryTag : 'ЗАБЕГ ОКОНЧЕН') +
               ' · ' +
               loadText,
             title: win ? 'Забег завершён' : 'Контур перегружен',
@@ -441,7 +439,7 @@ export const GameFlow = {
         return false;
       }
       run.selected = run.pendingHero = snapshot.hero;
-      if (arenaDefinitions[snapshot.map]) run.selectedMap = snapshot.map;
+      if (mapDefinitions[snapshot.map]) run.selectedMap = snapshot.map;
       world.select(run.selectedMap);
       if (snapshot.baClient) run.baClient = snapshot.baClient;
       run.selectedLoad = snapshot.state.load || 1;

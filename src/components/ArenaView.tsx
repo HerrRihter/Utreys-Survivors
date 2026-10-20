@@ -1,7 +1,8 @@
 import { drawNodes } from '../rendering/node-objectives.js';
 import { createNodeState } from '../systems/node-objectives.js';
 import React, { useEffect, useRef, useState } from 'react';
-import { createArenas, arenaDefinitions } from '../world/arenas.js';
+import { createArenas } from '../world/arenas.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
 import { createArenaFloor } from '../rendering/arena-floor.js';
 import { drawCollision } from '../rendering/collision.js';
 
@@ -53,7 +54,7 @@ export const ArenaView: React.FC = () => {
   }, [selectedArena, isClose, showLabels, showBounds]);
 
   const arena = (
-    arenaDefinitions as Record<string, { name: string; description: string; notes?: string }>
+    mapDefinitions as Record<string, { name: string; description: string; notes?: string }>
   )[selectedArena] || {
     name: 'Дата-центр Utrace',
     description: 'Высоконагруженный серверный контур',

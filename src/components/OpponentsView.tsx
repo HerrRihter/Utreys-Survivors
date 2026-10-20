@@ -5,7 +5,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { unitDefinitions, enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
 import { getWaveSchedule } from '../systems/wave-schedule.js';
 import { waveTiming } from '../ui/wave-preview.js';
-import { arenaDefinitions } from '../world/arenas.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
 
 export const OpponentsView: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<'all' | 'regulators' | 'clients'>('all');
@@ -47,7 +47,7 @@ export const OpponentsView: React.FC = () => {
     radarRef,
   });
 
-  const currentArena = arenaDefinitions.empty || {
+  const currentArena = mapDefinitions.empty || {
     name: 'Дата-центр Utrace',
     description: 'Высоконагруженный контур валидации данных и стресс-тестирования сервисов Utrace.',
   };

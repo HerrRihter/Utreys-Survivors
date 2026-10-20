@@ -11,7 +11,7 @@ export const SpriteRenderer = {
       // `flash` marks the blinking frames of the hero's invulnerability.
       sprite(context, name, x, y, size = 2, flip = false, flash = false, actor = null) {
         const charge =
-          actor?.player && heroAccessories[name]?.charged
+          actor === run.state?.p && heroAccessories[name]?.charged
             ? traceabilityCharge(run.state, blocksAttack(run.state))
             : null;
         if (!flash) return drawHero(context, name, x, y, size, flip, actor?.walk || 0, charge);

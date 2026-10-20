@@ -2,21 +2,19 @@ import { mapDefinitions } from '../../data/maps/maps.js';
 import { ArenaCollision } from './collision.js';
 import { ArenaNavigation } from './navigation.js';
 
-export const arenaDefinitions = mapDefinitions;
-
 // Geometry only: size, racks, collision and navigation. rendering/arena-floor.js draws the floor.
 export function createArenas() {
   const cache = {};
   return {
     get(id) {
-      if (!Object.hasOwn(arenaDefinitions, id)) id = 'empty';
-      return cache[id] || (cache[id] = createDatacenterArena(arenaDefinitions[id]));
+      if (!Object.hasOwn(mapDefinitions, id)) id = 'empty';
+      return cache[id] || (cache[id] = createDatacenterArena(mapDefinitions[id]));
     },
   };
 }
 
 // Both arenas share the datacenter floor; a map's `racks` become solid server racks.
-function createDatacenterArena(map = arenaDefinitions.empty) {
+function createDatacenterArena(map = mapDefinitions.empty) {
   const size = 2200,
     cell = 25,
     cols = 88,

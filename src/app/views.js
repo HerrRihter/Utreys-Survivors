@@ -12,8 +12,7 @@ import { heroPassives } from '../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../data/difficulty.js';
 import { productionMinutes } from '../systems/difficulty.js';
 import { effectiveStats } from '../systems/queries/abilities.js';
-import { arenaDefinitions } from '../world/arenas.js';
-import { mapUnlocked } from '../../data/maps/maps.js';
+import { mapDefinitions, mapUnlocked } from '../../data/maps/maps.js';
 import { openTickets } from '../systems/node-objectives.js';
 import { defaultBindings, bindingLabels, uiScales } from './run-state.js';
 import { nearestGoals, unlockText } from './unlocks.js';
@@ -118,19 +117,19 @@ export function heroSelectView({ run, progression }) {
     showBaClients: !!heroDefinitions[run.pendingHero]?.keyClient,
     baClients: baClientIds.map((id) => ({ id, name: unitDefinitions[id].name })),
     baClient: run.baClient,
-    maps: Object.entries(arenaDefinitions).map(([id, map]) => ({
+    maps: Object.entries(mapDefinitions).map(([id, map]) => ({
       id,
       name: map.name,
       locked: !mapUnlocked(map, progression.data.stats),
     })),
     map: run.selectedMap,
     seed: run.seedInput,
-    mapDescription: arenaDefinitions[run.selectedMap].description,
+    mapDescription: mapDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.
-    mapLocked: Object.keys(arenaDefinitions).length < 2,
+    mapLocked: Object.keys(mapDefinitions).length < 2,
     // The next map still closed, and what opens it.
     mapHint:
-      Object.values(arenaDefinitions).find(
+      Object.values(mapDefinitions).find(
         (map) => map.unlockHint && !mapUnlocked(map, progression.data.stats),
       )?.unlockHint || '',
   };
@@ -453,7 +452,7 @@ export function hudView({ run, progression, settings, upgrades }) {
     weapon:
       hero.weapon +
       ' · ' +
-      arenaDefinitions[s.map]?.name +
+      mapDefinitions[s.map]?.name +
       ` · Нагрузка ${s.load || 1}` +
       (s.endless ? ` · Продакшен ${productionMinutes(s)} мин` : '') +
       (ba ? ` · Клиент: ${unitDefinitions[ba.client].name} · +${ba.bonus} HP` : ''),

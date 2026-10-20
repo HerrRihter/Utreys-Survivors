@@ -1,5 +1,6 @@
 import { createEventScope } from '../core/lifecycle.js';
-import { createArenas, arenaDefinitions } from '../world/arenas.js';
+import { createArenas } from '../world/arenas.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
 import { CanvasSystem } from '../rendering/canvas.js';
 import { SpriteRenderer } from '../rendering/sprite-renderer.js';
 import { SceneRenderer } from '../rendering/scene-renderer.js';
@@ -351,7 +352,7 @@ export const GameSession = {
         return loop.running;
       },
       selectMap(id) {
-        if (!arenaDefinitions[id]) throw new Error('Unknown map: ' + id);
+        if (!mapDefinitions[id]) throw new Error('Unknown map: ' + id);
         flow.chooseMap(id);
       },
       select(hero) {
