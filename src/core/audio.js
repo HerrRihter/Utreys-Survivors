@@ -1,4 +1,4 @@
-import { AssetPaths } from '../rendering/asset-paths.js';
+import { AssetPaths } from './assets.js';
 import { createEventScope } from './lifecycle.js';
 // Music by mode, pooled sound effects and the persisted mix. No DOM controls: the UI calls
 // toggle()/setVolume() and re-reads `settings` when `onChange` fires.
