@@ -1,4 +1,3 @@
-import { updateEnemySpeech } from './enemy-speech.js';
 import { compact } from '../core/compact.js';
 import { resolveEnemyStrike } from './enemy-attacks.js';
 import {
@@ -22,7 +21,6 @@ const isLive = (item) => item.life > 0,
 export const Simulation = {
   create({
     run,
-    view,
     world,
     heroes,
     enemies,
@@ -351,7 +349,6 @@ export const Simulation = {
         }
       compact(s.pickups, isPresent);
       compact(s.enemies, isAlive);
-      updateEnemySpeech(s, view, world.arena.size);
       for (const f of s.fx) {
         f.life -= dt;
         if (f.kind === 'spark') {

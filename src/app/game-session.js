@@ -4,6 +4,7 @@ import { createMath } from '../core/math.js';
 import { CanvasSystem } from '../rendering/canvas.js';
 import { SpriteRenderer } from '../rendering/sprite-renderer.js';
 import { SceneRenderer } from '../rendering/scene-renderer.js';
+import { cameraOrigin } from '../rendering/camera.js';
 import { canvasFactory } from '../rendering/offscreen.js';
 import { AudioSystem } from '../core/audio.js';
 import { InputSystem } from '../core/input.js';
@@ -15,6 +16,7 @@ import * as views from './views.js';
 import { EnemySpawning } from '../systems/enemy-spawning.js';
 import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
+import { updateEnemySpeech } from '../systems/enemy-speech.js';
 import { AbilitySystem } from '../systems/abilities.js';
 import { RunEvents } from '../systems/run-events.js';
 import { createRunLog } from '../systems/run-log.js';
@@ -180,7 +182,6 @@ export const GameSession = {
     });
     const simulation = Simulation.create({
       run,
-      view,
       world,
       heroes,
       enemies,
@@ -234,9 +235,20 @@ export const GameSession = {
       tipClock = 0;
     const SAVE_EVERY = 30;
     // One simulation step reads the movement intent the input layer combines right before it.
+    // Speech is cosmetic and picks among enemies on screen, so it runs here with the camera's
+    // world rectangle instead of inside the simulation.
+    const visible = { x: 0, y: 0, width: 0, height: 0 };
     function step(dt) {
       input.updateMove();
       simulation.update(dt);
+      const s = run.state;
+      if (!s) return;
+      visible.width = view.W || 960;
+      visible.height = view.H || 640;
+      const origin = cameraOrigin(s.p, visible.width, visible.height, world.arena.size);
+      visible.x = origin.x;
+      visible.y = origin.y;
+      updateEnemySpeech(s, visible);
     }
     function frame(now, dt) {
       if (run.mode === 'play') {

@@ -14,12 +14,13 @@ const state = {
   enemies: [enemy],
   runtime: { speechPhraseIndex: {}, speechCursor: 0, nextSpeechAt: speechSettings.interval },
 };
-const view = { W: 800, H: 600 };
+// The world rectangle on screen: an 800×600 view centred on the player.
+const visible = { x: 700, y: 800, width: 800, height: 600 };
 // Speech is cosmetic: it must never consume the gameplay random source.
 Math.random = () => {
   throw Error('Gameplay RNG consumed');
 };
-const speak = () => updateEnemySpeech(state, view, 2200);
+const speak = () => updateEnemySpeech(state, visible);
 speak();
 assert(!enemy.speech);
 state.t = speechSettings.interval;

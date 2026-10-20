@@ -1,15 +1,13 @@
 import { enemyPhrases, speechSettings } from '../../data/enemies/phrases.js';
-import { cameraOrigin } from '../rendering/camera.js';
 
-// Picks who speaks next among visible enemies; `view` = { W, H } of the screen.
-export function updateEnemySpeech(s, view, worldSize) {
+// Picks who speaks next among visible enemies; `visible` = { x, y, width, height } is the world
+// rectangle on screen (the caller owns the camera).
+export function updateEnemySpeech(s, visible) {
   for (const enemy of s.enemies)
     if (enemy.speech && (enemy.hp <= 0 || s.t >= enemy.speech.until)) enemy.speech = null;
   const r = s.runtime;
   if (s.t < r.nextSpeechAt) return;
-  const width = view.W || 960,
-    height = view.H || 640;
-  const { x: cx, y: cy } = cameraOrigin(s.p, width, height, worldSize);
+  const { x: cx, y: cy, width, height } = visible;
   const candidates = s.enemies.filter(
     (e) =>
       e.hp > 0 &&
