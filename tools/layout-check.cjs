@@ -13,7 +13,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
-const { createServer } = require('./server.cjs');
+const { startPreview } = require('./preview-server.cjs');
 
 const out = path.resolve(__dirname, '../test-results/layout');
 const dist = path.resolve(__dirname, '../dist');
@@ -331,9 +331,8 @@ async function main(argv) {
     return 1;
   }
   fs.mkdirSync(out, { recursive: true });
-  const server = createServer({ root: dist, prefix: '/' });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const url = `http://127.0.0.1:${server.address().port}/?bench`;
+  const server = await startPreview();
+  const url = server.url + '?bench';
   const channel = process.env.BROWSER_CHANNEL;
   let browser;
   try {
@@ -398,7 +397,7 @@ async function main(argv) {
     }
   } finally {
     await browser.close();
-    server.close();
+    await server.close();
   }
   fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2));
   const warnings = report.reduce((n, r) => n + r.warnings.length, 0);

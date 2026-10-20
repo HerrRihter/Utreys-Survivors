@@ -1,4 +1,4 @@
-import { createStore } from '../app/store.js';
+import { createStore } from '../core/store.js';
 import { cloudEnabled, loadFirebase, loginDomain } from './firebase.js';
 import {
   authErrorText,

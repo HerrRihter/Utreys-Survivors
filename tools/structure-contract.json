@@ -2,38 +2,35 @@
   "directories": {
     "assets": ["runtime", "source"],
     "assets/runtime": ["audio"],
-    "src": [
-      "app",
-      "core",
-      "entities",
-      "systems",
-      "world",
-      "rendering",
-      "ui",
-      "components",
-      "services"
-    ],
+    "src": ["app", "core", "systems", "world", "rendering", "ui", "components", "services"],
     "data": ["animations", "characters", "enemies", "maps"]
+  },
+  "layers": {
+    "$comment": "Allowed imports between layers: a file in src/<layer> (or data) may import only the listed layers and itself. \"systems/queries\" admits only src/systems/queries, whose pure read-only questions may themselves import only data, core and world. A layer always reaches its own sublayers. \"src\" is the entry files directly in src/. Order: data → core → world → systems → services → rendering → ui → app → components → src. React (components) reaches the game only through app: the session, its views and commands, the preview kit for the catalog pages and app/types.ts. See docs/STRUCTURE-CONTRACT.md.",
+    "data": [],
+    "core": ["data"],
+    "world": ["data", "core"],
+    "systems": ["data", "core", "world"],
+    "services": ["data", "core", "systems"],
+    "systems/queries": ["data", "core", "world"],
+    "rendering": ["data", "core", "world", "systems/queries"],
+    "ui": ["data", "systems"],
+    "app": ["data", "core", "world", "systems", "services", "rendering", "ui"],
+    "components": ["app"],
+    "src": ["components"]
+  },
+  "noCanvas": {
+    "$comment": "Simulation and world only change state; drawing lives in src/rendering. These Canvas calls must not appear in the listed folders (comments excluded). See docs/STRUCTURE-CONTRACT.md.",
+    "roots": ["src/systems", "src/world"],
+    "calls": ["getContext", "fillRect", "strokeRect", "beginPath", "arc", "drawImage", "fillText"]
+  },
+  "noGlobalRandom": {
+    "$comment": "A run replays from its seed and input: the simulation draws random numbers from the run's state.rng and cosmetic ones from the injected source, and never reads the wall clock. These globals must not appear in the listed folders (comments excluded). See docs/STRUCTURE-CONTRACT.md.",
+    "roots": ["src/systems", "src/world"],
+    "globals": ["Math.random", "Date.now", "performance.now"]
   },
   "runtimeAssetPatterns": [
     "^assets/runtime/audio/(music|sfx)/[a-z0-9-]+\\.(mp3|ogg|wav)$",
     "^assets/runtime/audio/(CREDITS\\.md|[A-Za-z0-9-]+-LICENSE\\.txt)$"
-  ],
-  "forbiddenReferences": [
-    "assets/audio/",
-    "assets/ui/",
-    "assets/runtime/lutetia/",
-    "characters/frames/",
-    "achivements"
-  ],
-  "referenceRoots": ["src", "data"],
-  "referenceFiles": ["index.html", "opponents-preview.html", "arena-preview.html"],
-  "forbiddenIdentifiers": [
-    "Villagers",
-    "Legion",
-    "depthObjects",
-    "drawObject",
-    "civilian",
-    "campLanes"
   ]
 }

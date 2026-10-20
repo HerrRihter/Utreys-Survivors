@@ -3,16 +3,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { performance } = require('node:perf_hooks');
 const { execFileSync } = require('node:child_process');
-const { createHarness } = require('../tests/helpers/game-harness.cjs');
+// The test harness is an ES module: loaded on first use.
+const createHarness = async (options) =>
+  (await import('../tests/helpers/game-harness.js')).createHarness(options);
 
 const stressUnits = ['l3', 'pepsi', 'inbev', 'mars', 'baltika', 'multon', 'loreal', 'ferrero'];
 
-function seeded(env, seed) {
-  env.Math.random = () => {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed / 4294967296;
-  };
-}
+// The run's seed fixes its waves, drops and every other random choice.
+const seeded = (game, seed) => (game.views.run().nextSeed = seed);
 
 function summarize(samples) {
   samples.sort((a, b) => a - b);
@@ -27,8 +25,8 @@ function summarize(samples) {
 // Natural waves: stationary invulnerable Utrace, first upgrade chosen.
 async function waves() {
   const h = await createHarness();
-  seeded(h.env, 123456);
   const game = h.session;
+  seeded(game, 123456);
   const samples = [];
   let maxEnemies = 0;
   game.start();
@@ -54,11 +52,11 @@ async function waves() {
 // Stress: 300 enemies kept around a moving chain hero; exercises chain, collision and spawning.
 async function stress() {
   const h = await createHarness();
-  seeded(h.env, 424242);
-  h.env.Progression.earn(1e6);
-  h.env.Progression.buyHero('traceability');
+  h.env.Progression.wallet.earn(1e6);
+  h.env.Progression.shop.buyHero('traceability');
   const game = h.session;
   game.select('traceability');
+  seeded(game, 424242);
   game.start();
   const samples = [];
   let k = 0;

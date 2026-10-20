@@ -1,8 +1,63 @@
 # Открытия, достижения и магазин
 
-Этап 4 плана улучшения. Достижения — `data/achievements.js`, постоянные улучшения —
-`data/upgrades.js`, учёт и проверки — `src/systems/persistence.js`, блоки «ближайшие
+Этап 4 плана улучшения. Достижения — `data/achievements.js`, постоянные улучшения и их цены —
+`data/upgrades.js`, учёт и проверки — `src/systems/progression/`, блоки «ближайшие
 открытия» и «новое за забег» — `src/app/unlocks.js`.
+
+## Устройство прогрессии
+
+`createProgression({ storage, events, document })` (src/systems/progression/index.js) создаёт
+одно хранилище и пять модулей над ним:
+
+| Модуль | Что делает |
+| --- | --- |
+| `store.js` | Данные, запись в `utreys-progression-v1` (сразу — `save()`, пакетом в простое — `deferSave()`), `replace()` из облака, подписчики `onChange` ('save', 'run', 'hidden'), версия и замороженная копия |
+| `wallet` | `codes`, `earn(amount)`, `kill(tag, runKills)` |
+| `shop` | `owned`, `prices`, `upgrades`, `cost`, `buyHero`, `buyUpgrade`, `upgradeLock`, `upgradeSpent`, `respec` |
+| `records` | `recordTime`, `recordKills`, `recordLevel`, `recordBossKill`, `recordAbility`, `recordRunStats`, `recordRunResult`, `recordEvolution`, `evolutionSeen` |
+| `achievements` | `list`, `achievementDone(a)`, `weaponUnlocked`, `claimAchievement(id)`, `isClaimed` |
+| `loads` | `loadCleared`, `loadAvailable`, `recordLoadWin`, `productionRecord`, `recordProduction` |
+
+`normalize.js` (`normalizeProgression`) одинаково чистит сохранение из localStorage и из облака.
+Кроме модулей прогрессия отдаёт `data`, `flush`, `replace`, `onChange`, `dispose`, `persistent`
+и `previous` (см. «Формат сохранения»).
+
+`progression.data` — глубоко замороженная копия сохранения. Она пересобирается при первом чтении
+после изменения (любое изменение идёт через `save`, `deferSave` или `replace`, они поднимают
+версию), а между изменениями все чтения получают один и тот же объект. Поэтому экраны могут
+читать её сколько угодно (в том числе в циклах), а изменить прогрессию в обход модулей нельзя.
+
+Цена следующего ранга постоянного улучшения — `priceOf(id, level)` в data/upgrades.js: база
+(`upgradePriceBase`: 30 для общих, 50 для тренировок героев) × (level + 1). Сброс возвращает
+сумму `priceOf` по всем купленным рангам.
+
+## Формат сохранения
+
+`utreys-progression-v1`: `codes`, `kills` (всего побеждено), `unlocked`, `levels`, `stats`
+(`totalTime`, `maxTime`, `maxKills`, `bossKills`, `abilitiesUsed`, `maxLevel`, факты мастерства),
+`weaponKills`, `evolutionsSeen`, `claimedAchievements`, `loads`, `production`, `runStats`. Тот же
+объект лежит в облаке в `progress/{uid}.data` (правила Firestore проверяют только, что `data` —
+объект не больше чем с 40 ключами верхнего уровня, поэтому новое поле в `stats` их не меняет).
+
+`stats.maxKills` (с 20 октября 2026 года) — больше всего побед за один забег; записывается при
+каждом завершении забега вместе с `maxTime`. Экран итогов отмечает «рекорд», если время или победы
+забега больше `maxTime`/`maxKills` до этого завершения; в меню — «лучшее время» из `maxTime`.
+Раньше рекорд жил отдельно в `utreys-best` ({ time, kills }) и в облако не попадал. При первой
+загрузке он один раз сливается в прогрессию (по максимуму), ключ удаляется после успешной записи
+(src/core/migrations.js, удалить после 2027-04-20). Чтобы два устройства не спросили о конфликте
+только из-за этого перевода, прогрессия отдаёт `previous` — сохранение в прежнем виде, пока оно
+не менялось в этой сессии; синхронизация считает такое сохранение неизменённым и, если берёт
+облачную копию, вливает в неё рекорд устройства.
+
+Старые форматы: `helmets` → `codes`, достижение `helmets_100` → `codes_100` (без повторной
+награды) — `migrateProgressionNames` в src/core/migrations.js.
+
+## Коды за победы
+
+Каждая 10-я победа забега даёт 1 код (`wallet.kill(tag, runKills)`, счётчик — `s.kills` забега).
+До 20 октября 2026 года считались победы аккаунта, и остаток переходил из забега в забег; теперь
+каждый забег начинает счёт с первой победы, средняя скорость та же, а коды забега зависят только
+от сида и ввода.
 
 ## Открытия
 

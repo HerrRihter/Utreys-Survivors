@@ -1,0 +1,149 @@
+// A game session on fake browser objects: document, window events, storage and animation frames
+// are plain objects the test can drive. The session gets them injected, as the page does.
+import { canvasContext } from './canvas-context.js';
+import { createProgression } from '../../src/systems/progression/index.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
+import { createEnemyRenderer } from '../../src/rendering/enemies.js';
+import { CombatSystem } from '../../src/systems/combat.js';
+import { GameSession } from '../../src/app/game-session.js';
+
+const noop = () => {};
+
+export async function createHarness({ createSession: withSession = true } = {}) {
+  const nodes = new Map(),
+    listeners = {},
+    scheduled = new Map();
+  let frameId = 0;
+  const targets = [];
+  function eventTarget(exposed = {}) {
+    const handlers = new Map();
+    targets.push(handlers);
+    return {
+      addEventListener(name, handler) {
+        if (!handlers.has(name)) handlers.set(name, new Set());
+        handlers.get(name).add(handler);
+        exposed[name] = (event) => {
+          for (const fn of [...handlers.get(name)]) fn(event);
+        };
+      },
+      removeEventListener(name, handler) {
+        handlers.get(name)?.delete(handler);
+      },
+      dispatchEvent(event) {
+        for (const fn of handlers.get(event.type) || []) fn(event);
+      },
+    };
+  }
+  const eventCount = () =>
+    targets.reduce(
+      (sum, target) => sum + [...target.values()].reduce((n, set) => n + set.size, 0),
+      0,
+    );
+  const context = new Proxy(
+    canvasContext({ createRadialGradient: () => ({ addColorStop: noop }) }),
+    {
+      get: (target, key) => target[key] || noop,
+      set: (target, key, value) => ((target[key] = value), true),
+    },
+  );
+  function node() {
+    const events = {};
+    const el = {
+      style: {},
+      className: '',
+      dataset: {},
+      children: [],
+      events,
+      getContext: () => context,
+      ...eventTarget(events),
+      setPointerCapture: noop,
+      replaceChildren() {
+        this.children = [];
+      },
+      append(...items) {
+        this.children.push(...items);
+      },
+      querySelectorAll(selector) {
+        return selector === '.run-hero'
+          ? this.children.filter((child) => child.className.split(/\s+/).includes('run-hero'))
+          : [];
+      },
+    };
+    el.classList = {
+      toggle(name, on) {
+        const present = el.className.split(/\s+/).includes(name);
+        const active = on === undefined ? !present : on;
+        el.className = el.className
+          .split(/\s+/)
+          .filter((value) => value && value !== name)
+          .concat(active ? [name] : [])
+          .join(' ');
+        return active;
+      },
+      contains: (name) => el.className.split(/\s+/).includes(name),
+    };
+    return el;
+  }
+  const document = {
+    getElementById(id) {
+      if (!nodes.has(id)) nodes.set(id, node());
+      return nodes.get(id);
+    },
+    createElement: node,
+    querySelectorAll: () => [],
+    ...eventTarget(),
+  };
+  const env = {
+    document,
+    window: eventTarget(listeners),
+    localStorage: { getItem: () => null, setItem: noop },
+    performance: { now: () => 0 },
+    requestAnimationFrame(callback) {
+      const id = ++frameId;
+      scheduled.set(id, callback);
+      return id;
+    },
+    cancelAnimationFrame(id) {
+      scheduled.delete(id);
+    },
+    // The modules a test reaches through the harness.
+    createProgression,
+    unitDefinitions,
+    createEnemyRenderer,
+    CombatSystem,
+    GameSession,
+  };
+  env.Progression = env.createProgression({
+    storage: env.localStorage,
+    events: env.window,
+    document,
+  });
+  const createSession = () =>
+    env.GameSession.create({
+      document,
+      window: env.window,
+      storage: env.localStorage,
+      performance: env.performance,
+      requestAnimationFrame: env.requestAnimationFrame,
+      cancelAnimationFrame: env.cancelAnimationFrame,
+      canvas: document.getElementById('game'),
+      progression: env.Progression,
+    });
+  function tick(now) {
+    const [id, callback] = scheduled.entries().next().value;
+    scheduled.delete(id);
+    callback(now);
+  }
+  return {
+    env,
+    nodes,
+    listeners,
+    scheduled,
+    tick,
+    noop,
+    context,
+    eventCount,
+    createSession,
+    session: withSession ? createSession() : null,
+  };
+}

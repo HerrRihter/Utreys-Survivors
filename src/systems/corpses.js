@@ -1,22 +1,10 @@
 import { compact } from '../core/compact.js';
+import { CORPSE_LIFETIME } from './queries/corpses.js';
 
-// Fallen enemies: a cached pose per unit that tips over and fades out.
-export function createCorpses({ enemies, createCanvas }) {
-  const lifetime = 8,
-    fadeTime = 2,
-    limit = 180,
-    cache = new Map();
-  function pose(e) {
-    const key = e.unit;
-    if (cache.has(key)) return cache.get(key);
-    const c = createCanvas(256, 256),
-      g = c?.getContext('2d');
-    if (!g) return null;
-    g.imageSmoothingEnabled = false;
-    enemies.draw(g, { ...e, x: 128, y: 196, heading: 0, hit: 0, action: null, animationTime: 0 });
-    cache.set(key, c);
-    return c;
-  }
+// Fallen enemies: bodies that tip over and fade out (rendering/corpses.js draws them from a
+// cached pose per unit). A body keeps only its unit, position and fall direction.
+export function createCorpses() {
+  const limit = 180;
   function add(list, e, impact = { x: 1, y: 0 }) {
     const length = Math.hypot(impact.x, impact.y),
       nx = length > 0 ? impact.x / length : 1,
@@ -29,37 +17,13 @@ export function createCorpses({ enemies, createCanvas }) {
       fallX: nx,
       fallY: ny,
       angle: Math.atan2(nx, -ny / 0.58),
-      frame: pose(e),
+      unit: e.unit,
     });
     if (list.length > limit) list.splice(0, list.length - limit);
   }
   function update(list, dt) {
     for (const body of list) body.age += dt;
-    return compact(list, (body) => body.age < lifetime);
+    return compact(list, (body) => body.age < CORPSE_LIFETIME);
   }
-  function opacity(body) {
-    return Math.min(1, Math.max(0, (lifetime - body.age) / fadeTime));
-  }
-  function draw(g, list, cx, cy, w, h) {
-    for (const b of list) {
-      if (b.x < cx - 100 || b.x > cx + w + 100 || b.y < cy - 100 || b.y > cy + h + 100) continue;
-      const fall = Math.min(1, b.age / 0.32),
-        ease = 1 - (1 - fall) ** 3;
-      const x = b.x + b.fallX * 18 * ease,
-        y = b.y + b.fallY * 18 * ease;
-      g.save();
-      g.globalAlpha = opacity(b);
-      g.fillStyle = '#11261944';
-      g.beginPath();
-      g.ellipse(x, y + 3, 31, 9, 0, 0, Math.PI * 2);
-      g.fill();
-      g.translate(x, y - 40 * (1 - ease));
-      g.scale(1, 1 - 0.42 * ease);
-      g.rotate(b.angle * ease);
-      g.scale(b.flip ? -1 : 1, 1);
-      if (b.frame) g.drawImage(b.frame, -128, -196);
-      g.restore();
-    }
-  }
-  return { add, update, draw };
+  return { add, update };
 }

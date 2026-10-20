@@ -1,8 +1,8 @@
 # Нагрузка и «Продакшен»
 
 Этап 3 плана улучшения. Данные — `data/difficulty.js`, применение — `src/systems/difficulty.js`
-(спавн врагов и волны), учёт побед и рекордов — `src/systems/persistence.js`, экран итогов
-и продолжение — `src/app/game-flow.js`.
+(спавн врагов и волны), учёт побед и рекордов — `src/systems/progression/` (records, loads), экран итогов
+и продолжение — `src/app/run-lifecycle.js` (тексты итогов — `src/app/views/result.js`).
 
 ## Уровни нагрузки
 

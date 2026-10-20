@@ -1,14 +1,13 @@
 import { enemyPhrases, speechSettings } from '../../data/enemies/phrases.js';
-import { cameraOrigin } from '../rendering/camera.js';
 
-// Picks who speaks next among visible enemies; `view` = { W, H } of the screen.
-export function updateEnemySpeech(s, view, worldSize) {
+// Picks who speaks next among visible enemies; `visible` = { x, y, width, height } is the world
+// rectangle on screen (the caller owns the camera).
+export function updateEnemySpeech(s, visible) {
   for (const enemy of s.enemies)
     if (enemy.speech && (enemy.hp <= 0 || s.t >= enemy.speech.until)) enemy.speech = null;
-  if (s.t < (s.nextSpeechAt ?? speechSettings.interval)) return;
-  const width = view.W || 960,
-    height = view.H || 640;
-  const { x: cx, y: cy } = cameraOrigin(s.p, width, height, worldSize);
+  const r = s.runtime;
+  if (s.t < r.nextSpeechAt) return;
+  const { x: cx, y: cy, width, height } = visible;
   const candidates = s.enemies.filter(
     (e) =>
       e.hp > 0 &&
@@ -22,14 +21,13 @@ export function updateEnemySpeech(s, view, worldSize) {
   );
   if (!candidates.length) return;
   // Cosmetic rotation does not consume the gameplay random source.
-  const cursor = s.speechCursor || 0;
+  const cursor = r.speechCursor;
   const enemy = candidates[cursor % candidates.length];
   const phrases = enemyPhrases[enemy.unit];
-  const index = s.speechPhraseIndex?.[enemy.unit] || 0;
+  const index = r.speechPhraseIndex[enemy.unit] || 0;
   enemy.speech = { text: phrases[index % phrases.length], until: s.t + speechSettings.duration };
   enemy.nextSpeechAt = s.t + speechSettings.perEnemyCooldown;
-  s.speechPhraseIndex ??= {};
-  s.speechPhraseIndex[enemy.unit] = index + 1;
-  s.speechCursor = cursor + 1;
-  s.nextSpeechAt = s.t + speechSettings.interval;
+  r.speechPhraseIndex[enemy.unit] = index + 1;
+  r.speechCursor = cursor + 1;
+  r.nextSpeechAt = s.t + speechSettings.interval;
 }

@@ -1,6 +1,8 @@
 // Role mechanics of opponents, driven by the optional fields of data/enemies/units.js:
 // movement (dash, flank, keep), support (heal, aura), enrage, summons, ground hazards and
-// boss phases. `c` = { arena, spawn, hurtPlayer, effect, toast, random, units }.
+// boss phases. `c` = { arena, spawn, hurtPlayer, effect, toast, units }; random choices draw from `s.rng`.
+
+import { unitDefinitions } from '../../data/enemies/units.js';
 
 const hazardColor = '#ff7043';
 
@@ -19,7 +21,7 @@ export function moveGoal(c, s, e, u, d) {
   if (d <= e.r + 10) return null;
   if (u.flank && d > 150) {
     // Approach from the side: aim at a point off the straight line.
-    e.flankSide ??= c.random() < 0.5 ? -1 : 1;
+    e.flankSide ??= s.rng.random() < 0.5 ? -1 : 1;
     const a = Math.atan2(e.y - p.y, e.x - p.x) + e.flankSide * u.flank,
       r = d * 0.55;
     return { x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r, straight: true };
@@ -92,12 +94,12 @@ export function cooldownFactor(e, u) {
 function summonAround(c, s, e, units, count) {
   const out = [];
   for (let i = 0; i < count; i++) {
-    const a = c.random() * Math.PI * 2,
-      r = e.r + 40 + c.random() * 40,
-      unit = units[Math.floor(c.random() * units.length)];
+    const a = s.rng.random() * Math.PI * 2,
+      r = e.r + 40 + s.rng.random() * 40,
+      unit = units[Math.floor(s.rng.random() * units.length)];
     const m = c.spawn(unit, false, { x: e.x + Math.cos(a) * r, y: e.y + Math.sin(a) * r });
     if (m) {
-      m.summonedBy = e;
+      m.summonerId = e.id;
       out.push(m);
     }
   }
@@ -161,7 +163,7 @@ export function updateTraits(c, s, e, u, dt) {
     if (e.summonCd <= 0 && Math.hypot(s.p.x - e.x, s.p.y - e.y) < (spec.reach ?? 650)) {
       e.summonCd = spec.every;
       let alive = 0;
-      for (const o of s.enemies) if (o.summonedBy === e && o.hp > 0) alive++;
+      for (const o of s.enemies) if (o.summonerId === e.id && o.hp > 0) alive++;
       // `grow`: one more per call after every `grow` calls, up to `countMax`.
       const size = spec.grow
         ? Math.min(spec.countMax, spec.count + Math.floor((e.summons || 0) / spec.grow))
@@ -177,8 +179,8 @@ export function updateTraits(c, s, e, u, dt) {
     if (e.poolCd <= 0 && Math.hypot(s.p.x - e.x, s.p.y - e.y) < spec.reach) {
       e.poolCd = spec.every;
       for (let i = 0; i < spec.count; i++) {
-        const a = c.random() * Math.PI * 2,
-          r = i === 0 ? 0 : spec.scatter * (0.5 + c.random() * 0.5);
+        const a = s.rng.random() * Math.PI * 2,
+          r = i === 0 ? 0 : spec.scatter * (0.5 + s.rng.random() * 0.5);
         s.hazards.push({
           kind: 'pool',
           x: s.p.x + Math.cos(a) * r,
@@ -199,8 +201,8 @@ export function updateTraits(c, s, e, u, dt) {
 // Ground marks that explode after a delay (`blast`) and lingering zones (`pool`).
 export function placeMortar(c, s, e, u, spec, aim) {
   for (let i = 0; i < spec.count; i++) {
-    const a = c.random() * Math.PI * 2,
-      r = i === 0 ? 0 : spec.scatter * (0.5 + c.random() * 0.5);
+    const a = s.rng.random() * Math.PI * 2,
+      r = i === 0 ? 0 : spec.scatter * (0.5 + s.rng.random() * 0.5);
     s.hazards.push({
       kind: 'blast',
       x: aim.x + Math.cos(a) * r,
@@ -248,10 +250,20 @@ export function updateHazards(c, s, dt) {
 }
 
 // Damage share an enemy takes because a guard stands next to it.
+// A shielded unit (`frontDamageMultiplier`) takes less damage from hits that land on its
+// front; `p` is where the hit comes from.
+export function mitigation(e, p) {
+  const multiplier = unitDefinitions[e.unit]?.frontDamageMultiplier;
+  if (multiplier == null) return 1;
+  const a = Math.atan2(p.y - e.y, p.x - e.x);
+  return Math.cos(a - (e.heading || 0)) > 0.15 ? multiplier : 1;
+}
+
 export function auraFactor(s, e, units) {
-  if (!s.guards?.length) return 1;
+  const guards = s.runtime.guards;
+  if (!guards.length) return 1;
   let best = 0;
-  for (const g of s.guards) {
+  for (const g of guards) {
     if (g === e || g.hp <= 0) continue;
     const aura = units[g.unit].aura;
     if (Math.hypot(g.x - e.x, g.y - e.y) <= aura.radius) best = Math.max(best, aura.reduction);

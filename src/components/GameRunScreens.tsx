@@ -1,9 +1,9 @@
+import { memo } from 'react';
 import { Overlay } from './Overlay';
-import { GoalList } from './GameMenus';
+import { GoalList } from './menus/GoalList';
+import { primary } from './primary';
 import { RunRecords } from './LeaderboardView';
 import { useSession } from './session';
-
-const primary = { background: 'var(--cyan)', color: '#041724', boxShadow: '4px 4px 0 #008ba3' };
 
 type BuildItem = {
   id: string;
@@ -25,7 +25,14 @@ type Build = {
 };
 
 // Weapons and passives of the current run with their levels; empty slots are shown too.
-export function BuildPanel({ build, detailed }: { build: Build | null; detailed: boolean }) {
+// Memoized: the HUD passes the same build object until the build changes.
+export const BuildPanel = memo(function BuildPanel({
+  build,
+  detailed,
+}: {
+  build: Build | null;
+  detailed: boolean;
+}) {
   if (!build) return null;
   const row = (items: BuildItem[], empty: number, label: string) => (
     <div className="build-row" aria-label={label}>
@@ -84,7 +91,7 @@ export function BuildPanel({ build, detailed }: { build: Build | null; detailed:
       )}
     </div>
   );
-}
+});
 
 export function PauseScreen() {
   const session = useSession();

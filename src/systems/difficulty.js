@@ -6,7 +6,7 @@ export const productionMinutes = (s) =>
   s.endless ? Math.max(0, Math.floor((s.t - s.endlessStart) / 60)) : 0;
 
 // Modifiers in force right now: the run's load level plus production growth.
-export const runModifiers = (s) => loadModifiers(s.load || 1, productionMinutes(s));
+export const runModifiers = (s) => loadModifiers(s.load, productionMinutes(s));
 
 // Enemy stats on spawn. `bosses` is the number of production CRPTs before this one.
 export function scaleEnemy(e, m, bosses = 0) {

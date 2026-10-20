@@ -2,7 +2,7 @@
 // The SDK is loaded on demand so it never delays the first frame.
 const env = import.meta.env || {};
 
-export const firebaseConfig = {
+const firebaseConfig = {
   apiKey: env.VITE_FIREBASE_API_KEY,
   authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: env.VITE_FIREBASE_PROJECT_ID,

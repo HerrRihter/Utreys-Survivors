@@ -1,9 +1,8 @@
 const assert = require('node:assert/strict');
-const path = require('node:path');
 const fs = require('node:fs');
 fs.mkdirSync('test-results', { recursive: true });
 const { chromium, firefox } = require('playwright');
-const { createServer } = require('./server.cjs');
+const { startPreview } = require('./preview-server.cjs');
 const assets = require('./active-assets.json');
 
 (async () => {
@@ -14,8 +13,7 @@ const assets = require('./active-assets.json');
   });
   try {
     for (const prefix of ['/', '/utreys-survivors/']) {
-      const server = createServer({ root: path.resolve(__dirname, '../dist'), prefix });
-      await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+      const server = await startPreview({ base: prefix });
       const context = await browser.newContext();
       const page = await context.newPage();
       const errors = [];
@@ -23,7 +21,7 @@ const assets = require('./active-assets.json');
       page.on('response', (response) => {
         if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
       });
-      const url = `http://127.0.0.1:${server.address().port}${prefix}`;
+      const url = server.url;
       try {
         await page.goto(url);
         await page.locator('#start').waitFor();
@@ -63,6 +61,28 @@ const assets = require('./active-assets.json');
         await page.locator('#shopClose').click();
         await page.locator('#achievementsOpen').click();
         await page.locator('#achievementsClose').click();
+        // Keys reach the game on its own page only: the bestiary and arena pages keep them.
+        // ?bench exposes the session, so the probe reads the held keys directly.
+        const probe = await context.newPage();
+        await probe.goto(url + '?bench');
+        await probe.locator('#start').waitFor();
+        const held = () => probe.evaluate(() => window.__utraceSession.keys.has('KeyD'));
+        await probe.keyboard.down('d');
+        assert.equal(await held(), true, 'the game page receives keys');
+        await probe.keyboard.up('d');
+        await probe.getByRole('button', { name: 'ВРАГИ И КЛИЕНТЫ', exact: true }).click();
+        await probe.keyboard.down('d');
+        assert.equal(await held(), false, 'the bestiary keeps keys from the game');
+        await probe.keyboard.up('d');
+        await probe.getByRole('button', { name: 'Дата-центр Utrace', exact: true }).click();
+        await probe.keyboard.down('d');
+        assert.equal(await held(), false, 'the arena page keeps keys from the game');
+        await probe.keyboard.up('d');
+        await probe.getByRole('button', { name: '← В игру', exact: true }).click();
+        await probe.keyboard.down('d');
+        assert.equal(await held(), true, 'keys return with the game page');
+        await probe.keyboard.up('d');
+        await probe.close();
         await page.getByRole('button', { name: 'ВРАГИ И КЛИЕНТЫ', exact: true }).click();
         await page.getByRole('button', { name: '⏸ Пауза', exact: true }).click();
         const { unitDefinitions } = require('../data/enemies/units.js');
@@ -118,7 +138,7 @@ const assets = require('./active-assets.json');
           .screenshot({ path: 'test-results/client-skins.png' });
         await page.locator('#skin-review-sheet').evaluate((element) => element.remove());
         for (const motion of ['attack', 'hurt', 'walk']) {
-          await page.getByRole('combobox').selectOption(motion);
+          await page.getByRole('combobox', { name: /^Режим/ }).selectOption(motion);
           await page.evaluate(
             () =>
               new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
@@ -237,7 +257,7 @@ const assets = require('./active-assets.json');
         throw error;
       } finally {
         await context.close();
-        await new Promise((resolve) => server.close(resolve));
+        await server.close();
       }
     }
   } finally {

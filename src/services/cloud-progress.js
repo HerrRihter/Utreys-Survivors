@@ -1,5 +1,6 @@
-import { createStore } from '../app/store.js';
-import { normalizeProgression } from '../systems/persistence.js';
+import { createStore } from '../core/store.js';
+import { persisted } from '../core/storage.js';
+import { normalizeProgression } from '../systems/progression/index.js';
 
 // Keeps progress/{uid} in Firestore in step with the local save (docs/FIREBASE-PLAN.md,
 // «Синхронизация прогресса»). localStorage stays the source the game reads; the cloud copy
@@ -43,7 +44,7 @@ export function saveHash(data) {
 }
 
 // What the conflict dialog shows for each save.
-export const progressSummary = (data) => ({
+const progressSummary = (data) => ({
   codes: data.codes,
   wins: data.stats.wins,
   heroes: data.unlocked.length,
@@ -78,18 +79,11 @@ export function createCloudProgress({
   const stale = () => Object.assign(new Error('stale'), { code: 'stale' });
 
   // This device: its id and the cloud revision it last matched, per account.
-  function readMeta() {
-    try {
-      const meta = JSON.parse(storage.getItem(CLOUD_META_KEY));
-      if (meta && typeof meta === 'object') return meta;
-    } catch {}
-    return {};
-  }
-  function writeMeta(meta) {
-    try {
-      storage.setItem(CLOUD_META_KEY, JSON.stringify(meta));
-    } catch {}
-  }
+  const metaFile = persisted(storage, CLOUD_META_KEY, {
+    normalize: (meta) => (meta && typeof meta === 'object' ? meta : {}),
+  });
+  const readMeta = metaFile.load;
+  const writeMeta = metaFile.save;
   function deviceId() {
     const meta = readMeta();
     if (typeof meta.device !== 'string' || !meta.device) {
@@ -157,7 +151,11 @@ export function createCloudProgress({
       set({ status: 'synced' });
       return;
     }
-    const localChanged = !known || localHash !== meta.hash,
+    // A save only brought to the current format at load (src/core/migrations.js) is the one
+    // this device last synced, not a change of the player's.
+    const previous = progression.previous,
+      migratedOnly = !!previous && saveHash(previous) === meta.hash;
+    const localChanged = !known || (localHash !== meta.hash && !migratedOnly),
       remoteChanged = !known || remote.rev !== meta.rev;
     if (!remoteChanged) return push(sdk, owner, local, remote.rev);
     if (!localChanged || localKey === emptyKey) return take(owner, remote.rev, remoteData);

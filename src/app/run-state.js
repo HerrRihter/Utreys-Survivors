@@ -1,4 +1,5 @@
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { persisted } from '../core/storage.js';
 
 /**
  * @typedef {{ id: string, icon: string, name: string, level: number, max: number,
@@ -15,26 +16,24 @@ import { baClientIds } from '../../data/characters/ba-specialization.js';
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
- *   state: any, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
+ *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'end',
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
  *   selectedMap: string, selectedLoad: number, seedInput: string,
- *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], result: RunResult | null,
- *   best: { kills: number, time: number }, toast: { text: string, left: number },
+ *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], banishArmed: boolean,
+ *   capture: string | null, result: RunResult | null,
+ *   toast: { text: string, left: number },
  *   levelLock: number, tip: { text: string, left: number },
  *   keys: Set<string>, pointer: { id: number, x: number, y: number } | null,
- *   stick: { x: number, y: number }, stickView: StickView | null,
+ *   stick: { x: number, y: number }, move: { x: number, y: number },
+ *   stickView: StickView | null,
  * }} RunState
  */
 
 // Everything that describes "where the player is" between frames: the current run, which screen
 // is open, menu choices and raw input. Systems receive it explicitly and mutate it in place.
 /** @returns {RunState} */
-export function createRunState({ storage }) {
-  let best = { kills: 0, time: 0 };
-  try {
-    best = JSON.parse(storage.getItem('utreys-best')) || best;
-  } catch {}
+export function createRunState() {
   return {
     state: null, // the active run, null in the menu
     mode: 'menu', // menu | play | pause | level | end
@@ -49,14 +48,16 @@ export function createRunState({ storage }) {
     touchOnly: false, // a touch device without mouse or keyboard (set by the session)
     nextSeed: null, // seed for the next start (typed, repeated or resumed)
     choice: [],
+    banishArmed: false, // the next card picked is banned instead of taken
+    capture: null, // the action whose key the settings screen is waiting for
     result: null, // { win, ... } after a run ends
-    best,
     toast: { text: '', left: 0 },
     levelLock: 0, // seconds before a level-up card accepts player input
     tip: { text: '', left: 0 }, // first-run guidance banner
     keys: new Set(),
     pointer: null,
     stick: { x: 0, y: 0 },
+    move: { x: 0, y: 0 }, // movement intent combined by the input layer each step
     stickView: null, // { x, y, knobX, knobY } while a touch stick is engaged
   };
 }
@@ -99,7 +100,7 @@ export function hudScale(uiScale, width, height) {
 
 // Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings),
 // persisted separately from progress.
-export function createGameSettings({ storage }) {
+function normalizeSettings(saved) {
   const settings = {
     shake: true,
     hints: true,
@@ -107,23 +108,21 @@ export function createGameSettings({ storage }) {
     uiScale: 1,
     bindings: { ...defaultBindings },
   };
-  try {
-    const saved = JSON.parse(storage.getItem('utreys-settings'));
-    if (saved && typeof saved === 'object') {
-      for (const key of ['shake', 'hints', 'damageNumbers'])
-        if (typeof saved[key] === 'boolean') settings[key] = saved[key];
-      if (uiScales.includes(saved.uiScale)) settings.uiScale = saved.uiScale;
-      if (saved.bindings && typeof saved.bindings === 'object')
-        for (const action of Object.keys(defaultBindings))
-          if (typeof saved.bindings[action] === 'string')
-            settings.bindings[action] = saved.bindings[action];
-    }
-  } catch {}
-  const save = () => {
-    try {
-      storage.setItem('utreys-settings', JSON.stringify(settings));
-    } catch {}
-  };
+  if (saved && typeof saved === 'object') {
+    for (const key of ['shake', 'hints', 'damageNumbers'])
+      if (typeof saved[key] === 'boolean') settings[key] = saved[key];
+    if (uiScales.includes(saved.uiScale)) settings.uiScale = saved.uiScale;
+    if (saved.bindings && typeof saved.bindings === 'object')
+      for (const action of Object.keys(defaultBindings))
+        if (typeof saved.bindings[action] === 'string')
+          settings.bindings[action] = saved.bindings[action];
+  }
+  return settings;
+}
+export function createGameSettings({ storage }) {
+  const file = persisted(storage, 'utreys-settings', { normalize: normalizeSettings });
+  const settings = file.load();
+  const save = () => file.save(settings);
   return {
     get shake() {
       return settings.shake;

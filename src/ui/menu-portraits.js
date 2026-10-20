@@ -10,7 +10,7 @@ export const MenuPortraits = {
         for (let i = 0; i < 8; i++) {
           const source = document.createElement('canvas');
           source.width = source.height = 256;
-          sprite(source.getContext('2d'), name, 128, 230, 3, false, 0, false, 0, {
+          sprite(source.getContext('2d'), name, 128, 230, 3, false, false, {
             moving: i < 4,
             walk: (i % 4) / 4,
             action: i >= 4 ? { elapsed: (i % 4) / 4, duration: 1, flip: false } : null,

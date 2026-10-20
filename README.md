@@ -23,11 +23,11 @@ npm run test:browser
 
 check выполняет линт JavaScript, строгую проверку TypeScript, проверку форматирования, все тесты, контракты и production-сборку. test:browser проверяет уже собранный dist. На Windows можно использовать установленный Edge: `$env:BROWSER_CHANNEL='msedge'; npm.cmd run test:browser`. Если PowerShell блокирует npm.ps1, используйте npm.cmd вместо npm.
 
-- `npm test` — все тестовые файлы tests/test*.cjs, автоматически.
+- `npm test` — все тесты (vitest, tests/*.test.js).
 - `npm run format` — форматирование исходников.
 - `npm run check:structure` — проверка структуры и ресурсов.
 - `npm run build` — сборка в dist.
-- `npm run preview` — просмотр production-сборки на порту 3000.
+- `npm run preview` — просмотр production-сборки на порту 3000 (через тот же `preview()` Vite smoke и layout открывают dist).
 
 GitHub Actions выполняет те же проверки и браузерный smoke для PR. Публикация dist в GitHub Pages выполняется только для main/master и ручного запуска, после проверок.
 

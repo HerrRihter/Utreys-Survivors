@@ -1,23 +1,29 @@
-import { AssetPaths } from '../rendering/asset-paths.js';
+import { AssetPaths } from './assets.js';
 import { createEventScope } from './lifecycle.js';
+import { persisted } from './storage.js';
+import { LEGACY_AUDIO_KEYS } from './migrations.js';
+
+// The saved mix: sound on or off and the two volumes in 0..1.
+function normalizeAudio(saved) {
+  const settings = { enabled: true, music: 0.3, effects: 0.65 };
+  if (saved && typeof saved === 'object') {
+    if (typeof saved.enabled === 'boolean') settings.enabled = saved.enabled;
+    for (const key of ['music', 'effects'])
+      if (Number.isFinite(saved[key])) settings[key] = Math.max(0, Math.min(1, saved[key]));
+  }
+  return settings;
+}
 // Music by mode, pooled sound effects and the persisted mix. No DOM controls: the UI calls
 // toggle()/setVolume() and re-reads `settings` when `onChange` fires.
 export const AudioSystem = {
   create({ window, document, storage, performance, random, getMode, onChange = () => {} }) {
     const events = createEventScope();
     const root = new URL(AssetPaths.url('audio/'));
-    const settings = { enabled: true, music: 0.3, effects: 0.65 };
-    try {
-      const current = storage.getItem('utreys-audio');
-      const legacy = current == null ? storage.getItem('gaul-audio') : null;
-      const saved = JSON.parse(current ?? legacy);
-      if (saved) {
-        if (typeof saved.enabled === 'boolean') settings.enabled = saved.enabled;
-        for (const key of ['music', 'effects'])
-          if (Number.isFinite(saved[key])) settings[key] = Math.max(0, Math.min(1, saved[key]));
-      }
-      if (current == null && saved) storage.setItem('utreys-audio', JSON.stringify(settings));
-    } catch {}
+    const file = persisted(storage, 'utreys-audio', {
+      normalize: normalizeAudio,
+      legacyKeys: LEGACY_AUDIO_KEYS,
+    });
+    const settings = file.load();
     const clips = {
       hit: ['hit-1.mp3', 'hit-2.mp3'],
       hurt: ['hurt.mp3'],
@@ -113,9 +119,7 @@ export const AudioSystem = {
       play(audio);
     }
     function save() {
-      try {
-        storage.setItem('utreys-audio', JSON.stringify(settings));
-      } catch {}
+      file.save(settings);
     }
     function unlock() {
       unlocked = true;

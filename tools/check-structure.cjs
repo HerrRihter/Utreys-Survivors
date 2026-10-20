@@ -19,6 +19,127 @@ function walk(root, directory) {
   });
 }
 
+// Layer of a source file: `data`, `src` (entry files), `src/<dir>` or a declared sublayer such
+// as `systems/queries`. Files outside src and data have none.
+function layerOf(file, layers) {
+  const parts = file.split('/');
+  if (parts[0] === 'data') return 'data';
+  if (parts[0] !== 'src') return null;
+  if (parts.length === 2) return 'src';
+  for (let depth = parts.length - 1; depth > 1; depth--) {
+    const name = parts.slice(1, depth).join('/');
+    if (Object.hasOwn(layers, name)) return name;
+  }
+  return parts[1];
+}
+
+// Relative module specifiers of every static import/export and dynamic import().
+const importPattern =
+  /(?:^|[^\w.$])(?:import|export)\s[^'"`;]*?\bfrom\s*['"]([^'"]+)['"]|(?:^|[^\w.$])import\s*\(\s*['"]([^'"]+)['"]\s*\)|(?:^|[^\w.$])import\s+['"]([^'"]+)['"]/g;
+function importsOf(source) {
+  const specifiers = [];
+  for (const match of source.matchAll(importPattern)) {
+    const specifier = match[1] || match[2] || match[3];
+    if (specifier.startsWith('.')) specifiers.push(specifier);
+  }
+  return specifiers;
+}
+
+// A file may import its own layer (and its sublayers) and the layers its row of the matrix
+// lists; listing `systems` admits `systems/queries` as well.
+function importAllowed(from, to, layers) {
+  if (to === from || to.startsWith(from + '/')) return true;
+  return layers[from].some((allowed) => to === allowed || to.startsWith(allowed + '/'));
+}
+
+function checkLayers({ root = path.resolve(__dirname, '..'), layers = contract.layers } = {}) {
+  const violations = [];
+  const files = ['src', 'data']
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const from = layerOf(file, layers);
+    if (!Object.hasOwn(layers, from)) {
+      violations.push(`${file}: layer "${from}" is missing from structure-contract.json layers`);
+      continue;
+    }
+    for (const specifier of importsOf(fs.readFileSync(path.join(root, file), 'utf8'))) {
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier));
+      const to = layerOf(target, layers);
+      if (to === null || importAllowed(from, to, layers)) continue;
+      violations.push(
+        `${file} (${from}) imports ${target} (${to}); ${from} may import only: ` +
+          (layers[from].join(', ') || 'nothing outside itself'),
+      );
+    }
+  }
+  if (violations.length)
+    throw new Error(
+      'Layer violation (see docs/STRUCTURE-CONTRACT.md, tools/structure-contract.json):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
+// Code without comments (line numbers kept), so prose may name Canvas calls.
+const stripComments = (source) =>
+  source
+    .replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ''))
+    .replace(/(^|\s)\/\/.*$/gm, '$1');
+
+// Systems and world only change state: no Canvas call such as `g.fillRect(` in the
+// contract's `noCanvas.roots`.
+function checkNoCanvas({ root = path.resolve(__dirname, '..'), rule = contract.noCanvas } = {}) {
+  const call = new RegExp(`\\.\\s*(${rule.calls.join('|')})\\s*\\(`, 'g');
+  const violations = [];
+  const files = rule.roots
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const lines = stripComments(fs.readFileSync(path.join(root, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      for (const match of line.matchAll(call))
+        violations.push(`${file}:${i + 1} calls ${match[1]}()`);
+    });
+  }
+  if (violations.length)
+    throw new Error(
+      'Canvas call outside src/rendering (see docs/STRUCTURE-CONTRACT.md):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
+// A run replays from its seed and input: no global random source and no wall clock in the
+// contract's `noGlobalRandom.roots` (src/systems, src/world).
+function checkNoGlobalRandom({
+  root = path.resolve(__dirname, '..'),
+  rule = contract.noGlobalRandom,
+} = {}) {
+  const pattern = (name) => name.split('.').join('\\s*\\.\\s*');
+  const use = new RegExp(`\\b(${rule.globals.map(pattern).join('|')})\\b`, 'g');
+  const violations = [];
+  const files = rule.roots
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const lines = stripComments(fs.readFileSync(path.join(root, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      for (const match of line.matchAll(use))
+        violations.push(`${file}:${i + 1} uses ${match[1].replace(/\s+/g, '')}`);
+    });
+  }
+  if (violations.length)
+    throw new Error(
+      'Unseeded randomness or wall clock in the simulation (see docs/STRUCTURE-CONTRACT.md):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
 function checkStructure({
   root = path.resolve(__dirname, '..'),
   inventory = {
@@ -46,25 +167,6 @@ function checkStructure({
   for (const file of assets)
     if (file.startsWith('assets/runtime/') && !published.has(file))
       throw new Error('Unused runtime asset: ' + file);
-  const references = [
-    ...contract.referenceFiles,
-    ...contract.referenceRoots.flatMap((dir) => walk(root, dir)),
-    ...walk(root, 'tools').filter(
-      (file) => /\.(cjs|ps1)$/.test(file) && file !== 'tools/check-structure.cjs',
-    ),
-  ];
-  for (const file of references.filter((file) => /\.(js|tsx?|cjs|json|html|css|ps1)$/.test(file))) {
-    const source = fs.readFileSync(path.join(root, file), 'utf8');
-    for (const obsolete of contract.forbiddenReferences) {
-      if (source.includes(obsolete))
-        throw new Error(`Obsolete asset reference in ${file}: ${obsolete}`);
-    }
-    // Names of the retired village game must not creep back into the engine.
-    if (!file.startsWith('tools/'))
-      for (const name of contract.forbiddenIdentifiers || [])
-        if (new RegExp(`\\b${name}\\b`).test(source))
-          throw new Error(`Obsolete identifier in ${file}: ${name}`);
-  }
   for (const file of [
     ...fs.readdirSync(root),
     ...['src', 'data', 'styles', 'tools', 'tests'].flatMap((dir) => walk(root, dir)),
@@ -72,11 +174,23 @@ function checkStructure({
     if (/\.(png|jpe?g|webp|gif|mp3|ogg|wav)$/i.test(file))
       throw new Error(`Media outside assets: ${file}`);
   }
+  const { files: modules } = checkLayers({ root });
+  checkNoCanvas({ root });
+  checkNoGlobalRandom({ root });
   return {
     assets: assets.length,
+    modules,
     published: inventory.groups.flatMap((group) => group.files).length,
   };
 }
 
 if (require.main === module) console.log('Structure contract OK:', checkStructure());
-module.exports = { checkStructure, validateAssetPath };
+module.exports = {
+  checkStructure,
+  checkLayers,
+  checkNoCanvas,
+  checkNoGlobalRandom,
+  validateAssetPath,
+  stripComments,
+  walk,
+};

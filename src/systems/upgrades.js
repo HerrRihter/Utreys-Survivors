@@ -4,8 +4,6 @@ import {
   abilityUpgradeMax,
   abilityUpgradeId,
 } from '../../data/characters/abilities.js';
-import { permanentUpgradeDefinitions, heroTrainingDefinitions } from '../../data/upgrades.js';
-import { heroPassives } from '../../data/characters/hero-passives.js';
 import {
   weaponDefinitions,
   weaponSlots,
@@ -14,49 +12,44 @@ import {
   heroWeaponLevels,
   heroEvolutions,
 } from '../../data/weapons.js';
+import {
+  levelUpPassives,
+  passiveIcon,
+  passiveMaxRank,
+  supplyCards,
+  cardTexts,
+} from '../../data/upgrades.js';
+
+// A card text with its `{name}` placeholders filled in.
+const fill = (template, values) => template.replace(/\{(\w+)\}/g, (_, key) => values[key]);
 
 // Level-up choices. A run owns the hero's attack plus up to `weaponSlots` extra weapons (more
 // with the `weaponSlots` stat) and `passiveSlots` passives; once the slots are full only owned
 // items keep levelling.
 export const UpgradeSystem = {
-  create(Progression) {
+  create({ wallet, achievements }) {
     const add = (key, value) => (s) => (s.stats[key] = (s.stats[key] || 0) + value);
-    const passive = (id, name, desc, key, value, max = 5) => ({
-      id,
-      name,
-      desc,
-      icon: '✦',
-      max,
+    // One rank of a card's `effect` (data/upgrades.js).
+    function applyEffect(s, effect) {
+      if (effect.stat) add(effect.stat, effect.value)(s);
+      if (effect.maxHp) s.p.max += effect.maxHp;
+      if (effect.hp) s.p.hp += effect.hp;
+      if (effect.heal) s.p.hp = Math.min(s.p.max, s.p.hp + effect.heal);
+      if (effect.fullHeal) s.p.hp = s.p.max;
+      if (effect.codes) {
+        wallet.earn(effect.codes);
+        s.earned += effect.codes;
+      }
+    }
+    const common = levelUpPassives.map((u) => ({
+      id: u.id,
+      name: u.name,
+      desc: u.desc,
+      icon: u.icon || passiveIcon,
+      max: passiveMaxRank,
       kind: 'passive',
-      apply: add(key, value),
-    });
-    const common = [
-      passive('might', 'Сила атаки', '+15% к базовому урону всех атак.', 'damage', 0.15),
-      passive('tempo', 'Второе дыхание', '+12% к темпу атак и перезарядке оружия.', 'haste', 0.12),
-      passive('area', 'Широкий размах', '+12% к размеру оружия и областей урона.', 'range', 0.12),
-      passive('boots', 'Лёгкий шаг', '+8% к скорости передвижения.', 'speed', 0.08),
-      {
-        id: 'vitality',
-        name: 'Запас здоровья',
-        desc: '+20 к максимуму здоровья и восстановление 30 HP.',
-        icon: '♥',
-        max: 5,
-        kind: 'passive',
-        apply: (s) => {
-          s.p.max += 20;
-          s.p.hp = Math.min(s.p.max, s.p.hp + 30);
-        },
-      },
-      passive('recovery', 'Восстановление', 'Ещё 0,5 HP в секунду.', 'regen', 0.5),
-      passive('armor', 'Защита', 'На 1 меньше урона от каждого попадания; минимум 1.', 'armor', 1),
-      passive(
-        'magnet',
-        'Притяжение предметов',
-        '+30 к радиусу притяжения кодов и опыта.',
-        'magnet',
-        30,
-      ),
-    ];
+      apply: (s) => applyEffect(s, u.effect),
+    }));
     const passiveName = Object.fromEntries(common.map((u) => [u.id, u.name]));
 
     // The hero's own attack: one item, five ranks (levels 2..6), the last one evolves it.
@@ -66,9 +59,9 @@ export const UpgradeSystem = {
         [
           {
             id: 'heroWeapon',
-            name: 'Атака героя',
+            name: cardTexts.heroWeapon.name,
             desc: '',
-            icon: '⚔',
+            icon: cardTexts.heroWeapon.icon,
             max: heroWeaponLevels.length,
             kind: 'hero',
             apply: (s) => {
@@ -91,9 +84,8 @@ export const UpgradeSystem = {
       icon: def.icon,
       max: weaponMaxLevel,
       kind: 'weapon',
-      available: () => Progression.weaponUnlocked?.(id) ?? true,
+      available: () => achievements.weaponUnlocked(id),
       apply: (s) => {
-        s.weapons ??= [];
         const owned = s.weapons.find((w) => w.id === id);
         if (owned) owned.level++;
         else s.weapons.push({ id, level: 1, cd: 0.5, evolved: false, phase: 0 });
@@ -108,49 +100,20 @@ export const UpgradeSystem = {
           ability: a.id,
           name: a.name,
           desc: abilityUpgradeDescriptions[a.id],
-          icon: '◆',
+          icon: cardTexts.abilityIcon,
           max: abilityUpgradeMax,
           kind: 'ability',
           apply: () => {},
         })),
       ]),
     );
-    const fallback = [
-      {
-        id: 'herbs',
-        name: 'Восстановление',
-        desc: '+0,1 HP регенерации в секунду.',
-        icon: '♥',
-        apply: add('regen', 0.1),
-      },
-      {
-        id: 'food',
-        name: 'Передышка',
-        desc: 'Восстановить всё здоровье.',
-        icon: '♥',
-        apply: (s) => (s.p.hp = s.p.max),
-      },
-      {
-        id: 'loot',
-        name: 'Бонусные коды',
-        desc: 'Получить 3 кода маркировки.',
-        icon: '◈',
-        apply: (s) => {
-          Progression.earn(3);
-          s.earned += 3;
-        },
-      },
-      {
-        id: 'reserve',
-        name: 'Запас сил',
-        desc: '+5 к максимуму и текущему здоровью.',
-        icon: '♥',
-        apply: (s) => {
-          s.p.max += 5;
-          s.p.hp += 5;
-        },
-      },
-    ];
+    const fallback = supplyCards.map((u) => ({
+      id: u.id,
+      name: u.name,
+      desc: u.desc,
+      icon: u.icon,
+      apply: (s) => applyEffect(s, u.effect),
+    }));
 
     const rank = (s, u) =>
       u.kind === 'weapon'
@@ -168,10 +131,13 @@ export const UpgradeSystem = {
         return {
           ...u,
           name: s.heroWeaponName || u.name,
-          group: 'Оружие героя',
-          detail: `Ур. ${r + 1} → ${r + 2}`,
+          group: cardTexts.groups.hero,
+          detail: fill(cardTexts.level, { from: r + 1, to: r + 2 }),
           desc: step.evolve
-            ? `Эволюция: ${heroEvolutions[hero]?.name}. ${heroEvolutions[hero]?.desc}`
+            ? fill(cardTexts.heroEvolution, {
+                name: heroEvolutions[hero]?.name,
+                desc: heroEvolutions[hero]?.desc,
+              })
             : step.desc,
           isNew: false,
           evolves: !!step.evolve,
@@ -179,11 +145,14 @@ export const UpgradeSystem = {
       }
       if (u.kind === 'weapon') {
         const def = weaponDefinitions[u.weapon];
-        const pair = `Эволюция: ${def.evolution.name} (+ ${passiveName[def.evolution.passive]})`;
+        const pair = fill(cardTexts.weaponEvolution, {
+          name: def.evolution.name,
+          passive: passiveName[def.evolution.passive],
+        });
         return {
           ...u,
-          group: r ? 'Оружие' : 'Новое оружие',
-          detail: r ? `Ур. ${r} → ${r + 1}` : 'Новое',
+          group: r ? cardTexts.groups.weapon : cardTexts.groups.newWeapon,
+          detail: r ? fill(cardTexts.level, { from: r, to: r + 1 }) : cardTexts.isNew,
           desc:
             (r ? def.levels[r - 1].desc : def.desc) +
             (r + 1 === weaponMaxLevel ? ' · ' + pair : ''),
@@ -194,14 +163,14 @@ export const UpgradeSystem = {
       if (u.kind === 'passive')
         return {
           ...u,
-          group: r ? 'Пассивка' : 'Новая пассивка',
-          detail: r ? `Ранг ${r} → ${r + 1} из ${u.max}` : 'Новое',
+          group: r ? cardTexts.groups.passive : cardTexts.groups.newPassive,
+          detail: r ? fill(cardTexts.rank, { from: r, to: r + 1, max: u.max }) : cardTexts.isNew,
           isNew: !r,
         };
       return {
         ...u,
-        group: 'Активное умение',
-        detail: `Ранг ${r} → ${r + 1} из ${u.max}`,
+        group: cardTexts.groups.ability,
+        detail: fill(cardTexts.rank, { from: r, to: r + 1, max: u.max }),
         isNew: !r,
       };
     }
@@ -221,7 +190,7 @@ export const UpgradeSystem = {
         .map((u) => describe(u, s, hero));
     }
     // Four cards; one of them is always a weapon (the hero's or an extra) while any remains.
-    function offer(hero, s, random = Math.random) {
+    function offer(hero, s, random = s.rng.random) {
       const all = pool(hero, s),
         armed = all.filter((u) => u.kind === 'weapon' || u.kind === 'hero'),
         result = [];
@@ -234,38 +203,50 @@ export const UpgradeSystem = {
       result.push(...rest.slice(0, 4 - result.length));
       for (const u of fallback) {
         if (result.length === 4) break;
-        result.push({ ...u, group: 'Припасы', detail: '', isNew: false });
+        result.push(supply(u));
       }
       return result;
     }
+    const supply = (u) => ({ ...u, group: cardTexts.groups.supply, detail: '', isNew: false });
+    // The cards of a saved offer, by id; null when one of them can no longer be offered.
+    function cards(hero, s, ids) {
+      const all = [...pool(hero, s), ...fallback.map(supply)];
+      const out = ids.map((id) => all.find((u) => u.id === id));
+      return out.length && out.every(Boolean) ? out : null;
+    }
     function apply(u, s) {
       if (u.available && !u.available(s)) return false;
-      s.upgradeRanks ??= {};
       if (u.max && rank(s, u) >= u.max) return false;
       u.apply(s);
       if (u.max && u.kind !== 'weapon') s.upgradeRanks[u.id] = (s.upgradeRanks[u.id] || 0) + 1;
       return true;
     }
-    function permanent(s, hero, levels) {
-      for (const key of ['haste', 'range', 'magnet', 'armor', 'regen', 'greed', 'luck']) {
-        const factor = permanentUpgradeDefinitions[key]?.factor;
-        if (factor !== undefined) add(key, (levels[key] || 0) * factor)(s);
-      }
-      // The hero's innate passive, then its training on top.
-      for (const [key, value] of Object.entries(heroPassives[hero]?.stats || {}))
-        add(key, value)(s);
-      const training = heroTrainingDefinitions[hero];
-      if (training) add(training.stat, training.factor * (levels['training_' + hero] || 0))(s);
-    }
     // The run's build for HUD, pause and result screens.
+    // Everything build() reads, as a string: equal keys give equal builds.
+    function buildKey(hero, s) {
+      let key =
+        hero +
+        '|' +
+        (s.upgradeRanks?.heroWeapon || 0) +
+        '|' +
+        (s.heroWeaponName || '') +
+        '|' +
+        (s.stats.heroEvo ? 1 : 0) +
+        '|' +
+        extraSlots(s);
+      for (const w of s.weapons || []) key += '|' + w.id + ':' + w.level + (w.evolved ? '*' : '');
+      for (const u of common)
+        if (s.upgradeRanks?.[u.id]) key += '|' + u.id + ':' + s.upgradeRanks[u.id];
+      return key;
+    }
     function build(hero, s) {
       const heroRank = s.upgradeRanks?.heroWeapon || 0;
       return {
         weapons: [
           {
             id: 'hero',
-            icon: '⚔',
-            name: s.heroWeaponName || 'Атака героя',
+            icon: cardTexts.heroWeapon.icon,
+            name: s.heroWeaponName || cardTexts.heroWeapon.name,
             level: heroRank + 1,
             max: heroWeaponLevels.length + 1,
             evolved: !!s.stats.heroEvo,
@@ -298,6 +279,18 @@ export const UpgradeSystem = {
         passiveSlots,
       };
     }
-    return { common, heroes, weapons, abilities, pool, offer, apply, permanent, build, describe };
+    return {
+      common,
+      heroes,
+      weapons,
+      abilities,
+      pool,
+      offer,
+      cards,
+      apply,
+      build,
+      buildKey,
+      describe,
+    };
   },
 };

@@ -1,3 +1,6 @@
+import { eventSpec } from '../systems/queries/events.js';
+import { inBox } from '../core/math.js';
+
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
 // Where a marker for a world point sits on screen, or null when the point is visible.
@@ -6,7 +9,7 @@
 export function edgeMarker(target, cx, cy, width, height, margin = 30) {
   const sx = target.x - cx,
     sy = target.y - cy;
-  if (sx >= 0 && sx <= width && sy >= 0 && sy <= height) return null;
+  if (inBox({ x: sx, y: sy }, { minX: 0, minY: 0, maxX: width, maxY: height })) return null;
   const left = margin,
     right = width - margin,
     top = Math.max(margin, height * 0.27, 105),
@@ -37,12 +40,13 @@ export function edgeTargets(s) {
       node = n;
     }
   }
-  if (node) out.push({ x: node.x, y: node.y, label: node.id, color: '#ffd54f', distance: best });
-  if (s.event?.type === 'incident')
+  if (node) out.push({ x: node.x, y: node.y, label: node.label, color: '#ffd54f', distance: best });
+  const marker = eventSpec(s)?.marker;
+  if (marker)
     out.push({
       x: s.event.x,
       y: s.event.y,
-      label: 'ИНЦИДЕНТ',
+      label: marker,
       color: '#ff8a65',
       distance: Math.hypot(s.event.x - s.p.x, s.event.y - s.p.y),
     });

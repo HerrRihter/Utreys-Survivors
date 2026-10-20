@@ -1,7 +1,5 @@
 import { createContext, useContext, useSyncExternalStore } from 'react';
-import type { GameSession } from '../app/game-session.js';
-
-export type Session = ReturnType<typeof GameSession.create>;
+import type { Session } from '../app/types';
 
 export const SessionContext = createContext<Session | null>(null);
 

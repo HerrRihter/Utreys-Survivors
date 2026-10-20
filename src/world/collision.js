@@ -1,113 +1,103 @@
-// Ground-contact shapes in normalized sprite coordinates, not roof/canopy silhouettes.
-export const ArenaCollision = (() => {
-  function create(objects, size) {
-    const polygons = [],
-      bucketSize = 100,
+import { boxesOverlap, inBox } from '../core/math.js';
+
+// Solid ground as axis-aligned boxes { minX, minY, maxX, maxY } (a map's racks). A mover is a
+// capsule: the segment it sweeps in one step, grown by its radius. It is clear when it stays
+// `r` inside the arena's edge and no box comes closer than `r` to the segment.
+export const ArenaCollision = {
+  create(boxes, size) {
+    const bucketSize = 100,
       bucketCols = Math.ceil(size / bucketSize) + 2,
       buckets = [];
+    const solid = boxes.map((b) => ({ ...b, stamp: 0 }));
+    for (const box of solid) {
+      const minBy = Math.max(0, Math.floor(box.minY / bucketSize)),
+        maxBy = Math.min(bucketCols - 1, Math.floor(box.maxY / bucketSize));
+      const minBx = Math.max(0, Math.floor(box.minX / bucketSize)),
+        maxBx = Math.min(bucketCols - 1, Math.floor(box.maxX / bucketSize));
+      for (let y = minBy; y <= maxBy; y++)
+        for (let x = minBx; x <= maxBx; x++) (buckets[x + y * bucketCols] ||= []).push(box);
+    }
     let queryStamp = 1;
     const candidateList = [];
-    for (const o of objects) {
-      const [fx, fy, fw, fh] = o.footprint || [0, 0, 0, 0];
-      const outlines =
-        o.footprintPolygons ||
-        (o.footprint
-          ? [
-              [
-                [fx, fy],
-                [fx + fw, fy],
-                [fx + fw, fy + fh],
-                [fx, fy + fh],
-              ],
-            ]
-          : []);
-      for (const shape of outlines) {
-        const points = shape.map(([x, y]) =>
-          o.footprintPolygons
-            ? { x: o.x + (o.flip ? -x : x), y: o.y + y }
-            : o.footprint
-              ? { x: o.x + x, y: o.y + y }
-              : { x: o.x + x, y: o.y + y },
-        );
-        const p = {
-          points,
-          object: o,
-          minX: Math.min(...points.map((p) => p.x)),
-          maxX: Math.max(...points.map((p) => p.x)),
-          minY: Math.min(...points.map((p) => p.y)),
-          maxY: Math.max(...points.map((p) => p.y)),
-          stamp: 0,
-        };
-        polygons.push(p);
-        const minBy = Math.max(0, Math.floor(p.minY / bucketSize)),
-          maxBy = Math.min(bucketCols - 1, Math.floor(p.maxY / bucketSize));
-        const minBx = Math.max(0, Math.floor(p.minX / bucketSize)),
-          maxBx = Math.min(bucketCols - 1, Math.floor(p.maxX / bucketSize));
-        for (let y = minBy; y <= maxBy; y++)
-          for (let x = minBx; x <= maxBx; x++) {
-            const idx = x + y * bucketCols;
-            if (!buckets[idx]) buckets[idx] = [];
-            buckets[idx].push(p);
-          }
-      }
-    }
-    function candidates(x0, y0, x1, y1) {
-      const minBx = Math.max(0, Math.floor(x0 / bucketSize)),
-        maxBx = Math.min(bucketCols - 1, Math.floor(x1 / bucketSize));
-      const minBy = Math.max(0, Math.floor(y0 / bucketSize)),
-        maxBy = Math.min(bucketCols - 1, Math.floor(y1 / bucketSize));
+    // Boxes in the buckets under the query box, each once.
+    function candidates(query) {
+      const minBx = Math.max(0, Math.floor(query.minX / bucketSize)),
+        maxBx = Math.min(bucketCols - 1, Math.floor(query.maxX / bucketSize));
+      const minBy = Math.max(0, Math.floor(query.minY / bucketSize)),
+        maxBy = Math.min(bucketCols - 1, Math.floor(query.maxY / bucketSize));
       queryStamp++;
       if (queryStamp > 2000000000) {
-        for (let i = 0; i < polygons.length; i++) polygons[i].stamp = 0;
+        for (const box of solid) box.stamp = 0;
         queryStamp = 1;
       }
       candidateList.length = 0;
       for (let y = minBy; y <= maxBy; y++) {
         const row = y * bucketCols;
         for (let x = minBx; x <= maxBx; x++) {
-          const b = buckets[row + x];
-          if (b)
-            for (let i = 0; i < b.length; i++) {
-              const p = b[i];
-              if (p.stamp !== queryStamp) {
-                p.stamp = queryStamp;
-                candidateList.push(p);
+          const bucket = buckets[row + x];
+          if (bucket)
+            for (const box of bucket)
+              if (box.stamp !== queryStamp) {
+                box.stamp = queryStamp;
+                candidateList.push(box);
               }
-            }
         }
       }
       return candidateList;
     }
-    function distance2(p, a, b) {
+    // Squared distance from point (x, y) to segment a–b.
+    function toSegment2(x, y, a, b) {
       const dx = b.x - a.x,
         dy = b.y - a.y,
-        t = Math.max(
-          0,
-          Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1)),
-        );
-      return (p.x - a.x - t * dx) ** 2 + (p.y - a.y - t * dy) ** 2;
+        t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+      return (x - a.x - t * dx) ** 2 + (y - a.y - t * dy) ** 2;
     }
-    function inside(p, points) {
-      let yes = false;
-      for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-        const a = points[i],
-          b = points[j];
-        if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x)
-          yes = !yes;
+    // Squared distance from point `p` to `box`; zero inside.
+    function toBox2(p, box) {
+      const dx = Math.max(box.minX - p.x, 0, p.x - box.maxX),
+        dy = Math.max(box.minY - p.y, 0, p.y - box.maxY);
+      return dx * dx + dy * dy;
+    }
+    // Segment a–b passes through `box` (slab test over t in [0, 1]).
+    function crosses(a, b, box) {
+      let enter = 0,
+        leave = 1;
+      const dx = b.x - a.x,
+        dy = b.y - a.y;
+      if (dx === 0) {
+        if (a.x < box.minX || a.x > box.maxX) return false;
+      } else {
+        const t0 = (box.minX - a.x) / dx,
+          t1 = (box.maxX - a.x) / dx;
+        enter = Math.max(enter, Math.min(t0, t1));
+        leave = Math.min(leave, Math.max(t0, t1));
       }
-      return yes;
+      if (dy === 0) {
+        if (a.y < box.minY || a.y > box.maxY) return false;
+      } else {
+        const t0 = (box.minY - a.y) / dy,
+          t1 = (box.maxY - a.y) / dy;
+        enter = Math.max(enter, Math.min(t0, t1));
+        leave = Math.min(leave, Math.max(t0, t1));
+      }
+      return enter <= leave;
     }
-    const cross = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-    function intersects(a, b, c, d) {
+    // The capsule a–b of radius `r` touches `box`. Without crossing, the closest points are an
+    // end of the segment against the box or a corner of the box against the segment.
+    function touches(a, b, box, r) {
+      if (inBox(a, box) || inBox(b, box) || crosses(a, b, box)) return true;
+      const r2 = r * r;
       return (
-        Math.max(a.x, b.x) >= Math.min(c.x, d.x) &&
-        Math.max(c.x, d.x) >= Math.min(a.x, b.x) &&
-        Math.max(a.y, b.y) >= Math.min(c.y, d.y) &&
-        Math.max(c.y, d.y) >= Math.min(a.y, b.y) &&
-        cross(a, b, c) * cross(a, b, d) <= 0 &&
-        cross(c, d, a) * cross(c, d, b) <= 0
+        toBox2(a, box) < r2 ||
+        toBox2(b, box) < r2 ||
+        toSegment2(box.minX, box.minY, a, b) < r2 ||
+        toSegment2(box.maxX, box.minY, a, b) < r2 ||
+        toSegment2(box.maxX, box.maxY, a, b) < r2 ||
+        toSegment2(box.minX, box.maxY, a, b) < r2
       );
     }
+    // The swept segment's box, grown by the radius; reused by every query.
+    const sweep = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
     function clear(a, b, r = 14) {
       if (
         Math.min(a.x, b.x) < r ||
@@ -117,53 +107,13 @@ export const ArenaCollision = (() => {
       )
         return false;
       // Open arenas need only the bounds test above.
-      if (polygons.length === 0) return true;
-      const minX = Math.min(a.x, b.x) - r,
-        minY = Math.min(a.y, b.y) - r,
-        maxX = Math.max(a.x, b.x) + r,
-        maxY = Math.max(a.y, b.y) + r;
-      const cand = candidates(minX, minY, maxX, maxY);
-      for (let k = 0; k < cand.length; k++) {
-        const p = cand[k];
-        // Buckets deliberately over-select; reject non-overlapping bounds before
-        // the expensive polygon/segment distance tests.
-        if (p.maxX < minX || p.minX > maxX || p.maxY < minY || p.minY > maxY) continue;
-        // Reject polygons outside the swept segment's expanded box. The bucket
-        // rectangle alone over-selects many buildings on long diagonal paths.
-        let enter = 0,
-          leave = 1;
-        const dx = b.x - a.x,
-          dy = b.y - a.y;
-        if (dx !== 0) {
-          const t0 = (p.minX - r - a.x) / dx,
-            t1 = (p.maxX + r - a.x) / dx;
-          enter = Math.max(enter, Math.min(t0, t1));
-          leave = Math.min(leave, Math.max(t0, t1));
-        }
-        if (dy !== 0) {
-          const t0 = (p.minY - r - a.y) / dy,
-            t1 = (p.maxY + r - a.y) / dy;
-          enter = Math.max(enter, Math.min(t0, t1));
-          leave = Math.min(leave, Math.max(t0, t1));
-        }
-        if (enter > leave) continue;
-        if (inside(a, p.points) || inside(b, p.points)) return false;
-        for (let i = 0; i < p.points.length; i++) {
-          const c = p.points[i],
-            d = p.points[(i + 1) % p.points.length];
-          if (
-            intersects(a, b, c, d) ||
-            Math.min(
-              distance2(a, c, d),
-              distance2(b, c, d),
-              distance2(c, a, b),
-              distance2(d, a, b),
-            ) <
-              r * r
-          )
-            return false;
-        }
-      }
+      if (solid.length === 0) return true;
+      sweep.minX = Math.min(a.x, b.x) - r;
+      sweep.minY = Math.min(a.y, b.y) - r;
+      sweep.maxX = Math.max(a.x, b.x) + r;
+      sweep.maxY = Math.max(a.y, b.y) + r;
+      for (const box of candidates(sweep))
+        if (boxesOverlap(box, sweep) && touches(a, b, box, r)) return false;
       return true;
     }
     const reusablePoint = { x: 0, y: 0 };
@@ -172,21 +122,13 @@ export const ArenaCollision = (() => {
       reusablePoint.y = y;
       return !clear(reusablePoint, reusablePoint, r);
     };
-    function draw(g) {
-      g.save();
-      g.lineWidth = 2;
-      for (const p of polygons) {
-        g.beginPath();
-        p.points.forEach((v, i) => (i ? g.lineTo(v.x, v.y) : g.moveTo(v.x, v.y)));
-        g.closePath();
-        g.fillStyle = '#f25d4540';
-        g.strokeStyle = '#ffcf85';
-        g.fill();
-        g.stroke();
-      }
-      g.restore();
-    }
-    return { blocked, clear, draw };
-  }
-  return { create };
-})();
+    // Ground outlines as data (corner points per box); rendering/collision.js draws them.
+    const outlines = solid.map((box) => [
+      { x: box.minX, y: box.minY },
+      { x: box.maxX, y: box.minY },
+      { x: box.maxX, y: box.maxY },
+      { x: box.minX, y: box.maxY },
+    ]);
+    return { blocked, clear, outlines };
+  },
+};

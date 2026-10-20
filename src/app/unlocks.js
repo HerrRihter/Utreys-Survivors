@@ -17,10 +17,10 @@ function clockText(seconds) {
  */
 // The unfinished achievements closest to completion; ones that open content come first.
 /** @returns {UnlockGoal[]} */
-export function nearestGoals(progression, best, count = 3) {
+export function nearestGoals(progression, count = 3) {
   const data = progression.data;
-  return progression.achievements
-    .map((a) => ({ a, progress: a.getProgress(data, best) }))
+  return progression.achievements.list
+    .map((a) => ({ a, progress: a.getProgress(data) }))
     .filter(({ a, progress }) => progress < a.target)
     .map(({ a, progress }) => ({ a, progress, ratio: progress / a.target }))
     .sort((x, y) => !!y.a.unlocks - !!x.a.unlocks || y.ratio - x.ratio)
@@ -39,8 +39,8 @@ export function nearestGoals(progression, best, count = 3) {
 }
 
 // Achievements done now that were not done when the run started.
-export function newlyDone(progression, best, before = []) {
-  return progression.achievements
-    .filter((a) => !before.includes(a.id) && progression.achievementDone(a, best))
+export function newlyDone(progression, before = []) {
+  return progression.achievements.list
+    .filter((a) => !before.includes(a.id) && progression.achievements.achievementDone(a))
     .map((a) => ({ id: a.id, title: a.title, unlock: unlockText(a) }));
 }

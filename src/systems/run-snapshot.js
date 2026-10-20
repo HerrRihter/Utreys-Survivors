@@ -1,164 +1,220 @@
 import { makeElite } from './difficulty.js';
 import { guardianPoint } from './node-objectives.js';
+import { persistentKeys, reducedKeys } from './run-model.js';
+import { createGameRng } from '../core/rng.js';
+import { toGraphJson, fromGraphJson } from '../core/graph-json.js';
+import { persisted } from '../core/storage.js';
+import { currentAbilityId, currentCardId } from '../../data/characters/abilities.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
 
-// A paused or interrupted run, kept in storage so a closed tab does not lose it.
-// Only plain data is stored: enemies come back at their saved positions and health, live
-// projectiles and effects are dropped. `version` guards the format.
-export const RUN_SNAPSHOT_KEY = 'utreys-run-v1';
-const VERSION = 1;
-const MAX_GEMS = 200;
+// A paused or interrupted run, kept in storage so a closed tab does not lose it. The run model
+// (src/systems/run-model.js) says which fields are copied, reduced or rebuilt; the copied ones
+// keep the references between their objects (src/core/graph-json.js). A resumed run continues
+// exactly as the running one would have: the same enemies with their timers, projectiles and
+// ground hazards, the open level-up's cards and the game random source at its position.
+// `version` guards the format.
+export const RUN_SNAPSHOT_KEY = 'utreys-run-v4';
+const VERSION = 4;
+// Saves of older builds, newest first. Version 1 had no enemy ids (summons and node
+// guardians were linked by object); version 2 used older content ids; version 3 kept a reduced
+// run (see migrations).
+export const LEGACY_RUN_SNAPSHOT_KEYS = ['utreys-run-v3', 'utreys-run-v2', 'utreys-run-v1'];
 
 const pick = (source, keys) => Object.fromEntries(keys.map((key) => [key, source[key]]));
-const round = (n) => Math.round(n * 10) / 10;
+
+// The reduced form of each `reduce` field of the run model, and how it is put back.
+const reducers = {
+  rng: (s) => s.rng.getState(),
+};
+const restorers = {
+  rng: (s, value) => s.rng.setState(value),
+};
+for (const key of reducedKeys)
+  if (!reducers[key] || !restorers[key])
+    throw new Error('Run snapshot: no reduced form for ' + key);
+
+// Living enemies are written first, so the save lists them in `enemies` and other places
+// (targets, hit lists, aura guards) refer to them.
+const savedKeys = ['enemies', ...persistentKeys.filter((key) => key !== 'enemies')];
 
 export function snapshotRun(run) {
   const s = run.state;
   if (!s || s.p.hp <= 0 || s.resultRecorded) return null;
+  const level = run.mode === 'level';
   return {
     version: VERSION,
     hero: run.selected,
     map: s.map,
     baClient: s.baSpecialization?.client ?? null,
-    // A level-up that was open when the run was saved is offered again on resume.
-    pendingLevel: run.mode === 'level',
+    // A level-up that was open when the run was saved is offered again with the same cards.
+    pendingLevel: level,
+    choice: level ? (run.choice || []).map((card) => card.id) : null,
     state: {
-      ...pick(s, [
-        't',
-        'kills',
-        'level',
-        'xp',
-        'need',
-        'earned',
-        'spawn',
-        'waveNext',
-        'bossSpawned',
-        'eliteNext',
-        'step',
-        'stats',
-        'upgradeRanks',
-        'evoTokens',
-        'banned',
-        'rerolls',
-        'skips',
-        'banishes',
-        'damageBy',
-        'baSpecialization',
-        'load',
-        'healFactor',
-        'endless',
-        'endlessStart',
-        'endlessKills',
-        'productionBossNext',
-        'productionBosses',
-        'recordedTime',
-        'seed',
-        'offers',
-        'offersLogged',
-        'lastHitBy',
-        'eventIndex',
-        'event',
-        'statsRecorded',
-        'runId',
-        'statsCounted',
-        'earnedPaid',
-        'firstHurtAt',
-        'foodTaken',
-        'evolutions',
-        'doneBefore',
-      ]),
-      weapons: (s.weapons || []).map((w) => pick(w, ['id', 'level', 'cd', 'evolved', 'phase'])),
-      p: { x: round(s.p.x), y: round(s.p.y), hp: s.p.hp, max: s.p.max },
-      abilities: (s.abilities || []).map((a) => ({ id: a.id, cd: a.cd })),
-      nodes: s.nodes.map((n) => ({
-        id: n.id,
-        status: n.status,
-        progress: n.progress,
-        guardianHp: n.guardian && n.guardian.hp > 0 ? n.guardian.hp : null,
-        // A desk keeps its escalation across a resumed run.
-        summons: n.guardian?.summons || 0,
-      })),
-      enemies: s.enemies
-        .filter((e) => e.hp > 0 && !e.nodeId)
-        .map((e) => ({
-          unit: e.unit,
-          x: round(e.x),
-          y: round(e.y),
-          hp: e.hp,
-          boss: !!e.boss,
-          elite: !!e.elite,
-        })),
-      gems: s.gems.slice(0, MAX_GEMS).map((g) => ({ x: round(g.x), y: round(g.y), v: g.v })),
-      codes: s.codes.map((c) => ({ x: round(c.x), y: round(c.y), value: c.value })),
-      pickups: s.pickups.map((a) => ({ x: round(a.x), y: round(a.y), type: a.type })),
+      ...toGraphJson(pick(s, savedKeys)),
+      ...Object.fromEntries(reducedKeys.map((key) => [key, reducers[key](s)])),
     },
   };
+}
+
+// Each step converts a save of its version to the next one.
+const migrations = {
+  // Version 1 → 2: enemies and node guardians get ids. Version 1 did not save who summoned an
+  // enemy, so its summons are not counted as desk tickets after the resume (as before).
+  1(saved) {
+    let nextEnemyId = 1;
+    const enemies = saved.state.enemies.map((e) => ({ ...e, id: nextEnemyId++, summonerId: null }));
+    const nodes = saved.state.nodes.map((n) => ({
+      ...n,
+      guardianId: n.status === 'guarded' && n.guardianHp === null ? null : nextEnemyId++,
+    }));
+    return { ...saved, version: 2, state: { ...saved.state, enemies, nodes, nextEnemyId } };
+  },
+  // Version 2 → 3: renamed content ids. Utrace's ability `potion` is `overclock`: its id in
+  // the abilities and its level-up card `ability_potion` in ranks, bans and logged offers.
+  // Service desks were named by their label (`Сервисдеск 1`); their ids are `desk-1`...
+  2(saved) {
+    const state = saved.state;
+    const cards = (list) => (Array.isArray(list) ? list.map(currentCardId) : list);
+    const objective = mapDefinitions[saved.map]?.objective;
+    const deskNumber = (id) =>
+      objective?.type === 'desks' && typeof id === 'string' && id.startsWith(objective.label + ' ')
+        ? id.slice(objective.label.length + 1)
+        : '';
+    const nodeId = (id) => (/^\d+$/.test(deskNumber(id)) ? 'desk-' + deskNumber(id) : id);
+    return {
+      ...saved,
+      version: 3,
+      state: {
+        ...state,
+        abilities: state.abilities.map((a) => ({ ...a, id: currentAbilityId(a.id) })),
+        nodes: state.nodes.map((n) => ({ ...n, id: nodeId(n.id) })),
+        upgradeRanks: Object.fromEntries(
+          Object.entries(state.upgradeRanks).map(([id, rank]) => [currentCardId(id), rank]),
+        ),
+        banned: cards(state.banned),
+        offers: state.offers.map((o) => ({
+          ...o,
+          cards: cards(o.cards),
+          picked: currentCardId(o.picked),
+          banned: cards(o.banned),
+        })),
+      },
+    };
+  },
+  // Version 3 → 4: a version 3 save kept a reduced run (the hero's position and health, owned
+  // items, node status, living enemies, drops) and no game random source. It stays reduced
+  // (`reduced`, restored the old way) and its random source starts from the seed and the time.
+  3(saved) {
+    const { seed = 0, t = 0 } = saved.state;
+    const rng = createGameRng((seed ^ Math.imul(Math.round(t * 60), 0x9e3779b1)) >>> 0);
+    return {
+      ...saved,
+      version: 4,
+      reduced: true,
+      choice: null,
+      state: { ...saved.state, rng: rng.getState() },
+    };
+  },
+};
+
+// A save of an older version brought to the current one, or null if it is not one.
+export function migrateRunSnapshot(saved) {
+  if (!saved?.state || !Object.hasOwn(migrations, saved.version)) return null;
+  let current = saved;
+  while (current.version !== VERSION) current = migrations[current.version](current);
+  return current;
 }
 
 export function createRunSnapshots({ storage }) {
-  function load() {
-    try {
-      const saved = JSON.parse(storage.getItem(RUN_SNAPSHOT_KEY));
-      return saved?.version === VERSION && saved.state ? saved : null;
-    } catch {
-      return null;
-    }
-  }
+  // A save left by an older build is converted once and stored as the current version.
+  const file = persisted(storage, RUN_SNAPSHOT_KEY, {
+    normalize: (saved) => (saved?.version === VERSION && saved.state ? saved : null),
+    migrate: migrateRunSnapshot,
+    legacyKeys: LEGACY_RUN_SNAPSHOT_KEYS,
+  });
   return {
-    load,
-    has: () => !!load(),
+    load: file.load,
+    has: () => !!file.load(),
     save(run) {
       const snapshot = snapshotRun(run);
-      if (!snapshot) return false;
-      try {
-        storage.setItem(RUN_SNAPSHOT_KEY, JSON.stringify(snapshot));
-        return true;
-      } catch {
-        return false;
-      }
+      return !!snapshot && file.save(snapshot);
     },
-    clear() {
-      try {
-        if (storage.removeItem) storage.removeItem(RUN_SNAPSHOT_KEY);
-        else storage.setItem(RUN_SNAPSHOT_KEY, 'null');
-      } catch {}
-    },
+    clear: file.clear,
   };
 }
 
-// Puts a snapshot's data into a freshly started run. `spawn(unit, boss, position)` recreates
-// enemies; node guardians are recreated at their nodes with their saved health.
+// Puts a snapshot's data into a freshly started run.
 export function restoreRun(s, snapshot, spawn) {
+  if (snapshot.reduced) restoreReduced(s, snapshot, spawn);
+  else {
+    const saved = fromGraphJson(snapshot.state);
+    for (const key of persistentKeys) if (key in saved) s[key] = saved[key];
+  }
+  for (const key of reducedKeys)
+    if (snapshot.state[key] !== undefined) restorers[key](s, snapshot.state[key]);
+}
+
+// The fields a version 1–3 save kept in a reduced form.
+const legacyReducedKeys = [
+  'p',
+  'weapons',
+  'abilities',
+  'enemies',
+  'nodes',
+  'gems',
+  'codes',
+  'pickups',
+];
+// A version 1–3 save: `spawn(unit, boss, position)` recreates enemies with their saved ids;
+// node guardians are recreated at their nodes with their saved health. Live projectiles and
+// effects were not saved.
+function restoreReduced(s, snapshot, spawn) {
   const saved = snapshot.state;
-  const { p, abilities, nodes, enemies, weapons, gems, codes, pickups, ...plain } = saved;
-  Object.assign(s, structuredCloneSafe(plain));
-  s.weapons = weapons.map((w) => ({ ...w }));
-  Object.assign(s.p, p);
-  for (const a of s.abilities || []) {
-    const match = abilities.find((item) => item.id === a.id);
+  Object.assign(
+    s,
+    structuredCloneSafe(
+      pick(
+        saved,
+        persistentKeys.filter((key) => key in saved && !legacyReducedKeys.includes(key)),
+      ),
+    ),
+  );
+  s.weapons = saved.weapons.map((w) => ({ ...w }));
+  Object.assign(s.p, saved.p);
+  for (const a of s.abilities) {
+    const match = saved.abilities.find((item) => item.id === a.id);
     if (match) a.cd = match.cd;
   }
   s.enemies.length = 0;
-  for (const saved of nodes) {
-    const node = s.nodes.find((n) => n.id === saved.id);
+  for (const savedNode of saved.nodes) {
+    const node = s.nodes.find((n) => n.id === savedNode.id);
     if (!node) continue;
-    node.status = saved.status;
-    node.progress = saved.progress;
-    if (node.status !== 'guarded' || saved.guardianHp === null) continue;
+    node.status = savedNode.status;
+    node.progress = savedNode.progress;
+    // A guarded node without a living guardian spawns a new one, as in a running game.
+    node.guardianId = node.status === 'guarded' ? null : savedNode.guardianId;
+    if (node.status !== 'guarded' || savedNode.guardianHp === null) continue;
     const guardian = spawn(node.bug, false, guardianPoint(node));
     if (!guardian) continue;
-    guardian.hp = saved.guardianHp;
-    guardian.summons = saved.summons || 0;
+    guardian.id = savedNode.guardianId;
+    guardian.hp = savedNode.guardianHp;
+    guardian.summons = savedNode.summons || 0;
     guardian.nodeId = node.id;
-    node.guardian = guardian;
+    node.guardianId = guardian.id;
   }
-  for (const e of enemies) {
+  for (const e of saved.enemies) {
     const enemy = spawn(e.unit, e.boss, { x: e.x, y: e.y });
-    if (enemy && e.elite) makeElite(enemy);
-    if (enemy) enemy.hp = Math.min(enemy.max, e.hp);
+    if (!enemy) continue;
+    enemy.id = e.id;
+    enemy.summonerId = e.summonerId;
+    if (e.elite) makeElite(enemy);
+    enemy.hp = Math.min(enemy.max, e.hp);
   }
-  s.gems = gems.map((g) => ({ ...g }));
-  s.codes = codes.map((c) => ({ ...c }));
-  s.pickups = pickups.map((a) => ({ ...a }));
+  // Spawning above took fresh ids; the saved counter is past every saved id.
+  s.nextEnemyId = saved.nextEnemyId;
+  s.gems = saved.gems.map((g) => ({ ...g }));
+  s.codes = saved.codes.map((c) => ({ ...c }));
+  s.pickups = saved.pickups.map((a) => ({ ...a }));
 }
 
 const structuredCloneSafe = (value) => JSON.parse(JSON.stringify(value));

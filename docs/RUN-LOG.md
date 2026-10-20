@@ -21,7 +21,9 @@
 поэтому карточки не считаются дважды.
 
 Экспорт и очистка — «Настройки» → «Журнал забегов». Файл:
-`{ "format": "utreys-run-log", "version": 1, "runs": [...] }`.
+`{ "format": "utreys-run-log", "version": 1, "runs": [...] }`. Записи старых сборок читаются
+с текущими id карточек (`normalizeLogEntry` в `src/systems/run-log.js`, им же пользуется
+`tools/run-stats.cjs`): `ability_potion` считается как `ability_overclock`.
 
 ## Статистика
 

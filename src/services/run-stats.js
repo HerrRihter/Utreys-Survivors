@@ -1,4 +1,5 @@
-import { createStore } from '../app/store.js';
+import { createStore } from '../core/store.js';
+import { persisted } from '../core/storage.js';
 import { applyRun, normalizeRunEntry, normalizeScope } from '../systems/run-records.js';
 
 // Sends counted runs of a signed-in player to stats/{uid}, the document the leaderboards
@@ -38,19 +39,11 @@ export function createRunStats({
     store.emit();
   };
 
-  function readQueue() {
-    try {
-      const queue = JSON.parse(storage.getItem(STATS_QUEUE_KEY));
-      return Array.isArray(queue) ? queue : [];
-    } catch {
-      return [];
-    }
-  }
-  function writeQueue(queue) {
-    try {
-      storage.setItem(STATS_QUEUE_KEY, JSON.stringify(queue.slice(-MAX_QUEUE)));
-    } catch {}
-  }
+  const queueFile = persisted(storage, STATS_QUEUE_KEY, {
+    normalize: (queue) => (Array.isArray(queue) ? queue : []),
+  });
+  const readQueue = queueFile.load;
+  const writeQueue = (queue) => queueFile.save(queue.slice(-MAX_QUEUE));
   function enqueue(owner, entry) {
     writeQueue([...readQueue(), { uid: owner, entry }]);
   }

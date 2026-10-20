@@ -1,7 +1,22 @@
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { stripComments, walk } = require('./check-structure.cjs');
 
-function validateSchedules(schedules, maps, units) {
+// Fields each kind of mid-run event needs besides the common ones (src/systems/run-events.js).
+const eventFields = {
+  siege: ['count', 'distance'],
+  hold: ['hold', 'radius', 'distance'],
+  collect: ['tokens', 'need', 'near', 'far'],
+};
+
+function validateSchedules(
+  schedules,
+  maps,
+  units,
+  pickups = require('../data/pickups.js').pickupDefinitions,
+) {
   const fail = (condition, message) => assert(condition, 'Game contract: ' + message);
   const shape = (value, keys, label) => {
     fail(value && typeof value === 'object' && !Array.isArray(value), label + ' must be an object');
@@ -138,7 +153,7 @@ function validateSchedules(schedules, maps, units) {
       number(schedule.elites.first, 0, 'elites.first');
       positive(schedule.elites.every, 'elites.every');
       const events = schedule.events;
-      shape(events, ['times', 'types', 'friday', 'incident', 'rush'], id + '.events');
+      const types = Object.keys(events).filter((key) => key !== 'times' && key !== 'types');
       fail(Array.isArray(events.times) && events.times.length > 0, 'event times');
       events.times.forEach((time, i) => {
         positive(time, 'event time');
@@ -147,21 +162,53 @@ function validateSchedules(schedules, maps, units) {
       fail(
         Array.isArray(events.types) &&
           events.types.length > 0 &&
-          events.types.every((type) => ['friday', 'incident', 'rush'].includes(type)),
+          events.types.every((type) => types.includes(type)),
         'event types',
       );
-      shape(events.friday, ['duration', 'count', 'message'], 'friday');
-      shape(events.incident, ['duration', 'hold', 'radius', 'distance', 'message'], 'incident');
-      shape(events.rush, ['duration', 'tokens', 'need', 'message'], 'rush');
-      positive(events.friday.duration, 'friday.duration');
-      integer(events.friday.count, 1, 'friday.count');
-      positive(events.incident.hold, 'incident.hold');
-      fail(events.incident.hold < events.incident.duration, 'incident hold fits its duration');
-      positive(events.incident.radius, 'incident.radius');
-      positive(events.incident.distance, 'incident.distance');
-      integer(events.rush.need, 1, 'rush.need');
-      fail(events.rush.tokens >= events.rush.need, 'rush has enough tokens');
-      positive(events.rush.duration, 'rush.duration');
+      for (const type of types) {
+        const spec = events[type];
+        const fields = eventFields[spec?.kind];
+        fail(fields, `event ${type}.kind`);
+        const reward = spec.reward;
+        shape(
+          spec,
+          [
+            'kind',
+            'duration',
+            'message',
+            'label',
+            'success',
+            'failed',
+            'reward',
+            ...fields,
+            ...('marker' in spec ? ['marker'] : []),
+          ],
+          'event ' + type,
+        );
+        positive(spec.duration, type + '.duration');
+        for (const text of ['message', 'label', 'success', 'failed'])
+          fail(typeof spec[text] === 'string' && spec[text], `${type}.${text}`);
+        fail(
+          reward &&
+            (Number.isSafeInteger(reward.codes) && reward.codes > 0
+              ? Object.keys(reward).length === 1
+              : Object.keys(reward).length === 1 && Object.hasOwn(pickups, reward.pickup)),
+          type + '.reward',
+        );
+        if (spec.kind === 'siege') {
+          integer(spec.count, 1, type + '.count');
+          positive(spec.distance, type + '.distance');
+        } else if (spec.kind === 'hold') {
+          positive(spec.hold, type + '.hold');
+          fail(spec.hold < spec.duration, type + ' hold fits its duration');
+          positive(spec.radius, type + '.radius');
+          positive(spec.distance, type + '.distance');
+        } else {
+          integer(spec.need, 1, type + '.need');
+          fail(spec.tokens >= spec.need, type + ' has enough tokens');
+          fail(spec.near > 0 && spec.far > spec.near, type + ' token distances');
+        }
+      }
     }
     if (schedule.boss !== null) {
       shape(
@@ -212,8 +259,18 @@ function checkGameContracts() {
       .sort(),
     'Hero contract: unlock prices',
   );
+  const { attackKinds } = require('../src/systems/hero-attacks.js');
+  const { heroEvolutions } = require('../data/weapons.js');
+  assert.deepEqual(
+    Object.keys(heroEvolutions).sort(),
+    Object.keys(heroDefinitions).sort(),
+    'Hero contract: evolutions',
+  );
+  const { abilityKinds } = require('../src/systems/abilities/index.js');
+  for (const ability of Object.values(abilityDefinitions).flat())
+    assert(Object.hasOwn(abilityKinds, ability.kind), 'Ability contract: kind of ' + ability.id);
   for (const [id, hero] of Object.entries(heroDefinitions)) {
-    assert(['sector', 'chain', 'packet', 'scan'].includes(hero.attack), 'Hero contract: attack');
+    assert(Object.hasOwn(attackKinds, hero.attack), 'Hero contract: attack ' + id);
     for (const field of ['hp', 'speed', 'interval', 'wind', 'damage', 'range', 'push'])
       assert(Number.isFinite(hero[field]) && hero[field] > 0, `Hero contract: ${id}.${field}`);
     assert.equal(abilityDefinitions[id].length, 2, 'Hero contract: two abilities');
@@ -224,6 +281,27 @@ function checkGameContracts() {
         'Hero contract: price',
       );
   }
+  // Event kinds of the contract are the ones the event system knows.
+  const { eventKinds } = require('../src/systems/run-events.js');
+  assert.deepEqual(Object.keys(eventKinds).sort(), Object.keys(eventFields).sort(), 'Event kinds');
+  // Pickups: known kinds and icons; drops name pickup types.
+  const { pickupDefinitions, dropTable } = require('../data/pickups.js');
+  const pickupKinds = ['upgrade', 'pull', 'blast', 'stun', 'heal'];
+  const pickupIcons = ['crate', 'magnet', 'bomb', 'snowflake', 'capsule'];
+  for (const [id, pickup] of Object.entries(pickupDefinitions)) {
+    assert(pickupKinds.includes(pickup.kind), 'Pickup contract: kind of ' + id);
+    assert(pickupIcons.includes(pickup.icon), 'Pickup contract: icon of ' + id);
+  }
+  for (const type of [dropTable.elite, dropTable.food.type, ...dropTable.rare.map((d) => d.type)])
+    assert(Object.hasOwn(pickupDefinitions, type), 'Drop contract: unknown pickup ' + type);
+  dropTable.rare.forEach((drop, i) =>
+    assert(drop.below > (i ? dropTable.rare[i - 1].below : 0), 'Drop contract: rare order'),
+  );
+  // Every weapon names a kind the weapon system knows.
+  const { weaponDefinitions } = require('../data/weapons.js');
+  const { weaponKinds } = require('../src/systems/weapons/index.js');
+  for (const [id, weapon] of Object.entries(weaponDefinitions))
+    assert(Object.hasOwn(weaponKinds, weapon.kind), `Weapon contract: ${id}.kind ${weapon.kind}`);
   // Node 24 can require synchronous ES modules; no duplicate JSON representation.
   const { waveSchedules } = require('../data/enemies/waves.js');
   const { mapDefinitions } = require('../data/maps/maps.js');
@@ -234,6 +312,9 @@ function checkGameContracts() {
   const { clientEmblems } = require('../src/rendering/art/client-emblems.js');
   for (const id of [...Object.keys(unitArt), ...Object.keys(clientEmblems)])
     assert(Object.hasOwn(unitDefinitions, id), 'Art contract: art for unknown unit ' + id);
+  const { heroAccessories } = require('../src/rendering/art/utrace-hero.js');
+  for (const id of Object.keys(heroAccessories))
+    assert(Object.hasOwn(heroDefinitions, id), 'Art contract: accessory for unknown hero ' + id);
   assert.equal(
     new Set(nodeDefinitions.map((node) => node.id)).size,
     nodeDefinitions.length,
@@ -254,6 +335,7 @@ function checkGameContracts() {
       'Node contract: position outside arena',
     );
   }
+  checkContentIds();
   return validateSchedules(waveSchedules, mapDefinitions, unitDefinitions);
 }
 function validateUnits(units) {
@@ -328,5 +410,82 @@ function validateUnits(units) {
     }
   }
 }
+// Rules and drawing do not branch on content ids: no string literal in `roots` equals the id
+// of a weapon, hero, ability, unit, map, event type or pickup type (`=== 'orbit'`,
+// `case 'friday'`, `abilityActive(s, 'overclock')`). Behaviour comes from the content's data
+// and kind registries; art keyed by id uses object keys, which are not literals. Comments do
+// not count.
+const contentIdRoots = ['src/systems', 'src/rendering'];
+// Literals that are allowed, each with its reason. An exception that no longer matches fails.
+const contentIdExceptions = [
+  // The Multon logo is lettered with the word «multon»: text drawn, not a comparison.
+  { file: 'src/rendering/art/client-emblems.js', id: 'multon' },
+];
+function contentIds() {
+  const ids = new Map();
+  const add = (kind, keys) => {
+    for (const id of keys) if (!ids.has(id)) ids.set(id, kind);
+  };
+  add('weapon', Object.keys(require('../data/weapons.js').weaponDefinitions));
+  add('hero', Object.keys(require('../data/characters/heroes.js').heroDefinitions));
+  const { abilityDefinitions } = require('../data/characters/abilities.js');
+  add(
+    'ability',
+    Object.values(abilityDefinitions)
+      .flat()
+      .map((a) => a.id),
+  );
+  add('unit', Object.keys(require('../data/enemies/units.js').unitDefinitions));
+  add('map', Object.keys(require('../data/maps/maps.js').mapDefinitions));
+  for (const schedule of Object.values(require('../data/enemies/waves.js').waveSchedules))
+    add(
+      'event',
+      Object.keys(schedule.events || {}).filter((key) => key !== 'times' && key !== 'types'),
+    );
+  add('pickup', Object.keys(require('../data/pickups.js').pickupDefinitions));
+  return ids;
+}
+function checkContentIds({
+  root = path.resolve(__dirname, '..'),
+  roots = contentIdRoots,
+  ids = contentIds(),
+  exceptions = contentIdExceptions,
+} = {}) {
+  const literal = /(['"`])([A-Za-z_][\w-]*)\1/g;
+  const violations = [],
+    used = new Set();
+  const files = roots
+    .filter((dir) => fs.existsSync(path.join(root, dir)))
+    .flatMap((dir) => walk(root, dir))
+    .filter((file) => /\.(js|jsx|ts|tsx|mjs)$/.test(file));
+  for (const file of files) {
+    const lines = stripComments(fs.readFileSync(path.join(root, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      for (const [, , id] of line.matchAll(literal)) {
+        if (!ids.has(id)) continue;
+        const exception = exceptions.find((x) => x.file === file && x.id === id);
+        if (exception) used.add(exception);
+        else violations.push(`${file}:${i + 1} '${id}' (${ids.get(id)} id)`);
+      }
+    });
+  }
+  for (const exception of exceptions)
+    if (!used.has(exception))
+      violations.push(`stale exception: '${exception.id}' in ${exception.file}`);
+  if (violations.length)
+    throw new Error(
+      'Content id in game rules or drawing (use the content data or a kind registry; see ' +
+        'tools/check-game-contracts.cjs):\n  ' +
+        violations.join('\n  '),
+    );
+  return { files: files.length };
+}
+
 if (require.main === module) console.log('Game contracts OK:', checkGameContracts(), 'maps');
-module.exports = { validateUnits, validateSchedules, checkGameContracts };
+module.exports = {
+  validateUnits,
+  validateSchedules,
+  checkGameContracts,
+  checkContentIds,
+  contentIds,
+};

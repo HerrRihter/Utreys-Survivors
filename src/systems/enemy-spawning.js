@@ -1,3 +1,4 @@
+import { clamp } from '../core/math.js';
 import { updateNodes, allNodesResolved } from './node-objectives.js';
 import {
   getWaveSchedule,
@@ -8,14 +9,14 @@ import {
 } from './wave-schedule.js';
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
-import { enemyDamageScale, enemyHpScale } from '../../data/enemies/units.js';
+import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
-  create({ run, enemies, world, math, toast, audio }) {
+  create({ run, world, toast, audio }) {
     function spawn(unit, boss = false, position = null) {
       const s = run.state,
         p = s.p,
-        u = enemies.units[unit];
+        u = unitDefinitions[unit];
       if (!u) throw new Error('Unknown unit: ' + unit);
       let x, y;
       if (position) {
@@ -23,14 +24,17 @@ export const EnemySpawning = {
         y = position.y;
       }
       for (let i = 0; !position && i < 100; i++) {
-        const a = math.rand(0, Math.PI * 2),
-          r = math.rand(520, 640);
-        x = math.clamp(p.x + Math.cos(a) * r, u.r + 10, world.arena.size - u.r - 10);
-        y = math.clamp(p.y + Math.sin(a) * r, u.r + 10, world.arena.size - u.r - 10);
+        const a = s.rng.rand(0, Math.PI * 2),
+          r = s.rng.rand(520, 640);
+        x = clamp(p.x + Math.cos(a) * r, u.r + 10, world.arena.size - u.r - 10);
+        y = clamp(p.y + Math.sin(a) * r, u.r + 10, world.arena.size - u.r - 10);
         if (!world.arena.blocked(x, y, u.r) && Math.hypot(x - p.x, y - p.y) > 260) break;
       }
       if (world.arena.blocked(x, y, u.r)) return;
       const e = {
+        id: s.nextEnemyId++,
+        summonerId: null,
+        nodeId: null,
         x,
         y,
         unit,
@@ -43,7 +47,8 @@ export const EnemySpawning = {
         boss,
         hit: 0,
         cd: 0,
-        phase: math.rand(0, 3),
+        // Animation offset, spread by id so neighbours do not walk in step.
+        phase: (((s.nextEnemyId - 1) * 0.6180339887) % 1) * 3,
         vx: 0,
         vy: 0,
         heading: Math.atan2(p.y - y, p.x - x),
@@ -58,7 +63,7 @@ export const EnemySpawning = {
       }
       e.hp = e.max = Math.max(1, Math.round(e.hp * enemyHpScale));
       e.damage = Math.max(1, Math.round(e.damage * enemyDamageScale));
-      scaleEnemy(e, runModifiers(s), boss ? s.productionBosses || 0 : 0);
+      scaleEnemy(e, runModifiers(s), boss ? s.productionBosses : 0);
       s.enemies.push(e);
       return e;
     }
@@ -87,7 +92,7 @@ export const EnemySpawning = {
         return e;
       };
       for (const spec of schedule.recurring) {
-        const next = s.waveNext[spec.unit] ?? spec.first;
+        const next = s.waveNext[spec.unit];
         if (s.t < next) continue;
         const stage = scheduleStage(spec.stages, s.t);
         s.waveNext[spec.unit] = next + stage.every;
@@ -106,38 +111,38 @@ export const EnemySpawning = {
         const shares = schedule.normal.shares || {},
           roles = { shooter: 0, tank: 0, light: 0 },
           full = new Set();
-        for (const e of s.enemies) if (e.hp > 0) roles[unitRole(enemies.units[e.unit])]++;
+        for (const e of s.enemies) if (e.hp > 0) roles[unitRole(unitDefinitions[e.unit])]++;
         const check = () => {
           for (const [role, share] of Object.entries(shares))
             if (roles[role] >= Math.ceil(wave.cap * share)) full.add(role);
         };
         check();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++) {
-          const unit = selectWaveUnit(schedule, s.t, math.random(), enemies.units, full),
+          const unit = selectWaveUnit(schedule, s.t, s.rng.random(), unitDefinitions, full),
             leader = track(spawn(unit)),
-            pack = enemies.units[unit].pack || 1;
+            pack = unitDefinitions[unit].pack || 1;
           if (leader) {
-            roles[unitRole(enemies.units[unit])]++;
+            roles[unitRole(unitDefinitions[unit])]++;
             check();
           }
           // Swarm units arrive as a pack around the first one.
           for (let k = 1; leader && k < pack; k++)
             track(
               spawn(unit, false, {
-                x: leader.x + math.rand(-45, 45),
-                y: leader.y + math.rand(-45, 45),
+                x: leader.x + s.rng.rand(-45, 45),
+                y: leader.y + s.rng.rand(-45, 45),
               }),
             );
         }
       }
       // Elites: a stronger copy of a unit from the current stage, on the schedule's timer.
-      if (schedule.elites && s.t >= (s.eliteNext ?? schedule.elites.first)) {
-        s.eliteNext = (s.eliteNext ?? schedule.elites.first) + schedule.elites.every;
-        const e = spawn(selectWaveUnit(schedule, s.t, math.random()));
+      if (schedule.elites && s.t >= s.eliteNext) {
+        s.eliteNext += schedule.elites.every;
+        const e = spawn(selectWaveUnit(schedule, s.t, s.rng.random()));
         if (e) {
           makeElite(e);
           toast(
-            'Элитный клиент: ' + enemies.units[e.unit].name + '. С него падает пакет обновлений',
+            'Элитный клиент: ' + unitDefinitions[e.unit].name + '. С него падает пакет обновлений',
           );
         }
       }
@@ -145,7 +150,7 @@ export const EnemySpawning = {
       if (boss && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
         s.bossSpawned = true;
         if (boss.heal) {
-          const gain = Math.round(s.p.max * boss.heal * (s.healFactor ?? 1));
+          const gain = Math.round(s.p.max * boss.heal * s.healFactor);
           s.p.hp = Math.min(s.p.max, s.p.hp + gain);
           s.texts.push({
             x: s.p.x,
@@ -161,7 +166,7 @@ export const EnemySpawning = {
       if (boss && s.endless && s.t >= s.productionBossNext) {
         s.productionBossNext += production.bossEvery;
         if (spawn(boss.unit, true)) {
-          s.productionBosses = (s.productionBosses || 0) + 1;
+          s.productionBosses++;
           toast('ПРОДАКШЕН: усиленный ЦРПТ №' + s.productionBosses);
           if (boss.sound) audio.effect(boss.sound);
         }

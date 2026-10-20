@@ -1,23 +1,22 @@
 import { hudScale } from '../app/run-state.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
-import { createAccount } from '../services/auth.js';
-import { ConflictDialog, type Account } from './Account';
+import { createAccount } from '../app/cloud.js';
+import { ConflictDialog } from './Account';
+import type { Account, Session } from '../app/types';
 import type { CloudProgress } from '../app/useGameSession';
 import { CloudContext } from './cloud-context';
 import { GameHud } from './GameHud';
-import {
-  Achievements,
-  Encyclopedia,
-  HeroSelect,
-  MainMenu,
-  Settings,
-  Shop,
-  SoundButton,
-} from './GameMenus';
+import { Achievements } from './menus/Achievements';
+import { Encyclopedia } from './menus/Encyclopedia';
+import { HeroSelect } from './menus/HeroSelect';
+import { MainMenu } from './menus/MainMenu';
+import { Settings } from './menus/Settings';
+import { Shop } from './menus/Shop';
+import { SoundButton } from './menus/SoundButton';
 import { createPortal } from 'react-dom';
 import { EndScreen, LevelUpScreen, PauseScreen } from './GameRunScreens';
-import { SessionContext, useUiVersion, type Session } from './session';
+import { SessionContext, useUiVersion } from './session';
 
 interface GameViewProps {
   active: boolean;

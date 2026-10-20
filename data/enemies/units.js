@@ -414,5 +414,3 @@ export const unitDefinitions = {
     summon: { every: 7, count: 1, grow: 3, countMax: 4, max: 7, reach: 4000, units: ['pepsi'] },
   },
 };
-
-export const units = unitDefinitions;

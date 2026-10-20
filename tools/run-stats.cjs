@@ -6,17 +6,21 @@
 // rates of heroes on the same load level within 1.5× of each other.
 const fs = require('node:fs');
 const path = require('node:path');
+const { normalizeLogEntry } = require('../src/systems/run-log.js');
 
 const PICK_HIGH = 0.7,
   PICK_LOW = 0.05,
   WIN_SPREAD = 1.5;
 
-// Runs from a file: the export object `{ runs: [...] }` or a bare array.
+// Runs from a file: the export object `{ runs: [...] }` or a bare array. Card ids of older
+// journals are read under their current names (src/systems/run-log.js normalizeLogEntry).
 function readRuns(file) {
   const data = JSON.parse(fs.readFileSync(file, 'utf8'));
   const runs = Array.isArray(data) ? data : data?.runs;
   if (!Array.isArray(runs)) throw new Error(file + ': no runs in this file');
-  return runs.filter((r) => r && typeof r === 'object' && typeof r.hero === 'string');
+  return runs
+    .filter((r) => r && typeof r === 'object' && typeof r.hero === 'string')
+    .map(normalizeLogEntry);
 }
 
 const round = (n, digits = 1) => Math.round(n * 10 ** digits) / 10 ** digits;

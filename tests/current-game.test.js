@@ -1,0 +1,76 @@
+import assert from 'node:assert/strict';
+import { nodeGuardian } from '../src/systems/node-objectives.js';
+import { createHarness } from './helpers/game-harness.js';
+import { unitDefinitions } from '../data/enemies/units.js';
+import { test } from 'vitest';
+
+test('current-game', async () => {
+  const h = await createHarness();
+  const s = h.session;
+  // A fixed seed: the waves, drops and crits below are the same every run.
+  s.views.run().nextSeed = 20261020;
+  s.start();
+  assert.equal(s.state.map, 'empty');
+  assert.equal(s.state.p.hp, 120);
+  assert.equal(s.activateAbility(0), true);
+  assert.equal(s.activateAbility(0), false, 'cooldown prevents repeat cast');
+  assert.equal(s.activateAbility(1), true);
+  const original = s.state.p.x;
+  s.update(0.05);
+  assert(s.state.p.x > original, 'dash moves player');
+  s.pause();
+  assert.equal(s.activateAbility(0), false, 'abilities blocked on pause');
+  s.pause();
+  const p = s.state.p;
+  const enemy = s.spawn('inbev', false, { x: p.x + 100, y: p.y });
+  enemy.heading = 0;
+  const hp = enemy.hp;
+  s.damage(enemy, 100, 0, 0, { x: enemy.x + 10, y: enemy.y });
+  const front = 100 * unitDefinitions.inbev.frontDamageMultiplier;
+  assert.equal(enemy.hp, hp - front, 'front armor blocks part of the hit');
+  s.damage(enemy, 40, 0, 0, { x: enemy.x - 10, y: enemy.y });
+  assert.equal(enemy.hp, hp - front - 40, 'rear receives full damage');
+  s.state.t = 120;
+  s.update(0.01);
+  const boss = s.state.enemies.find((e) => e.unit === 'crpt');
+  assert.equal(boss, undefined, 'time alone never spawns CRPT');
+  // A guard's aura or front armour of a wave unit nearby can soak part of a hit: strike hard.
+  for (const node of s.state.nodes) {
+    const guardian = nodeGuardian(s.state, node);
+    s.damage(guardian, guardian.hp * 10 + 1);
+  }
+  s.update(0.01);
+  const unlockedBoss = s.state.enemies.find((e) => e.unit === 'crpt');
+  assert(unlockedBoss?.boss, 'CRPT follows resolved nodes');
+  assert.equal(s.views.hud().boss.name, unitDefinitions.crpt.name, 'HUD names the boss unit');
+  s.update(0.01);
+  assert.equal(s.state.enemies.filter((e) => e.unit === 'crpt').length, 1);
+  s.damage(unlockedBoss, unlockedBoss.hp + 1);
+  assert.equal(s.state.bossDead, true);
+  assert.equal(s.state.kills, 6);
+  assert.equal(s.state.corpses.length, 6);
+  s.state.t = 121;
+  s.update(0.01);
+  assert.equal(s.mode, 'end', 'defeating unlocked boss ends the run');
+  s.start();
+  assert.equal(s.state.t, 0);
+  s.state.p.hp = 0;
+  s.update(0.01);
+  assert.equal(s.mode, 'end', 'death ends the run');
+  s.dispose();
+  // The renamed Utrace hero must consume the weapon stats offered in the shop.
+  for (const reach of [0, 36]) {
+    const check = await createHarness();
+    const game = check.session;
+    game.start();
+    game.state.spawn = 9999;
+    game.state.stats.punchReach = reach;
+    const target = game.spawn('l3', false, { x: game.state.p.x + 100, y: game.state.p.y });
+    target.speed = 0;
+    target.cd = 99;
+    for (let i = 0; i < 12; i++) game.update(0.05);
+    assert.equal(target.hp < target.max, reach > 0, 'range upgrade changes actual hit reach');
+    game.dispose();
+  }
+  console.log('PASS: active hero, abilities, armor, boss, rewards, victory and defeat');
+});

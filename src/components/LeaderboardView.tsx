@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
-import { statMetrics } from '../../data/leaderboards.js';
 import { AuthDialog } from './Account';
 import { Dialog } from './Dialog';
-import { formatStat, mapColumns, recordLabel } from './StatsView';
+import { statMetrics, formatStat, mapColumns, recordLabel } from '../app/views/stats.js';
+import { statPath } from '../app/cloud.js';
+import type { Metric } from '../app/types';
 import { useCloud, useStore } from './cloud-context';
-import { statPath } from '../services/leaderboard.js';
 
-type Metric = (typeof statMetrics)[number];
 type Row = { place: number; uid: string; login: string; scope: Record<string, number | string> };
 
-export const placeText = (place: number | null) =>
+const placeText = (place: number | null) =>
   place === null ? '' : Number.isFinite(place) ? `${place}-е место` : 'дальше 1000-го места';
 
 const scopes = [{ id: 'all', name: 'Все карты' }, ...mapColumns];

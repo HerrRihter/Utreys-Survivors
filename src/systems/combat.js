@@ -1,24 +1,28 @@
 import { heroAttack } from './hero-attacks.js';
 import { advanceAction } from '../core/action-timeline.js';
 import { baHealthPerKill } from '../../data/characters/ba-specialization.js';
-import { protectedMove, effectiveStats } from './ability-state.js';
+import { protectedMove, effectiveStats } from './queries/abilities.js';
 import { passiveDamage } from './hero-passives.js';
 import { production } from '../../data/difficulty.js';
 import { elite } from './difficulty.js';
-import { auraFactor, deathBlast } from './enemy-behaviors.js';
+import { auraFactor, deathBlast, mitigation } from './enemy-behaviors.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
+import { heroDefinitions } from '../../data/characters/heroes.js';
+import { heroEvolutions } from '../../data/weapons.js';
+import { dropTable } from '../../data/pickups.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
-  create({ run, heroes, enemies, corpses, progression, world, audio, math, toast, settings = {} }) {
+  create({ run, corpses, wallet, records, world, audio, cosmetic, toast, settings = {} }) {
     // `tag` names the source (hero, an ability or a weapon id) for the result screen.
     function damage(e, n, dx = 0, dy = 0, source = run.state.p, tag = 'hero') {
       if (e.hp <= 0 || n <= 0) return;
       const st = run.state;
-      n *= enemies.mitigation(e, source) * auraFactor(st, e, enemies.units);
-      if (e.markedUntil > st.t) n *= 1.3;
-      const passive = passiveDamage(st, e, n, tag, math.random);
+      n *= mitigation(e, source) * auraFactor(st, e, unitDefinitions);
+      // A mark of the hero's evolution (the QA scan).
+      if (e.markedUntil > st.t) n *= heroEvolutions[run.selected]?.mark?.factor ?? 1;
+      const passive = passiveDamage(st, e, n, tag, st.rng.random);
       n = passive.n;
-      st.damageBy ??= {};
       st.damageBy[tag] = (st.damageBy[tag] || 0) + Math.min(n, e.hp);
       e.hp -= n;
       audio.effect('hit');
@@ -26,7 +30,7 @@ export const CombatSystem = {
       // A hit interrupts light enemies (a charger loses its lunge too); heavy units (tanks,
       // the boss) keep their attacks going, and bugs shrug off hits for `poise` seconds after
       // each interruption.
-      const u = enemies.units[e.unit];
+      const u = unitDefinitions[e.unit];
       if (e.hp > 0 && e.type === 'enemy' && !u?.heavy && !(e.poiseUntil > st.t)) {
         if (u?.poise) e.poiseUntil = st.t + u.poise;
         if (e.dash?.phase === 'wind') e.dash = null;
@@ -66,61 +70,61 @@ export const CombatSystem = {
           s.baSpecialization.bonus = Math.round((s.baSpecialization.bonus + gain) * 10) / 10;
           s.p.max = Math.round((s.p.max + gain) * 10) / 10;
           s.p.hp = Math.min(s.p.max, s.p.hp + gain);
-          if (s.stats.heroEvo) s.stats.damage += 0.01;
+          if (s.stats.heroEvo) s.stats.damage += heroEvolutions[run.selected]?.clientDamage ?? 0;
           if (s.texts.length < 45)
             s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${gain} HP`, life: 0.8 });
         }
         run.state.kills++;
-        run.state.earned += progression.kill(tag);
+        run.state.earned += wallet.kill(tag, run.state.kills);
         const luck = run.state.stats.luck || 0;
-        if (math.random() < 0.05 + luck) run.state.codes.push({ x: e.x, y: e.y, value: 3 });
+        if (run.state.rng.random() < dropTable.code.chance + luck * dropTable.code.luck)
+          run.state.codes.push({ x: e.x, y: e.y, value: dropTable.code.value });
         run.state.gems.push({
           x: e.x,
           y: e.y,
-          v: enemies.units[e.unit].xp * (e.elite ? elite.xp : 1),
+          v: unitDefinitions[e.unit].xp * (e.elite ? elite.xp : 1),
         });
         // Elites leave an update bundle; ordinary kills rarely drop a map pickup.
-        if (e.elite) run.state.pickups.push({ x: e.x, y: e.y, type: 'bundle' });
+        if (e.elite) run.state.pickups.push({ x: e.x, y: e.y, type: dropTable.elite });
         else {
-          const roll = math.random();
-          const type =
-            roll < 0.004 ? 'magnet' : roll < 0.007 ? 'bomb' : roll < 0.01 ? 'freeze' : '';
-          if (type) run.state.pickups.push({ x: e.x + 12, y: e.y, type });
+          const roll = run.state.rng.random();
+          const rare = dropTable.rare.find((drop) => roll < drop.below);
+          if (rare) run.state.pickups.push({ x: e.x + 12, y: e.y, type: rare.type });
         }
         for (let i = 0; i < 4; i++)
           run.state.fx.push({
             kind: 'spark',
             x: e.x,
             y: e.y - 10,
-            vx: math.rand(-65, 65),
-            vy: math.rand(-70, 20),
+            vx: -65 + cosmetic() * 130,
+            vy: -70 + cosmetic() * 90,
             life: 0.3,
             max: 0.3,
             color: i % 2 === 0 ? '#00e5ff' : '#64ffda',
           });
-        if (math.random() < 0.025 + luck / 2)
-          run.state.pickups.push({ x: e.x, y: e.y, type: 'food' });
+        if (run.state.rng.random() < dropTable.food.chance + luck * dropTable.food.luck)
+          run.state.pickups.push({ x: e.x, y: e.y, type: dropTable.food.type });
         // A node guardian leaves a bug archive: it evolves a ready weapon now or later.
-        if (enemies.units[e.unit]?.miniboss) {
-          run.state.evoTokens = (run.state.evoTokens || 0) + 1;
+        if (unitDefinitions[e.unit]?.miniboss) {
+          run.state.evoTokens++;
           toast(
-            (enemies.units[e.unit].archiveName || 'Архив бага') +
+            (unitDefinitions[e.unit].archiveName || 'Архив бага') +
               ' получен: эволюция готового оружия',
           );
         }
         if (e.boss && run.state.endless) {
           // Production CRPTs pay codes; the run goes on.
-          run.state.earned += progression.earn(production.bossReward);
+          run.state.earned += wallet.earn(production.bossReward);
           toast(
-            `${enemies.units[e.unit].name} повержен в продакшене! +${production.bossReward} кодов`,
+            `${unitDefinitions[e.unit].name} повержен в продакшене! +${production.bossReward} кодов`,
           );
           audio.effect('boss');
-          progression.recordBossKill?.();
+          records.recordBossKill();
         } else if (e.boss) {
           run.state.bossDead = true;
-          toast(enemies.units[e.unit].name + ' повержен! Заверши валидацию контура!');
+          toast(unitDefinitions[e.unit].name + ' повержен! Заверши валидацию контура!');
           audio.effect('boss');
-          progression.recordBossKill?.();
+          records.recordBossKill();
         }
       }
     }
@@ -132,18 +136,19 @@ export const CombatSystem = {
         flip: target.x < actor.x,
         aim: { x: target.x, y: target.y },
       };
-      if (actor === run.state.p && run.selected === 'utrace') audio.effect('punchSwing');
+      const swing = actor === run.state.p && heroDefinitions[run.selected].swingSound;
+      if (swing) audio.effect(swing);
     }
     function hurtPlayer(e) {
       const p = run.state.p;
       if (p.hp <= 0 || p.inv > 0 || protectedMove(run.state)) return false;
       p.hp -= Math.max(1, e.damage - run.state.stats.armor);
-      const slow = !e.kind && enemies.units[e.unit]?.slow;
+      const slow = !e.kind && unitDefinitions[e.unit]?.slow;
       if (slow) {
         p.slowUntil = run.state.t + slow.duration;
         p.slowAmount = slow.amount;
       }
-      run.state.firstHurtAt ??= run.state.t;
+      if (run.state.firstHurtAt === null) run.state.firstHurtAt = run.state.t;
       run.state.lastHitBy = e.unit || e.kind || 'unknown';
       p.inv = 0.7;
       p.hurt = { elapsed: 0, duration: 0.34, flip: p.flip };
@@ -155,10 +160,10 @@ export const CombatSystem = {
       heroAttack(
         {
           state: run.state,
-          hero: heroes.defs[run.selected],
+          hero: heroDefinitions[run.selected],
           heroId: run.selected,
           arena: world.arena,
-          units: enemies.units,
+          units: unitDefinitions,
           effect: audio.effect,
           damage,
         },

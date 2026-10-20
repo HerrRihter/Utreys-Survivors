@@ -1,0 +1,51 @@
+// What React may ask the session to do. Player input goes through chooseCard (the level-up
+// lock); `restart` starts a new run with the same picks.
+/**
+ * @param {{ flow: ReturnType<typeof import('./game-flow.js').GameFlow.create>,
+ *   audio: ReturnType<typeof import('../core/audio.js').AudioSystem.create>,
+ *   runLogFile: ReturnType<typeof import('./run-log-file.js').createRunLogFile>,
+ *   activateAbility: (slot: number) => unknown,
+ *   portraits: ReturnType<typeof import('./portraits.js').createPortraits> }} deps
+ */
+export function createSessionCommands({ flow, audio, runLogFile, activateAbility, portraits }) {
+  return {
+    openHeroSelect: flow.openHeroSelect,
+    closeHeroSelect: flow.closeHeroSelect,
+    chooseHero: flow.chooseHero,
+    chooseBaClient: flow.chooseBaClient,
+    chooseMap: flow.chooseMap,
+    chooseLoad: flow.chooseLoad,
+    chooseSeed: flow.chooseSeed,
+    restartSameSeed: flow.restartSameSeed,
+    continueProduction: flow.continueProduction,
+    startSelected: flow.startSelected,
+    restart: flow.start,
+    resume: flow.resume,
+    menu: flow.menu,
+    pause: flow.pause,
+    pickUpgrade: flow.chooseCard,
+    reroll: flow.reroll,
+    skip: flow.skip,
+    armBanish: flow.armBanish,
+    startCapture: flow.startCapture,
+    resetBindings: flow.resetBindings,
+    setUiScale: flow.setUiScale,
+    exportRunLog: runLogFile.exportRunLog,
+    clearRunLog: runLogFile.clearRunLog,
+    activateAbility,
+    openShop: flow.openShop,
+    openAchievements: flow.openAchievements,
+    openEncyclopedia: flow.openEncyclopedia,
+    backToMenu: flow.backToMenu,
+    openSettings: flow.openSettings,
+    closeSettings: flow.closeSettings,
+    buyHero: flow.buyHero,
+    buyUpgrade: flow.buyUpgrade,
+    respec: flow.respec,
+    claimAchievement: flow.claimAchievement,
+    toggleSetting: flow.toggleSetting,
+    toggleSound: audio.toggle,
+    setVolume: audio.setVolume,
+    attachPortrait: portraits.attach,
+  };
+}

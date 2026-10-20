@@ -1,34 +1,50 @@
 # Техническая документация
 
-Актуальная версия: пять героев Utrace, одна карта empty, 16 противников и пять багов-минибоссов. Запуск и команды описаны в [README](README.md).
+Актуальная версия: пять героев Utrace, три карты (дата-центр empty, серверный зал serverRoom, сервисдеск Пепси pepsiDesk), противники, баги-минибоссы узлов и босс ЦРПТ. Запуск и команды описаны в [README](README.md).
 
-Модификации героя, цены и атаки описаны в [HEROES](docs/HEROES.md), противники и условие босса — в [ENEMIES-AND-NODES](docs/ENEMIES-AND-NODES.md).
+Модификации героя, цены и атаки описаны в [HEROES](docs/HEROES.md), противники и условие босса — в [ENEMIES-AND-NODES](docs/ENEMIES-AND-NODES.md), слои и правила кода — в [контракте структуры](docs/STRUCTURE-CONTRACT.md).
 
 ## Архитектура
 
-src/main.tsx монтирует React StrictMode. App переключает экраны, сохраняя GameView. src/app/useGameSession.ts создаёт на mount прогресс (createProgression) и GameSession на canvas, вызывает run/stop при переключении экрана и dispose на unmount. dispose освобождает RAF, ввод, аудио, resize и подписки на события; повторный вызов безопасен.
+Код разложен по слоям; кто кого может импортировать, задаёт матрица в tools/structure-contract.json, её проверяет `npm test`:
 
-src/app/game-session.js — композиционный корень: создаёт системы и передаёт каждой в create({...}) только её зависимости. Общее изменяемое состояние забега — объект run из src/app/run-state.js (state, mode, screen, выбор героя/клиента/карты, ввод). Циклы разорваны чистыми функциями: состояние умений читается через src/systems/ability-state.js, а ввод вызывает команды flow через замыкания в корне.
+data → core → world → systems → services → rendering → ui → app → components → src.
 
-Весь интерфейс — React (src/components: GameView, GameMenus, GameRunScreens, GameHud, Overlay, Portrait). Сессия отдаёт два хранилища для useSyncExternalStore: ui (меняется на каждом дискретном событии) и hud (не чаще 10 раз в секунду из игрового цикла), чистые представления из src/app/views.js и команды (session.commands). Какая панель открыта, определяется run.mode и run.screen. Overlay берёт фокус, удерживает Tab и возвращает фокус при закрытии.
+- **data** — определения: герои, умения, оружие, улучшения, враги, волны, узлы, карты, предметы, достижения. Новое оружие, умение, событие или предмет — запись с полем `kind`, поведение вида — в реестре systems (src/systems/weapons/, src/systems/abilities/, `attackKinds`, `projectileKinds`, `eventKinds`, `pickupKinds`).
+- **core** — без игры: хранилище (storage.js, migrations.js), RNG (rng.js), фиксированный шаг (game-loop.js), ввод, звук, graph-json.js (сериализация с общими ссылками), math.js (clamp и единые проверки прямоугольников `inBox`, `boxesOverlap`, `near`).
+- **world** — геометрия арены: стойки карты как прямоугольники, коллизия «капсула против прямоугольника» (collision.js: `clear`, `blocked`, `outlines`) и поле навигации (navigation.js).
+- **systems** — симуляция забега: модель забега (run-model.js, все поля `run.state` и их схема сохранения), бой, враги, волны, оружие, умения, события, прогрессия аккаунта (systems/progression/). Только меняют состояние: Canvas, `Math.random`, `Date.now` и `performance.now` здесь запрещены. Чистые запросы для рисования — systems/queries/.
+- **services** — Firebase: вход, облачный прогресс, таблица лидеров, статистика забегов.
+- **rendering** — Canvas: сцена, враги, герой, эффекты, пол арены, отладочные контуры коллизии.
+- **ui** — без React: портреты меню (menu-portraits.js), тексты бестиария (opponent-details.ts), тайминги волн (wave-preview.js).
+- **app** — стык игры и React. src/app/game-session.js — композиционный корень: создаёт системы (run-systems.js) и передаёт каждой в `create({...})` только её зависимости; общее изменяемое состояние экрана — объект `run` (src/app/run-state.js). game-flow.js собирает жизненный цикл забега (run-lifecycle.js, учёт окончаний — run-recording.js), левелап (level-up.js) и навигацию по меню (navigation.js). Таймеры кадра — frame-timers.js, портреты меню — portraits.js, журнал забегов как файл — run-log-file.js, то, что видит React, — session-views.js и session-commands.js. Чистые представления — src/app/views/ (по модулю на экран, итоги забега — views/result.js, общие текстовые шаблоны — views/format.js). Страницы арены и бестиария получают всё из `createPreviewKit` (preview-kit.js), сами рисунки — src/rendering/previews.js.
+- **components** — React, импортирует только app: GameView, экраны меню (components/menus/: MainMenu, HeroSelect, Shop, Encyclopedia, Achievements, Settings), GameRunScreens, GameHud, страницы ArenaView и OpponentsView (выбор любой из трёх карт), Overlay, Dialog.
 
-Модули не читают глобалы при импорте: прогресс, враги, трупы и арены создаются фабриками (createProgression, createEnemies, createCorpses, createArenas) с хранилищем и фабрикой offscreen-canvas. Определения героя, врагов, волн, способностей и улучшений находятся в data. Данные описаний бестиария находятся в src/ui/opponent-details.ts, а цикл предпросмотра — в useOpponentPreview.ts.
+src/main.tsx монтирует React StrictMode. App переключает игру и страницы, сохраняя GameView. src/app/useGameSession.ts создаёт на mount прогресс (createProgression) и GameSession на canvas, вызывает run/stop при переключении экрана и dispose на unmount. dispose освобождает RAF, ввод, аудио, resize и подписки; повторный вызов безопасен.
+
+Сессия отдаёт React два хранилища для useSyncExternalStore: ui (меняется на каждом дискретном событии) и hud (не чаще 10 раз в секунду из игрового цикла), представления и команды (session.commands). Строка сборки в HUD пересобирается только при изменении сборки (`upgrades.buildKey`). Какая панель открыта, определяется run.mode и run.screen. Overlay берёт фокус, удерживает Tab и возвращает фокус при закрытии.
+
+Модули не читают глобалы при импорте: прогресс, враги, трупы и арены создаются фабриками (createProgression, createEnemyRenderer, createCorpses, createArenas), браузерные объекты (document, window, хранилище, requestAnimationFrame) передаются сессии.
+
+## Детерминизм
+
+Симуляция идёт фиксированными шагами 1/60 с. Всё случайное в игре берётся из `state.rng` (src/core/rng.js), созданного из сида забега; косметика (искры, тряска, варианты звука) — из отдельного источника сессии. Забег повторяется из сида и записанного ввода: tests/golden-replay.test.js проигрывает 15 пар герой × карта дважды, в другом процессе и с сохранением на середине. `node tests/helpers/replay-child.js` печатает финальные хэши всех повторов — одинаковый вывод двух коммитов показывает, что изменение не тронуло ни одного забега.
 
 ## Ресурсы и производство
 
-Игра рисует текущих персонажей на Canvas. При загрузке движка старые PNG не запрашиваются. Vite публикует только файлы tools/active-assets.json, JS/CSS приложения и две страницы-перенаправления. URL ресурсов привязан к document.baseURI и base Vite; проверяются корень сайта и префикс репозитория.
-
-Каталог runtime содержит audio и ui. Устаревшие покадровые реестры, генераторы и рендереры прежних персонажей удалены. Авторские материалы в assets/source не публикуются. Геометрия и навигация текущей арены находятся в src/world/collision.js и src/world/navigation.js.
+Игра рисует персонажей на Canvas; при загрузке движка изображения не запрашиваются. Vite публикует только файлы tools/active-assets.json (звук в assets/runtime/audio), JS/CSS приложения и две страницы-перенаправления (arena-preview.html, opponents-preview.html — старые адреса). URL ресурсов привязан к document.baseURI и base Vite; smoke проверяет корень сайта и префикс репозитория.
 
 ## Проверки
 
-npm test автоматически запускает все верхнеуровневые tests/test\*.cjs. Общие проверки геометрии, кадров, глубины, звука, сохранений и улучшений сохранены. Проверки удалённого контента заменены текущими сценариями; список выведенных файлов и причины — в docs/archive/RETIRED-2026-10-15.md.
-
-Браузерный smoke проверяет production, HTTP-ресурсы, запуск/паузу, Q/E, навигацию, настройки, ширины экрана, модальный фокус и freeze предпросмотра. Сначала npm run build, затем npm run test:browser. Для CI устанавливается Chromium Playwright; локально можно задать BROWSER_CHANNEL.
+- `npm test` — vitest: все tests/\*.test.js, включая проверку контракта структуры и контрактов контента (tests/contracts.test.js). Тесты сессии используют tests/helpers/game-harness.js — сессию на поддельных document, window, хранилище и кадрах.
+- `npm run check` — ESLint (@eslint/js recommended), tsc, Prettier, тесты и сборка.
+- `npm run test:browser` и `npm run test:layout` — после `npm run build`; страницу отдаёт `preview()` из Vite (tools/preview-server.cjs), как `npm run preview`. Smoke проверяет production, ресурсы, запуск/паузу, Q/E, навигацию, настройки, ширины экрана, модальный фокус и предпросмотр; layout обходит экраны на 21 размере. Локально можно задать BROWSER_CHANNEL=msedge.
+- `npm run benchmark` — симуляция (волны и 300 врагов) на ESM-харнессе; `npm run benchmark:render` — отрисовка в браузере.
+- `npm run test:rules` — правила Firestore на эмуляторе.
 
 ## Сохранения
 
-Ключи прогресса — utreys-progression-v1, utreys-best и utreys-settings. Незаконченный забег хранится в utreys-run-v1, показанные подсказки — в utreys-tips (см. [WEAPONS-AND-RUN](docs/WEAPONS-AND-RUN.md)). Валюта записывается в codes; при загрузке старого сохранения читается codes ?? helmets. Старое достижение helmets_100 переносится в codes_100 без повторной награды. Аудио записывается в utreys-audio; при отсутствии нового ключа настройки читаются из gaul-audio и копируются в новый. Доход от боя сохраняется пакетно; flush вызывается при уходе со страницы и disposal.
+Все ключи localStorage читаются и пишутся через persisted() из src/core/storage.js. Прогресс аккаунта — utreys-progression-v1 (модули systems/progression/: кошелёк, магазин, рекорды, достижения, уровни нагрузки; рекорд лучшего забега — stats.maxTime и stats.maxKills; прежний ключ utreys-best сливается в него один раз), настройки — utreys-settings, звук — utreys-audio, показанные подсказки — utreys-tips. Незаконченный забег хранится в utreys-run-v4 целиком (src/systems/run-snapshot.js; utreys-run-v1…v3 переводятся при чтении, см. [WEAPONS-AND-RUN](docs/WEAPONS-AND-RUN.md)). Старые форматы прогресса (helmets → codes, helmets_100 → codes_100 без повторной награды, gaul-audio → utreys-audio) переводит src/core/migrations.js. Перед изменением формата сохранения нужна миграция. Доход от боя сохраняется пакетно; flush вызывается при уходе со страницы и dispose.
 
 ## Аккаунт и облако
 
@@ -42,6 +58,4 @@ npm test автоматически запускает все верхнеуро
 
 ## Стиль и поддержка
 
-TypeScript проверяется в strict с запретом неиспользуемых локальных значений и параметров. JavaScript остаётся JS: checkJs не включён; его проверяют ESLint и тесты. ESLint проверяет структурные ошибки JS/CJS; TSX проходит tsc и Prettier. Цветовые токены определены в styles/game.css и используются React-компонентами. Canvas получает обычные цветовые значения, а не CSS var().
-
-Полное переписывание движка на TypeScript не является условием этой миграции. Добавляйте типы и более узкие интерфейсы по мере изменения подсистем. Текущий набор ресурсов и проверок должен оставаться воспроизводимым.
+TypeScript проверяется в strict с запретом неиспользуемых локальных значений и параметров. JavaScript остаётся JS (часть модулей — с `// @ts-check`); его проверяют ESLint и тесты. Цветовые токены и стили страниц определены в styles/game.css; в разметке inline остаются только значения из данных (цвет врага, ширина полосы). Canvas получает обычные цветовые значения, а не CSS var().

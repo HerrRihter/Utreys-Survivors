@@ -1,4 +1,4 @@
-import { SoundButton } from './GameMenus';
+import { SoundButton } from './menus/SoundButton';
 import { BuildPanel } from './GameRunScreens';
 import { useHudVersion, useSession } from './session';
 

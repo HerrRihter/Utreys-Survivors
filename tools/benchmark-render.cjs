@@ -5,7 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { chromium, firefox } = require('playwright');
-const { createServer } = require('./server.cjs');
+const { startPreview } = require('./preview-server.cjs');
 
 const units = ['l3', 'pepsi', 'inbev', 'mars', 'baltika', 'multon', 'loreal', 'ferrero'];
 
@@ -25,8 +25,7 @@ const units = ['l3', 'pepsi', 'inbev', 'mars', 'baltika', 'multon', 'loreal', 'f
       ? { args: ['--disable-frame-rate-limit', '--disable-gpu-vsync'] }
       : {}),
   });
-  const server = createServer({ root: path.resolve(__dirname, '../dist'), prefix: '/' });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const server = await startPreview();
   const result = {
     date: new Date().toISOString().slice(0, 10),
     browser: `${isFirefox ? 'firefox' : process.env.BROWSER_CHANNEL || 'chromium'} ${browser.version()}`,
@@ -52,7 +51,7 @@ const units = ['l3', 'pepsi', 'inbev', 'mars', 'baltika', 'multon', 'loreal', 'f
             window.__frames.push(performance.now() - start);
           });
       });
-      await page.goto(`http://127.0.0.1:${server.address().port}/?bench`);
+      await page.goto(server.url + '?bench');
       await page.locator('#start').click();
       await page.evaluate(() => window.__utraceSession.commands.chooseSeed('123456'));
       await page.locator('#runHeroStart').click();
@@ -108,7 +107,7 @@ const units = ['l3', 'pepsi', 'inbev', 'mars', 'baltika', 'multon', 'loreal', 'f
     }
   } finally {
     await browser.close();
-    server.close();
+    await server.close();
   }
   const output = process.env.BENCH_OUTPUT
     ? path.resolve(process.env.BENCH_OUTPUT)

@@ -6,5 +6,11 @@ export const nodeDefinitions = [
   { id: 'logistic-processor', x: 1100, y: 1800, bug: 'bug_logistic' },
   { id: 'goods-reports', x: 500, y: 1500, bug: 'bug_goods' },
 ];
+// Toasts after a node's label when it is resolved.
+export const nodeToasts = {
+  destroyed: ': баг уничтожен',
+  closed: ': закрыт',
+  workaround: ': воркэраунд найден',
+};
 export const workaroundSeconds = 6;
 export const workaroundRadius = 75;

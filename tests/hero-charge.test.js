@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict';
+import { traceabilityCharge } from '../src/rendering/hero-charge.js';
+import { actionTiming } from '../data/animations/action-timing.js';
+import { createHarness } from './helpers/game-harness.js';
+import { test } from 'vitest';
+
+test('hero-charge', async () => {
+  const s = { t: 1, attack: 0.9, runtime: { attackCycle: 0.9 }, p: {} };
+  assert.equal(traceabilityCharge(s).charge, 0);
+  s.attack = 0.45;
+  assert.equal(traceabilityCharge(s).charge, 0.35);
+  s.p.action = { elapsed: (0.4 * actionTiming.impactProgress) / 2, duration: 0.4, hit: false };
+  assert.equal(traceabilityCharge(s).charge, 0.85);
+  s.p.action.elapsed *= 2;
+  assert.equal(traceabilityCharge(s).charge, 1);
+  s.p.action.hit = true;
+  s.p.chainImpactAt = s.t;
+  assert.deepEqual(traceabilityCharge(s), { charge: 0, flash: 1 });
+  const frozen = traceabilityCharge(s);
+  assert.deepEqual(traceabilityCharge(s), frozen, 'rendering does not advance charge');
+  s.t += 0.2;
+  assert.equal(traceabilityCharge(s).flash, 0);
+  assert.equal(traceabilityCharge(s, true).charge, 0);
+  s.p = {};
+  s.attack = 0.225;
+  s.runtime.attackCycle = 0.45;
+  assert.equal(traceabilityCharge(s).charge, 0.35, 'haste uses actual cycle duration');
+
+  const h = await createHarness();
+  h.env.Progression.wallet.earn(80);
+  h.env.Progression.shop.buyHero('traceability');
+  h.session.select('traceability');
+  h.session.start();
+  h.session.state.spawn = 9999;
+  let flashed = false;
+  for (let i = 0; i < 30; i++) {
+    h.session.update(0.025);
+    h.session.draw();
+    const state = h.session.state;
+    if (state.p.chainImpactAt === state.t) {
+      assert(state.p.action.hit, 'flash is emitted by the actual impact');
+      assert.equal(traceabilityCharge(state).flash, 1);
+      flashed = true;
+    }
+  }
+  assert(flashed, 'attack cycle produces an impact flash even with no targets');
+  h.session.start();
+  assert.equal(h.session.state.p.chainImpactAt, null, 'new run clears flash');
+  h.session.dispose();
+  console.log('PASS: charge timing, windup, impact flash, pause, haste and run reset');
+});

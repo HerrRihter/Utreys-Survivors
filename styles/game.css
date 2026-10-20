@@ -2916,3 +2916,470 @@ button:disabled {
 .run-records {
   margin: 12px 0;
 }
+
+/* App frame: pinned to the visible viewport (100vh is taller than the screen in mobile
+   Chrome while its address bar shows), the game kept mounted under the catalog pages. */
+.app-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+.game-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.game-frame.is-hidden {
+  display: none;
+}
+.view-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+.view-navigation button {
+  cursor: pointer;
+}
+.view-navigation button.is-current {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* Catalog pages (?view=arena, ?view=opponents): scrolling pages over the game. Their ids
+   outrank the menu overlay rules, which these pages do not follow. */
+#arenaView.overlay,
+#opponentsView.overlay {
+  align-items: flex-start;
+  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  color: var(--ink);
+  padding: 80px 24px 24px;
+}
+#arenaView.overlay {
+  background: #0a1619;
+}
+.catalog-main {
+  margin: 0 auto;
+  width: 100%;
+  flex-shrink: 0;
+}
+#arenaView .catalog-main {
+  max-width: 1220px;
+}
+.catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+#arenaView .catalog-header {
+  margin-bottom: 16px;
+}
+#arenaView .catalog-header .eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+#arenaView .catalog-header h1 {
+  margin: 0;
+  font-size: 32px;
+  color: var(--cyan);
+}
+#arenaView .catalog-header p {
+  color: #a0bec7;
+  max-width: 880px;
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.catalog-controls {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  align-items: center;
+}
+#arenaView .catalog-controls {
+  gap: 14px;
+}
+#arenaView .catalog-controls button.is-current {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+#arenaView .catalog-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #90b4bc;
+}
+#arenaView .arena-notes {
+  font-size: 12px;
+  color: #00e5ffaa;
+  margin: 4px 0 16px;
+}
+#arenaView .arena-plan {
+  display: block;
+  width: 100%;
+  border: 1px solid #1a5763;
+  background: #0a1619;
+  border-radius: 4px;
+}
+
+#opponentsView.overlay {
+  background: #081215;
+}
+#opponentsView .catalog-main {
+  max-width: 1180px;
+}
+#opponentsView .catalog-header {
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+#opponentsView .catalog-header .eyebrow {
+  color: var(--cyan);
+  letter-spacing: 3px;
+  font-size: 12px;
+}
+#opponentsView .catalog-header h1 {
+  font-size: 38px;
+  line-height: 1.15;
+  margin: 8px 0;
+  color: var(--cyan);
+}
+#opponentsView .catalog-header p {
+  max-width: 850px;
+  color: #9bb8bf;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+#opponentsView .catalog-controls {
+  gap: 12px;
+  background: var(--panel);
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #1a5763;
+}
+#opponentsView .opponents-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#opponentsView .opponents-tabs button {
+  border-color: var(--panel-border);
+  background: #0e252b;
+  color: #d0e7eb;
+  font-weight: normal;
+}
+#opponentsView .opponents-tabs button.is-current {
+  border-color: var(--cyan);
+  background: #13353e;
+  color: var(--cyan);
+  font-weight: bold;
+}
+#opponentsView .opponents-motion {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#opponentsView .opponents-mode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+#opponentsView .opponents-mode span {
+  color: #9bb8bf;
+}
+#opponentsView .opponents-mode select {
+  background: #0f272d;
+  color: var(--cyan);
+  border: 1px solid #1a5763;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font: inherit;
+}
+#opponentsView .opponents-pause {
+  padding: 5px 12px;
+}
+#opponentsView .catalog-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #9bb8bf;
+}
+#opponentsView .opponents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
+  margin: 22px 0;
+}
+#opponentsView .opponent-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s;
+}
+#opponentsView .opponent-card.is-boss {
+  border-color: #ffd600;
+  box-shadow: 0 0 20px rgba(255, 214, 0, 0.2);
+}
+#opponentsView .opponent-badges {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+#opponentsView .opponent-badge {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+#opponentsView .opponent-boss {
+  color: #ffd600;
+  font-size: 18px;
+}
+#opponentsView .opponent-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/10;
+  image-rendering: pixelated;
+  border-radius: 6px;
+  border: 1px solid #163a43;
+  margin-bottom: 14px;
+  background: #08171a;
+}
+#opponentsView .opponent-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+#opponentsView .opponent-name h2 {
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+#opponentsView .opponent-name span {
+  font-size: 12px;
+  color: var(--teal);
+  font-family: monospace;
+}
+#opponentsView .opponent-role {
+  font-size: 12px;
+  color: #7e9fa8;
+  margin-bottom: 8px;
+}
+#opponentsView .opponent-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--teal);
+  background: #0e252b;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #1a5763;
+  margin-bottom: 10px;
+  font-family: monospace;
+  font-weight: bold;
+}
+#opponentsView .opponent-timing {
+  font-size: 12px;
+  color: var(--cyan);
+  margin: 4px 0 8px;
+  font-weight: 600;
+}
+#opponentsView .opponent-description {
+  font-size: 13px;
+  color: #a4c1c9;
+  margin: 0 0 16px;
+  line-height: 1.55;
+  min-height: 60px;
+}
+#opponentsView .opponent-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+}
+#opponentsView .opponent-attack {
+  flex: 1;
+  border-color: var(--cyan);
+  color: var(--cyan);
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#opponentsView .opponent-spec {
+  border-color: var(--panel-border);
+  color: var(--teal);
+  padding: 7px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#opponentsView .opponents-schema {
+  margin-top: 36px;
+  background: var(--panel);
+  border: 1px solid #1a5763;
+  padding: 24px;
+  border-radius: 8px;
+}
+#opponentsView .opponents-schema .eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+#opponentsView .opponents-schema h3 {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font-size: 22px;
+}
+#opponentsView .opponents-schema p {
+  font-size: 13px;
+  color: #8fb1b9;
+  margin: 0 0 16px;
+  max-width: 850px;
+}
+#opponentsView .opponents-schema canvas {
+  width: 100%;
+  max-width: 440px;
+  display: block;
+  border: 1px solid #1a5763;
+  border-radius: 6px;
+  background: #0a1619;
+}
+/* The specification sheet takes its border and glow from the opponent's badge (--badge, --badge-glow). */
+#opponentsView .opponent-sheet {
+  background: var(--panel);
+  border: 1px solid var(--badge);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.8),
+    0 0 24px var(--badge-glow);
+  border-radius: 10px;
+  padding: 28px;
+  max-width: 560px;
+  width: 100%;
+  color: var(--ink);
+}
+#opponentsView .opponent-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+#opponentsView .opponent-close {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+#opponentsView .opponent-sheet h2 {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+#opponentsView .opponent-sheet-role {
+  font-size: 13px;
+  color: #7e9fa8;
+  margin-bottom: 16px;
+}
+#opponentsView .opponent-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 12px;
+}
+#opponentsView .opponent-facts > div {
+  background: #0e252b;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #1a5763;
+}
+#opponentsView .opponent-facts > .fact-wide {
+  grid-column: span 2;
+}
+#opponentsView .opponent-facts span {
+  color: #7e9fa8;
+  display: block;
+  margin-bottom: 3px;
+}
+#opponentsView .fact-protocol {
+  color: var(--cyan);
+}
+#opponentsView .fact-frequency {
+  color: var(--teal);
+}
+#opponentsView .fact-aggregation {
+  color: var(--ink);
+}
+#opponentsView .opponent-sheet-section {
+  margin-bottom: 16px;
+}
+#opponentsView .opponent-sheet-section h4 {
+  margin: 0 0 6px;
+  color: var(--cyan);
+  font-size: 14px;
+}
+#opponentsView .opponent-sheet-section p {
+  margin: 0;
+  font-size: 13px;
+  color: #a4c1c9;
+  line-height: 1.6;
+}
+#opponentsView .opponent-tactics {
+  margin-bottom: 22px;
+}
+#opponentsView .opponent-tactics h4 {
+  color: #ffd600;
+}
+#opponentsView .opponent-tactics p {
+  color: #d0e7eb;
+  background: #112930;
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1px solid #1c4b56;
+}
+#opponentsView .opponent-sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+#opponentsView .opponent-attack-all {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+#opponentsView .opponent-done,
+#opponentsView .opponent-done:hover {
+  background: var(--cyan);
+  color: #041724;
+  padding: 8px 18px;
+  font-size: 13px;
+}
+/* Map choice on both catalog pages, styled like the bestiary's motion select. */
+.catalog .catalog-map {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.catalog .catalog-map span {
+  color: #9bb8bf;
+}
+.catalog .catalog-map select {
+  background: #0f272d;
+  color: var(--cyan);
+  border: 1px solid #1a5763;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font: inherit;
+}

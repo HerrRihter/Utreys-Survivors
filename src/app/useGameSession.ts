@@ -1,11 +1,10 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { GameSession } from './game-session.js';
-import { createProgression } from '../systems/persistence.js';
+import { createProgression } from '../systems/progression/index.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
 import { createRunStats } from '../services/run-stats.js';
 import { createLeaderboard } from '../services/leaderboard.js';
-import type { Session } from '../components/session';
-import type { Account } from '../components/Account';
+import type { Session, Account } from './types';
 
 export type CloudProgress = ReturnType<typeof createCloudProgress>;
 export type RunStats = ReturnType<typeof createRunStats>;
@@ -28,6 +27,7 @@ export function useGameSession(
     const storage = {
       getItem: (key: string) => window.localStorage.getItem(key),
       setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
+      removeItem: (key: string) => window.localStorage.removeItem(key),
     };
     const progression = createProgression({ storage, events: window, document });
     const created = GameSession.create({

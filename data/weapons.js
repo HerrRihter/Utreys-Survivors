@@ -2,6 +2,19 @@
 // `base` holds level-1 values; each entry of `levels` describes levels 2..6 and the change it
 // makes (fields add to the running values, `damage` is a multiplier step). Evolution needs the
 // weapon at level 6 plus the named passive; a bug archive (a node guardian kill) performs it.
+// `kind` names the behaviour (src/systems/weapons/, drawn by src/rendering/weapons.js); the
+// rest of `evolution` is what the evolved form changes, read by that kind:
+//   orbiter    count, rehit (s between hits of one enemy), spinFactor, ring (drawn as a ring)
+//   seeker     split { turns, life, damage }: on a hit the shot breaks into shots at these
+//              turns, living `life` s with this damage share
+//   minefield  countFactor, limitFactor, chain { reach, delay }: a blast sets off mines
+//              within `reach` blast radii after `delay` s
+//   pulse      aura { every, damage, slow, slowFor }: a standing aura instead of pulses; enemies
+//              inside lose `slow` of their speed for `slowFor` s
+//   lob        fan { count, speed, life }: straight out in every direction
+//   boomerang  persist (`count` stay alive for good), collect { reach }: carry experience
+//   zone       radiusFactor, heal (HP/s for the hero inside)
+//   beam       directions: [dx, dy] of the lines
 
 export const weaponSlots = 3; // besides the hero's own attack
 export const passiveSlots = 4;
@@ -9,6 +22,7 @@ export const weaponMaxLevel = 6;
 
 export const weaponDefinitions = {
   orbit: {
+    kind: 'orbiter',
     name: 'Орбитальный сканер',
     icon: '◎',
     color: '#4fc3f7',
@@ -25,9 +39,14 @@ export const weaponDefinitions = {
       passive: 'area',
       name: 'Кольцо валидации',
       desc: '8 сканеров образуют сплошное кольцо и бьют чаще.',
+      count: 8,
+      rehit: 0.3,
+      spinFactor: 1.3,
+      ring: true,
     },
   },
   homing: {
+    kind: 'seeker',
     name: 'Криптохвост',
     icon: '➶',
     color: '#ffd54f',
@@ -44,9 +63,11 @@ export const weaponDefinitions = {
       passive: 'might',
       name: 'Криптоподпись',
       desc: 'Каждый снаряд при попадании раскалывается на три.',
+      split: { turns: [-0.9, 0, 0.9], life: 0.8, damage: 0.5 },
     },
   },
   mine: {
+    kind: 'minefield',
     name: 'DataMatrix-мина',
     icon: '▦',
     color: '#ff8a65',
@@ -63,9 +84,13 @@ export const weaponDefinitions = {
       passive: 'tempo',
       name: 'Минное поле агрегации',
       desc: 'Взрыв поджигает соседние мины: цепные подрывы, вдвое больше мин.',
+      countFactor: 2,
+      limitFactor: 2,
+      chain: { reach: 2, delay: 0.12 },
     },
   },
   ping: {
+    kind: 'pulse',
     name: 'Пинг',
     icon: '◉',
     color: '#80deea',
@@ -82,9 +107,11 @@ export const weaponDefinitions = {
       passive: 'armor',
       name: 'Firewall',
       desc: 'Постоянная аура: урон каждые 0,35 с и замедление врагов на 35%.',
+      aura: { every: 0.35, damage: 0.4, slow: 0.35, slowFor: 0.2 },
     },
   },
   printer: {
+    kind: 'lob',
     name: 'Принтер этикеток',
     icon: '⎙',
     color: '#ce93d8',
@@ -101,9 +128,11 @@ export const weaponDefinitions = {
       passive: 'vitality',
       name: 'Промышленная печать',
       desc: 'Веер из 8 этикеток во все стороны.',
+      fan: { count: 8, speed: 380, life: 0.9 },
     },
   },
   retry: {
+    kind: 'boomerang',
     name: 'Ретрай',
     icon: '↻',
     color: '#a5d6a7',
@@ -120,9 +149,12 @@ export const weaponDefinitions = {
       passive: 'magnet',
       name: 'Бесконечный цикл',
       desc: 'Бумеранги не исчезают и собирают опыт по пути.',
+      persist: true,
+      collect: { reach: 50 },
     },
   },
   cache: {
+    kind: 'zone',
     name: 'Горячий кэш',
     icon: '▣',
     color: '#ffab40',
@@ -139,9 +171,12 @@ export const weaponDefinitions = {
       passive: 'recovery',
       name: 'Резервная копия',
       desc: 'Зоны крупнее и лечат героя на 3 HP/с, пока он внутри.',
+      radiusFactor: 1.35,
+      heal: 3,
     },
   },
   log: {
+    kind: 'beam',
     name: 'Лог-поток',
     icon: '≡',
     color: '#90caf9',
@@ -158,6 +193,12 @@ export const weaponDefinitions = {
       passive: 'boots',
       name: 'Трассировка стека',
       desc: 'Удар сразу в четыре стороны.',
+      directions: [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ],
     },
   },
 };
@@ -187,22 +228,33 @@ export const heroWeaponLevels = [
   { desc: 'Эволюция атаки героя', evolve: true },
 ];
 
+// What each hero's evolution changes, read by the hero's attack kind (src/systems/hero-attacks.js)
+// and by combat:
+//   backSweep     the sector or scan strikes behind the hero as well
+//   returnChain   the chain runs back along its targets for this damage share
+//   split         { turns, life, damage }: the packet breaks apart at the end of its flight
+//   clientDamage  damage gained per kill of the BA client
+//   mark          { factor, seconds }: scanned targets take `factor` damage from every source
 export const heroEvolutions = {
-  utrace: { name: 'Двойная трассировка', desc: 'Второй сектор бьёт за спиной.' },
+  utrace: { name: 'Двойная трассировка', desc: 'Второй сектор бьёт за спиной.', backSweep: true },
   traceability: {
     name: 'Обратная цепь',
     desc: 'Цепь возвращается по тем же целям и наносит ещё 60% урона.',
+    returnChain: 0.6,
   },
   serialization: {
     name: 'Пакетная фрагментация',
     desc: 'В конце пути пакет распадается на три.',
+    split: { turns: [-0.45, 0, 0.45], life: 0.45, damage: 0.6 },
   },
   ba: {
     name: 'Ключевой клиент',
     desc: 'Каждое убийство выбранного клиента ещё и даёт +1% урона до конца забега.',
+    clientDamage: 0.01,
   },
   qa: {
     name: 'Баг-репорт',
     desc: 'Отмеченные сканом цели 3 с получают +30% урона от всех источников.',
+    mark: { factor: 1.3, seconds: 3 },
   },
 };
