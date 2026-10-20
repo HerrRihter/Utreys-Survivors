@@ -5,6 +5,34 @@ import { mapDefinitions, mapUnlocked } from '../data/maps/maps.js';
 import { unitDefinitions } from '../data/enemies/units.js';
 import { test } from 'vitest';
 
+test('saved victory records unlock maps even without mastery map counters', async () => {
+  const h = await createHarness();
+  const s = h.session;
+  const p = h.env.Progression;
+  try {
+    p.replace({ runStats: { maps: { empty: { victoryScore: 99000 } } } });
+    s.commands.chooseMap('serverRoom');
+    assert.equal(s.views.run().selectedMap, 'serverRoom');
+    s.commands.chooseMap('pepsiDesk');
+    assert.equal(s.views.run().selectedMap, 'serverRoom', 'another map win is insufficient');
+
+    p.replace({ runStats: { maps: { serverRoom: { games: 2, bestTime: 600 } } } });
+    s.commands.chooseMap('pepsiDesk');
+    assert.notEqual(s.views.run().selectedMap, 'pepsiDesk', 'survival alone is not a win');
+
+    p.replace({ runStats: { maps: { serverRoom: { victoryScore: 99000 } } } });
+    const view = s.views.heroSelect();
+    assert.equal(view.maps.find((map) => map.id === 'pepsiDesk').locked, false);
+    assert.equal(view.mapHint, '');
+    s.commands.chooseMap('pepsiDesk');
+    assert.equal(s.views.run().selectedMap, 'pepsiDesk');
+    s.start();
+    assert.equal(s.state.map, 'pepsiDesk', 'start also accepts the recorded victory');
+  } finally {
+    s.dispose();
+  }
+});
+
 // The Pepsi service desk map: desks replace the nodes, never attack, release more Pepsi the
 // longer they stay open, and the CRPT comes once every desk is closed.
 test('service-desk', async () => {

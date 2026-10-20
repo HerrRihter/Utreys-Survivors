@@ -97,6 +97,15 @@ export function normalizeProgression(input) {
           for (const [map, n] of Object.entries(saved.stats.mapWins))
             if (/^[a-zA-Z]+$/.test(map) && integer(n) > 0) data.stats.mapWins[map] = integer(n);
       }
+      // Saves from before map wins were counted keep their victories only in the run records:
+      // a recorded victory on a map counts as at least one win there (it opens the next map).
+      for (const [map, scope] of Object.entries(data.runStats.maps))
+        if (scope.victoryScore > 0 && !data.stats.mapWins[map]) data.stats.mapWins[map] = 1;
+      if (
+        !data.stats.wins &&
+        (Object.keys(data.stats.mapWins).length || data.runStats.all.victoryScore > 0)
+      )
+        data.stats.wins = 1;
       if (Array.isArray(saved.evolutionsSeen))
         data.evolutionsSeen = [
           ...new Set(
