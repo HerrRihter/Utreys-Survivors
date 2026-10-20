@@ -1,8 +1,9 @@
 import { workaroundRadius, workaroundSeconds } from '../../data/enemies/nodes.js';
 import { neonStroke } from './neon.js';
+import { nodeGuardian } from '../systems/node-objectives.js';
 
 // A service desk is drawn as an enemy; the ground only marks its spot and status.
-function drawDesk(g, node) {
+function drawDesk(g, node, guardian) {
   const open = node.status === 'guarded';
   g.save();
   g.translate(node.x, node.y);
@@ -17,17 +18,19 @@ function drawDesk(g, node) {
   g.fillText(node.id, 0, -118);
   g.font = '11px monospace';
   g.fillText(open ? 'Снеси, чтобы закрыть бэклог' : 'Бэклог закрыт', 0, 78);
-  if (open && node.guardian) {
+  if (open && guardian) {
     g.fillStyle = '#ff5252';
-    g.fillRect(-40, -112, 80 * Math.max(0, node.guardian.hp / node.guardian.max), 5);
+    g.fillRect(-40, -112, 80 * Math.max(0, guardian.hp / guardian.max), 5);
   }
   g.restore();
 }
 
-export function drawNodes(g, nodes) {
+// `enemies` holds the node guardians; previews draw bare nodes without them.
+export function drawNodes(g, nodes, enemies = []) {
   for (const node of nodes || []) {
+    const guardian = nodeGuardian({ enemies }, node);
     if (node.kind === 'desk') {
-      drawDesk(g, node);
+      drawDesk(g, node, guardian);
       continue;
     }
     const guarded = node.status === 'guarded';
@@ -63,9 +66,9 @@ export function drawNodes(g, nodes) {
       0,
       4,
     );
-    if (guarded && node.guardian) {
+    if (guarded && guardian) {
       g.fillStyle = '#ff5252';
-      g.fillRect(75, -60, 70 * Math.max(0, node.guardian.hp / node.guardian.max), 5);
+      g.fillRect(75, -60, 70 * Math.max(0, guardian.hp / guardian.max), 5);
     }
     g.restore();
   }

@@ -8,6 +8,7 @@
 const fs = require('node:fs');
 const { createHarness } = require('../tests/helpers/game-harness.cjs');
 const { heroDefinitions } = require('../data/characters/heroes.js');
+const { nodeGuardian } = require('../src/systems/node-objectives.js');
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -153,9 +154,9 @@ function steer(s, units, size, reachOf) {
   else if (s.t > objectiveAt) {
     let nearest = Infinity;
     for (const n of s.nodes || []) {
-      if (n.status !== 'guarded' || !n.guardian) continue;
-      const g = n.guardian,
-        d = Math.hypot(g.x - p.x, g.y - p.y);
+      const g = n.status === 'guarded' ? nodeGuardian(s, n) : null;
+      if (!g) continue;
+      const d = Math.hypot(g.x - p.x, g.y - p.y);
       if (d >= nearest) continue;
       nearest = d;
       // Stand just inside striking reach of the bug.
@@ -224,7 +225,7 @@ async function play(hero, seed) {
     }
     if (bossAt !== null && s.t >= bossAt && s.nodes.some((n) => n.status === 'guarded')) {
       for (const n of s.nodes) {
-        if (n.guardian) s.enemies = s.enemies.filter((e) => e !== n.guardian);
+        s.enemies = s.enemies.filter((e) => e.id !== n.guardianId);
         n.status = 'workaround';
       }
     }

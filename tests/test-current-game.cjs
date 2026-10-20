@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { nodeGuardian } = require('../src/systems/node-objectives.js');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { unitDefinitions } = require('../data/enemies/units.js');
 
@@ -30,7 +31,10 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   s.update(0.01);
   const boss = s.state.enemies.find((e) => e.unit === 'crpt');
   assert.equal(boss, undefined, 'time alone never spawns CRPT');
-  for (const node of s.state.nodes) s.damage(node.guardian, node.guardian.hp + 1);
+  for (const node of s.state.nodes) {
+    const guardian = nodeGuardian(s.state, node);
+    s.damage(guardian, guardian.hp + 1);
+  }
   s.update(0.01);
   const unlockedBoss = s.state.enemies.find((e) => e.unit === 'crpt');
   assert(unlockedBoss?.boss, 'CRPT follows resolved nodes');

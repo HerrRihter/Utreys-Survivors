@@ -142,7 +142,7 @@ export const Simulation = {
       p.walk += travel / 55;
       spawning.updateSpawning(dt);
       runEvents?.update(dt);
-      s.crowd = countCrowd(s);
+      s.runtime.crowd = countCrowd(s);
       if (p.hurt) {
         p.hurt.elapsed += dt;
         if (p.hurt.elapsed >= p.hurt.duration) p.hurt = null;
@@ -158,7 +158,7 @@ export const Simulation = {
       if (!blocksAttack(s) && s.attack <= 0 && !p.action) {
         s.attack = Math.max(0.22, heroSpec.interval / (st.haste * (1 + (st.punchTempo || 0))));
         const dir = { ...p.facing };
-        s.attackCycle = s.attack;
+        s.runtime.attackCycle = s.attack;
         combat.beginAction(
           p,
           Math.max(0.18, heroSpec.wind / (st.haste * (1 + (st.punchTempo || 0)))),
@@ -168,7 +168,7 @@ export const Simulation = {
         p.action.flip = Math.abs(dir.x) > 0.01 ? dir.x < 0 : p.flip;
       }
       // Guards whose aura covers their neighbours, found once per step for combat.
-      s.guards = s.enemies.filter((e) => e.hp > 0 && enemies.units[e.unit]?.aura);
+      s.runtime.guards = s.enemies.filter((e) => e.hp > 0 && enemies.units[e.unit]?.aura);
       for (const e of s.enemies) {
         if (e.hp <= 0 || e.abilityStun > 0) continue;
         const u = enemies.units[e.unit],

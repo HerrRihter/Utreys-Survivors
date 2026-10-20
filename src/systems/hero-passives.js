@@ -17,7 +17,7 @@ export function countCrowd(state) {
 export function passiveDamage(state, e, n, tag, random) {
   const st = state.stats;
   if (st.weaponBonus && weaponDefinitions[tag]) n *= 1 + st.weaponBonus;
-  if (st.crowdPer) n *= 1 + Math.min(st.crowdCap || 0, (state.crowd || 0) * st.crowdPer);
+  if (st.crowdPer) n *= 1 + Math.min(st.crowdCap || 0, state.runtime.crowd * st.crowdPer);
   if (st.farBonus && Math.hypot(e.x - state.p.x, e.y - state.p.y) > farDistance)
     n *= 1 + st.farBonus;
   const chance = (st.crit || 0) + (e.scannedUntil > state.t ? st.scanCrit || 0 : 0);

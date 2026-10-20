@@ -1,6 +1,7 @@
 import { compact } from '../core/compact.js';
 
-// Fallen enemies: a cached pose per unit that tips over and fades out.
+// Fallen enemies: a cached pose per unit that tips over and fades out. A body keeps only its
+// unit; the pose canvas stays in the cache.
 export function createCorpses({ enemies, createCanvas }) {
   const lifetime = 8,
     fadeTime = 2,
@@ -29,8 +30,10 @@ export function createCorpses({ enemies, createCanvas }) {
       fallX: nx,
       fallY: ny,
       angle: Math.atan2(nx, -ny / 0.58),
-      frame: pose(e),
+      unit: e.unit,
     });
+    // The pose is drawn once per unit, from the first enemy of that unit that falls.
+    pose(e);
     if (list.length > limit) list.splice(0, list.length - limit);
   }
   function update(list, dt) {
@@ -57,7 +60,8 @@ export function createCorpses({ enemies, createCanvas }) {
       g.scale(1, 1 - 0.42 * ease);
       g.rotate(b.angle * ease);
       g.scale(b.flip ? -1 : 1, 1);
-      if (b.frame) g.drawImage(b.frame, -128, -196);
+      const frame = cache.get(b.unit);
+      if (frame) g.drawImage(frame, -128, -196);
       g.restore();
     }
   }

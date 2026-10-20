@@ -27,7 +27,7 @@ const { passiveDamage, countCrowd } = require('../src/systems/hero-passives.js')
     far = { x: 300, y: 0 };
   const never = () => 1,
     always = () => 0;
-  const st = (stats, extra = {}) => ({ p, t: 10, stats, ...extra });
+  const st = (stats, runtime = {}) => ({ p, t: 10, stats, runtime: { crowd: 0, ...runtime } });
   assert.equal(passiveDamage(st({}), near, 10, 'hero', never).n, 10, 'no passive, no change');
   assert.equal(passiveDamage(st({ weaponBonus: 0.5 }), near, 10, 'mine', never).n, 15);
   assert.equal(passiveDamage(st({ weaponBonus: 0.5 }), near, 10, 'hero', never).n, 10);

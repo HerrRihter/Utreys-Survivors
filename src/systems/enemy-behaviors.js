@@ -97,7 +97,7 @@ function summonAround(c, s, e, units, count) {
       unit = units[Math.floor(c.random() * units.length)];
     const m = c.spawn(unit, false, { x: e.x + Math.cos(a) * r, y: e.y + Math.sin(a) * r });
     if (m) {
-      m.summonedBy = e;
+      m.summonerId = e.id;
       out.push(m);
     }
   }
@@ -161,7 +161,7 @@ export function updateTraits(c, s, e, u, dt) {
     if (e.summonCd <= 0 && Math.hypot(s.p.x - e.x, s.p.y - e.y) < (spec.reach ?? 650)) {
       e.summonCd = spec.every;
       let alive = 0;
-      for (const o of s.enemies) if (o.summonedBy === e && o.hp > 0) alive++;
+      for (const o of s.enemies) if (o.summonerId === e.id && o.hp > 0) alive++;
       // `grow`: one more per call after every `grow` calls, up to `countMax`.
       const size = spec.grow
         ? Math.min(spec.countMax, spec.count + Math.floor((e.summons || 0) / spec.grow))
@@ -249,9 +249,10 @@ export function updateHazards(c, s, dt) {
 
 // Damage share an enemy takes because a guard stands next to it.
 export function auraFactor(s, e, units) {
-  if (!s.guards?.length) return 1;
+  const guards = s.runtime.guards;
+  if (!guards.length) return 1;
   let best = 0;
-  for (const g of s.guards) {
+  for (const g of guards) {
     if (g === e || g.hp <= 0) continue;
     const aura = units[g.unit].aura;
     if (Math.hypot(g.x - e.x, g.y - e.y) <= aura.radius) best = Math.max(best, aura.reduction);

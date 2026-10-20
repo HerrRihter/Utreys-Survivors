@@ -1,6 +1,10 @@
 const assert = require('node:assert/strict');
 const { createHarness } = require('./helpers/game-harness.cjs');
-const { allNodesResolved, openTickets } = require('../src/systems/node-objectives.js');
+const {
+  allNodesResolved,
+  openTickets,
+  nodeGuardian,
+} = require('../src/systems/node-objectives.js');
 const { mapDefinitions, mapUnlocked } = require('../data/maps/maps.js');
 const { unitDefinitions } = require('../data/enemies/units.js');
 
@@ -36,12 +40,9 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   assert.equal(guards.length, desk.objective.count);
   for (const node of st.nodes) {
     assert.equal(node.kind, 'desk');
-    assert.equal(node.guardian.unit, 'pepsi_desk');
-    assert.deepEqual(
-      [node.guardian.x, node.guardian.y],
-      [node.x, node.y],
-      'a desk stands on its spot',
-    );
+    const guardian = nodeGuardian(st, node);
+    assert.equal(guardian.unit, 'pepsi_desk');
+    assert.deepEqual([guardian.x, guardian.y], [node.x, node.y], 'a desk stands on its spot');
   }
 
   // Standing at a desk neither researches a workaround nor gets the player hit.
@@ -61,25 +62,25 @@ const { unitDefinitions } = require('../data/enemies/units.js');
 
   // Releases grow: one Pepsi at first, more after every `grow` releases, up to countMax.
   const spec = unitDefinitions.pepsi_desk.summon;
-  const g = first.guardian;
+  const g = nodeGuardian(st, first);
   const released = [];
   for (let call = 0; call < spec.grow * spec.countMax; call++) {
-    for (const e of st.enemies) if (e.summonedBy === g) e.hp = 0;
+    for (const e of st.enemies) if (e.summonerId === g.id) e.hp = 0;
     st.enemies = st.enemies.filter((e) => e.hp > 0);
     g.summonCd = 0;
     s.update(0.001);
-    released.push(st.enemies.filter((e) => e.summonedBy === g).length);
+    released.push(st.enemies.filter((e) => e.summonerId === g.id).length);
   }
   assert.equal(released[0], spec.count);
   assert.equal(Math.max(...released), spec.countMax);
-  assert(st.enemies.filter((e) => e.summonedBy === g).every((e) => e.unit === 'pepsi'));
+  assert(st.enemies.filter((e) => e.summonerId === g.id).every((e) => e.unit === 'pepsi'));
   assert.equal(openTickets(st), released.at(-1), 'open tickets count living desk Pepsi');
 
   // Closing every desk brings the CRPT.
   st.t = 999;
   s.update(0.01);
   assert.equal(st.bossSpawned, false, 'open desks block the boss');
-  for (const node of st.nodes) s.damage(node.guardian, 100000);
+  for (const node of st.nodes) s.damage(nodeGuardian(st, node), 100000);
   s.update(0.01);
   assert(allNodesResolved(st));
   assert(st.evoTokens >= desk.objective.count, 'each desk leaves an archive');

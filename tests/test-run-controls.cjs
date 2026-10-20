@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { nodeGuardian } = require('../src/systems/node-objectives.js');
 const { createHarness } = require('./helpers/game-harness.cjs');
 
 // Level-up controls (reroll, skip, ban), key rebinding, the saved run and first-run tips.
@@ -79,7 +80,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   s.upgradeRanks.might = 2;
   s.t = 95;
   s.kills = 17;
-  const guardian = s.nodes[0].guardian;
+  const guardian = nodeGuardian(s, s.nodes[0]);
   guardian.hp = 123;
   s.nodes[1].status = 'workaround';
   game.pause();
@@ -99,9 +100,9 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.equal(r.upgradeRanks.might, 2);
   assert.equal(r.rerolls, 0, 'spent controls stay spent');
   assert.equal(r.enemies.filter((e) => !e.nodeId).length, enemies);
-  assert.equal(r.nodes[0].guardian.hp, 123, 'guardian health is restored');
+  assert.equal(nodeGuardian(r, r.nodes[0]).hp, 123, 'guardian health is restored');
   assert.equal(r.nodes[1].status, 'workaround');
-  assert(!r.nodes[1].guardian);
+  assert.equal(nodeGuardian(r, r.nodes[1]), null);
   game.pause();
   game.update(0.05);
   game.finish(false);

@@ -7,7 +7,7 @@ export function createNodeState(seconds = workaroundSeconds, layout = nodeDefini
     need: seconds,
     status: 'guarded',
     progress: 0,
-    guardian: null,
+    guardianId: null,
   }));
 }
 
@@ -23,10 +23,19 @@ export function guardianPoint(node) {
   return { x: node.x + (node.kind === 'desk' ? 0 : 110), y: node.y };
 }
 
+// The enemy standing at a node; null before it is spawned and once it is gone.
+export function nodeGuardian(state, node) {
+  if (node.guardianId === null) return null;
+  for (const e of state.enemies) if (e.id === node.guardianId) return e;
+  return null;
+}
+
 // Open tickets: living enemies released by the run's service desks.
 export function openTickets(state) {
+  const guardians = new Set();
+  for (const node of state.nodes) if (node.guardianId !== null) guardians.add(node.guardianId);
   let n = 0;
-  for (const e of state.enemies) if (e.hp > 0 && e.summonedBy?.nodeId) n++;
+  for (const e of state.enemies) if (e.hp > 0 && guardians.has(e.summonerId)) n++;
   return n;
 }
 
@@ -34,13 +43,15 @@ export function updateNodes(context, dt) {
   const s = context.state;
   for (const node of s.nodes) {
     if (node.status !== 'guarded') continue;
-    if (!node.guardian) {
+    if (node.guardianId === null) {
       const guardian = context.spawn(node.bug, false, guardianPoint(node));
       if (!guardian) continue;
       guardian.nodeId = node.id;
-      node.guardian = guardian;
+      node.guardianId = guardian.id;
     }
-    if (node.guardian.hp <= 0) {
+    // A killed guardian leaves the enemy list at the end of its step.
+    const guardian = nodeGuardian(s, node);
+    if (!guardian || guardian.hp <= 0) {
       node.status = 'destroyed';
       context.toast(node.id + (node.kind === 'desk' ? ': закрыт' : ': баг уничтожен'));
       continue;
@@ -54,7 +65,7 @@ export function updateNodes(context, dt) {
     if (node.progress >= need) {
       node.status = 'workaround';
       // Bypassing a bug grants no kill, XP, boss reward or corpse.
-      s.enemies = s.enemies.filter((enemy) => enemy !== node.guardian);
+      s.enemies = s.enemies.filter((enemy) => enemy !== guardian);
       context.toast(node.id + ': воркэраунд найден');
     }
   }

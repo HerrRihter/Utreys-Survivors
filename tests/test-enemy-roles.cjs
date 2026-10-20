@@ -200,7 +200,7 @@ const run = (s, seconds) => {
     const summoner = s.spawn('bug_aggregation', false, { x: p.x + 300, y: p.y });
     summoner.summonCd = 0;
     s.update(0.01);
-    const minions = s.state.enemies.filter((e) => e.summonedBy === summoner);
+    const minions = s.state.enemies.filter((e) => e.summonerId === summoner.id);
     assert(minions.length > 0 && minions.length <= unitDefinitions.bug_aggregation.summon.max);
     const pools = s.spawn('bug_goods', false, { x: p.x - 200, y: p.y });
     pools.poolCd = 0;

@@ -4,7 +4,7 @@ const { actionTiming } = require('../data/animations/action-timing.js');
 const { createHarness } = require('./helpers/game-harness.cjs');
 
 (async () => {
-  const s = { t: 1, attack: 0.9, attackCycle: 0.9, p: {} };
+  const s = { t: 1, attack: 0.9, runtime: { attackCycle: 0.9 }, p: {} };
   assert.equal(traceabilityCharge(s).charge, 0);
   s.attack = 0.45;
   assert.equal(traceabilityCharge(s).charge, 0.35);
@@ -22,7 +22,7 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   assert.equal(traceabilityCharge(s, true).charge, 0);
   s.p = {};
   s.attack = 0.225;
-  s.attackCycle = 0.45;
+  s.runtime.attackCycle = 0.45;
   assert.equal(traceabilityCharge(s).charge, 0.35, 'haste uses actual cycle duration');
 
   const h = await createHarness();

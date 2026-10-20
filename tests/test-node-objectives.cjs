@@ -1,6 +1,10 @@
 const assert = require('node:assert/strict');
 const { createHarness } = require('./helpers/game-harness.cjs');
-const { updateNodes, allNodesResolved } = require('../src/systems/node-objectives.js');
+const {
+  updateNodes,
+  allNodesResolved,
+  nodeGuardian,
+} = require('../src/systems/node-objectives.js');
 const { nodeDefinitions } = require('../data/enemies/nodes.js');
 const { unitDefinitions } = require('../data/enemies/units.js');
 
@@ -29,13 +33,14 @@ const { unitDefinitions } = require('../data/enemies/units.js');
     Object.assign(s.state.p, { x: node.x, y: node.y });
     for (let i = 0; i < 121; i++) updateNodes(ctx, 0.05);
     assert.equal(node.status, 'workaround');
-    assert(!s.state.enemies.includes(node.guardian));
+    assert(!s.state.enemies.some((e) => e.id === node.guardianId));
+    assert.equal(nodeGuardian(s.state, node), null);
   }
   assert.equal(s.state.kills, 0, 'workarounds grant no kill rewards');
   s.state.t = 999;
   s.update(0.01);
   assert.equal(s.state.bossSpawned, false, 'unresolved nodes block boss beyond old timer');
-  for (const node of s.state.nodes.slice(3)) s.damage(node.guardian, 10000);
+  for (const node of s.state.nodes.slice(3)) s.damage(nodeGuardian(s.state, node), 10000);
   s.update(0.01);
   assert(allNodesResolved(s.state));
   assert.equal(s.state.kills, 2);
@@ -43,7 +48,9 @@ const { unitDefinitions } = require('../data/enemies/units.js');
   s.update(0.01);
   assert.equal(s.state.enemies.filter((e) => e.boss).length, 1);
   s.start();
-  assert(s.state.nodes.every((n) => n.status === 'guarded' && n.progress === 0 && !n.guardian));
+  assert(
+    s.state.nodes.every((n) => n.status === 'guarded' && n.progress === 0 && n.guardianId === null),
+  );
   assert.equal(s.state.bossSpawned, false);
   s.dispose();
   console.log('PASS: nodes, interrupted workarounds, mixed resolution, boss gate and fresh run');

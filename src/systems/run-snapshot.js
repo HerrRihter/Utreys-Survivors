@@ -1,5 +1,5 @@
 import { makeElite } from './difficulty.js';
-import { guardianPoint } from './node-objectives.js';
+import { guardianPoint, nodeGuardian } from './node-objectives.js';
 
 // A paused or interrupted run, kept in storage so a closed tab does not lose it.
 // Only plain data is stored: enemies come back at their saved positions and health, live
@@ -69,14 +69,17 @@ export function snapshotRun(run) {
       weapons: s.weapons.map((w) => pick(w, ['id', 'level', 'cd', 'evolved', 'phase'])),
       p: { x: round(s.p.x), y: round(s.p.y), hp: s.p.hp, max: s.p.max },
       abilities: s.abilities.map((a) => ({ id: a.id, cd: a.cd })),
-      nodes: s.nodes.map((n) => ({
-        id: n.id,
-        status: n.status,
-        progress: n.progress,
-        guardianHp: n.guardian && n.guardian.hp > 0 ? n.guardian.hp : null,
-        // A desk keeps its escalation across a resumed run.
-        summons: n.guardian?.summons || 0,
-      })),
+      nodes: s.nodes.map((n) => {
+        const guardian = nodeGuardian(s, n);
+        return {
+          id: n.id,
+          status: n.status,
+          progress: n.progress,
+          guardianHp: guardian && guardian.hp > 0 ? guardian.hp : null,
+          // A desk keeps its escalation across a resumed run.
+          summons: guardian?.summons || 0,
+        };
+      }),
       enemies: s.enemies
         .filter((e) => e.hp > 0 && !e.nodeId)
         .map((e) => ({
@@ -149,7 +152,7 @@ export function restoreRun(s, snapshot, spawn) {
     guardian.hp = saved.guardianHp;
     guardian.summons = saved.summons || 0;
     guardian.nodeId = node.id;
-    node.guardian = guardian;
+    node.guardianId = guardian.id;
   }
   for (const e of enemies) {
     const enemy = spawn(e.unit, e.boss, { x: e.x, y: e.y });

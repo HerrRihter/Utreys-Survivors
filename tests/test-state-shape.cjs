@@ -32,15 +32,12 @@ const RUNTIME_KEYS = [
   'shake',
   // Saved at the snapshot's top level, not inside `state`.
   'map',
-  // Per-frame caches set by the simulation and weapons.
+  // Live weapon effects, and the caches of the running simulation.
   'wfx',
-  'crowd',
-  'guards',
-  'attackCycle',
-  // Set lazily by systems and not saved today: a resumed run starts them over.
-  'speechPhraseIndex',
-  'speechCursor',
-  'nextSpeechAt',
+  'runtime',
+  // Enemy ids continue from the saved enemies' ids.
+  'nextEnemyId',
+  // Not saved today: a resumed run starts it over.
   'eventsDone',
   // Ending bookkeeping: a run that has ended is never saved.
   'resultRecorded',

@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { nodeGuardian } = require('../src/systems/node-objectives.js');
 const { createHarness } = require('./helpers/game-harness.cjs');
 
 // Every extra weapon damages enemies, levels change its numbers, a bug archive evolves a
@@ -51,7 +52,8 @@ const { createHarness } = require('./helpers/game-harness.cjs');
   s.upgradeRanks.might = 1;
   s.evoTokens = 0;
   const bug =
-    s.nodes[0].guardian || game.spawn('bug_aggregation', false, { x: s.p.x + 300, y: s.p.y });
+    nodeGuardian(s, s.nodes[0]) ||
+    game.spawn('bug_aggregation', false, { x: s.p.x + 300, y: s.p.y });
   game.damage(bug, bug.hp + 1);
   assert.equal(s.evoTokens, 1, 'a node guardian leaves an archive');
   game.update(1 / 60);

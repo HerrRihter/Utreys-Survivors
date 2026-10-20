@@ -29,12 +29,12 @@ import { loadModifiers } from '../../data/difficulty.js';
  * @typedef {{ x: number, y: number, unit: string, type: 'enemy' | 'boss', hp: number,
  *   max: number, r: number, speed: number, damage: number, boss: boolean, hit: number,
  *   cd: number, phase: number, vx: number, vy: number, heading: number, elite?: boolean,
- *   nodeId?: string }} EnemyCore
+ *   id: number, summonerId: number | null, nodeId: string | null }} EnemyCore
  * Behaviours keep their own timers on the enemy (summonCd, wcd, speech...).
  * @typedef {EnemyCore & Record<string, unknown>} Enemy
  * @typedef {{ id: string, kind?: string, bug: string, x: number, y: number, need: number,
  *   status: string, progress: number,
- *   guardian: Enemy | null }} RunNode
+ *   guardianId: number | null }} RunNode
  * @typedef {{ id: string, level: number, cd: number, evolved: boolean, phase: number,
  *   tick?: number }} OwnedWeapon
  * @typedef {{ id: string, name: string, cooldown: number, duration: number, cd: number,
@@ -51,13 +51,19 @@ import { loadModifiers } from '../../data/difficulty.js';
  * @typedef {Record<string, unknown>} WorldObject
  * @typedef {{ client: string, bonus: number }} BaSpecialization
  *
+ * Caches and cosmetic cursors of the running simulation. Recomputed or restarted after a
+ * resume, so never saved.
+ * @typedef {{ crowd: number, guards: Enemy[], attackCycle: number,
+ *   speechPhraseIndex: Record<string, number>, speechCursor: number,
+ *   nextSpeechAt: number }} RunRuntime
+ *
  * @typedef {{
  *   t: number, step: number, runId: string, map: string, seed: number, load: number,
  *   healFactor: number,
  *   eventPlan: PlannedEvent[], eventIndex: number, event: RunEvent | null, eventsDone: number,
  *   spawn: number, waveNext: Record<string, number>, bossSpawned: boolean, eliteNext: number,
  *   kills: number, level: number, xp: number, need: number, earned: number,
- *   attack: number, attackCycle: number, crowd: number, guards: Enemy[],
+ *   attack: number, runtime: RunRuntime,
  *   p: Player, stats: RunStats, heroWeaponName: string,
  *   abilities: RunAbility[], weapons: OwnedWeapon[], evoTokens: number, evolutions: number,
  *   upgradeRanks: Record<string, number>, banned: string[],
@@ -66,11 +72,10 @@ import { loadModifiers } from '../../data/difficulty.js';
  *   baSpecialization: BaSpecialization | null,
  *   damageBy: Record<string, number>, lastHitBy: string | null, firstHurtAt: number | null,
  *   foodTaken: number, doneBefore: string[],
- *   enemies: Enemy[], nodes: RunNode[], gems: Gem[], codes: CodeToken[], pickups: Pickup[],
+ *   enemies: Enemy[], nextEnemyId: number, nodes: RunNode[], gems: Gem[], codes: CodeToken[], pickups: Pickup[],
  *   corpses: WorldObject[], enemyShots: WorldObject[], hazards: WorldObject[],
  *   shots: WorldObject[], wfx: WorldObject[], fx: WorldObject[], texts: WorldObject[],
  *   bossDead: boolean, shake: number,
- *   speechPhraseIndex: Record<string, number>, speechCursor: number, nextSpeechAt: number,
  *   endless: boolean, endlessStart: number, endlessKills: number,
  *   productionBossNext: number, productionBosses: number,
  *   resultRecorded: boolean, recordedTime: number, statsRecorded: boolean,
@@ -78,6 +83,21 @@ import { loadModifiers } from '../../data/difficulty.js';
  *   recordsImproved: Record<string, string[]> | null,
  * }} RunModel
  */
+
+/** @returns {RunRuntime} */
+export function createRunRuntime() {
+  return {
+    // Enemies near the hero and the aura guards, counted once per step.
+    crowd: 0,
+    guards: [],
+    // Length of the hero's current attack cycle (the charge ring).
+    attackCycle: 0.2,
+    // Who speaks next and which phrase each unit says next; cosmetic only.
+    speechPhraseIndex: {},
+    speechCursor: 0,
+    nextSpeechAt: speechSettings.interval,
+  };
+}
 
 /**
  * A new run with every field in place.
@@ -122,12 +142,8 @@ export function createRunModel({
     xp: 0,
     need: 8,
     earned: 0,
-    // Hero attack timer and the length of its current cycle (the charge ring).
+    // Hero attack timer.
     attack: 0.2,
-    attackCycle: 0.2,
-    // Enemies near the hero and the aura guards, counted once per step.
-    crowd: 0,
-    guards: [],
     p: {
       x: arenaSize / 2,
       y: arenaSize / 2,
@@ -182,6 +198,8 @@ export function createRunModel({
     // Achievements already done, to list what this run opens.
     doneBefore,
     enemies: [],
+    // Ids of spawned enemies: summons and node objectives refer to enemies by id.
+    nextEnemyId: 1,
     nodes: createNodeState(workaroundSeconds * (1 + mods.workaround), layoutNodes(map, seed)),
     gems: [],
     codes: [],
@@ -195,9 +213,6 @@ export function createRunModel({
     texts: [],
     bossDead: false,
     shake: 0,
-    speechPhraseIndex: {},
-    speechCursor: 0,
-    nextSpeechAt: speechSettings.interval,
     endless: false,
     endlessStart: 0,
     endlessKills: 0,
@@ -211,6 +226,7 @@ export function createRunModel({
     earnedPaid: 0,
     // Which run statistics the last ending improved (for the result screen and tests).
     recordsImproved: null,
+    runtime: createRunRuntime(),
   };
   applyPermanentUpgrades(s, hero, levels);
   return s;

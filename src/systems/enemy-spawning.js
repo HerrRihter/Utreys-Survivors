@@ -31,6 +31,9 @@ export const EnemySpawning = {
       }
       if (world.arena.blocked(x, y, u.r)) return;
       const e = {
+        id: s.nextEnemyId++,
+        summonerId: null,
+        nodeId: null,
         x,
         y,
         unit,

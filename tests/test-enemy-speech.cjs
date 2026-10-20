@@ -12,9 +12,7 @@ const state = {
   t: 0,
   p: { x: 1100, y: 1100 },
   enemies: [enemy],
-  speechPhraseIndex: {},
-  speechCursor: 0,
-  nextSpeechAt: speechSettings.interval,
+  runtime: { speechPhraseIndex: {}, speechCursor: 0, nextSpeechAt: speechSettings.interval },
 };
 const view = { W: 800, H: 600 };
 // Speech is cosmetic: it must never consume the gameplay random source.

@@ -11,7 +11,7 @@ export function traceabilityCharge(state, blocked = false) {
     const progress = Math.min(1, action.elapsed / (action.duration * actionTiming.impactProgress));
     return { charge: 0.7 + progress * 0.3, flash };
   }
-  const cycle = state.attackCycle || 0.2;
+  const cycle = state.runtime.attackCycle;
   const charge = 0.7 * Math.max(0, Math.min(1, 1 - state.attack / cycle));
   return { charge: flash > 0 ? 0 : charge, flash };
 }
