@@ -13,22 +13,21 @@ import { GameLoop, createFixedStep, STEP } from '../core/game-loop.js';
 import { GameFlow } from './game-flow.js';
 import { createStore } from '../core/store.js';
 import { createRunState, createGameSettings } from './run-state.js';
-import * as views from './views/index.js';
-import { EnemySpawning } from '../systems/enemy-spawning.js';
-import { CombatSystem } from '../systems/combat.js';
 import { Simulation } from '../systems/simulation.js';
 import { updateEnemySpeech } from '../systems/enemy-speech.js';
-import { AbilitySystem } from '../systems/abilities.js';
-import { RunEvents } from '../systems/run-events.js';
 import { createRunLog } from '../systems/run-log.js';
 import { UpgradeSystem } from '../systems/upgrades.js';
-import { WeaponSystem } from '../systems/weapons.js';
 import { createCorpses } from '../systems/corpses.js';
 import { createCorpseRenderer } from '../rendering/corpses.js';
 import { createEnemyRenderer } from '../rendering/enemies.js';
-import { MenuPortraits } from '../ui/menu-portraits.js';
 import { createRunSnapshots } from '../systems/run-snapshot.js';
 import { createTips } from './tips.js';
+import { createRunSystems } from './run-systems.js';
+import { createFrameTimers } from './frame-timers.js';
+import { createPortraits } from './portraits.js';
+import { createRunLogFile } from './run-log-file.js';
+import { createSessionViews } from './session-views.js';
+import { createSessionCommands } from './session-commands.js';
 
 // Composition root of one game mount. Every system gets exactly the collaborators it uses;
 // React talks to the session through `ui`/`hud` stores, read models (views) and commands.
@@ -94,52 +93,16 @@ export const GameSession = {
       ui.emit();
     }
 
-    const combat = CombatSystem.create({
+    const { combat, weapons, abilities, spawning, runEvents } = createRunSystems({
       run,
-      corpses,
-      wallet: progression.wallet,
-      records: progression.records,
       world,
+      corpses,
+      progression,
       audio,
       cosmetic,
       toast,
       settings,
     });
-    const weapons = WeaponSystem.create({ run, world, damage: combat.damage, audio });
-    const abilities = AbilitySystem.create({
-      run,
-      world,
-      damage: combat.damage,
-      records: progression.records,
-      audio,
-    });
-    const spawning = EnemySpawning.create({ run, world, toast, audio });
-    const runEvents = RunEvents.create({
-      run,
-      world,
-      spawning,
-      wallet: progression.wallet,
-      toast,
-      audio,
-    });
-    // Saves the run journal as a JSON file; returns the file's text (tests read it).
-    function exportRunLog() {
-      const text = runLog.json();
-      try {
-        const blob = new window.Blob([text], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `utreys-runs-${new Date().toISOString().slice(0, 10)}.json`;
-        link.click();
-        window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-      } catch {}
-      return text;
-    }
-    function clearRunLog() {
-      runLog.clear();
-      ui.emit();
-    }
     function activateAbility(slot) {
       const cast = abilities.activate(slot);
       if (cast) hud.emit();
@@ -207,29 +170,9 @@ export const GameSession = {
       settings,
       cosmetic,
     });
+    const portraits = createPortraits({ document, sprite });
+    const timers = createFrameTimers({ run, ui, hud, snapshots, tips });
 
-    // Hero portraits in menus: React attaches canvases, the loop animates them in the menu.
-    const portraits = MenuPortraits.create({ document, sprite, artStatus: () => 'canvas-v1' });
-    const attached = new Map();
-    let portraitPhase = -1;
-    function attachPortrait(target, hero, { animated = true } = {}) {
-      portraits.fit(target, hero, 0);
-      if (animated) attached.set(target, hero);
-      return () => attached.delete(target);
-    }
-    function animatePortraits(now) {
-      const phase = Math.floor(now / 190) % 8;
-      if (phase === portraitPhase) return;
-      portraitPhase = phase;
-      for (const [target, hero] of attached) portraits.fit(target, hero, phase);
-    }
-
-    // The HUD is refreshed at most ten times a second from the frame loop; the run is saved
-    // every 30 s of play, tips are checked four times a second.
-    let hudClock = 0,
-      saveClock = 0,
-      tipClock = 0;
-    const SAVE_EVERY = 30;
     // One simulation step reads the movement intent the input layer combines right before it.
     // Speech is cosmetic and picks among enemies on screen, so it runs here with the camera's
     // world rectangle instead of inside the simulation.
@@ -246,10 +189,8 @@ export const GameSession = {
       visible.y = origin.y;
       updateEnemySpeech(s, visible);
     }
-    // The run advances in fixed steps (core/game-loop.js). Timers of play time (autosave,
-    // tips and how long a tip shows) count the simulated time; the interface's own timers (HUD
-    // refresh, the level-up lock, toasts, menu portraits) count real frame time, so they behave
-    // the same while the simulation is paused or drops time on a stalled frame.
+    // The run advances in fixed steps (core/game-loop.js); frame-timers.js keeps the timers
+    // of play time and of the interface apart.
     const fixedStep = createFixedStep();
     function frame(now, frameDt) {
       // A hidden tab resumes with one long frame: interface timers move by at most a moment.
@@ -264,32 +205,10 @@ export const GameSession = {
           step(STEP);
           played += STEP;
         }
-        saveClock += played;
-        if (saveClock >= SAVE_EVERY) {
-          saveClock = 0;
-          snapshots.save(run);
-        }
-        tipClock += played;
-        if (tipClock >= 0.25) {
-          tipClock = 0;
-          tips.check();
-        }
-        if (run.tip.left > 0) run.tip.left -= played;
+        timers.played(played);
       }
-      if (run.mode === 'level' && run.levelLock > 0) {
-        run.levelLock -= dt;
-        if (run.levelLock <= 0) ui.emit();
-      }
-      if (run.mode === 'menu') animatePortraits(now);
-      if (run.toast.left > 0) {
-        run.toast.left -= dt;
-        if (run.toast.left <= 0) ui.emit();
-      }
-      hudClock += dt;
-      if (run.state && hudClock >= 0.1) {
-        hudClock = 0;
-        hud.emit();
-      }
+      if (run.mode === 'menu') portraits.animate(now);
+      timers.frame(dt);
       renderer.draw();
     }
     const loop = GameLoop.create({ requestAnimationFrame, cancelAnimationFrame, frame, audio });
@@ -309,7 +228,6 @@ export const GameSession = {
       events.dispose();
       progression.flush();
     }
-    const read = { run, progression, settings, upgrades };
 
     return {
       // Engine API (tests, tools)
@@ -362,61 +280,22 @@ export const GameSession = {
       // `emit` re-renders menus after the save was replaced from the cloud.
       ui: { subscribe: ui.subscribe, getVersion: ui.getVersion, emit: ui.emit },
       hud: { subscribe: hud.subscribe, getVersion: hud.getVersion },
-      views: {
-        run: () => run,
-        menu: () => views.menuView({ ...read, snapshot: snapshots.load() }),
-        heroSelect: () => views.heroSelectView(read),
-        shop: () => views.shopView(read),
-        achievements: () => views.achievementsView(read),
-        encyclopedia: () => views.encyclopediaView(read),
-        levelUp: () => views.levelUpView(read),
-        build: () => views.buildView(read),
-        levelControls: () => views.levelControlsView(read),
-        hud: () => views.hudView(read),
-        settings: () => views.settingsView({ run, settings, audio, runLog }),
-        // Totals and records per map for «Моя статистика».
-        runStats: () => progression.data.runStats,
-      },
-      commands: {
-        openHeroSelect: flow.openHeroSelect,
-        closeHeroSelect: flow.closeHeroSelect,
-        chooseHero: flow.chooseHero,
-        chooseBaClient: flow.chooseBaClient,
-        chooseMap: flow.chooseMap,
-        chooseLoad: flow.chooseLoad,
-        chooseSeed: flow.chooseSeed,
-        restartSameSeed: flow.restartSameSeed,
-        continueProduction: flow.continueProduction,
-        startSelected: flow.startSelected,
-        restart: flow.start,
-        resume: flow.resume,
-        menu: flow.menu,
-        pause: flow.pause,
-        pickUpgrade: flow.chooseCard,
-        reroll: flow.reroll,
-        skip: flow.skip,
-        armBanish: flow.armBanish,
-        startCapture: flow.startCapture,
-        resetBindings: flow.resetBindings,
-        setUiScale: flow.setUiScale,
-        exportRunLog,
-        clearRunLog,
+      views: createSessionViews({
+        run,
+        progression,
+        settings,
+        upgrades,
+        snapshots,
+        audio,
+        runLog,
+      }),
+      commands: createSessionCommands({
+        flow,
+        audio,
+        runLogFile: createRunLogFile({ window, document, runLog, ui }),
         activateAbility,
-        openShop: flow.openShop,
-        openAchievements: flow.openAchievements,
-        openEncyclopedia: flow.openEncyclopedia,
-        backToMenu: flow.backToMenu,
-        openSettings: flow.openSettings,
-        closeSettings: flow.closeSettings,
-        buyHero: flow.buyHero,
-        buyUpgrade: flow.buyUpgrade,
-        respec: flow.respec,
-        claimAchievement: flow.claimAchievement,
-        toggleSetting: flow.toggleSetting,
-        toggleSound: audio.toggle,
-        setVolume: audio.setVolume,
-        attachPortrait,
-      },
+        portraits,
+      }),
     };
   },
 };
