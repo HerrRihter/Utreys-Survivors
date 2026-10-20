@@ -1,5 +1,5 @@
 import { compact } from '../core/compact.js';
-import { clamp } from '../core/math.js';
+import { clamp, near } from '../core/math.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
 import { pickupDefinitions } from '../../data/pickups.js';
@@ -66,11 +66,7 @@ export const Simulation = {
       blast(s, spec, st, type) {
         const p = s.p;
         for (const e of s.enemies)
-          if (
-            e.hp > 0 &&
-            Math.abs(e.x - p.x) < spec.halfWidth &&
-            Math.abs(e.y - p.y) < spec.halfHeight
-          )
+          if (e.hp > 0 && near(p, e, spec.halfWidth, spec.halfHeight))
             combat.damage(e, spec.damage * st.damage, 0, 0, p, type);
         ring(s, spec.ring);
         s.shake = spec.shake;

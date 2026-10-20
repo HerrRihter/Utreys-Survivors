@@ -1,4 +1,5 @@
 import { corpseOpacity } from '../systems/queries/corpses.js';
+import { inBox } from '../core/math.js';
 
 // Fallen enemies: a pose per unit, drawn once by the enemy renderer into an offscreen canvas,
 // tips over in the fall direction and fades out. `enemies` draws a standing enemy;
@@ -15,10 +16,10 @@ export function createCorpseRenderer({ enemies, createCanvas }) {
     poses.set(unit, c);
     return c;
   }
-  // Bodies within 100 px of the screen rectangle (cx, cy, w, h).
-  function draw(g, list, cx, cy, w, h) {
+  // Bodies within 50 px of `bounds` (the screen grown by 50 px, see scene-renderer.js).
+  function draw(g, list, bounds) {
     for (const b of list) {
-      if (b.x < cx - 100 || b.x > cx + w + 100 || b.y < cy - 100 || b.y > cy + h + 100) continue;
+      if (!inBox(b, bounds, 50)) continue;
       const fall = Math.min(1, b.age / 0.32),
         ease = 1 - (1 - fall) ** 3;
       const x = b.x + b.fallX * 18 * ease,

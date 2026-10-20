@@ -10,6 +10,7 @@ import { drawFx } from './fx.js';
 import { drawWeapons } from './weapons.js';
 import { drawAbilities } from './abilities.js';
 import { drawShot, drawEnemyShot } from './projectiles.js';
+import { inBox } from '../core/math.js';
 
 // The datacenter has no depth-sorted scenery; orderActors still merges it when a map does.
 const noScenery = [];
@@ -54,53 +55,42 @@ export const SceneRenderer = {
       ctx.save();
       ctx.translate(-cx, -cy);
       if (s) {
-        const minX = cx - 50,
-          maxX = cx + view.W + 50,
-          minY = cy - 50,
-          maxY = cy + view.H + 50;
+        bounds.minX = cx - 50;
+        bounds.maxX = cx + view.W + 50;
+        bounds.minY = cy - 50;
+        bounds.maxY = cy + view.H + 50;
         drawNodes(ctx, s.nodes, s.enemies);
         drawEvent(ctx, s);
         for (const h of s.hazards || []) {
-          if (h.x < minX - h.r || h.x > maxX + h.r || h.y < minY - h.r || h.y > maxY + h.r)
-            continue;
+          if (!inBox(h, bounds, h.r)) continue;
           enemies.hazard(ctx, h);
         }
-        corpses.draw(ctx, s.corpses, cx, cy, view.W, view.H);
+        corpses.draw(ctx, s.corpses, bounds);
         for (const h of s.codes) {
-          if (h.x < minX || h.x > maxX || h.y < minY || h.y > maxY) continue;
+          if (!inBox(h, bounds)) continue;
           drawCodeToken(ctx, h.x, h.y);
         }
         for (const g of s.gems) {
-          if (g.x < minX || g.x > maxX || g.y < minY || g.y > maxY) continue;
+          if (!inBox(g, bounds)) continue;
           drawGem(ctx, g);
         }
         for (const a of s.pickups) {
-          if (a.x < minX || a.x > maxX || a.y < minY || a.y > maxY) continue;
+          if (!inBox(a, bounds)) continue;
           drawPickup(ctx, a, s.t);
         }
         for (const e of s.enemies) {
-          if (e.x < minX - 70 || e.x > maxX + 70 || e.y < minY - 70 || e.y > maxY + 70) continue;
+          if (!inBox(e, bounds, 70)) continue;
           if (e.elite) drawEliteAura(ctx, e, s.t);
           enemies.telegraph(ctx, e);
         }
         drawAbilities(ctx, s);
-        bounds.minX = minX;
-        bounds.maxX = maxX;
-        bounds.minY = minY;
-        bounds.maxY = maxY;
         drawWeapons(ctx, s, bounds, 'ground');
         // Sort only what can appear on screen.
         visible.length = 0;
-        for (const e of s.enemies)
-          if (e.x >= minX - 100 && e.x <= maxX + 100 && e.y >= minY - 100 && e.y <= maxY + 100)
-            visible.push(e);
+        for (const e of s.enemies) if (inBox(e, bounds, 100)) visible.push(e);
         const actors = orderActors(noScenery, visible, p, run.selected);
         for (const e of actors) {
-          if (
-            !e.player &&
-            (e.x < minX - 100 || e.x > maxX + 100 || e.y < minY - 100 || e.y > maxY + 100)
-          )
-            continue;
+          if (!e.player && !inBox(e, bounds, 100)) continue;
           // The hero's and enemies' art draws its own shadow.
           if (e.player)
             sprite(
@@ -152,7 +142,7 @@ export const SceneRenderer = {
         ctx.font = 'bold 12px monospace';
         ctx.textAlign = 'center';
         for (const t of s.texts) {
-          if (t.x < minX || t.x > maxX || t.y < minY || t.y > maxY) continue;
+          if (!inBox(t, bounds)) continue;
           ctx.globalAlpha = Math.min(1, t.life * 3);
           ctx.fillStyle = '#08171a';
           ctx.fillText(t.v, t.x + 1, t.y + 1);

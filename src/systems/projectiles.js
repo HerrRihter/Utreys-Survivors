@@ -1,5 +1,5 @@
 import { compact } from '../core/compact.js';
-import { clamp } from '../core/math.js';
+import { clamp, near } from '../core/math.js';
 
 const TAU = Math.PI * 2;
 const isLive = (item) => item.life > 0;
@@ -88,7 +88,7 @@ export const projectileKinds = {
     if (f.collect) {
       const reach = f.collect.reach;
       for (const g of s.gems)
-        if (Math.abs(g.x - f.x) < reach && Math.abs(g.y - f.y) < reach) {
+        if (near(f, g, reach)) {
           g.x = s.p.x;
           g.y = s.p.y;
         }

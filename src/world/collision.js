@@ -1,3 +1,5 @@
+import { boxesOverlap } from '../core/math.js';
+
 // Ground-contact shapes in normalized sprite coordinates, not roof/canopy silhouettes.
 export const ArenaCollision = (() => {
   function create(objects, size) {
@@ -108,6 +110,8 @@ export const ArenaCollision = (() => {
         cross(c, d, a) * cross(c, d, b) <= 0
       );
     }
+    // The swept segment's box, grown by the radius; reused by every query.
+    const sweep = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
     function clear(a, b, r = 14) {
       if (
         Math.min(a.x, b.x) < r ||
@@ -118,16 +122,16 @@ export const ArenaCollision = (() => {
         return false;
       // Open arenas need only the bounds test above.
       if (polygons.length === 0) return true;
-      const minX = Math.min(a.x, b.x) - r,
-        minY = Math.min(a.y, b.y) - r,
-        maxX = Math.max(a.x, b.x) + r,
-        maxY = Math.max(a.y, b.y) + r;
-      const cand = candidates(minX, minY, maxX, maxY);
+      sweep.minX = Math.min(a.x, b.x) - r;
+      sweep.minY = Math.min(a.y, b.y) - r;
+      sweep.maxX = Math.max(a.x, b.x) + r;
+      sweep.maxY = Math.max(a.y, b.y) + r;
+      const cand = candidates(sweep.minX, sweep.minY, sweep.maxX, sweep.maxY);
       for (let k = 0; k < cand.length; k++) {
         const p = cand[k];
         // Buckets deliberately over-select; reject non-overlapping bounds before
         // the expensive polygon/segment distance tests.
-        if (p.maxX < minX || p.minX > maxX || p.maxY < minY || p.minY > maxY) continue;
+        if (!boxesOverlap(p, sweep)) continue;
         // Reject polygons outside the swept segment's expanded box. The bucket
         // rectangle alone over-selects many buildings on long diagonal paths.
         let enter = 0,

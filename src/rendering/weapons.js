@@ -2,6 +2,7 @@ import { weaponDefinitions } from '../../data/weapons.js';
 import { effectiveStats } from '../systems/queries/abilities.js';
 import { projectilePainters } from './projectiles.js';
 import { orbitShape, auraRadius, weaponEvolution } from '../systems/queries/weapons.js';
+import { inBox } from '../core/math.js';
 
 const TAU = Math.PI * 2;
 
@@ -94,8 +95,7 @@ export function drawWeapons(g, s, bounds, layer = 'ground') {
   for (const f of s.wfx) {
     const painter = effectPainters[f.kind];
     if (painter.layer !== layer) continue;
-    if (f.x < bounds.minX - 80 || f.x > bounds.maxX + 80) continue;
-    if (f.y < bounds.minY - 80 || f.y > bounds.maxY + 80) continue;
+    if (!inBox(f, bounds, 80)) continue;
     painter.draw(g, f);
   }
 }

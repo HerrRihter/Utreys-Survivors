@@ -1,19 +1,20 @@
 import { unitDefinitions } from '../../data/enemies/units.js';
+import { inBox } from '../core/math.js';
 
 export function drawEnemySpeech(g, state, viewport) {
+  const screen = {
+    minX: viewport.x,
+    minY: viewport.y,
+    maxX: viewport.x + viewport.width,
+    maxY: viewport.y + viewport.height,
+  };
   g.save();
   g.font = 'bold 12px Consolas, monospace';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   for (const e of state.enemies) {
     if (!e.speech || e.hp <= 0 || e.speech.until <= state.t) continue;
-    if (
-      e.x < viewport.x ||
-      e.x > viewport.x + viewport.width ||
-      e.y < viewport.y ||
-      e.y > viewport.y + viewport.height
-    )
-      continue;
+    if (!inBox(e, screen)) continue;
     const text = e.speech.text;
     const width = Math.min(g.measureText(text).width + 20, viewport.width - 24);
     const x = Math.max(

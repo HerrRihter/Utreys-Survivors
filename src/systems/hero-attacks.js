@@ -1,5 +1,6 @@
 import { scanMarkSeconds } from '../../data/characters/hero-passives.js';
 import { heroEvolutions } from '../../data/weapons.js';
+import { near } from '../core/math.js';
 
 // One hero strike. `c` holds exactly what a strike touches:
 // { state, hero, heroId, arena, units, effect, damage }. The hero's `attack` names the kind
@@ -159,7 +160,7 @@ function strikeArea(c, dir, angle, range, power, push, evo, radial) {
       d = Math.hypot(dx, dy),
       along = dx * dir.x + dy * dir.y;
     const delta = Math.abs(Math.atan2(dx * dir.y - dy * dir.x, along));
-    const outside = radial ? Math.max(Math.abs(dx), Math.abs(dy)) >= range + e.r : d >= range + e.r;
+    const outside = radial ? !near(p, e, range + e.r) : d >= range + e.r;
     if (e.hp <= 0 || outside || !c.arena.clear(p, e, 2)) continue;
     if (!radial && (along < 0 || delta > spec.half + Math.asin(Math.min(1, e.r / Math.max(1, d)))))
       continue;

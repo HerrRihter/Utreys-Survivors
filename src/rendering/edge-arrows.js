@@ -1,4 +1,5 @@
 import { eventSpec } from '../systems/queries/events.js';
+import { inBox } from '../core/math.js';
 
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
@@ -8,7 +9,7 @@ import { eventSpec } from '../systems/queries/events.js';
 export function edgeMarker(target, cx, cy, width, height, margin = 30) {
   const sx = target.x - cx,
     sy = target.y - cy;
-  if (sx >= 0 && sx <= width && sy >= 0 && sy <= height) return null;
+  if (inBox({ x: sx, y: sy }, { minX: 0, minY: 0, maxX: width, maxY: height })) return null;
   const left = margin,
     right = width - margin,
     top = Math.max(margin, height * 0.27, 105),

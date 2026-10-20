@@ -1,5 +1,6 @@
 import { crowdRadius, farDistance, critMultiplier } from '../../data/characters/hero-passives.js';
 import { weaponDefinitions } from '../../data/weapons.js';
+import { near } from '../core/math.js';
 
 // Enemies close to the hero, counted once per step for the crowd passive.
 export function countCrowd(state) {
@@ -7,7 +8,7 @@ export function countCrowd(state) {
   const p = state.p;
   let n = 0;
   for (const e of state.enemies)
-    if (e.hp > 0 && Math.abs(e.x - p.x) < crowdRadius && Math.abs(e.y - p.y) < crowdRadius)
+    if (e.hp > 0 && near(p, e, crowdRadius))
       if (Math.hypot(e.x - p.x, e.y - p.y) < crowdRadius) n++;
   return n;
 }
