@@ -1,0 +1,867 @@
+{
+  "utrace-pepsiDesk": {
+    "version": 2,
+    "hero": "utrace",
+    "map": "pepsiDesk",
+    "baClient": null,
+    "pendingLevel": false,
+    "state": {
+      "t": 69.99999999999731,
+      "step": 69.99999999999731,
+      "runId": "mvgn2km1-9y3fvt",
+      "seed": 1032213998,
+      "load": 1,
+      "healFactor": 1,
+      "eventIndex": 0,
+      "event": null,
+      "eventsDone": 0,
+      "spawn": 2.3780440000000067,
+      "waveNext": {
+        "inbev": 150,
+        "mars": 75
+      },
+      "bossSpawned": false,
+      "eliteNext": 100,
+      "kills": 0,
+      "level": 1,
+      "xp": 0,
+      "need": 8,
+      "earned": 0,
+      "stats": {
+        "damage": 1,
+        "haste": 1,
+        "range": 1,
+        "speed": 1,
+        "magnet": 75,
+        "armor": 0,
+        "regen": 0,
+        "greed": 0,
+        "luck": 0,
+        "weaponSlots": 1,
+        "weaponBonus": 0
+      },
+      "evoTokens": 0,
+      "evolutions": 0,
+      "upgradeRanks": {
+        "ability_potion": 2
+      },
+      "banned": ["ability_potion"],
+      "rerolls": 1,
+      "skips": 1,
+      "banishes": 1,
+      "offers": [
+        {
+          "level": 1,
+          "cards": ["w_orbit", "ability_potion", "might", "heroWeapon"],
+          "picked": "ability_potion",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": ["ability_potion"]
+        }
+      ],
+      "offersLogged": 0,
+      "baSpecialization": null,
+      "damageBy": {
+        "hero": 56
+      },
+      "lastHitBy": "pepsi",
+      "firstHurtAt": 32.24999999999945,
+      "foodTaken": 0,
+      "doneBefore": ["win_utrace"],
+      "nextEnemyId": 32,
+      "endless": false,
+      "endlessStart": 0,
+      "endlessKills": 0,
+      "productionBossNext": 0,
+      "productionBosses": 0,
+      "recordedTime": 0,
+      "statsRecorded": false,
+      "statsCounted": null,
+      "earnedPaid": 0,
+      "p": {
+        "x": 1055,
+        "y": 1400.4,
+        "hp": 120,
+        "max": 120
+      },
+      "abilities": [
+        {
+          "id": "dash",
+          "cd": 0
+        },
+        {
+          "id": "potion",
+          "cd": 0
+        }
+      ],
+      "weapons": [],
+      "enemies": [
+        {
+          "id": 4,
+          "unit": "progress",
+          "x": 1165.5,
+          "y": 1254.3,
+          "hp": 77,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 5,
+          "unit": "l3",
+          "x": 1217.3,
+          "y": 1351,
+          "hp": 56,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 6,
+          "unit": "pepsi",
+          "x": 1189.3,
+          "y": 1306.6,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 7,
+          "unit": "pepsi",
+          "x": 1255.9,
+          "y": 1293.8,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 8,
+          "unit": "pepsi",
+          "x": 1321.7,
+          "y": 1308.3,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 9,
+          "unit": "l3",
+          "x": 1217.3,
+          "y": 1351,
+          "hp": 56,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 10,
+          "unit": "baltika",
+          "x": 1228.7,
+          "y": 1305.1,
+          "hp": 193,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 11,
+          "unit": "l3",
+          "x": 1217.3,
+          "y": 1351,
+          "hp": 56,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 12,
+          "unit": "l3",
+          "x": 1217.3,
+          "y": 1351,
+          "hp": 56,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 13,
+          "unit": "pepsi",
+          "x": 1320.4,
+          "y": 1292.3,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 14,
+          "unit": "pepsi",
+          "x": 1281.1,
+          "y": 1281.9,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 15,
+          "unit": "pepsi",
+          "x": 1318.6,
+          "y": 1333.3,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 16,
+          "unit": "pepsi",
+          "x": 1313.6,
+          "y": 1273.1,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 17,
+          "unit": "pepsi",
+          "x": 1298.3,
+          "y": 1424.5,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 18,
+          "unit": "pepsi",
+          "x": 1187.3,
+          "y": 1428.7,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 19,
+          "unit": "pepsi",
+          "x": 1299.7,
+          "y": 1377.5,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 20,
+          "unit": "pepsi",
+          "x": 1316,
+          "y": 1451.9,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 21,
+          "unit": "pepsi",
+          "x": 1298.2,
+          "y": 1424.5,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 22,
+          "unit": "pepsi",
+          "x": 1309.7,
+          "y": 1441.8,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 23,
+          "unit": "pepsi",
+          "x": 1189.4,
+          "y": 1422.6,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 24,
+          "unit": "pepsi",
+          "x": 1308.8,
+          "y": 1440.3,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 25,
+          "unit": "pepsi",
+          "x": 1292.7,
+          "y": 1396.3,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 26,
+          "unit": "pepsi",
+          "x": 1302.2,
+          "y": 1431.2,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 1
+        },
+        {
+          "id": 27,
+          "unit": "pepsi",
+          "x": 1312.7,
+          "y": 1446.6,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 28,
+          "unit": "pepsi",
+          "x": 1232.8,
+          "y": 1504.9,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 2
+        },
+        {
+          "id": 29,
+          "unit": "pepsi",
+          "x": 1271.3,
+          "y": 1476.4,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 30,
+          "unit": "pepsi",
+          "x": 1184.2,
+          "y": 1353.7,
+          "hp": 85,
+          "boss": false,
+          "elite": false,
+          "summonerId": 3
+        },
+        {
+          "id": 31,
+          "unit": "royal_canin",
+          "x": 1166.2,
+          "y": 1173.5,
+          "hp": 138,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Сервисдеск 1",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 1,
+          "guardianHp": 1610,
+          "summons": 10
+        },
+        {
+          "id": "Сервисдеск 2",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 2,
+          "guardianHp": 1610,
+          "summons": 10
+        },
+        {
+          "id": "Сервисдеск 3",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 3,
+          "guardianHp": 1610,
+          "summons": 10
+        }
+      ],
+      "gems": [],
+      "codes": [],
+      "pickups": []
+    }
+  },
+  "qa-empty": {
+    "version": 2,
+    "hero": "qa",
+    "map": "empty",
+    "baClient": null,
+    "pendingLevel": false,
+    "state": {
+      "t": 69.99999999999731,
+      "step": 69.99999999999731,
+      "runId": "mvgn2lc0-d4pxtr",
+      "seed": 1052188298,
+      "load": 1,
+      "healFactor": 1,
+      "eventIndex": 0,
+      "event": null,
+      "eventsDone": 0,
+      "spawn": 2.3780440000000067,
+      "waveNext": {
+        "inbev": 150,
+        "mars": 75
+      },
+      "bossSpawned": false,
+      "eliteNext": 100,
+      "kills": 58,
+      "level": 6,
+      "xp": 13,
+      "need": 41,
+      "earned": 14,
+      "stats": {
+        "damage": 1,
+        "haste": 1,
+        "range": 1,
+        "speed": 1,
+        "magnet": 75,
+        "armor": 0,
+        "regen": 0,
+        "greed": 0,
+        "luck": 0,
+        "crit": 0.1,
+        "scanCrit": 0.35
+      },
+      "evoTokens": 0,
+      "evolutions": 0,
+      "upgradeRanks": {
+        "ability_regress": 2
+      },
+      "banned": ["ability_regress"],
+      "rerolls": 1,
+      "skips": 1,
+      "banishes": 1,
+      "offers": [
+        {
+          "level": 2,
+          "cards": ["w_orbit", "boots", "magnet", "might"],
+          "picked": "w_orbit",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 3,
+          "cards": ["w_homing", "heroWeapon", "magnet", "area"],
+          "picked": "w_homing",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 4,
+          "cards": ["w_mine", "magnet", "recovery", "armor"],
+          "picked": "w_mine",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 5,
+          "cards": ["w_homing", "w_mine", "tempo", "armor"],
+          "picked": "w_homing",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 6,
+          "cards": ["w_orbit", "ability_regress", "recovery", "boots"],
+          "picked": "w_orbit",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": []
+        },
+        {
+          "level": 6,
+          "cards": ["w_orbit", "ability_regress", "might", "heroWeapon"],
+          "picked": "ability_regress",
+          "action": "pick",
+          "rerolls": 0,
+          "banned": ["ability_regress"]
+        }
+      ],
+      "offersLogged": 0,
+      "baSpecialization": null,
+      "damageBy": {
+        "hero": 2143.18,
+        "orbit": 768.3000000000002,
+        "homing": 621.3,
+        "mine": 393.99999999999994
+      },
+      "lastHitBy": "l3",
+      "firstHurtAt": 11.533333333333486,
+      "foodTaken": 0,
+      "doneBefore": ["win_utrace"],
+      "nextEnemyId": 83,
+      "endless": false,
+      "endlessStart": 0,
+      "endlessKills": 0,
+      "productionBossNext": 0,
+      "productionBosses": 0,
+      "recordedTime": 0,
+      "statsRecorded": false,
+      "statsCounted": null,
+      "earnedPaid": 0,
+      "p": {
+        "x": 775,
+        "y": 885,
+        "hp": 115,
+        "max": 115
+      },
+      "abilities": [
+        {
+          "id": "dash",
+          "cd": 0
+        },
+        {
+          "id": "regress",
+          "cd": 0
+        }
+      ],
+      "weapons": [
+        {
+          "id": "orbit",
+          "level": 2,
+          "cd": 0.5,
+          "evolved": false,
+          "phase": 144.95999999999663
+        },
+        {
+          "id": "homing",
+          "level": 2,
+          "cd": 1.2333333333333338,
+          "evolved": false,
+          "phase": 0
+        },
+        {
+          "id": "mine",
+          "level": 1,
+          "cd": 0.7833333333333371,
+          "evolved": false,
+          "phase": 0
+        }
+      ],
+      "enemies": [
+        {
+          "id": 53,
+          "unit": "cherkizovo",
+          "x": 1031.4,
+          "y": 881.3,
+          "hp": 27.10000000000001,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 63,
+          "unit": "inbev",
+          "x": 897,
+          "y": 728.6,
+          "hp": 221,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 64,
+          "unit": "royal_canin",
+          "x": 735.4,
+          "y": 1145.7,
+          "hp": 138,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 66,
+          "unit": "l3",
+          "x": 797.1,
+          "y": 1045.7,
+          "hp": 64,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 67,
+          "unit": "royal_canin",
+          "x": 807.3,
+          "y": 519.6,
+          "hp": 138,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 69,
+          "unit": "mondelez",
+          "x": 1043.1,
+          "y": 913.7,
+          "hp": 66.8,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 70,
+          "unit": "ferrero",
+          "x": 1248.4,
+          "y": 734.1,
+          "hp": 129,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 71,
+          "unit": "loreal",
+          "x": 856.5,
+          "y": 566.4,
+          "hp": 92,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 72,
+          "unit": "mondelez",
+          "x": 703.8,
+          "y": 857.3,
+          "hp": 101,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 73,
+          "unit": "royal_canin",
+          "x": 1268.9,
+          "y": 559.4,
+          "hp": 138,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 74,
+          "unit": "multon",
+          "x": 806.2,
+          "y": 1112,
+          "hp": 46,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 75,
+          "unit": "multon",
+          "x": 810.5,
+          "y": 1117.9,
+          "hp": 46,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 76,
+          "unit": "multon",
+          "x": 792.6,
+          "y": 1115.5,
+          "hp": 46,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 77,
+          "unit": "l3",
+          "x": 1076.9,
+          "y": 1388.2,
+          "hp": 64,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 78,
+          "unit": "mondelez",
+          "x": 932.3,
+          "y": 326.4,
+          "hp": 101,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 79,
+          "unit": "multon",
+          "x": 1377.4,
+          "y": 1029,
+          "hp": 46,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 80,
+          "unit": "multon",
+          "x": 1335.1,
+          "y": 1007.3,
+          "hp": 46,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 81,
+          "unit": "multon",
+          "x": 1412,
+          "y": 1014.5,
+          "hp": 46,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        },
+        {
+          "id": 82,
+          "unit": "l3",
+          "x": 898.1,
+          "y": 1445,
+          "hp": 64,
+          "boss": false,
+          "elite": false,
+          "summonerId": null
+        }
+      ],
+      "nodes": [
+        {
+          "id": "production-aggreagtion",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 1,
+          "guardianHp": 575,
+          "summons": 0
+        },
+        {
+          "id": "code-usage-report",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 2,
+          "guardianHp": 575,
+          "summons": 0
+        },
+        {
+          "id": "inport-operation-processor",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 3,
+          "guardianHp": 575,
+          "summons": 0
+        },
+        {
+          "id": "logistic-processor",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 4,
+          "guardianHp": 575,
+          "summons": 0
+        },
+        {
+          "id": "goods-reports",
+          "status": "guarded",
+          "progress": 0,
+          "guardianId": 5,
+          "guardianHp": 575,
+          "summons": 7
+        }
+      ],
+      "gems": [
+        {
+          "x": 1282.5,
+          "y": 1359.5,
+          "v": 1
+        },
+        {
+          "x": 1294.5,
+          "y": 1292.3,
+          "v": 4
+        },
+        {
+          "x": 1020.7,
+          "y": 1298.7,
+          "v": 1
+        },
+        {
+          "x": 1260.3,
+          "y": 764.1,
+          "v": 2
+        },
+        {
+          "x": 670.6,
+          "y": 904.4,
+          "v": 2
+        },
+        {
+          "x": 993.4,
+          "y": 681.1,
+          "v": 2
+        },
+        {
+          "x": 1097.2,
+          "y": 827.7,
+          "v": 4
+        },
+        {
+          "x": 1005.2,
+          "y": 805.7,
+          "v": 2
+        },
+        {
+          "x": 969.6,
+          "y": 787,
+          "v": 4
+        },
+        {
+          "x": 969.2,
+          "y": 963.7,
+          "v": 6
+        },
+        {
+          "x": 964.5,
+          "y": 960.1,
+          "v": 6
+        }
+      ],
+      "codes": [],
+      "pickups": []
+    }
+  }
+}

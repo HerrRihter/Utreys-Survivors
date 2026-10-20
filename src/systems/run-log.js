@@ -1,3 +1,5 @@
+import { currentCardId } from '../../data/characters/abilities.js';
+
 // Local journal of finished runs for balance work. Each ending adds one entry; the settings
 // screen exports the journal as JSON for `tools/run-stats.cjs`. Only the newest `MAX_ENTRIES`
 // are kept so storage stays small.
@@ -59,13 +61,29 @@ export function logEntry({ s, hero, win, build, date = new Date() }) {
   };
 }
 
+// An entry as the current build names things: level-up cards of renamed abilities (an older
+// journal has `ability_potion`) get their current ids. Entries are not rewritten in storage.
+export function normalizeLogEntry(entry) {
+  if (!Array.isArray(entry?.offers)) return entry;
+  const cards = (list) => (Array.isArray(list) ? list.map(currentCardId) : list);
+  return {
+    ...entry,
+    offers: entry.offers.map((o) => ({
+      ...o,
+      cards: cards(o.cards),
+      picked: currentCardId(o.picked),
+      banned: cards(o.banned),
+    })),
+  };
+}
+
 export function createRunLog({ storage }) {
   // Settings read the count on every render; keep it without parsing the journal each time.
   let count = null;
   function entries() {
     try {
       const saved = JSON.parse(storage.getItem(RUN_LOG_KEY));
-      return Array.isArray(saved) ? saved : [];
+      return Array.isArray(saved) ? saved.map(normalizeLogEntry) : [];
     } catch {
       return [];
     }

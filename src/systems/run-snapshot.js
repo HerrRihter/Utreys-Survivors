@@ -1,15 +1,17 @@
 import { makeElite } from './difficulty.js';
 import { guardianPoint, nodeGuardian } from './node-objectives.js';
 import { persistentKeys, reducedKeys } from './run-model.js';
+import { currentAbilityId, currentCardId } from '../../data/characters/abilities.js';
 
 // A paused or interrupted run, kept in storage so a closed tab does not lose it.
 // Only plain data is stored: the run model (src/systems/run-model.js) says which fields are
 // copied, reduced or rebuilt. Enemies come back at their saved positions and health with
 // their ids, live projectiles and effects are dropped. `version` guards the format.
-export const RUN_SNAPSHOT_KEY = 'utreys-run-v2';
-const VERSION = 2;
-// Version 1 had no enemy ids: summons and node guardians were linked by object.
-export const LEGACY_RUN_SNAPSHOT_KEY = 'utreys-run-v1';
+export const RUN_SNAPSHOT_KEY = 'utreys-run-v3';
+const VERSION = 3;
+// Saves of older builds, newest first. Version 1 had no enemy ids (summons and node
+// guardians were linked by object); version 2 used older content ids (see migrations).
+export const LEGACY_RUN_SNAPSHOT_KEYS = ['utreys-run-v2', 'utreys-run-v1'];
 const MAX_GEMS = 200;
 
 const pick = (source, keys) => Object.fromEntries(keys.map((key) => [key, source[key]]));
@@ -71,21 +73,51 @@ export function snapshotRun(run) {
   };
 }
 
-// Version 1 → 2: enemies and node guardians get ids. Version 1 did not save who summoned an
-// enemy, so its summons are not counted as desk tickets after the resume (as before).
+// Each step converts a save of its version to the next one.
+const migrations = {
+  // Version 1 → 2: enemies and node guardians get ids. Version 1 did not save who summoned an
+  // enemy, so its summons are not counted as desk tickets after the resume (as before).
+  1(saved) {
+    let nextEnemyId = 1;
+    const enemies = saved.state.enemies.map((e) => ({ ...e, id: nextEnemyId++, summonerId: null }));
+    const nodes = saved.state.nodes.map((n) => ({
+      ...n,
+      guardianId: n.status === 'guarded' && n.guardianHp === null ? null : nextEnemyId++,
+    }));
+    return { ...saved, version: 2, state: { ...saved.state, enemies, nodes, nextEnemyId } };
+  },
+  // Version 2 → 3: renamed content ids. Utrace's ability `potion` is `overclock`: its id in
+  // the abilities and its level-up card `ability_potion` in ranks, bans and logged offers.
+  2(saved) {
+    const state = saved.state;
+    const cards = (list) => (Array.isArray(list) ? list.map(currentCardId) : list);
+    return {
+      ...saved,
+      version: 3,
+      state: {
+        ...state,
+        abilities: state.abilities.map((a) => ({ ...a, id: currentAbilityId(a.id) })),
+        upgradeRanks: Object.fromEntries(
+          Object.entries(state.upgradeRanks).map(([id, rank]) => [currentCardId(id), rank]),
+        ),
+        banned: cards(state.banned),
+        offers: state.offers.map((o) => ({
+          ...o,
+          cards: cards(o.cards),
+          picked: currentCardId(o.picked),
+          banned: cards(o.banned),
+        })),
+      },
+    };
+  },
+};
+
+// A save of an older version brought to the current one, or null if it is not one.
 export function migrateRunSnapshot(saved) {
-  if (saved?.version !== 1 || !saved.state) return null;
-  let nextEnemyId = 1;
-  const enemies = saved.state.enemies.map((e) => ({ ...e, id: nextEnemyId++, summonerId: null }));
-  const nodes = saved.state.nodes.map((n) => ({
-    ...n,
-    guardianId: n.status === 'guarded' && n.guardianHp === null ? null : nextEnemyId++,
-  }));
-  return {
-    ...saved,
-    version: VERSION,
-    state: { ...saved.state, enemies, nodes, nextEnemyId },
-  };
+  if (!saved?.state || !Object.hasOwn(migrations, saved.version)) return null;
+  let current = saved;
+  while (current.version !== VERSION) current = migrations[current.version](current);
+  return current;
 }
 
 export function createRunSnapshots({ storage }) {
@@ -102,17 +134,17 @@ export function createRunSnapshots({ storage }) {
       else storage.setItem(key, 'null');
     } catch {}
   };
-  // A version 1 save left by an older build is converted once and stored as version 2.
+  // A save left by an older build is converted once and stored as the current version.
   function migrate() {
-    const legacy = read(LEGACY_RUN_SNAPSHOT_KEY);
-    if (legacy === null) return null;
-    const migrated = migrateRunSnapshot(legacy);
+    const key = LEGACY_RUN_SNAPSHOT_KEYS.find((k) => read(k) !== null);
+    if (!key) return null;
+    const migrated = migrateRunSnapshot(read(key));
     try {
       if (migrated) storage.setItem(RUN_SNAPSHOT_KEY, JSON.stringify(migrated));
     } catch {
       return migrated;
     }
-    remove(LEGACY_RUN_SNAPSHOT_KEY);
+    for (const k of LEGACY_RUN_SNAPSHOT_KEYS) remove(k);
     return migrated;
   }
   function load() {
@@ -134,7 +166,7 @@ export function createRunSnapshots({ storage }) {
     },
     clear() {
       remove(RUN_SNAPSHOT_KEY);
-      remove(LEGACY_RUN_SNAPSHOT_KEY);
+      for (const key of LEGACY_RUN_SNAPSHOT_KEYS) remove(key);
     },
   };
 }

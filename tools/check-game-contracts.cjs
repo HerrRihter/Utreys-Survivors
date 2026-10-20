@@ -219,6 +219,9 @@ function checkGameContracts() {
     Object.keys(heroDefinitions).sort(),
     'Hero contract: evolutions',
   );
+  const { abilityKinds } = require('../src/systems/abilities/index.js');
+  for (const ability of Object.values(abilityDefinitions).flat())
+    assert(Object.hasOwn(abilityKinds, ability.kind), 'Ability contract: kind of ' + ability.id);
   for (const [id, hero] of Object.entries(heroDefinitions)) {
     assert(Object.hasOwn(attackKinds, hero.attack), 'Hero contract: attack ' + id);
     for (const field of ['hp', 'speed', 'interval', 'wind', 'damage', 'range', 'push'])

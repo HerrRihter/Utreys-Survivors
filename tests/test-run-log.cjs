@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { createHarness } = require('./helpers/game-harness.cjs');
 const { createRunLog, RUN_LOG_KEY, MAX_ENTRIES } = require('../src/systems/run-log.js');
-const { computeStats, report } = require('../tools/run-stats.cjs');
+const { computeStats, readRuns, report } = require('../tools/run-stats.cjs');
 
 // The run journal records offers, picks and endings; tools/run-stats.cjs turns exports into
 // pick rates and win rates.
@@ -97,6 +97,31 @@ const { computeStats, report } = require('../tools/run-stats.cjs');
   for (let i = 0; i < MAX_ENTRIES + 5; i++) log.record({ hero: 'qa', i });
   assert.equal(log.count(), MAX_ENTRIES);
   assert.equal(log.entries()[0].i, 5);
+
+  // Entries of older builds are read under the current card ids (potion → overclock).
+  const old = {
+    hero: 'utrace',
+    offers: [
+      {
+        cards: ['ability_potion', 'might'],
+        picked: 'ability_potion',
+        action: 'pick',
+        banned: ['ability_potion'],
+      },
+    ],
+  };
+  const oldMap = new Map([[RUN_LOG_KEY, JSON.stringify([old])]]);
+  const oldLog = createRunLog({
+    storage: { getItem: (k) => oldMap.get(k), setItem: (k, v) => oldMap.set(k, v) },
+  });
+  const read = oldLog.entries()[0].offers[0];
+  assert.deepEqual(read.cards, ['ability_overclock', 'might']);
+  assert.equal(read.picked, 'ability_overclock');
+  assert.deepEqual(read.banned, ['ability_overclock']);
+  const file = require('node:path').join(require('node:os').tmpdir(), 'utreys-old-runs.json');
+  require('node:fs').writeFileSync(file, JSON.stringify({ runs: [old] }));
+  assert.equal(readRuns(file)[0].offers[0].picked, 'ability_overclock', 'run-stats reads old ids');
+  require('node:fs').unlinkSync(file);
 
   // Statistics.
   const offer = (cards, picked) => ({ cards, picked, action: picked ? 'pick' : 'skip' });
