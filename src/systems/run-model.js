@@ -4,7 +4,8 @@ import { createWaveState } from './wave-schedule.js';
 import { layoutNodes, planEvents } from './run-layout.js';
 import { abilityDefinitions } from '../../data/characters/abilities.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
-import { permanentUpgradeDefinitions } from '../../data/upgrades.js';
+import { permanentUpgradeDefinitions, heroTrainingDefinitions } from '../../data/upgrades.js';
+import { heroPassives } from '../../data/characters/hero-passives.js';
 import { workaroundSeconds } from '../../data/enemies/nodes.js';
 import { speechSettings } from '../../data/enemies/phrases.js';
 import { loadModifiers } from '../../data/difficulty.js';
@@ -99,8 +100,7 @@ export function createRunModel({
   baClient,
   doneBefore = [],
 }) {
-  const mods = loadModifiers(load),
-    health = heroDef.hp + levels.health * permanentUpgradeDefinitions.health.factor;
+  const mods = loadModifiers(load);
   /** @type {RunModel} */
   const s = {
     t: 0,
@@ -131,8 +131,8 @@ export function createRunModel({
     p: {
       x: arenaSize / 2,
       y: arenaSize / 2,
-      hp: health,
-      max: health,
+      hp: heroDef.hp,
+      max: heroDef.hp,
       speed: heroDef.speed,
       inv: 0,
       flip: false,
@@ -146,10 +146,10 @@ export function createRunModel({
       chainImpactAt: null,
     },
     stats: {
-      damage: 1 + levels.power * permanentUpgradeDefinitions.power.factor,
+      damage: 1,
       haste: 1,
       range: 1,
-      speed: 1 + levels.speed * permanentUpgradeDefinitions.speed.factor,
+      speed: 1,
       magnet: 75,
       armor: 0,
       regen: 0,
@@ -163,9 +163,9 @@ export function createRunModel({
     upgradeRanks: {},
     banned: [],
     // Level-up controls: one of each per run, permanent ranks add more.
-    rerolls: 1 + (levels.rerolls || 0),
-    skips: 1 + (levels.skips || 0),
-    banishes: 1 + (levels.banishes || 0),
+    rerolls: 1,
+    skips: 1,
+    banishes: 1,
     offers: [],
     offersLogged: 0,
     baSpecialization:
@@ -212,10 +212,42 @@ export function createRunModel({
     // Which run statistics the last ending improved (for the result screen and tests).
     recordsImproved: null,
   };
-  // Head start: enough experience for the first level-ups, taken one by one as usual.
-  for (let i = 0, need = s.need; i < (levels.headStart || 0); i++) {
-    s.xp += need;
-    need = Math.floor(need * 1.23 + 3);
-  }
+  applyPermanentUpgrades(s, hero, levels);
   return s;
+}
+
+/** @param {RunStats} stats @param {string} key @param {number} value */
+const addStat = (stats, key, value) => (stats[key] = Number(stats[key] || 0) + value);
+
+/**
+ * Shop ranks, then the hero's innate passive and its training, applied to a new run. Every
+ * permanent upgrade names what it raises with `stat`: the hero's health, the head start,
+ * a level-up control or a run stat.
+ * @param {RunModel} s
+ * @param {string} hero
+ * @param {Record<string, number>} levels
+ */
+export function applyPermanentUpgrades(s, hero, levels) {
+  for (const [id, def] of Object.entries(permanentUpgradeDefinitions)) {
+    const rank = levels[id] || 0,
+      stat = def.stat;
+    if (stat === 'hp') {
+      s.p.max += rank * def.factor;
+      s.p.hp += rank * def.factor;
+    } else if (stat === 'headStart') {
+      // Enough experience for the first level-ups, taken one by one as usual.
+      for (let i = 0, need = s.need; i < rank * def.factor; i++) {
+        s.xp += need;
+        need = Math.floor(need * 1.23 + 3);
+      }
+    } else if (stat === 'rerolls' || stat === 'skips' || stat === 'banishes')
+      s[stat] += rank * def.factor;
+    else addStat(s.stats, stat, rank * def.factor);
+  }
+  const passives = /** @type {Record<string, { stats: Record<string, number> }>} */ (heroPassives);
+  for (const [key, value] of Object.entries(passives[hero]?.stats || {}))
+    addStat(s.stats, key, value);
+  const training = heroTrainingDefinitions[hero];
+  if (training)
+    addStat(s.stats, training.stat, training.factor * (levels['training_' + hero] || 0));
 }

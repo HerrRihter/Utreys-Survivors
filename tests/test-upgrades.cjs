@@ -1,4 +1,5 @@
 const { loadModule } = require('./helpers/load-modules.cjs');
+const { applyPermanentUpgrades } = require('../src/systems/run-model.js');
 async function main() {
   const projectRoot = require('node:path').resolve(__dirname, '..');
   const vm = require('node:vm'),
@@ -75,8 +76,8 @@ async function main() {
   assert(P.buyUpgrade('training_utrace'));
   const a = state(),
     o = state();
-  U.permanent(a, 'utrace', P.data.levels);
-  U.permanent(o, 'obelix', P.data.levels);
+  applyPermanentUpgrades(a, 'utrace', P.data.levels);
+  applyPermanentUpgrades(o, 'obelix', P.data.levels);
   assert.equal(a.stats.weaponBonus, 0.06, 'Utrace training strengthens its passive');
   assert.equal(a.stats.weaponSlots, 1, 'Utrace passive: extra weapon slot');
   assert.equal(o.stats.weaponBonus, undefined);

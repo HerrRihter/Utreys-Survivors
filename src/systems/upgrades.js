@@ -4,8 +4,6 @@ import {
   abilityUpgradeMax,
   abilityUpgradeId,
 } from '../../data/characters/abilities.js';
-import { permanentUpgradeDefinitions, heroTrainingDefinitions } from '../../data/upgrades.js';
-import { heroPassives } from '../../data/characters/hero-passives.js';
 import {
   weaponDefinitions,
   weaponSlots,
@@ -244,17 +242,6 @@ export const UpgradeSystem = {
       if (u.max && u.kind !== 'weapon') s.upgradeRanks[u.id] = (s.upgradeRanks[u.id] || 0) + 1;
       return true;
     }
-    function permanent(s, hero, levels) {
-      for (const key of ['haste', 'range', 'magnet', 'armor', 'regen', 'greed', 'luck']) {
-        const factor = permanentUpgradeDefinitions[key]?.factor;
-        if (factor !== undefined) add(key, (levels[key] || 0) * factor)(s);
-      }
-      // The hero's innate passive, then its training on top.
-      for (const [key, value] of Object.entries(heroPassives[hero]?.stats || {}))
-        add(key, value)(s);
-      const training = heroTrainingDefinitions[hero];
-      if (training) add(training.stat, training.factor * (levels['training_' + hero] || 0))(s);
-    }
     // The run's build for HUD, pause and result screens.
     function build(hero, s) {
       const heroRank = s.upgradeRanks?.heroWeapon || 0;
@@ -296,6 +283,6 @@ export const UpgradeSystem = {
         passiveSlots,
       };
     }
-    return { common, heroes, weapons, abilities, pool, offer, apply, permanent, build, describe };
+    return { common, heroes, weapons, abilities, pool, offer, apply, build, describe };
   },
 };

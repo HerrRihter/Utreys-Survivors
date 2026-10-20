@@ -152,7 +152,6 @@ export const GameFlow = {
           .filter((a) => progression.achievementDone(a, run.best))
           .map((a) => a.id),
       });
-      upgrades.permanent(run.state, run.selected, levels);
       world.arena.prepare(
         Object.values(enemies.units).map((unit) => unit.r),
         run.state.p,
