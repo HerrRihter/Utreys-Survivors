@@ -4,7 +4,7 @@
 // on that map; `unlockHint` says so in the map picker.
 // `objective` is what clears the way to the CRPT (default: the five component nodes):
 //   { type: 'desks', unit, count }  — `count` structures of `unit` that must be destroyed.
-import { learningRooms } from '../learning-rules.js';
+import { learningRooms, incidentRooms } from '../learning-rules.js';
 
 export const nodeSpacing = 450;
 
@@ -97,8 +97,19 @@ export const mapDefinitions = {
     victoryTag: 'ПАРТИОННЫЙ УЧЁТ ОСВОЕН',
     ranked: false,
     // Rooms are generated per run (data/learning-rules.js, src/world/maze.js); no fixed racks.
-    objective: { type: 'learning', label: 'Терминал' },
+    objective: { type: 'learning', label: 'Терминал', course: 'batch-accounting' },
     rooms: learningRooms,
+  },
+  incidentLab: {
+    name: 'Полигон инцидентов',
+    description:
+      'Три случайных лабиринта по управлению критическими инцидентами, затем «Критический инцидент».',
+    notes:
+      'Тот же полигон, другой курс: критичность и роли, Трекер и эскалация, коммуникации и разбор. В каждом лабиринте три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт пакет обновлений, ошибка — проверку. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
+    victoryTag: 'ИНЦИДЕНТ ЗАКРЫТ',
+    ranked: false,
+    objective: { type: 'learning', label: 'Терминал', course: 'critical-incidents' },
+    rooms: incidentRooms,
   },
 };
 

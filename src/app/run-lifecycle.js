@@ -226,7 +226,7 @@ export function createRunLifecycle({
     }
     if (
       (mapDefinitions[snapshot.map]?.objective?.type === 'learning' &&
-        !validLearning(saved.learning)) ||
+        !validLearning(saved.learning, snapshot.map)) ||
       (saved.p.hp <= 0 &&
         !(saved.learning?.active?.reason === 'revive' && saved.learning.reviveUsed))
     ) {

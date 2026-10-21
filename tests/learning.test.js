@@ -2,10 +2,17 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { createHarness } from './helpers/game-harness.js';
 import { learningCourse } from '../data/learning-questions.js';
+import { incidentCourse } from '../data/learning-incidents.js';
 import { learningRules, learningRooms } from '../data/learning-rules.js';
 import { unitDefinitions } from '../data/enemies/units.js';
 import { validateLearningCourse, validLearning } from '../src/systems/learning.js';
-import { currentLayout, doorOpen, roomLayout, roomNodes } from '../src/systems/queries/learning.js';
+import {
+  courseOf,
+  currentLayout,
+  doorOpen,
+  roomLayout,
+  roomNodes,
+} from '../src/systems/queries/learning.js';
 import { edgeTargets } from '../src/rendering/edge-arrows.js';
 import { createArenas } from '../src/world/arenas.js';
 import { snapshotRun, RUN_SNAPSHOT_KEY, migrateRunSnapshot } from '../src/systems/run-snapshot.js';
@@ -15,7 +22,7 @@ import { createEnemyRenderer } from '../src/rendering/enemies.js';
 
 const mazes = learningRooms.filter((room) => room.maze).length;
 
-async function open(seed = 789) {
+async function open(seed = 789, map = 'learningLab') {
   const h = await createHarness({ createSession: false });
   const store = new Map();
   h.env.localStorage = {
@@ -24,7 +31,7 @@ async function open(seed = 789) {
     removeItem: (k) => store.delete(k),
   };
   const game = h.createSession();
-  game.selectMap('learningLab');
+  game.selectMap(map);
   game.views.run().nextSeed = seed;
   game.start();
   // The tests drive the quizzes; the waves must not end the run meanwhile.
@@ -50,7 +57,7 @@ function startTest(game, k = 0) {
 function answer(game, correct = true) {
   const a = game.state.learning.active;
   if (a.phase === 'intro') game.commands.advanceLearning(a.id);
-  const q = learningCourse.questions.find((q) => q.id === a.questions[a.index].id);
+  const q = courseOf(game.state.map).questions.find((q) => q.id === a.questions[a.index].id);
   for (const id of correct ? q.correct : [q.options.find((o) => !q.correct.includes(o.id)).id])
     game.commands.selectLearningAnswer(a.id, id);
   assert(game.commands.submitLearningAnswer(a.id));
@@ -81,7 +88,7 @@ function nextRoom(game) {
 }
 
 test('learning content preserves all supplied questions and rejects invalid banks', () => {
-  assert(validateLearningCourse());
+  assert(validateLearningCourse(learningCourse));
   assert.equal(learningCourse.questions.length, 26);
   assert.equal(learningCourse.questions.filter((q) => q.type === 'open').length, 2);
   const multiple = learningCourse.questions.find((q) => q.sourceNumber === 10);
@@ -90,6 +97,50 @@ test('learning content preserves all supplied questions and rejects invalid bank
   const broken = structuredClone(learningCourse);
   broken.questions[0].correct = ['missing'];
   assert.throws(() => validateLearningCourse(broken));
+});
+
+test('the incident course keeps the scored test: keys, comments, open questions', () => {
+  assert(validateLearningCourse(incidentCourse));
+  assert.equal(incidentCourse.questions.length, 40);
+  assert.equal(incidentCourse.questions.filter((q) => q.type === 'open').length, 7);
+  assert.equal(incidentCourse.questions.filter((q) => q.type === 'multiple').length, 8);
+  for (let topic = 0; topic < 3; topic++)
+    assert(
+      incidentCourse.questions.filter((q) => q.topic === topic && q.type !== 'open').length >= 9,
+    );
+  // Keys of the questions answered wrongly in the scored page.
+  const key = (start) => {
+    const q = incidentCourse.questions.find((q) => q.text.startsWith(start));
+    return q.correct.map((id) => q.options.find((o) => o.id === id).text);
+  };
+  assert.deepEqual(key('Каким тегом'), ['ZombieSquad']);
+  assert.equal(key('При переводе тикета CRIT').length, 5);
+  assert(!key('Какие обязанности').includes('Лично устраняет техническую неисправность'));
+  assert(incidentCourse.questions.filter((q) => q.type === 'open').every((q) => q.reference));
+});
+
+test('the incident map plays the same scheme with its own course and boss', async () => {
+  const { game } = await open(321, 'incidentLab');
+  try {
+    assert.equal(game.state.learning.course, 'critical-incidents');
+    for (let i = 0; i < mazes; i++) {
+      for (let k = 0; k < 3; k++) {
+        startTest(game, k);
+        const a = game.state.learning.active;
+        assert(
+          a.questions.every((q) => q.id.startsWith('incident-')),
+          'its own questions',
+        );
+        finishTest(game);
+      }
+      nextRoom(game);
+    }
+    game.update(1 / 60);
+    const boss = game.state.enemies.find((e) => e.boss);
+    assert.equal(unitDefinitions[boss.unit].name, 'Критический инцидент');
+  } finally {
+    game.dispose();
+  }
 });
 
 test('every run and every room gets its own connected maze', () => {

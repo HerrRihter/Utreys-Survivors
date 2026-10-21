@@ -27,6 +27,18 @@ export const bestiary = {
       'Множество склеенных значков Пепси. Ждёт в центральном зале учебного полигона, за тремя лабиринтами.',
     tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
   },
+  critical_incident: {
+    category: 'clients',
+    badge: 'УЧЕБНЫЙ БОСС · КРИТИЧЕСКИЙ ИНЦИДЕНТ',
+    badgeColor: '#ff5d5d',
+    role: 'Сбой, задевший сразу многих клиентов',
+    protocol: '#CS_Critical',
+    aggregation: 'Очередь CRIT и матрица эскалации',
+    frequency: `Призыв каждые ${unitDefinitions.critical_incident.summon.every} с`,
+    description:
+      'Склеенные логотипы клиентов, задетых одним сбоем. Ждёт в центральном зале полигона инцидентов, за тремя лабиринтами.',
+    tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.critical_incident.summon.count} клиента — Пепси, Марс или Балтику, до ${unitDefinitions.critical_incident.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
+  },
   l3: {
     category: 'regulators',
     badge: 'ПРОМЕЖУТОЧНЫЙ КОНТУР L3 · РОЙ',

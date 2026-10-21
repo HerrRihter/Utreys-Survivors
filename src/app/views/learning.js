@@ -1,6 +1,10 @@
-import { learningCourse } from '../../../data/learning-questions.js';
 import { learningRules } from '../../../data/learning-rules.js';
-import { availableTerminal, availableExit, roomNodes } from '../../systems/queries/learning.js';
+import {
+  availableTerminal,
+  availableExit,
+  courseOf,
+  roomNodes,
+} from '../../systems/queries/learning.js';
 import { mapDefinitions } from '../../../data/maps/maps.js';
 
 const percent = (share) => Math.round(share * 100) + '%';
@@ -11,8 +15,9 @@ export function learningView({ run }) {
   const s = run.state,
     l = s?.learning;
   if (!l) return null;
-  const a = l.active;
-  const q = a && learningCourse.questions.find((q) => q.id === a.questions[a.index].id);
+  const a = l.active,
+    course = courseOf(s.map);
+  const q = a && course.questions.find((q) => q.id === a.questions[a.index].id);
   const reveal = a?.phase === 'feedback';
   const r = learningRules,
     revival = `вернёшься в бой с ${percent(r.reviveHealth)} здоровья и защитой на ${r.reviveInvulnerability} с`;
@@ -22,7 +27,7 @@ export function learningView({ run }) {
       .map((n) => ({ id: n.id, label: n.label })),
     // The door's button names where it leads.
     exit: availableExit(s) ? `В ${nextRoomName(s).toLowerCase()} →` : '',
-    selfChecks: learningCourse.questions
+    selfChecks: course.questions
       .filter((q) => q.type === 'open')
       .map((q) => ({ id: q.id, text: q.text, reference: q.reference })),
     active: a
@@ -35,9 +40,8 @@ export function learningView({ run }) {
           note:
             a.topic === null
               ? `Ответь верно хотя бы на ${r.passing} из ${r.questions}: ${revival}. При провале или отказе забег закончится.`
-              : learningCourse.topics[a.topic].note,
-          title:
-            a.reason === 'revive' ? 'Вторая жизнь за знания' : learningCourse.topics[a.topic].name,
+              : course.topics[a.topic].note,
+          title: a.reason === 'revive' ? 'Вторая жизнь за знания' : course.topics[a.topic].name,
           question: q.text,
           multiple: q.type === 'multiple',
           options: a.questions[a.index].options.map((id) => ({

@@ -22,6 +22,7 @@
 //   phases     boss only: at a health share `at`, summons adds and gains new attacks
 //   passive    never attacks (a structure that only summons)
 //   labelAbove height of the name tag over the feet, for art taller than the radius
+//   collage    a body glued from other units' art: [unit, x, y, scale] (the learning bosses)
 // Every enemy, bosses included, has this much more health and hits this much harder than
 // the numbers below.
 export const enemyHpScale = 1.15;
@@ -91,6 +92,47 @@ export const unitDefinitions = {
     heavy: true,
     labelAbove: 92,
     summon: { every: 7, count: 3, max: 12, reach: 4000, units: ['pepsi'] },
+    // Drawn as many Pepsi emblems glued together: [unit, x, y, scale].
+    collage: [
+      ['pepsi', -27, -41, 0.9],
+      ['pepsi', 4, -48, 1],
+      ['pepsi', 30, -34, 0.9],
+      ['pepsi', -37, -12, 0.85],
+      ['pepsi', -9, -18, 1.1],
+      ['pepsi', 24, -9, 1],
+      ['pepsi', -20, 12, 0.8],
+      ['pepsi', 8, 14, 0.85],
+    ],
+  },
+  // The incident course's boss: one incident that hit many clients at once.
+  critical_incident: {
+    name: 'Критический инцидент',
+    hp: 1800,
+    speed: 38,
+    damage: 16,
+    r: 52,
+    range: 120,
+    wind: 1.2,
+    cooldown: 2.8,
+    xp: 100,
+    color: '#ff5d5d',
+    mark: 'CRIT',
+    attack: 'pulse',
+    boss: true,
+    heavy: true,
+    labelAbove: 92,
+    summon: { every: 7, count: 3, max: 12, reach: 4000, units: ['pepsi', 'mars', 'baltika'] },
+    // The logos of the clients one failure hit, glued together.
+    collage: [
+      ['baltika', -30, -36, 0.85],
+      ['pepsi', 6, -50, 0.95],
+      ['mondelez', 34, -30, 0.8],
+      ['inbev', -36, -6, 0.8],
+      ['pepsi', -6, -16, 1.1],
+      ['ferrero', 28, -2, 0.85],
+      ['baltika', -16, 16, 0.75],
+      ['pepsi', 14, 16, 0.8],
+    ],
   },
   pepsi: {
     name: 'Пепси',

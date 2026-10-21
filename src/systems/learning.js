@@ -1,16 +1,17 @@
-import { learningCourse } from '../../data/learning-questions.js';
-import { learningRules, learningRooms } from '../../data/learning-rules.js';
+import { learningRules } from '../../data/learning-rules.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
 import { shuffle } from '../core/rng.js';
-import { availableTerminal, availableExit, roomLayout } from './queries/learning.js';
+import { availableTerminal, availableExit, courseOf, roomLayout } from './queries/learning.js';
 
 // The map's layout generation: 2 = generated mazes. A saved run of another layout cannot go on.
 export const LEARNING_LAYOUT = 2;
 
 export function createLearningState(map) {
-  return mapDefinitions[map]?.objective?.type === 'learning'
+  const course = courseOf(map);
+  return course
     ? {
-        courseVersion: learningCourse.version,
+        course: course.id,
+        courseVersion: course.version,
         layout: LEARNING_LAYOUT,
         roomIndex: 0,
         // Packs of enemies owed for wrong answers; spawning sends them once the quiz closes.
@@ -25,7 +26,7 @@ export function createLearningState(map) {
     : null;
 }
 
-export function validateLearningCourse(course = learningCourse) {
+export function validateLearningCourse(course) {
   const ids = new Set();
   for (const q of course.questions) {
     if (ids.has(q.id) || !q.text || !course.topics[q.topic])
@@ -60,7 +61,7 @@ export function beginLearning(s, reason, nodeId = null) {
     if (l.reviveUsed || s.p.hp > 0) return false;
     l.reviveUsed = true;
   } else if (!node || s.p.hp <= 0) return false;
-  const pool = learningCourse.questions.filter(
+  const pool = courseOf(s.map).questions.filter(
     (q) => q.type !== 'open' && (!node || q.topic === node.topic),
   );
   // Prefer unseen questions, then mistakes; shuffle only once when creating the attempt.
@@ -94,7 +95,7 @@ export function selectLearning(s, id, option) {
   const a = s.learning?.active;
   if (!a || a.id !== id || a.phase !== 'question' || !a.questions[a.index].options.includes(option))
     return false;
-  const q = learningCourse.questions.find((q) => q.id === a.questions[a.index].id);
+  const q = courseOf(s.map).questions.find((q) => q.id === a.questions[a.index].id);
   a.selected =
     q.type === 'single'
       ? [option]
@@ -108,7 +109,7 @@ export function submitLearning(s, id) {
   const l = s.learning,
     a = l?.active;
   if (!a || a.id !== id || a.phase !== 'question' || !a.selected.length) return false;
-  const q = learningCourse.questions.find((q) => q.id === a.questions[a.index].id);
+  const q = courseOf(s.map).questions.find((q) => q.id === a.questions[a.index].id);
   const correct =
     a.selected.length === q.correct.length && q.correct.every((v) => a.selected.includes(v));
   const record = l.answers[q.id] ?? {
@@ -234,7 +235,7 @@ export function learningSummary(s) {
     firstCorrect: entries.filter((q) => q.firstCorrect).length,
     retries: entries.reduce((n, q) => n + Math.max(0, q.attempts - 1), 0),
     reviveUsed: l.reviveUsed,
-    topics: learningCourse.topics.map((t, i) => ({
+    topics: courseOf(s.map).topics.map((t, i) => ({
       name: t.name,
       mistakes: entries
         .filter((q) => q.topic === i)
@@ -243,15 +244,21 @@ export function learningSummary(s) {
   };
 }
 
-export function validLearning(l) {
+// Whether a saved learning state can go on with this build on `map`: same course and version,
+// the maze layout generation, and an open quiz that still matches the course's questions.
+export function validLearning(l, map) {
+  const course = courseOf(map);
   if (
     !l ||
-    l.courseVersion !== learningCourse.version ||
+    !course ||
+    // Saves from before the second course have no `course`: it was this map's one.
+    (l.course ?? course.id) !== course.id ||
+    l.courseVersion !== course.version ||
     l.layout !== LEARNING_LAYOUT ||
     !Number.isInteger(l.audits) ||
     !Number.isInteger(l.roomIndex) ||
     l.roomIndex < 0 ||
-    l.roomIndex >= learningRooms.length ||
+    l.roomIndex >= mapDefinitions[map].rooms.length ||
     typeof l.reviveUsed !== 'boolean' ||
     !l.answers ||
     !Array.isArray(l.rewards)
@@ -271,7 +278,7 @@ export function validLearning(l) {
     a.index < a.questions.length &&
     Array.isArray(a.selected) &&
     a.questions.every((item) => {
-      const q = learningCourse.questions.find((q) => q.id === item.id && q.type !== 'open');
+      const q = course.questions.find((q) => q.id === item.id && q.type !== 'open');
       return (
         q &&
         Array.isArray(item.options) &&

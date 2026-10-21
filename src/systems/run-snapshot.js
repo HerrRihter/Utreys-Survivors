@@ -49,7 +49,7 @@ export function snapshotRun(run) {
     mapDefinitions[s?.map]?.objective?.type === 'learning' &&
     s?.learning?.active?.reason === 'revive' &&
     s.learning.reviveUsed &&
-    validLearning(s.learning);
+    validLearning(s.learning, s.map);
   if (!s || (s.p.hp <= 0 && !pendingRevive) || s.resultRecorded) return null;
   const level = run.mode === 'level';
   return {

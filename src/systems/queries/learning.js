@@ -1,5 +1,6 @@
 import { mapDefinitions } from '../../../data/maps/maps.js';
 import { learningRules, learningMaze } from '../../../data/learning-rules.js';
+import { learningCourses } from '../../../data/learning-courses.js';
 import { arenaSize } from '../../world/arenas.js';
 import { mazeLayout } from '../../world/maze.js';
 
@@ -7,6 +8,8 @@ import { mazeLayout } from '../../world/maze.js';
 // the run's seed (walls, entry, terminals, door). Null on other maps.
 export const currentRoom = (s) =>
   mapDefinitions[s?.map]?.rooms?.[s.learning?.roomIndex ?? 0] ?? null;
+// The course a learning map teaches (`objective.course`); null on other maps.
+export const courseOf = (map) => learningCourses[mapDefinitions[map]?.objective?.course] ?? null;
 export const mazeRooms = (map) => (mapDefinitions[map]?.rooms || []).filter((room) => room.maze);
 export function roomLayout(map, seed, roomIndex) {
   const room = mapDefinitions[map]?.rooms?.[roomIndex];
