@@ -1,6 +1,12 @@
 import { nodeResolved, nodeAvailable } from '../../systems/queries/nodes.js';
 import { eventSpec } from '../../systems/queries/events.js';
-import { learningActionNear } from '../../systems/queries/learning.js';
+import {
+  currentRoom,
+  doorOpen,
+  learningActionNear,
+  mazeRooms,
+  roomNodes,
+} from '../../systems/queries/learning.js';
 import {
   abilityRank,
   abilityUpgradeMax,
@@ -44,12 +50,16 @@ const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 function nodeProgress(s) {
   if (s.learning) {
     const l = s.learning,
-      rooms = mapDefinitions[s.map].rooms,
-      required = s.nodes.filter((n) => n.required);
+      room = currentRoom(s),
+      mazes = mazeRooms(s.map).length,
+      terminals = roomNodes(s),
+      tail = ` · ${l.points} очков · ${l.reviveUsed ? 'вторая жизнь использована' : 'вторая жизнь есть'}`;
+    if (!room.maze) return room.name + tail;
     return (
-      `Комната ${l.roomIndex + 1}/${rooms.length} · ${rooms[l.roomIndex].name}` +
-      ` · Тесты ${required.filter(nodeResolved).length}/${required.length}` +
-      ` · ${l.points} очков · ${l.reviveUsed ? 'вторая жизнь использована' : 'вторая жизнь есть'}`
+      `${room.name} ${l.roomIndex + 1}/${mazes}` +
+      ` · терминалы ${terminals.filter((n) => n.status === 'completed').length}/${terminals.length}` +
+      (doorOpen(s) ? ' · дверь открыта' : '') +
+      tail
     );
   }
   let next = null,

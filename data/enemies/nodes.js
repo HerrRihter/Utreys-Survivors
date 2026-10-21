@@ -11,6 +11,7 @@ export const nodeToasts = {
   destroyed: ': баг уничтожен',
   closed: ': закрыт',
   workaround: ': воркэраунд найден',
+  opened: ': страж побеждён, терминал открыт',
 };
 export const workaroundSeconds = 6;
 export const workaroundRadius = 75;

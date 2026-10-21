@@ -58,7 +58,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
         </div>
       </div>
 
-      {/* Near a terminal or the room exit only; the room summary is the progress line. */}
+      {/* Near a terminal or the open door only; the room summary is the progress line. */}
       {learning && run.mode === 'play' && (learning.terminals.length > 0 || learning.exit) && (
         <div className="learning-hud">
           {learning.terminals.map((n: LearningTerminal) => (
@@ -69,7 +69,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
           {learning.exit && (
             <>
               <button className="primary" onClick={commands.moveLearningRoom}>
-                В следующую комнату →
+                {learning.exit}
               </button>
               <small>Неподобранные предметы останутся здесь</small>
             </>

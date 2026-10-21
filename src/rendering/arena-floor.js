@@ -115,31 +115,9 @@ export function createArenaFloor({ createCanvas = browserCanvas } = {}) {
   }
 
   function drawCore(g, arena) {
-    if (arena.rooms?.length) {
+    // A generated room (the learning mazes and hall): its walls are all there is.
+    if (arena.rooms) {
       drawRacks(g, arena.racks);
-      for (const [i, room] of arena.rooms.entries()) {
-        g.save();
-        g.fillStyle = '#78cfff';
-        g.textAlign = 'center';
-        g.font = 'bold 24px sans-serif';
-        g.fillText(
-          `${i + 1}. ${room.name}`,
-          (room.bounds[0] + room.bounds[2]) / 2,
-          room.bounds[1] + 80,
-        );
-        if (room.exit) {
-          g.strokeStyle = '#78cfff';
-          g.lineWidth = 3;
-          g.beginPath();
-          g.arc(room.exit.x, room.exit.y, 42, 0, Math.PI * 2);
-          g.stroke();
-          g.font = 'bold 14px sans-serif';
-          g.fillText('ПЕРЕХОД →', room.exit.x, room.exit.y + 5);
-          g.font = '12px sans-serif';
-          g.fillText('Открывается после теста', room.exit.x, room.exit.y + 65);
-        }
-        g.restore();
-      }
       return;
     }
     const size = arena.size;

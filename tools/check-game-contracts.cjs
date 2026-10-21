@@ -403,6 +403,12 @@ function validateUnits(units) {
       if (list)
         for (const other of list)
           assert(units[other] && !units[other].boss, `Unit contract: ${id} summons ${other}`);
+    // A collage boss is glued from ordinary units' art.
+    for (const [other, x, y, scale] of unit.collage || [])
+      assert(
+        units[other] && !units[other].collage && [x, y].every(Number.isFinite) && scale > 0,
+        `Unit contract: ${id}.collage ${other}`,
+      );
     if (unit.phases != null) {
       assert(unit.boss, `Unit contract: ${id}.phases needs a boss`);
       unit.phases.forEach((phase, i) => {

@@ -6,9 +6,11 @@ import {
   closeLearning,
   moveLearningRoom,
 } from '../systems/learning.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
 
 export function createLearningFlow({
   run,
+  world,
   input,
   snapshots,
   toast,
@@ -39,7 +41,7 @@ export function createLearningFlow({
     const s = run.state;
     if (run.mode !== 'play' || !s || s.xp >= s.need) return false;
     const node = s.nodes.find((n) => n.id === nodeId);
-    if (!node || !beginLearning(s, node.required ? 'lesson' : 'bonus', nodeId)) return false;
+    if (!node || !beginLearning(s, 'lesson', nodeId)) return false;
     setMode('quiz');
     input.resetInput();
     save();
@@ -66,8 +68,14 @@ export function createLearningFlow({
       else resumePlay();
       return true;
     },
+    // Through the door: the next room's arena replaces this one before the next step.
     moveLearningRoom() {
       if (run.mode !== 'play' || !moveLearningRoom(run.state)) return false;
+      world.follow(run.state);
+      world.arena.prepare(
+        Object.values(unitDefinitions).map((unit) => unit.r),
+        run.state.p,
+      );
       input.resetInput();
       save();
       return true;

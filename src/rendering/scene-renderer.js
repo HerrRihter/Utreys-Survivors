@@ -4,6 +4,8 @@ import { drawEnemySpeech } from './enemy-speech.js';
 import { cameraOrigin } from './camera.js';
 import { drawEdgeArrows } from './edge-arrows.js';
 import { drawEvent } from './events.js';
+import { drawDoor } from './learning.js';
+import { roomNodes } from '../systems/queries/learning.js';
 import { drawPickup, drawEliteAura, drawGem, drawCodeToken } from './pickups.js';
 import { drawFx } from './fx.js';
 import { drawWeapons } from './weapons.js';
@@ -46,7 +48,7 @@ export const SceneRenderer = {
     function draw() {
       const s = run.state,
         p = s ? s.p : { x: 1100, y: 1010 },
-        { x: cx, y: cy } = cameraOrigin(p, view.W, view.H, world.arena.size);
+        { x: cx, y: cy } = cameraOrigin(p, view.W, view.H, world.arena.size, world.arena.rooms);
       ctx.save();
       if (s && s.shake && run.mode === 'play' && settings.shake !== false)
         ctx.translate((cosmetic() * 2 - 1) * s.shake, (cosmetic() * 2 - 1) * s.shake);
@@ -58,7 +60,9 @@ export const SceneRenderer = {
         bounds.maxX = cx + view.W + 50;
         bounds.minY = cy - 50;
         bounds.maxY = cy + view.H + 50;
-        drawNodes(ctx, s.nodes, s.enemies);
+        // The learning map's rooms share the arena: only the room in play is drawn.
+        drawNodes(ctx, roomNodes(s), s.enemies);
+        drawDoor(ctx, s);
         drawEvent(ctx, s);
         for (const h of s.hazards || []) {
           if (!inBox(h, bounds, h.r)) continue;

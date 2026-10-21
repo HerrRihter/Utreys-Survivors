@@ -1,24 +1,33 @@
-import { learningCourse } from '../../../data/learning-questions.js';
 import { learningRules } from '../../../data/learning-rules.js';
-import { availableTerminal, availableExit } from '../../systems/queries/learning.js';
+import {
+  availableTerminal,
+  availableExit,
+  courseOf,
+  roomNodes,
+} from '../../systems/queries/learning.js';
+import { mapDefinitions } from '../../../data/maps/maps.js';
 
 const percent = (share) => Math.round(share * 100) + '%';
+
+const nextRoomName = (s) => mapDefinitions[s.map].rooms[s.learning.roomIndex + 1]?.name ?? '';
 
 export function learningView({ run }) {
   const s = run.state,
     l = s?.learning;
   if (!l) return null;
-  const a = l.active;
-  const q = a && learningCourse.questions.find((q) => q.id === a.questions[a.index].id);
+  const a = l.active,
+    course = courseOf(s.map);
+  const q = a && course.questions.find((q) => q.id === a.questions[a.index].id);
   const reveal = a?.phase === 'feedback';
   const r = learningRules,
     revival = `вернёшься в бой с ${percent(r.reviveHealth)} здоровья и защитой на ${r.reviveInvulnerability} с`;
   return {
-    terminals: s.nodes
+    terminals: roomNodes(s)
       .filter((n) => availableTerminal(s, n.id))
       .map((n) => ({ id: n.id, label: n.label })),
-    exit: availableExit(s),
-    selfChecks: learningCourse.questions
+    // The door's button names where it leads.
+    exit: availableExit(s) ? `В ${nextRoomName(s).toLowerCase()} →` : '',
+    selfChecks: course.questions
       .filter((q) => q.type === 'open')
       .map((q) => ({ id: q.id, text: q.text, reference: q.reference })),
     active: a
@@ -31,13 +40,8 @@ export function learningView({ run }) {
           note:
             a.topic === null
               ? `Ответь верно хотя бы на ${r.passing} из ${r.questions}: ${revival}. При провале или отказе забег закончится.`
-              : learningCourse.topics[a.topic].note,
-          title:
-            a.reason === 'revive'
-              ? 'Вторая жизнь за знания'
-              : a.reason === 'bonus'
-                ? 'Бонус знаний'
-                : learningCourse.topics[a.topic].name,
+              : course.topics[a.topic].note,
+          title: a.reason === 'revive' ? 'Вторая жизнь за знания' : course.topics[a.topic].name,
           question: q.text,
           multiple: q.type === 'multiple',
           options: a.questions[a.index].options.map((id) => ({
@@ -52,14 +56,11 @@ export function learningView({ run }) {
           lastCorrect: a.lastCorrect,
           explanation: reveal ? q.explanation : '',
           // Quiz terms and rewards, from the rules.
-          terms:
-            a.reason === 'bonus'
-              ? `Вопросов: ${r.bonusQuestions}, нужно верных: ${r.bonusPassing}. Одна попытка: успех лечит на ${percent(r.bonusHeal)} здоровья.`
-              : `Вопросов: ${r.questions}, нужно верных: ${r.passing}. После каждого ответа — объяснение.`,
+          terms: `Вопросов: ${r.questions}, нужно верных: ${r.passing}. Каждая ошибка приведёт проверку.`,
           reward:
             a.reason === 'revive'
               ? revival[0].toUpperCase() + revival.slice(1) + '.'
-              : `Награда: лечение на ${percent(a.reason === 'bonus' ? r.bonusHeal : r.terminalHeal)} здоровья. Учебные очки (${r.points}) — за первый верный ответ на каждый вопрос.`,
+              : 'Награда: пакет обновлений у терминала.',
         }
       : null,
   };

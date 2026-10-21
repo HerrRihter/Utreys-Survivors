@@ -1,14 +1,15 @@
 import { mapDefinitions, nodeSpacing } from '../../data/maps/maps.js';
 import { nodeDefinitions } from '../../data/enemies/nodes.js';
 import { createRng, shuffle } from '../core/rng.js';
+import { roomLayout } from './queries/learning.js';
 
 // Node positions and bug placement for one seed: each node takes its own zone, nodes keep
 // `nodeSpacing` apart, and the five bugs are dealt to the nodes in random order. A map with a
 // `desks` objective places its structures the same way instead of the nodes.
 export function layoutNodes(mapId, seed) {
   const map = mapDefinitions[mapId] || mapDefinitions.empty;
-  if (map.objective?.type === 'learning') return layoutTerminals(map.rooms);
   const rng = createRng(seed).random;
+  if (map.objective?.type === 'learning') return layoutTerminals(mapId, map.rooms, seed, rng);
   const zones = shuffle(map.nodeZones, rng);
   if (map.objective?.type === 'desks') return layoutDesks(map.objective, zones, rng);
   const bugs = shuffle(
@@ -31,24 +32,29 @@ export function layoutNodes(mapId, seed) {
   return nodeDefinitions.map((n, i) => ({ ...n, ...placed[i], bug: bugs[i] }));
 }
 
-// Desks are `desk-1`, `desk-2`... and shown as the objective's label with their number.
-// Learning terminals stand where their rooms put them: the required ones in room order, then
-// the optional bonus terminals.
-function layoutTerminals(rooms) {
-  const terminal = (room, i, spec, required) => ({
-    label: room.name,
-    ...spec,
-    kind: 'learning-terminal',
-    required,
-    room: i,
-    topic: room.topic,
-  });
-  return [
-    ...rooms.flatMap((room, i) => (room.terminal ? [terminal(room, i, room.terminal, true)] : [])),
-    ...rooms.flatMap((room, i) => (room.bonus ? [terminal(room, i, room.bonus, false)] : [])),
-  ];
+// Learning terminals stand where each generated maze puts them, ids `maze1-t1`...; a bug
+// from the node roster guards each one from the corridor leading to it.
+function layoutTerminals(mapId, rooms, seed, rng) {
+  const bugs = nodeDefinitions.map((n) => n.bug);
+  return rooms.flatMap((room, i) =>
+    room.maze
+      ? roomLayout(mapId, seed, i).terminals.map((t, k) => ({
+          id: `maze${i + 1}-t${k + 1}`,
+          label: `Терминал ${k + 1}`,
+          kind: 'learning-terminal',
+          required: true,
+          room: i,
+          topic: room.topic,
+          x: t.x,
+          y: t.y,
+          guard: t.guard,
+          bug: bugs[Math.floor(rng() * bugs.length)],
+        }))
+      : [],
+  );
 }
 
+// Desks are `desk-1`, `desk-2`... and shown as the objective's label with their number.
 function layoutDesks({ unit, count, label }, zones, rng) {
   const placed = [];
   for (const [x, y, w, h] of zones) {

@@ -95,9 +95,7 @@ export function LearningScreen() {
                 ? a.reward
                 : a.reason === 'revive'
                   ? 'Попытка возрождения не удалась. Забег завершится.'
-                  : a.reason === 'bonus'
-                    ? 'Бонусная попытка использована.'
-                    : 'Вернись к терминалу, прочитай памятку и попробуй ещё раз.'}
+                  : 'Терминал ждёт новой попытки: прочитай памятку и попробуй ещё раз.'}
             </p>
             <button className="primary" onClick={() => commands.closeLearning(a.id)}>
               {a.reason === 'revive' && !a.passed ? 'К результатам' : 'Продолжить'}
@@ -111,11 +109,7 @@ export function LearningScreen() {
         )}
         {a.phase !== 'result' && (
           <button className="small" onClick={() => commands.closeLearning(a.id)}>
-            {a.reason === 'revive'
-              ? 'Отказаться и завершить забег'
-              : a.reason === 'bonus'
-                ? 'Отказаться от бонуса'
-                : 'Вернуться в комнату'}
+            {a.reason === 'revive' ? 'Отказаться и завершить забег' : 'Вернуться в лабиринт'}
           </button>
         )}
       </div>

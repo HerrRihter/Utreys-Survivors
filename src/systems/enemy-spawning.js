@@ -1,4 +1,5 @@
-import { currentRoom, inRoom } from './queries/learning.js';
+import { currentRoom, currentLayout } from './queries/learning.js';
+import { learningRules } from '../../data/learning-rules.js';
 import { clamp } from '../core/math.js';
 import { updateNodes, allNodesResolved } from './node-objectives.js';
 import {
@@ -11,42 +12,46 @@ import {
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
 import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
+// A learning room's wave size and limit, scaled by the room (later mazes bring more).
+const roomWave = (wave, room) =>
+  room?.waves
+    ? {
+        ...wave,
+        batch: Math.ceil(wave.batch * room.waves.batch),
+        cap: Math.round(wave.cap * room.waves.cap),
+      }
+    : wave;
+
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
   create({ run, world, toast, audio }) {
+    // A free spot `near`..`far` px from the hero; null when none was found.
+    function pointAround(s, u, [near, far]) {
+      for (let attempt = 0; attempt < 40; attempt++) {
+        const a = s.rng.rand(0, Math.PI * 2),
+          r = s.rng.rand(near, far),
+          x = clamp(s.p.x + Math.cos(a) * r, u.r + 10, world.arena.size - u.r - 10),
+          y = clamp(s.p.y + Math.sin(a) * r, u.r + 10, world.arena.size - u.r - 10);
+        if (!world.arena.blocked(x, y, u.r)) return { x, y };
+      }
+      return null;
+    }
     function spawn(unit, boss = false, position = null) {
       const s = run.state,
         p = s.p,
         u = unitDefinitions[unit];
       if (!u) throw new Error('Unknown unit: ' + unit);
       const room = currentRoom(s);
+      // In a learning room waves come from around the corridors' bends, the boss to its spot.
+      if (room && !position) {
+        position = boss ? currentLayout(s).boss : pointAround(s, u, learningRules.waveDistance);
+        if (!position) return;
+      }
       let x, y;
       if (position) {
         x = position.x;
         y = position.y;
       }
-      if (room && !position) {
-        if (boss) position = room.boss;
-        else
-          for (let attempt = 0; attempt < 30; attempt++) {
-            const [left, top, right, bottom] = room.bounds;
-            const point = {
-              x: s.rng.rand(left + u.r, right - u.r),
-              y: s.rng.rand(top + u.r, bottom - u.r),
-            };
-            if (
-              Math.hypot(point.x - p.x, point.y - p.y) >= 240 &&
-              !world.arena.blocked(point.x, point.y, u.r)
-            ) {
-              position = point;
-              break;
-            }
-          }
-        if (!position) return;
-        x = position.x;
-        y = position.y;
-      }
-      if (room && !inRoom(room, x, y, u.r)) return;
       for (let i = 0; !position && i < 100; i++) {
         const a = s.rng.rand(0, Math.PI * 2),
           r = s.rng.rand(520, 640);
@@ -80,8 +85,10 @@ export const EnemySpawning = {
       const schedule = getWaveSchedule(s.map);
       if (boss) e.hp = e.max = Math.round(u.hp * (schedule.boss?.hpScale || 1));
       else if (!u.miniboss) {
-        // The whole roster is there from the start; the stage's strength ramps it up.
-        const k = scheduleStage(schedule.normal.stages, s.t)?.strength ?? 1;
+        // The whole roster is there from the start; the stage's strength ramps it up, and a
+        // learning room's strength on top.
+        const k =
+          (scheduleStage(schedule.normal.stages, s.t)?.strength ?? 1) * (room?.strength ?? 1);
         e.hp = e.max = Math.max(1, Math.round(e.hp * k));
         e.damage *= k;
       }
@@ -97,6 +104,16 @@ export const EnemySpawning = {
       if (schedule.active === false) return;
       updateNodes({ state: s, spawn, toast }, dt);
       const room = currentRoom(s);
+      // An audit for a wrong answer: a pack of the current waves, close by. One pack per step.
+      if (s.learning?.audits > 0) {
+        s.learning.audits--;
+        for (let i = 0; i < learningRules.auditPack; i++) {
+          const unit = selectWaveUnit(schedule, s.t, s.rng.random());
+          const point = pointAround(s, unitDefinitions[unit], learningRules.auditDistance);
+          if (point) spawn(unit, false, point);
+        }
+        toast('Проверка: ошибка в ответе привела инспекторов');
+      }
       if (room?.boss) {
         if (allNodesResolved(s) && !s.bossSpawned && spawn(schedule.boss.unit, true, room.boss)) {
           s.bossSpawned = true;
@@ -136,7 +153,7 @@ export const EnemySpawning = {
       }
       s.spawn -= dt;
       if (s.spawn <= 0) {
-        const wave = scaleWave(normalWave(schedule, s.t), runModifiers(s));
+        const wave = scaleWave(roomWave(normalWave(schedule, s.t), room), runModifiers(s));
         s.spawn = wave.interval;
         count();
         // Shooters and tanks outlive the light crowd: their share of the wave limit is capped
