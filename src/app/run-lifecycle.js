@@ -1,4 +1,5 @@
 import { validLearning } from '../systems/learning.js';
+import { validIncident } from '../systems/escalation.js';
 import { courseOf } from '../systems/queries/learning.js';
 import { fromGraphJson } from '../core/graph-json.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
@@ -238,6 +239,14 @@ export function createRunLifecycle({
         !(saved.learning?.active?.reason === 'revive' && saved.learning.reviveUsed))
     ) {
       toast('Учебное сохранение несовместимо. Можно начать новый забег.');
+      return false;
+    }
+    // A shift saved under other incident rules is not judged by these ones.
+    if (
+      (saved.incident || mapDefinitions[snapshot.map]?.objective?.type === 'escalation') &&
+      !validIncident(saved.incident, snapshot.map)
+    ) {
+      toast('Сохранение смены несовместимо. Можно начать новую.');
       return false;
     }
     if (!heroDefinitions[snapshot.hero] || !shop.owned(snapshot.hero)) {

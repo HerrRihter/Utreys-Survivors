@@ -162,6 +162,80 @@ export const unitArt = {
       uprightText(g, flip, 'L3', 0, -h + 21);
     },
   },
+  // Фильтр Grafana — a small dashboard panel: an orange filter funnel over a running sparkline
+  // (it shifts every tick, period 8).
+  grafana_filter: {
+    frame: (e) => ledTick(e) % 8,
+    draw(g, u, hitFlash, flip, e) {
+      const w = 22,
+        h = 22;
+      g.fillStyle = hitFlash ? '#ffffff' : '#181b1f';
+      g.fillRect(-w / 2, -h, w, h);
+      g.lineWidth = 2;
+      g.strokeStyle = u.color;
+      g.strokeRect(-w / 2, -h, w, h);
+      // Funnel
+      g.fillStyle = hitFlash ? u.color : '#ff9830';
+      g.beginPath();
+      g.moveTo(-7, -h + 4);
+      g.lineTo(7, -h + 4);
+      g.lineTo(2, -h + 10);
+      g.lineTo(2, -h + 14);
+      g.lineTo(-2, -h + 16);
+      g.lineTo(-2, -h + 10);
+      g.closePath();
+      g.fill();
+      // Sparkline under it
+      const tick = ledTick(e) % 8;
+      g.strokeStyle = '#f2cc0c';
+      g.lineWidth = 1.5;
+      g.beginPath();
+      for (let i = 0; i <= 6; i++) {
+        const x = -w / 2 + 3 + i * 2.7,
+          y = -4 - ((i * 5 + tick * 3) % 7) * 0.6;
+        if (i) g.lineTo(x, y);
+        else g.moveTo(x, y);
+      }
+      g.stroke();
+    },
+  },
+  // Запрос в логи — a heavy terminal window scrolling log lines, a magnifier on its corner and
+  // a blinking cursor (period 2).
+  log_query: {
+    frame: (e) => ledTick(e) % 2,
+    draw(g, u, hitFlash, flip, e) {
+      const w = 38,
+        h = 34;
+      g.fillStyle = hitFlash ? '#ffffff' : '#140f24';
+      g.fillRect(-w / 2, -h, w, h);
+      g.lineWidth = 2;
+      g.strokeStyle = u.color;
+      g.strokeRect(-w / 2, -h, w, h);
+      // Title bar
+      g.fillStyle = u.color;
+      g.fillRect(-w / 2, -h, w, 5);
+      // Log lines: errors in red among the grey
+      const lines = [14, 22, 10, 18, 12];
+      lines.forEach((len, i) => {
+        g.fillStyle = i === 1 || i === 3 ? '#ff5c5c' : '#b9a8ff';
+        g.fillRect(-w / 2 + 4, -h + 9 + i * 4.5, len, 2);
+      });
+      if (ledTick(e) % 2 === 0) {
+        g.fillStyle = '#ffffff';
+        g.fillRect(-w / 2 + 4 + 12 + 2, -h + 9 + 4 * 4.5, 3, 2);
+      }
+      // Magnifier
+      g.strokeStyle = '#ffffff';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(w / 2 - 9, -10, 5, 0, Math.PI * 2);
+      g.stroke();
+      g.beginPath();
+      g.moveTo(w / 2 - 5, -6);
+      g.lineTo(w / 2 - 1, -2);
+      g.stroke();
+    },
+  },
 };
 
 const styleArt = {

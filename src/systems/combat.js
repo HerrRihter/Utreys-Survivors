@@ -10,6 +10,8 @@ import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
 import { heroEvolutions } from '../../data/weapons.js';
 import { dropTable } from '../../data/pickups.js';
+import { countKill } from './escalation.js';
+import { shiftMinute } from './queries/incident.js';
 
 // Damage, deaths and rewards, hero/enemy action timing and hits on the player.
 export const CombatSystem = {
@@ -77,6 +79,8 @@ export const CombatSystem = {
             s.texts.push({ x: s.p.x, y: s.p.y - 40, v: `+${gain} HP`, life: 0.8 });
         }
         run.state.kills++;
+        // On the incident shift a kill may count for an ordered metric.
+        if (run.state.incident) countKill(run.state.incident, e.unit, shiftMinute(run.state));
         run.state.earned += wallet.kill(tag, run.state.kills);
         const luck = run.state.stats.luck || 0;
         if (run.state.rng.random() < dropTable.code.chance + luck * dropTable.code.luck)
@@ -120,6 +124,11 @@ export const CombatSystem = {
           toast(
             `${unitDefinitions[e.unit].name} повержен в продакшене! +${production.bossReward} кодов`,
           );
+          audio.effect('boss');
+          records.recordBossKill();
+        } else if (e.boss && run.state.incident) {
+          // The shift's boss is a punishment: beating it does not end the shift.
+          toast(unitDefinitions[e.unit].name + ' повержен! Смена продолжается.');
           audio.effect('boss');
           records.recordBossKill();
         } else if (e.boss) {

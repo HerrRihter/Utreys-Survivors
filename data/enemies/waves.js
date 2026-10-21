@@ -221,6 +221,35 @@ function learningSchedule() {
   };
 }
 
+// The incident shift (data/incident-rules.js): the data centre's waves with the monitoring foes
+// in every stage at a small weight, which an ordered metric multiplies. No mid-run events: the
+// shift has its own. The boss is a punishment: the critical incident comes when an incident is
+// left to grow (`incident-escalated`), and beating it does not end the shift.
+function shiftSchedule() {
+  const monitoring = [
+    ['grafana_filter', 1],
+    ['log_query', 0.5],
+  ];
+  return {
+    ...datacenter,
+    normal: {
+      ...datacenter.normal,
+      stages: datacenter.normal.stages.map((stage) => ({
+        ...stage,
+        weights: [...stage.weights, ...monitoring],
+      })),
+    },
+    boss: {
+      unit: 'critical_incident',
+      condition: 'incident-escalated',
+      message: 'КРИТИЧЕСКИЙ ИНЦИДЕНТ: эскалация запоздала, сбой задел всех клиентов!',
+      sound: 'boss',
+    },
+    notifications: [{ time: 5, message: 'Ночная смена началась. Следи за операциями в комнатах.' }],
+    events: { times: [], types: [] },
+  };
+}
+
 export const waveSchedules = {
   empty: datacenter,
   // Narrow corridors: fewer enemies at once, larger batches, a tougher CRPT.
@@ -267,4 +296,5 @@ export const waveSchedules = {
     ],
   },
   learningCenter: learningSchedule(),
+  opsCenter: shiftSchedule(),
 };

@@ -1,5 +1,6 @@
 // @ts-check
 import { createLearningState } from './learning.js';
+import { createIncidentState } from './escalation.js';
 import { roomLayout } from './queries/learning.js';
 import { createNodeState } from './node-objectives.js';
 import { createWaveState } from './wave-schedule.js';
@@ -67,6 +68,7 @@ import { createGameRng } from '../core/rng.js';
  *
  * @typedef {{
  *   learning: ReturnType<typeof createLearningState>,
+ *   incident: import('./queries/incident.js').IncidentState | null,
  *   t: number, step: number, runId: string, map: string, seed: number, rng: GameRng,
  *   load: number, penza: boolean,
  *   healFactor: number,
@@ -119,6 +121,7 @@ function createRunRuntime() {
 /** @type {Record<keyof RunModel, 'save' | 'reduce' | 'rebuild'>} */
 export const runFields = {
   learning: 'save',
+  incident: 'save',
   t: 'save',
   step: 'save',
   runId: 'save',
@@ -227,6 +230,8 @@ export function createRunModel({
   /** @type {RunModel} */
   const s = {
     learning: createLearningState(map, course),
+    // The incident shift of the escalation map; null elsewhere.
+    incident: createIncidentState(map, seed),
     t: 0,
     step: 0,
     // Identifies the run in the statistics, so a second ending never adds a game.

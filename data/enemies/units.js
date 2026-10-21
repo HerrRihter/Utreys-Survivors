@@ -30,6 +30,8 @@
 //   escalate   every `every` s one level more, up to `max`: cooldown × `cooldown` per level,
 //              `shots` more in the barrage ring, `summon` × level `units` called; {level} in
 //              `message`
+//   onlyIn     comes only on maps whose objective has this type (the incident mode's
+//              monitoring foes); every other unit is in every stage of every map
 // Every enemy, bosses included, has this much more health and hits this much harder than
 // the numbers below.
 export const enemyHpScale = 1.15;
@@ -428,6 +430,40 @@ export const unitDefinitions = {
     poise: 0.8,
     // Inspector: its wave slows the player.
     slow: { amount: 0.25, duration: 1.2 },
+  },
+  // Monitoring foes of the incident escalation mode: beating them opens its metrics
+  // (data/incident-rules.js).
+  grafana_filter: {
+    name: 'Фильтр Grafana',
+    hp: 40,
+    speed: 105,
+    damage: 5,
+    r: 13,
+    range: 40,
+    wind: 0.5,
+    cooldown: 0.8,
+    xp: 1,
+    color: '#ff9830',
+    mark: 'GF',
+    onlyIn: 'escalation',
+    // A fast weak swarm: all-round strike like L3.
+    burst: { reach: 14, ring: { r: 22, life: 0.25, color: '#ff9830' }, sound: 'hit' },
+  },
+  log_query: {
+    name: 'Запрос в логи',
+    hp: 220,
+    speed: 50,
+    damage: 10,
+    r: 22,
+    range: 50,
+    wind: 0.8,
+    cooldown: 1.2,
+    xp: 4,
+    color: '#9b7bff',
+    mark: 'LOG',
+    onlyIn: 'escalation',
+    // A slow armoured query: hits from the front do less.
+    frontDamageMultiplier: 0.7,
   },
   bug_aggregation: {
     name: 'Баг агрегации',

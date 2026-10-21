@@ -3,6 +3,8 @@ import { inBox } from '../core/math.js';
 import { nodeAvailable } from '../systems/queries/nodes.js';
 import { currentLayout, doorOpen } from '../systems/queries/learning.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
+import { mapDefinitions } from '../../data/maps/maps.js';
+import { componentDef, shiftMinute, ticketFor } from '../systems/queries/incident.js';
 
 // Off-screen markers at the screen edge pointing to the nearest unresolved node and the boss.
 
@@ -49,6 +51,19 @@ export function edgeTargets(s) {
     }
   }
   if (node) out.push({ x: node.x, y: node.y, label: node.label, color: '#ffd54f' });
+  // On the incident shift monitoring points at a failing component once its alert has come
+  // and nobody escalated it; before that the player has to notice it in the rooms.
+  const shift = mapDefinitions[s.map]?.shift;
+  if (shift && s.incident) {
+    const minute = shiftMinute(s);
+    for (const alert of s.incident.alerts) {
+      const f = s.incident.plan[alert.fault];
+      if (alert.monitoringAt > minute || f.endedAt != null || ticketFor(s.incident, alert.fault))
+        continue;
+      const spot = shift.rooms[f.component].panel;
+      out.push({ ...spot, label: 'АЛЕРТ: ' + componentDef(f.component).label, color: '#ff5252' });
+    }
+  }
   const marker = eventSpec(s)?.marker;
   if (marker)
     out.push({

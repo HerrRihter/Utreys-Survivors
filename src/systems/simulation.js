@@ -17,6 +17,9 @@ import { advanceAction } from '../core/action-timeline.js';
 import { protectedMove, blocksAttack, effectiveStats, pacified } from './queries/abilities.js';
 import { countCrowd } from './hero-passives.js';
 import { updateProjectiles } from './projectiles.js';
+import { updateShift } from './production-line.js';
+import { updateEscalation } from './escalation.js';
+import { shiftEnd, shiftMinute } from './queries/incident.js';
 
 const isLive = (item) => item.life > 0,
   isPresent = (item) => !item.dead,
@@ -147,6 +150,11 @@ export const Simulation = {
       p.walk += travel / 55;
       spawning.updateSpawning(dt);
       runEvents?.update(dt);
+      // The incident shift's production line and escalation (only on its map).
+      if (s.incident) {
+        updateShift(s.incident, shiftMinute(s));
+        updateEscalation(s.incident, shiftMinute(s));
+      }
       s.runtime.crowd = countCrowd(s);
       if (p.hurt) {
         p.hurt.elapsed += dt;
@@ -330,10 +338,12 @@ export const Simulation = {
         t.y -= dt * 35;
       }
       compact(s.texts, isLive);
+      const shift = s.incident ? shiftEnd(s.incident, shiftMinute(s)) : null;
       if (p.hp <= 0) {
         p.hp = 0;
         events.finish(false);
-      } else if (s.bossDead) events.finish(true);
+      } else if (shift) events.finish(shift === 'done');
+      else if (s.bossDead) events.finish(true);
       else if (s.xp >= s.need) events.levelUp();
     }
     return { update };

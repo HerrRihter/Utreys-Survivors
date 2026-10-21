@@ -33,9 +33,11 @@ export function unitRole(u) {
 }
 
 // `roll` in [0, 1) picks by weight (the run draws it from `s.rng`). `units` + `full`: a set
-// of roles whose share is used up; those are skipped.
-export function selectWaveUnit(schedule, time, roll, units = null, full = null) {
+// of roles whose share is used up; those are skipped. `boost` multiplies some units' weights
+// (the incident shift's ordered metrics); without it the weights are the stage's.
+export function selectWaveUnit(schedule, time, roll, units = null, full = null, boost = null) {
   let { weights } = scheduleStage(schedule.normal.stages, time);
+  if (boost) weights = weights.map(([id, weight]) => [id, weight * (boost[id] ?? 1)]);
   if (full?.size && units) {
     const open = weights.filter(([id]) => !full.has(unitRole(units[id])));
     if (open.length) weights = open;

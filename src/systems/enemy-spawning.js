@@ -10,6 +10,7 @@ import {
   unitRole,
 } from './wave-schedule.js';
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
+import { metricBoost, shiftEscalated, shiftMinute } from './queries/incident.js';
 import { production } from '../../data/difficulty.js';
 import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
 // A learning room's wave size and limit, scaled by the room (later mazes bring more) and
@@ -172,7 +173,14 @@ export const EnemySpawning = {
         };
         check();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++) {
-          const unit = selectWaveUnit(schedule, s.t, s.rng.random(), unitDefinitions, full),
+          const unit = selectWaveUnit(
+              schedule,
+              s.t,
+              s.rng.random(),
+              unitDefinitions,
+              full,
+              metricBoost(s.incident),
+            ),
             leader = track(spawn(unit)),
             pack = unitDefinitions[unit].pack || 1;
           if (leader) {
@@ -201,7 +209,13 @@ export const EnemySpawning = {
         }
       }
       const boss = schedule.boss;
-      if (boss && !room && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
+      // The incident shift's boss punishes an incident left to grow; elsewhere it comes once
+      // the objectives are done.
+      const bossDue =
+        boss?.condition === 'incident-escalated'
+          ? !!s.incident && shiftEscalated(s.incident, shiftMinute(s))
+          : allNodesResolved(s);
+      if (boss && !room && bossDue && !s.bossSpawned && spawn(boss.unit, true)) {
         s.bossSpawned = true;
         if (boss.heal) {
           const gain = Math.round(s.p.max * boss.heal * s.healFactor);

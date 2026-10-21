@@ -10,6 +10,8 @@ export function layoutNodes(mapId, seed) {
   const map = mapDefinitions[mapId] || mapDefinitions.empty;
   const rng = createRng(seed).random;
   if (map.objective?.type === 'learning') return layoutTerminals(mapId, map.rooms, seed, rng);
+  // The incident shift has no bug nodes: its objective is the escalation.
+  if (map.objective?.type === 'escalation') return [];
   const zones = shuffle(map.nodeZones, rng);
   if (map.objective?.type === 'desks') return layoutDesks(map.objective, zones, rng);
   const bugs = shuffle(

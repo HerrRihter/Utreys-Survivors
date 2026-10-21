@@ -332,7 +332,7 @@ test('v5 saves gain the terminal lock, the surge and the report card fields', as
       delete r.sources;
     }
     const migrated = migrateRunSnapshot(saved);
-    assert.equal(migrated.version, 6);
+    assert.equal(migrated.version, 7);
     assert.equal(migrated.state.learning.surgeUntil, 0);
     assert(migrated.state.nodes.every((n) => n.retryAt === 0));
     assert(validLearning(migrated.state.learning, 'learningCenter'));
@@ -608,7 +608,7 @@ test('v4 migration, old learning layouts and unknown courses are refused, no lea
     old.map = 'empty';
     delete old.state.learning;
     const migrated = migrateRunSnapshot(old);
-    assert.equal(migrated.version, 6);
+    assert.equal(migrated.version, 7);
     assert.equal(migrated.state.learning, null);
     for (const change of [(l) => (l.courseVersion = 999), (l) => (l.layout = 1)]) {
       startTest(game);

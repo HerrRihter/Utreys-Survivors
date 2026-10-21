@@ -14,12 +14,13 @@ import { mapDefinitions } from '../../data/maps/maps.js';
 // exactly as the running one would have: the same enemies with their timers, projectiles and
 // ground hazards, the open level-up's cards and the game random source at its position.
 // `version` guards the format.
-export const RUN_SNAPSHOT_KEY = 'utreys-run-v6';
-const VERSION = 6;
+export const RUN_SNAPSHOT_KEY = 'utreys-run-v7';
+const VERSION = 7;
 // Saves of older builds, newest first. Version 1 had no enemy ids (summons and node
 // guardians were linked by object); version 2 used older content ids; version 3 kept a reduced
 // run (see migrations).
 export const LEGACY_RUN_SNAPSHOT_KEYS = [
+  'utreys-run-v6',
   'utreys-run-v5',
   'utreys-run-v4',
   'utreys-run-v3',
@@ -70,6 +71,10 @@ export function snapshotRun(run) {
 
 // Each step converts a save of its version to the next one.
 const migrations = {
+  // Version 6 → 7: the incident escalation shift (`incident`), null on every map of version 6.
+  6(saved) {
+    return { ...saved, version: 7, state: { ...saved.state, incident: null } };
+  },
   // Version 5 → 6: learning terminals shut after a failed test (`retryAt`), the waves swell
   // (`surgeUntil`), and every answered question keeps its report card fields.
   5(saved) {

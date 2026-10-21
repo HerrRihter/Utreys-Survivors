@@ -45,9 +45,11 @@ const cosmetic = new Set([
   'speechCursor',
 ]);
 // Fields added after a fixture was taken, which its projection leaves out: `pre-learning`
-// before the learning map and the Penza run flag (false in these replays).
+// before the learning map, `pre-incident` before the incident escalation mode; both before
+// the Penza run flag (false in these replays).
 export const projections = {
-  'pre-learning': ['learning', 'penza'],
+  'pre-learning': ['learning', 'incident', 'penza'],
+  'pre-incident': ['incident', 'penza'],
 };
 export function stateHash(s, projection = null) {
   const without = projections[projection] ?? [];

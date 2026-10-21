@@ -230,6 +230,30 @@ export const bestiary = {
       'Система Ветис. Контур ветеринарной прослеживаемости сопоставляет производственные партии с сопроводительными записями. Устойчивый проверяющий узел медленно приближается к ядру и проводит круговую проверку с ударной волной вокруг себя.',
     tactics: `Круговая проверка на ${unitDefinitions.vetis.range} px замедляет на ${Math.round(unitDefinitions.vetis.slow.amount * 100)}% на ${unitDefinitions.vetis.slow.duration} с, а под замедлением трудно уйти от остальных. Полностью выходи из круга подготовки, затем возвращайся в паузе.`,
   },
+  grafana_filter: {
+    category: 'regulators',
+    badge: 'МОНИТОРИНГ · РОЙ',
+    badgeColor: unitDefinitions.grafana_filter.color,
+    role: 'Фильтр дашборда Grafana',
+    protocol: 'Метрики · Временные ряды',
+    frequency: `Высокая (каждые ${unitDefinitions.grafana_filter.cooldown} с)`,
+    aggregation: 'Графики компонентов и очереди Artemis',
+    description:
+      'Фильтр дашборда мониторинга. В режиме эскалации инцидента десяток таких фильтров, побеждённых быстро, открывает графики Grafana.',
+    tactics: `Быстрый слабый рой: ${unitDefinitions.grafana_filter.speed} px/s. Бьёт по кругу вплотную. Собирай в кучу и снимай площадными атаками, пока окно метрики не закрылось.`,
+  },
+  log_query: {
+    category: 'regulators',
+    badge: 'МОНИТОРИНГ · ТОЛСТЫЙ',
+    badgeColor: unitDefinitions.log_query.color,
+    role: 'Тяжёлый запрос в логи компонента',
+    protocol: 'Поиск по логам',
+    frequency: `Интервал атак — ${unitDefinitions.log_query.cooldown} с`,
+    aggregation: 'Ошибки и причины сбоев',
+    description:
+      'Медленный запрос по логам. В режиме эскалации инцидента несколько побеждённых запросов открывают логи сбоящего компонента: причину и обходное решение.',
+    tactics: `Медленный (${unitDefinitions.log_query.speed} px/s), но выносливый. Концентрируй урон на одном, чтобы уложиться в окно метрики.`,
+  },
   bug_aggregation: {
     category: 'regulators',
     badge: 'БАГ · МИНИБОСС · ПРИЗЫВ',
