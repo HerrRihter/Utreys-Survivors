@@ -3,20 +3,20 @@ import {
   availableTerminal,
   availableExit,
   courseOf,
+  roomName,
   roomNodes,
 } from '../../systems/queries/learning.js';
-import { mapDefinitions } from '../../../data/maps/maps.js';
 
 const percent = (share) => Math.round(share * 100) + '%';
 
-const nextRoomName = (s) => mapDefinitions[s.map].rooms[s.learning.roomIndex + 1]?.name ?? '';
+const nextRoomName = (s) => roomName(s, s.learning.roomIndex + 1);
 
 export function learningView({ run }) {
   const s = run.state,
     l = s?.learning;
   if (!l) return null;
   const a = l.active,
-    course = courseOf(s.map);
+    course = courseOf(s);
   const q = a && course.questions.find((q) => q.id === a.questions[a.index].id);
   const reveal = a?.phase === 'feedback';
   const r = learningRules,

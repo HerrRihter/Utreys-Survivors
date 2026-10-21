@@ -70,3 +70,19 @@ test('wave-contract', async () => {
   assert.throws(() => getWaveSchedule('missing'), /Unknown/);
   console.log('PASS: wave validation, boundary times, roster and independent run timers');
 });
+
+// The bestiary tells, map by map, when a unit comes; it must not name another map's objective.
+test('bestiary timings follow each map objective', async () => {
+  const { waveTiming } = await import('../src/ui/wave-preview.js');
+  const timing = (map, unit) =>
+    waveTiming(getWaveSchedule(map), unit, mapDefinitions[map].objective);
+  assert.match(timing('empty', 'crpt'), /багов узлов/);
+  assert.match(timing('pepsiDesk', 'crpt'), /сервисдеск/);
+  assert.match(timing('pepsiDesk', 'pepsi_desk'), /цель карты/);
+  assert.match(timing('pepsiDesk', 'bug_usage'), /не встречается/);
+  assert.match(timing('empty', 'bug_usage'), /охраняет узел/);
+  assert.match(timing('learningCenter', 'bug_usage'), /терминал/);
+  assert.match(timing('learningCenter', 'critical_incident'), /центральном зале/);
+  assert.match(timing('learningCenter', 'crpt'), /не встречается/);
+  assert.match(timing('empty', 'batch_accounting'), /не встречается/);
+});

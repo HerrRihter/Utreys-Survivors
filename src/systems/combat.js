@@ -19,6 +19,8 @@ export const CombatSystem = {
       if (e.hp <= 0 || n <= 0) return;
       const st = run.state;
       n *= mitigation(e, source) * auraFactor(st, e, unitDefinitions);
+      // A boss's ward holds while units it called live (enemy-behaviors.js).
+      if (e.warded) n *= 1 - unitDefinitions[e.unit].ward.reduction;
       // A mark of the hero's evolution (the QA scan).
       if (e.markedUntil > st.t) n *= heroEvolutions[run.selected]?.mark?.factor ?? 1;
       const passive = passiveDamage(st, e, n, tag, st.rng.random);

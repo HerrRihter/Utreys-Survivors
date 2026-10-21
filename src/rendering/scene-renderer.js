@@ -61,7 +61,7 @@ export const SceneRenderer = {
         bounds.minY = cy - 50;
         bounds.maxY = cy + view.H + 50;
         // The learning map's rooms share the arena: only the room in play is drawn.
-        drawNodes(ctx, roomNodes(s), s.enemies);
+        drawNodes(ctx, roomNodes(s), s.enemies, s.t);
         drawDoor(ctx, s);
         drawEvent(ctx, s);
         for (const h of s.hazards || []) {

@@ -4,9 +4,11 @@ import type { createLeaderboard } from '../services/leaderboard.js';
 import type { createPreviewKit } from './preview-kit.js';
 import type { mapDefinitions } from '../../data/maps/maps.js';
 import type { statMetrics } from '../../data/leaderboards.js';
+import type { learningResult } from './views/result.js';
 
 export type LearningOption = { id: string; text: string; selected: boolean; correct: boolean };
 export type LearningTerminal = { id: string; label: string };
+export type LearningReport = NonNullable<ReturnType<typeof learningResult>>;
 
 // Shapes the app layer hands to React; components import them from here, never the reverse.
 export type Session = ReturnType<typeof GameSession.create>;

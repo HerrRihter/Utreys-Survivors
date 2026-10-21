@@ -5,7 +5,9 @@ import {
   doorOpen,
   learningActionNear,
   mazeRooms,
+  roomName,
   roomNodes,
+  terminalLock,
 } from '../../systems/queries/learning.js';
 import {
   abilityRank,
@@ -47,6 +49,12 @@ function hudBuild(run, upgrades) {
 
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
+// The longest lock of a failed terminal in the room, with the swollen waves; '' when none.
+function lockLabel(s) {
+  const lock = Math.max(0, ...roomNodes(s).map((n) => terminalLock(s, n)));
+  return lock > 0 ? ` · терминал недоступен ${Math.ceil(lock)} с, наплыв врагов` : '';
+}
+
 function nodeProgress(s) {
   if (s.learning) {
     const l = s.learning,
@@ -54,11 +62,13 @@ function nodeProgress(s) {
       mazes = mazeRooms(s.map).length,
       terminals = roomNodes(s),
       tail = ` · ${l.points} очков · ${l.reviveUsed ? 'вторая жизнь использована' : 'вторая жизнь есть'}`;
-    if (!room.maze) return room.name + tail;
+    const name = roomName(s, l.roomIndex);
+    if (!room.maze) return name + tail;
     return (
-      `${room.name} ${l.roomIndex + 1}/${mazes}` +
+      `${name} ${l.roomIndex + 1}/${mazes}` +
       ` · терминалы ${terminals.filter((n) => n.status === 'completed').length}/${terminals.length}` +
       (doorOpen(s) ? ' · дверь открыта' : '') +
+      lockLabel(s) +
       tail
     );
   }

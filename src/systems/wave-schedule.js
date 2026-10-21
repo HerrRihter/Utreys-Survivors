@@ -1,5 +1,6 @@
 import { nodeDefinitions } from '../../data/enemies/nodes.js';
 import { waveSchedules } from '../../data/enemies/waves.js';
+import { learningCourses } from '../../data/learning-courses.js';
 
 export function getWaveSchedule(map) {
   if (!Object.hasOwn(waveSchedules, map)) throw new Error('Unknown wave schedule: ' + map);
@@ -57,6 +58,14 @@ export function createWaveState(schedule) {
   };
 }
 
+// The schedule's main boss: its unit, or every course's boss on the learning map.
+export const bossUnits = (schedule) =>
+  !schedule.boss
+    ? []
+    : schedule.boss.course
+      ? Object.values(learningCourses).map((course) => course.boss.unit)
+      : [schedule.boss.unit];
+
 // The preview uses the same schedules as gameplay.
 export function waveRoster(schedule) {
   const arrivals = new Map();
@@ -65,6 +74,6 @@ export function waveRoster(schedule) {
     for (const [unit] of stage.weights) add(unit, stage.time);
   for (const spec of schedule.recurring) add(spec.unit, spec.first);
   for (const node of nodeDefinitions) add(node.bug, 0);
-  if (schedule.boss) add(schedule.boss.unit, Infinity);
+  for (const unit of bossUnits(schedule)) add(unit, Infinity);
   return [...arrivals].sort((a, b) => a[1] - b[1]).map(([unit, time]) => ({ unit, time }));
 }

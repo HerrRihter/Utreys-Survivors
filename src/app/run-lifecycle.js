@@ -1,4 +1,5 @@
 import { validLearning } from '../systems/learning.js';
+import { courseOf } from '../systems/queries/learning.js';
 import { fromGraphJson } from '../core/graph-json.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
@@ -17,6 +18,7 @@ import { codes } from './views/format.js';
 // update bundles and resuming a saved run. Level-up screens belong to `levels` (level-up.js).
 export function createRunLifecycle({
   run,
+  settings,
   progression,
   upgrades,
   world,
@@ -56,12 +58,16 @@ export function createRunLifecycle({
       heroDef: heroDefinitions[run.selected],
       levels,
       load,
+      // A new run takes the Penza mode from the settings; a resumed one keeps its own
+      // (restoreRun puts the saved flag back; saves from before the mode have none).
+      penza: !restoring && settings.penza,
       seed,
       runId: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       map: run.selectedMap,
       schedule,
       arenaSize: world.arena.size,
       baClient: run.baClient,
+      course: run.selectedCourse,
       doneBefore: achievements.list.filter((a) => achievements.achievementDone(a)).map((a) => a.id),
     });
     world.follow(run.state);
@@ -74,7 +80,8 @@ export function createRunLifecycle({
     run.tip = { text: '', left: 0 };
     setMode('play');
     const map = mapDefinitions[run.selectedMap];
-    toast(map.name.toUpperCase() + ' · ' + map.description);
+    // A learning run names its course; other maps describe themselves.
+    toast(map.name.toUpperCase() + ' · ' + (courseOf(run.state)?.title ?? map.description));
     audio.effect('ui');
     changed();
   }
@@ -242,6 +249,7 @@ export function createRunLifecycle({
     if (mapDefinitions[snapshot.map]) run.selectedMap = snapshot.map;
     world.select(run.selectedMap);
     if (snapshot.baClient) run.baClient = snapshot.baClient;
+    if (saved.learning) run.selectedCourse = saved.learning.course;
     run.selectedLoad = snapshot.state.load || 1;
     run.nextSeed = snapshot.state.seed ?? null;
     start(true);

@@ -10,7 +10,7 @@ import { permanentUpgradeDefinitions, heroTrainingDefinitions } from '../../data
 import { heroPassives } from '../../data/characters/hero-passives.js';
 import { workaroundSeconds } from '../../data/enemies/nodes.js';
 import { speechSettings } from '../../data/enemies/phrases.js';
-import { loadModifiers } from '../../data/difficulty.js';
+import { loadModifiers, penzaRun } from '../../data/difficulty.js';
 import { createGameRng } from '../core/rng.js';
 
 /**
@@ -68,7 +68,7 @@ import { createGameRng } from '../core/rng.js';
  * @typedef {{
  *   learning: ReturnType<typeof createLearningState>,
  *   t: number, step: number, runId: string, map: string, seed: number, rng: GameRng,
- *   load: number,
+ *   load: number, penza: boolean,
  *   healFactor: number,
  *   eventPlan: PlannedEvent[], eventIndex: number, event: RunEvent | null, eventsDone: number,
  *   spawn: number, waveNext: Record<string, number>, bossSpawned: boolean, eliteNext: number,
@@ -126,6 +126,7 @@ export const runFields = {
   seed: 'save',
   rng: 'reduce',
   load: 'save',
+  penza: 'save',
   healFactor: 'save',
   eventPlan: 'rebuild',
   eventIndex: 'save',
@@ -198,9 +199,9 @@ export const reducedKeys = fieldsOf('reduce');
 /**
  * A new run with every field in place.
  * @param {{ hero: string, heroDef: { hp: number, speed: number, weapon: string, keyClient?: boolean },
- *   levels: Record<string, number>, load: number, seed: number, runId: string, map: string,
+ *   levels: Record<string, number>, load: number, penza?: boolean, seed: number, runId: string, map: string,
  *   schedule: Parameters<typeof createWaveState>[0] & Parameters<typeof planEvents>[0],
- *   arenaSize: number, baClient?: string, doneBefore?: string[] }} options
+ *   arenaSize: number, baClient?: string, course?: string, doneBefore?: string[] }} options
  * @returns {RunModel}
  */
 export function createRunModel({
@@ -208,20 +209,24 @@ export function createRunModel({
   heroDef,
   levels,
   load,
+  penza = false,
   seed,
   runId,
   map,
   schedule,
   arenaSize,
   baClient,
+  course,
   doneBefore = [],
 }) {
   const mods = loadModifiers(load);
+  // The Penza run (data/difficulty.js): the hero starts 30% faster and stronger.
+  const boost = penza ? penzaRun.hero : { damage: 0, haste: 0, speed: 0, heal: 0 };
   // The learning map's hero starts at its first room's entry; other maps in the middle.
   const entry = roomLayout(map, seed, 0)?.entry;
   /** @type {RunModel} */
   const s = {
-    learning: createLearningState(map),
+    learning: createLearningState(map, course),
     t: 0,
     step: 0,
     // Identifies the run in the statistics, so a second ending never adds a game.
@@ -232,7 +237,8 @@ export function createRunModel({
     // Every random decision of the simulation draws from here.
     rng: createGameRng(seed),
     load,
-    healFactor: Math.max(0, 1 + mods.heal),
+    penza,
+    healFactor: Math.max(0, 1 + mods.heal) * (1 + boost.heal),
     eventPlan: planEvents(schedule, seed),
     eventIndex: 0,
     event: null,
@@ -263,10 +269,10 @@ export function createRunModel({
       chainImpactAt: null,
     },
     stats: {
-      damage: 1,
-      haste: 1,
+      damage: 1 + boost.damage,
+      haste: 1 + boost.haste,
       range: 1,
-      speed: 1,
+      speed: 1 + boost.speed,
       magnet: 75,
       armor: 0,
       regen: 0,

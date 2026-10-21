@@ -4,7 +4,7 @@
 // on that map; `unlockHint` says so in the map picker.
 // `objective` is what clears the way to the CRPT (default: the five component nodes):
 //   { type: 'desks', unit, count }  — `count` structures of `unit` that must be destroyed.
-import { learningRooms, incidentRooms } from '../learning-rules.js';
+import { learningRooms } from '../learning-rules.js';
 
 export const nodeSpacing = 450;
 
@@ -88,28 +88,18 @@ export const mapDefinitions = {
       [1600, 1650, 300, 250],
     ],
   },
-  learningLab: {
-    name: 'Учебный полигон',
+  // One map for every course: the course is chosen with the map (data/learning-courses.js)
+  // and brings its questions, room names and boss.
+  learningCenter: {
+    name: 'Учебный центр',
     description:
-      'Три случайных лабиринта с терминалами, затем центральный зал и «Партионный учёт».',
+      'Три случайных лабиринта с терминалами-тестами, затем центральный зал с боссом курса.',
     notes:
-      'Каждый забег — новые лабиринты. В каждом три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт пакет обновлений, ошибка — проверку. После трёх терминалов открывается дверь дальше. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
-    victoryTag: 'ПАРТИОННЫЙ УЧЁТ ОСВОЕН',
+      'Выбери курс. Каждый забег — новые лабиринты. В каждом три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт награду, провал на время закрывает терминал и зовёт врагов. После трёх терминалов открывается дверь дальше. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
     ranked: false,
     // Rooms are generated per run (data/learning-rules.js, src/world/maze.js); no fixed racks.
-    objective: { type: 'learning', label: 'Терминал', course: 'batch-accounting' },
+    objective: { type: 'learning', label: 'Терминал' },
     rooms: learningRooms,
-  },
-  incidentLab: {
-    name: 'Полигон инцидентов',
-    description:
-      'Три случайных лабиринта по управлению критическими инцидентами, затем «Критический инцидент».',
-    notes:
-      'Тот же полигон, другой курс: критичность и роли, Трекер и эскалация, коммуникации и разбор. В каждом лабиринте три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт пакет обновлений, ошибка — проверку. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
-    victoryTag: 'ИНЦИДЕНТ ЗАКРЫТ',
-    ranked: false,
-    objective: { type: 'learning', label: 'Терминал', course: 'critical-incidents' },
-    rooms: incidentRooms,
   },
 };
 

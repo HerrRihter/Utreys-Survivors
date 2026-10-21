@@ -193,9 +193,10 @@ const datacenter = {
   },
 };
 
-// The learning maps: steady waves in the mazes (the rooms scale them, data/learning-rules.js),
-// no events, and the course's boss in the central hall.
-function learningSchedule(unit, message) {
+// The learning map: steady waves in the mazes (the rooms scale them, data/learning-rules.js),
+// twice the crowd of a calm stage, no events, and the course's boss in the central hall: its
+// unit and message come from the run's course (`course: true`).
+function learningSchedule() {
   return {
     ...datacenter,
     normal: {
@@ -203,8 +204,8 @@ function learningSchedule(unit, message) {
       firstDelay: 2,
       stages: datacenter.normal.stages.map((stage) => ({
         ...stage,
-        batch: 2,
-        cap: 14,
+        batch: 4,
+        cap: 28,
         interval: 4,
         minInterval: 3,
         timeFactor: 0,
@@ -216,7 +217,7 @@ function learningSchedule(unit, message) {
     elites: datacenter.elites,
     events: { times: [], types: [] },
     notifications: [],
-    boss: { unit, condition: 'learning-rooms-complete', message, sound: 'boss' },
+    boss: { course: true, condition: 'learning-rooms-complete', sound: 'boss' },
   };
 }
 
@@ -265,12 +266,5 @@ export const waveSchedules = {
       { time: 90, message: 'Бэклог растёт: сервисдески выпускают всё больше тикетов!' },
     ],
   },
-  learningLab: learningSchedule(
-    'batch_accounting',
-    'ПАРТИОННЫЙ УЧЁТ: склеенные партии Пепси наступают!',
-  ),
-  incidentLab: learningSchedule(
-    'critical_incident',
-    'КРИТИЧЕСКИЙ ИНЦИДЕНТ: сбой задел всех клиентов разом!',
-  ),
+  learningCenter: learningSchedule(),
 };

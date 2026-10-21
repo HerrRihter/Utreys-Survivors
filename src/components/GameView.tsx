@@ -23,9 +23,16 @@ interface GameViewProps {
   active: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
+  // The catalog pages live outside the session: they learn the Penza mode from here.
+  onPenzaChange: (penza: boolean) => void;
 }
 
-export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: GameViewProps) {
+export function GameView({
+  active,
+  onNavigateToArena,
+  onNavigateToOpponents,
+  onPenzaChange,
+}: GameViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const account = useAccount();
   const { session, cloud, runStats, leaderboard } = useGameSession(canvasRef, active, account);
@@ -51,6 +58,7 @@ export function GameView({ active, onNavigateToArena, onNavigateToOpponents }: G
               active={active}
               onNavigateToArena={onNavigateToArena}
               onNavigateToOpponents={onNavigateToOpponents}
+              onPenzaChange={onPenzaChange}
             />
           </CloudContext.Provider>
         </SessionContext.Provider>
@@ -83,6 +91,7 @@ function GameScreens({
   active,
   onNavigateToArena,
   onNavigateToOpponents,
+  onPenzaChange,
 }: {
   session: Session;
   account: Account;
@@ -90,6 +99,7 @@ function GameScreens({
   active: boolean;
   onNavigateToArena: () => void;
   onNavigateToOpponents: () => void;
+  onPenzaChange: (penza: boolean) => void;
 }) {
   useUiVersion(session);
   const run = session.views.run();
@@ -99,7 +109,10 @@ function GameScreens({
   useEffect(() => {
     document.body.dataset.mode = mode;
     document.body.classList.toggle('hide-hints', !settings.hints);
-  }, [mode, settings.hints]);
+    // The Penza mini-mode paints the interface red (styles/game.css, body.penza).
+    document.body.classList.toggle('penza', settings.penza);
+  }, [mode, settings.hints, settings.penza]);
+  useEffect(() => onPenzaChange(settings.penza), [onPenzaChange, settings.penza]);
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--ui-scale', String(settings.uiScale));

@@ -108,7 +108,7 @@ const screens = [
     name: 'learning-hud',
     hud: true,
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       s.state.spawn = 9999;
       const terminal = s.state.nodes.find((n) => n.room === 0);
@@ -120,7 +120,7 @@ const screens = [
   {
     name: 'learning-intro',
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       const terminal = s.state.nodes.find((n) => n.room === 0);
       terminal.status = 'available';
@@ -131,7 +131,7 @@ const screens = [
   {
     name: 'learning-question',
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       const terminal = s.state.nodes.find((n) => n.room === 0);
       terminal.status = 'available';
@@ -143,7 +143,7 @@ const screens = [
   {
     name: 'learning-revive',
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       s.state.p.hp = 0;
       s.update(0.016);

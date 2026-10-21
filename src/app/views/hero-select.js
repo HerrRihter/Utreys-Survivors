@@ -5,6 +5,7 @@ import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { heroPassives } from '../../../data/characters/hero-passives.js';
 import { loadLevels, rewardPerLevel } from '../../../data/difficulty.js';
 import { mapDefinitions } from '../../../data/maps/maps.js';
+import { learningCourses } from '../../../data/learning-courses.js';
 import { mapOpen } from '../selection.js';
 import { clock, loadLabel, slotKey } from './format.js';
 
@@ -41,6 +42,11 @@ export function heroSelectView({ run, progression }) {
       locked: !mapOpen(progression, id),
     })),
     map: run.selectedMap,
+    // The learning map teaches the course chosen beside it.
+    showCourses: mapDefinitions[run.selectedMap].objective?.type === 'learning',
+    courses: Object.values(learningCourses).map((c) => ({ id: c.id, name: c.title })),
+    course: run.selectedCourse,
+    courseDescription: learningCourses[run.selectedCourse]?.description ?? '',
     seed: run.seedInput,
     mapDescription: mapDefinitions[run.selectedMap].description,
     // A single arena is shown for context but cannot be switched.

@@ -7,13 +7,15 @@ import { MapSelect } from './MapSelect';
 // ?dev adds the collision outlines toggle.
 const devTools = devToolsEnabled(window.location.search);
 
-export const ArenaView: React.FC = () => {
+export const ArenaView: React.FC<{ penza: boolean }> = ({ penza }) => {
   const [selectedArena, setSelectedArena] = useState<MapId>('empty');
   const [isClose, setIsClose] = useState<boolean>(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showBounds, setShowBounds] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [kit] = useState(createPreviewKit);
+  const penzaRef = useRef(penza);
+  penzaRef.current = penza;
+  const [kit] = useState(() => createPreviewKit({ penza: () => penzaRef.current }));
 
   useEffect(() => {
     const g = canvasRef.current?.getContext('2d');
@@ -23,7 +25,7 @@ export const ArenaView: React.FC = () => {
         labels: showLabels,
         bounds: showBounds,
       });
-  }, [kit, selectedArena, isClose, showLabels, showBounds]);
+  }, [kit, selectedArena, isClose, showLabels, showBounds, penza]);
 
   const arena = kit.map(selectedArena);
 
@@ -32,7 +34,7 @@ export const ArenaView: React.FC = () => {
       <main className="catalog-main">
         <header className="catalog-header">
           <div>
-            <div className="eyebrow">СЕРВЕРНАЯ ИНФРАСТРУКТУРА</div>
+            <div className="eyebrow">КАРТА</div>
             <h1>{arena.name}</h1>
             <p>{arena.description}</p>
           </div>
@@ -46,7 +48,7 @@ export const ArenaView: React.FC = () => {
             className={!isClose ? 'small is-current' : 'small'}
             onClick={() => setIsClose(false)}
           >
-            Весь кластер
+            Вся карта
           </button>
 
           <button
@@ -54,7 +56,7 @@ export const ArenaView: React.FC = () => {
             className={isClose ? 'small is-current' : 'small'}
             onClick={() => setIsClose(true)}
           >
-            Центральное ядро
+            Центр карты
           </button>
 
           <label className="catalog-check">
@@ -63,7 +65,7 @@ export const ArenaView: React.FC = () => {
               checked={showLabels}
               onChange={(e) => setShowLabels(e.target.checked)}
             />
-            Узлы сети
+            Цели карты
           </label>
 
           {devTools && (
@@ -84,7 +86,7 @@ export const ArenaView: React.FC = () => {
           ref={canvasRef}
           width={1320}
           height={1000}
-          aria-label={`План дата-центра: ${arena.name}`}
+          aria-label={`План карты: ${arena.name}`}
           className="arena-plan"
         />
       </main>

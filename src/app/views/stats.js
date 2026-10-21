@@ -8,10 +8,12 @@ import { duration } from './format.js';
 // and how a value and the record's holder are written.
 export { statMetrics };
 
-export const mapColumns = Object.entries(mapDefinitions).map(([id, map]) => ({
-  id,
-  name: map.name,
-}));
+// Ranked maps only: learning runs are not counted, so their columns would stay empty.
+export const mapColumns = Object.entries(mapDefinitions)
+  .filter(([, map]) => map.ranked !== false)
+  .map(([id, map]) => ({ id, name: map.name }));
+// The leaderboard shows records only; totals stay in «Моя статистика».
+export const leaderboardMetrics = statMetrics.filter((m) => m.kind === 'record');
 
 /**
  * A metric value as shown in tables; '—' when nothing is recorded yet.

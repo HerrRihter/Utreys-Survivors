@@ -139,6 +139,45 @@ $env:GOOGLE_APPLICATION_CREDENTIALS='C:\keys\utreys-admin.json'; npm run admin:r
 Передайте игроку новый пароль; сменить его на свой он сможет в игре. Прогресс и место в
 таблице сохраняются, потому что аккаунт тот же.
 
+## Защита и квоты
+
+Ключ из `firebaseConfig` виден любому, кто откроет сайт или APK. Базу защищают правила
+(`firestore.rules`), а эти шаги сужают то, что можно сделать с ключом.
+
+**Ограничить API-ключ.** [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials)
+→ ключ _Browser key (auto created by Firebase)_ → **API restrictions → Restrict key**, оставить:
+
+- Identity Toolkit API
+- Token Service API
+- Cloud Firestore API
+
+**Application restrictions** оставьте _None_: APK обращается к Firebase из WebView с адреса
+`https://localhost`, и ограничение по сайту (HTTP referrers) его бы отрезало. Если оно уже
+включено для сайта, добавьте в список `https://localhost/*`.
+
+**Квоты.** Оставайтесь на тарифе **Spark**: при исчерпании дневной квоты Firestore просто
+перестаёт отвечать до полуночи по тихоокеанскому времени, денег не списывают. Игра при этом
+работает, облако догонит на следующий день. На **Blaze** обязательно **Billing → Budgets &
+alerts** с порогом в несколько долларов. Нагрузку видно в **Firestore → Usage**; всплеск
+чтений без роста игроков — повод посмотреть, кто читает таблицы.
+
+Регистрацию массовых аккаунтов Firebase Auth сам ограничивает по IP. Таблицы читаются без
+входа — так задумано; одна таблица стоит до 51 чтения из 50 тыс. в день.
+
+**Бан.** Нарушителя (накрученные рекорды, мусор в базе) банит скрипт с тем же ключом сервисного
+аккаунта, что и сброс пароля:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS='C:\keys\utreys-admin.json'; npm run admin:ban -- <логин> "причина"
+```
+
+Аккаунт отключается в Authentication, появляется `banned/{uid}` (правила запрещают ему любые
+записи), строки в таблицах удаляются. Прогресс игрока остаётся. Снять бан:
+`npm run admin:ban -- <логин> --unban` (таблицы заполнятся заново со следующих забегов).
+Список банов — **Firestore → Data → banned**.
+
+После изменения `firestore.rules` выкатите их: `npx firebase deploy --only firestore:rules`.
+
 ## 9. По желанию
 
 - **Предупреждение о расходах.** Даже на Spark полезно видеть нагрузку: **Firestore →

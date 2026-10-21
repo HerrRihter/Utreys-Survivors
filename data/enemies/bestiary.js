@@ -25,7 +25,7 @@ export const bestiary = {
     frequency: `Призыв каждые ${unitDefinitions.batch_accounting.summon.every} с`,
     description:
       'Множество склеенных значков Пепси. Ждёт в центральном зале учебного полигона, за тремя лабиринтами.',
-    tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
+    tactics: `Умеет всё, что баги узлов, сразу: круговой удар с замедлением, кольцо выстрелов, бомбы вокруг себя, метки под героем и лужи отчётов. Призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Резерв партии: пока жив хоть один призванный Пепси, босс получает на ${Math.round(unitDefinitions.batch_accounting.ward.reduction * 100)}% меньше урона — сначала зачищай свиту.`,
   },
   critical_incident: {
     category: 'clients',
@@ -37,7 +37,7 @@ export const bestiary = {
     frequency: `Призыв каждые ${unitDefinitions.critical_incident.summon.every} с`,
     description:
       'Склеенные логотипы клиентов, задетых одним сбоем. Ждёт в центральном зале полигона инцидентов, за тремя лабиринтами.',
-    tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.critical_incident.summon.count} клиента — Пепси, Марс или Балтику, до ${unitDefinitions.critical_incident.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
+    tactics: `Умеет всё, что баги узлов, сразу: круговой удар с замедлением, кольцо выстрелов, бомбы вокруг себя, метки под героем и лужи отчётов. Призывает по ${unitDefinitions.critical_incident.summon.count} клиента — Пепси, Марс или Балтику, до ${unitDefinitions.critical_incident.summon.max} живых. Эскалация: каждые ${unitDefinitions.critical_incident.escalate.every} с уровень растёт до ${unitDefinitions.critical_incident.escalate.max} — удары чаще, кольцо гуще, клиентов больше. Затягивать бой нельзя.`,
   },
   l3: {
     category: 'regulators',

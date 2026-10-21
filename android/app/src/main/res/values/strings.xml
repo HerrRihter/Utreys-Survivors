@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Utrace Survivors</string>
+    <string name="title_activity_main">Utrace Survivors</string>
+    <string name="package_name">com.utreys.survivors</string>
+    <string name="custom_url_scheme">com.utreys.survivors</string>
+</resources>

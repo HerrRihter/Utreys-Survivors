@@ -19,6 +19,7 @@ export function createSessionCommands({ flow, audio, runLogFile, activateAbility
     closeHeroSelect: flow.closeHeroSelect,
     chooseHero: flow.chooseHero,
     chooseBaClient: flow.chooseBaClient,
+    chooseCourse: flow.chooseCourse,
     chooseMap: flow.chooseMap,
     chooseLoad: flow.chooseLoad,
     chooseSeed: flow.chooseSeed,
@@ -51,6 +52,7 @@ export function createSessionCommands({ flow, audio, runLogFile, activateAbility
     claimAchievement: flow.claimAchievement,
     toggleSetting: flow.toggleSetting,
     toggleSound: audio.toggle,
+    togglePenza: flow.togglePenza,
     setVolume: audio.setVolume,
     attachPortrait: portraits.attach,
   };

@@ -95,6 +95,7 @@ export const GameSession = {
       performance,
       random: cosmetic,
       getMode: () => run.mode,
+      penza: () => settings.penza,
       onChange: ui.emit,
     });
     function toast(text) {
@@ -171,10 +172,10 @@ export const GameSession = {
     });
     const { sprite } = SpriteRenderer.create({ run });
     // The session's own enemy renderer: its sprite caches follow this canvas's pixel ratio.
-    const enemies = createEnemyRenderer({ createCanvas });
+    const enemies = createEnemyRenderer({ createCanvas, penza: () => settings.penza });
     const renderer = SceneRenderer.create({
       ctx,
-      floor: createArenaFloor({ createCanvas }),
+      floor: createArenaFloor({ createCanvas, penza: () => settings.penza }),
       view,
       run,
       world,

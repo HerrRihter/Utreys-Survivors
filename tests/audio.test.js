@@ -191,3 +191,75 @@ test('audio', async () => {
   }
   await main();
 });
+
+test('penza playlist', async () => {
+  const handlers = {},
+    created = [];
+  class Audio {
+    constructor(src) {
+      this.src = src;
+      this.paused = true;
+      this.ended = false;
+      this.currentTime = 0;
+      this.listeners = {};
+      created.push(this);
+    }
+    addEventListener(name, fn) {
+      this.listeners[name] = fn;
+    }
+    removeEventListener() {}
+    play() {
+      this.paused = false;
+      return Promise.resolve();
+    }
+    pause() {
+      this.paused = true;
+    }
+  }
+  const c = {
+    window: { Audio },
+    document: {
+      hidden: false,
+      addEventListener(name, fn) {
+        handlers[name] = fn;
+      },
+      removeEventListener() {},
+    },
+    storage: { getItem: () => null, setItem() {} },
+    performance: { now: () => 0 },
+    random: () => 0,
+    mode: 'play',
+    penza: true,
+    getMode: () => c.mode,
+  };
+  const { AudioSystem } = await import('../src/core/audio.js');
+  const audio = AudioSystem.create({ ...c, penza: () => c.penza });
+  handlers.pointerdown();
+  const playing = () => created.filter((item) => !item.paused).map((item) => item.src);
+  const first = created.find((item) => item.src.endsWith('penza-strela.mp3'));
+  assert(first && !first.paused, 'The playlist starts with «Стрела»');
+  assert(!first.loop, 'Playlist tracks do not loop on their own');
+  first.ended = true;
+  first.paused = true;
+  first.listeners.ended();
+  assert(
+    playing().some((src) => src.endsWith('penza-chelovechek.mp3')),
+    'Then «Человечек»',
+  );
+  c.mode = 'menu';
+  audio.sync();
+  c.mode = 'play';
+  first.ended = false;
+  audio.sync();
+  assert(
+    playing().some((src) => src.endsWith('penza-strela.mp3')),
+    'A new battle starts over',
+  );
+  c.penza = false;
+  audio.restartBattle();
+  assert(
+    playing().some((src) => src.endsWith('/battle.mp3')),
+    'Off: the usual battle music',
+  );
+  assert.equal(playing().length, 1);
+});

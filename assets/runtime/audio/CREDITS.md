@@ -56,3 +56,9 @@ Downloaded 2026-10-11; converted to MP3 without editing.
 The active effects now use `punch.mp3`, `hit-1.mp3`, `hit-2.mp3` and
 `hurt.mp3`, supplied in the workspace by the user. Source/license metadata
 was not supplied for these replacements.
+
+`music/penza-strela.mp3` («Стрела») and `music/penza-chelovechek.mp3` («Заточка —
+Человечек»): the hidden Penza mode's battle playlist, supplied by the user on 2026-10-21.
+Re-encoded from the supplied 320 kbps files to 128 kbps stereo MP3 with 1 dB of headroom
+(keeps the APK small and stops clipping after encoding). Source/license metadata was not
+supplied.

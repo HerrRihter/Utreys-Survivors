@@ -112,7 +112,7 @@ migrate, legacyKeys })` из src/core/storage.js: ошибки хранилищ�
   значение под старым ключом переводится один раз. Больше нигде в src и data нет `getItem`, `setItem`,
   `removeItem` (единственное исключение — адаптер `window.localStorage` в src/app/useGameSession.ts);
   проверяет tests/storage.test.js. Ключи: `utreys-progression-v1`, `utreys-settings`, `utreys-tips`,
-  `utreys-audio`, `utreys-run-v5`, `utreys-run-log-v1`, `utreys-stats-queue-v1`, `utreys-cloud-v1`.
+  `utreys-audio`, `utreys-run-v6`, `utreys-run-log-v1`, `utreys-stats-queue-v1`, `utreys-cloud-v1`.
   Переводы старых форматов (helmets → codes, gaul-audio, utreys-best) собраны в src/core/migrations.js
   с датой, после которой их можно удалить; цепочка снапшота забега v1…v5 — в src/systems/run-snapshot.js.
 - Прогрессия аккаунта (src/systems/progression/) — общее хранилище `store.js` (данные, запись,

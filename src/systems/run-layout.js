@@ -48,6 +48,8 @@ function layoutTerminals(mapId, rooms, seed, rng) {
           x: t.x,
           y: t.y,
           guard: t.guard,
+          // A failed test shuts the terminal until this run time.
+          retryAt: 0,
           bug: bugs[Math.floor(rng() * bugs.length)],
         }))
       : [],

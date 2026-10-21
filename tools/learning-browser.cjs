@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const { chromium } = require('playwright');
 const { startPreview } = require('./preview-server.cjs');
 const { learningCourse } = require('../data/learning-questions.js');
+const { incidentCourse } = require('../data/learning-incidents.js');
 const { learningRooms } = require('../data/learning-rules.js');
 const { roomLayout } = require('../src/systems/queries/learning.js');
 
@@ -21,12 +22,23 @@ const mazes = learningRooms.filter((room) => room.maze).length;
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(server.url + '?bench');
     await page.locator('#start').waitFor();
+    // The course is picked beside the learning map in the hero select.
+    await page.locator('#start').click();
+    await page.locator('#runMap').selectOption('learningCenter');
+    const course = page.locator('#runCourse');
+    await course.selectOption(incidentCourse.id);
+    assert.equal(await page.locator('#courseDescription').innerText(), incidentCourse.description);
+    await course.selectOption(learningCourse.id);
+    await page.locator('#runHeroStart').click();
+    await page.waitForFunction(() => window.__utraceSession.mode === 'play');
     await page.evaluate(() => {
       const s = window.__utraceSession;
-      s.selectMap('learningLab');
-      s.start();
       s.state.p.hp = s.state.p.max = 10000;
     });
+    assert.equal(
+      await page.evaluate(() => window.__utraceSession.state.learning.course),
+      learningCourse.id,
+    );
     const answerTest = async () => {
       await page.getByRole('button', { name: 'Начать тест', exact: true }).click();
       for (let i = 0; i < 3; i++) {
@@ -113,7 +125,7 @@ const mazes = learningRooms.filter((room) => room.maze).length;
         (point) => {
           Object.assign(window.__utraceSession.state.p, point);
         },
-        roomLayout('learningLab', seed, room).exit,
+        roomLayout('learningCenter', seed, room).exit,
       );
       await page.getByRole('button', { name: /^В .* →$/ }).click();
       assert.equal(
@@ -149,10 +161,15 @@ const mazes = learningRooms.filter((room) => room.maze).length;
       s.damage(b, 999999, 0, 0, s.state.p, 'hero');
     });
     await page.waitForFunction(() => window.__utraceSession.mode === 'end');
+    // The victory's report card: the grade and every question asked.
+    const report = page.locator('#learningReport');
+    await report.waitFor();
+    assert.match(await report.innerText(), /Оценка: .+ · \d+%/);
+    assert((await report.locator('.learning-report-q').count()) > 0, 'questions in the report');
     await page.screenshot({ path: 'test-results/learning-result.png' });
     assert.equal(errors.length, 0, errors.join('\n'));
     console.log(
-      'PASS learning browser: guarded terminals in 3 mazes, mobile questions, reload, doors, hall boss, revival, victory',
+      'PASS learning browser: guarded terminals in 3 mazes, mobile questions, reload, doors, hall boss, revival, victory, report card',
     );
   } finally {
     await browser.close();

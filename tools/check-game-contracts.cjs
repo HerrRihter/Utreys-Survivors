@@ -214,7 +214,15 @@ function validateSchedules(
         }
       }
     }
-    if (schedule.boss !== null) {
+    // The learning map's boss comes from the run's course (validated with the course).
+    if (schedule.boss?.course) {
+      shape(schedule.boss, ['course', 'condition', 'sound'], id + '.boss');
+      fail(
+        schedule.boss.condition === 'learning-rooms-complete' &&
+          maps[id].objective?.type === 'learning',
+        'course boss condition',
+      );
+    } else if (schedule.boss !== null) {
       shape(
         schedule.boss,
         [

@@ -8,7 +8,7 @@ test('all previous hero/map outcomes retain their pre-learning fields and RNG', 
     fs.readFileSync(new URL('./fixtures/pre-learning-replay.json', import.meta.url), 'utf8'),
   );
   for (const scenario of goldenScenarios) {
-    const after = await replayContinuous({ ...scenario, legacyProjection: true });
+    const after = await replayContinuous({ ...scenario, projection: 'pre-learning' });
     assert.equal(
       after.hashes[scenario.steps],
       before[scenarioLabel(scenario)],

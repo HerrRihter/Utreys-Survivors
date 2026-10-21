@@ -1,4 +1,4 @@
-import { currentRoom, currentLayout } from './queries/learning.js';
+import { currentRoom, currentLayout, courseOf } from './queries/learning.js';
 import { learningRules } from '../../data/learning-rules.js';
 import { clamp } from '../core/math.js';
 import { updateNodes, allNodesResolved } from './node-objectives.js';
@@ -12,15 +12,17 @@ import {
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
 import { production } from '../../data/difficulty.js';
 import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
-// A learning room's wave size and limit, scaled by the room (later mazes bring more).
-const roomWave = (wave, room) =>
-  room?.waves
-    ? {
-        ...wave,
-        batch: Math.ceil(wave.batch * room.waves.batch),
-        cap: Math.round(wave.cap * room.waves.cap),
-      }
-    : wave;
+// A learning room's wave size and limit, scaled by the room (later mazes bring more) and
+// swollen for a while after a failed test.
+function roomWave(wave, room, s) {
+  if (!room?.waves) return wave;
+  const surge = s.t < s.learning.surgeUntil ? learningRules.surge : { batch: 1, cap: 1 };
+  return {
+    ...wave,
+    batch: Math.ceil(wave.batch * room.waves.batch * surge.batch),
+    cap: Math.round(wave.cap * room.waves.cap * surge.cap),
+  };
+}
 
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
@@ -115,9 +117,11 @@ export const EnemySpawning = {
         toast('Проверка: ошибка в ответе привела инспекторов');
       }
       if (room?.boss) {
-        if (allNodesResolved(s) && !s.bossSpawned && spawn(schedule.boss.unit, true, room.boss)) {
+        // The hall's boss is the course's.
+        const boss = courseOf(s).boss;
+        if (allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true, room.boss)) {
           s.bossSpawned = true;
-          toast(schedule.boss.message);
+          toast(boss.message);
           audio.effect(schedule.boss.sound);
         }
         return;
@@ -153,7 +157,7 @@ export const EnemySpawning = {
       }
       s.spawn -= dt;
       if (s.spawn <= 0) {
-        const wave = scaleWave(roomWave(normalWave(schedule, s.t), room), runModifiers(s));
+        const wave = scaleWave(roomWave(normalWave(schedule, s.t), room, s), runModifiers(s));
         s.spawn = wave.interval;
         count();
         // Shooters and tanks outlive the light crowd: their share of the wave limit is capped

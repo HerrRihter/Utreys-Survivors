@@ -5,6 +5,7 @@ import { createProgression } from '../systems/progression/index.js';
 import { createCloudProgress } from '../services/cloud-progress.js';
 import { createRunStats } from '../services/run-stats.js';
 import { createLeaderboard } from '../services/leaderboard.js';
+import { bindBackButton } from '../services/native-app.js';
 import type { Session, Account } from './types';
 
 export type CloudProgress = ReturnType<typeof createCloudProgress>;
@@ -55,10 +56,19 @@ export function useGameSession(
     const stats = createRunStats({ account, progression, storage });
     // A written run changes the tables: drop cached answers.
     const offStats = stats.subscribe(leaderboard.invalidate);
+    // Back online (a phone leaving a tunnel): send what waited instead of the minute's retry.
+    const onOnline = () => {
+      synced.sync();
+      stats.send();
+    };
+    window.addEventListener('online', onOnline);
+    const offBack = bindBackButton(window);
     setSession(created);
     setCloud(synced);
     setRunStats(stats);
     return () => {
+      offBack();
+      window.removeEventListener('online', onOnline);
       offStats();
       stats.dispose();
       synced.dispose();

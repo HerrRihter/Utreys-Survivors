@@ -5,13 +5,15 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
+    "android:apk": "node tools/android-build.cjs",
+    "android:open": "npx cap open android",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src data tools tests vitest.config.js && npm run typecheck",
     "format": "prettier --write src data styles tools tests vite.config.ts vitest.config.js",
     "format:check": "prettier --check src data styles tools tests vite.config.ts vitest.config.js",
     "test": "vitest run",
-    "test:browser": "node tools/smoke-browser.cjs && node tools/learning-browser.cjs",
+    "test:browser": "node tools/smoke-browser.cjs && node tools/learning-browser.cjs && node tools/touch-browser.cjs",
     "test:layout": "node tools/layout-check.cjs",
     "check:structure": "node tools/check-structure.cjs",
     "check:contracts": "node tools/check-game-contracts.cjs",
@@ -20,14 +22,19 @@
     "benchmark:render": "node tools/benchmark-render.cjs",
     "stats": "node tools/run-stats.cjs",
     "admin:reset-password": "node tools/reset-password.cjs",
+    "admin:ban": "node tools/ban-player.cjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-utreys \"node tests/rules/firestore-rules.cjs\""
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
     "firebase": "^12.19.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@eslint/js": "^10.0.1",
     "@firebase/rules-unit-testing": "^5.0.2",
     "@types/node": "^26.6.5",

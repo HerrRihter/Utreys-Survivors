@@ -33,6 +33,7 @@ export const GameFlow = {
     const levels = createLevelUp({ run, upgrades, audio, input, ui, setMode, changed });
     const lifecycle = createRunLifecycle({
       run,
+      settings,
       progression,
       upgrades,
       world,

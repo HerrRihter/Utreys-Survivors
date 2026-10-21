@@ -1,13 +1,20 @@
-import { learningRules } from '../../data/learning-rules.js';
+import { learningRules, learningGrading } from '../../data/learning-rules.js';
 import { mapDefinitions } from '../../data/maps/maps.js';
+import { learningCourses } from '../../data/learning-courses.js';
+import { unitDefinitions } from '../../data/enemies/units.js';
 import { shuffle } from '../core/rng.js';
 import { availableTerminal, availableExit, courseOf, roomLayout } from './queries/learning.js';
 
 // The map's layout generation: 2 = generated mazes. A saved run of another layout cannot go on.
 export const LEARNING_LAYOUT = 2;
 
-export function createLearningState(map) {
-  const course = courseOf(map);
+// The learning state of a run on `map` with the course `courseId` (the first course when that
+// one is unknown); null on other maps.
+export function createLearningState(map, courseId) {
+  const course =
+    mapDefinitions[map]?.objective?.type === 'learning'
+      ? (learningCourses[courseId] ?? Object.values(learningCourses)[0])
+      : null;
   return course
     ? {
         course: course.id,
@@ -16,6 +23,8 @@ export function createLearningState(map) {
         roomIndex: 0,
         // Packs of enemies owed for wrong answers; spawning sends them once the quiz closes.
         audits: 0,
+        // Until this run time the waves swell after a failed test (learningRules.surge).
+        surgeUntil: 0,
         nextAttempt: 1,
         active: null,
         reviveUsed: false,
@@ -33,6 +42,9 @@ export function validateLearningCourse(course) {
       throw new Error('Invalid learning question: ' + q.id);
     ids.add(q.id);
     if (!['single', 'multiple', 'open'].includes(q.type)) throw new Error('Unknown question type');
+    // Explanations speak for themselves, without «according to the material» lead-ins.
+    if (/^(По предоставленному|Согласно|По регламенту[^:]*:)/.test(q.explanation ?? ''))
+      throw new Error('Explanation with a source lead-in: ' + q.id);
     if (q.type === 'open') continue;
     const options = new Set(q.options.map((o) => o.id));
     if (
@@ -44,6 +56,16 @@ export function validateLearningCourse(course) {
     )
       throw new Error('Invalid answers: ' + q.id);
   }
+  // The course's wrapper on the learning map: a name per maze, the hall's boss, texts.
+  if (
+    !course.description ||
+    !course.victoryTag ||
+    !Array.isArray(course.rooms) ||
+    course.rooms.length !== course.topics.length ||
+    !unitDefinitions[course.boss?.unit]?.boss ||
+    !course.boss.message
+  )
+    throw new Error('Invalid course wrapper: ' + course.id);
   for (let topic = 0; topic < course.topics.length; topic++)
     if (
       course.questions.filter((q) => q.topic === topic && q.type !== 'open').length <
@@ -61,7 +83,7 @@ export function beginLearning(s, reason, nodeId = null) {
     if (l.reviveUsed || s.p.hp > 0) return false;
     l.reviveUsed = true;
   } else if (!node || s.p.hp <= 0) return false;
-  const pool = courseOf(s.map).questions.filter(
+  const pool = courseOf(s).questions.filter(
     (q) => q.type !== 'open' && (!node || q.topic === node.topic),
   );
   // Prefer unseen questions, then mistakes; shuffle only once when creating the attempt.
@@ -95,7 +117,7 @@ export function selectLearning(s, id, option) {
   const a = s.learning?.active;
   if (!a || a.id !== id || a.phase !== 'question' || !a.questions[a.index].options.includes(option))
     return false;
-  const q = courseOf(s.map).questions.find((q) => q.id === a.questions[a.index].id);
+  const q = courseOf(s).questions.find((q) => q.id === a.questions[a.index].id);
   a.selected =
     q.type === 'single'
       ? [option]
@@ -109,22 +131,32 @@ export function submitLearning(s, id) {
   const l = s.learning,
     a = l?.active;
   if (!a || a.id !== id || a.phase !== 'question' || !a.selected.length) return false;
-  const q = courseOf(s.map).questions.find((q) => q.id === a.questions[a.index].id);
+  const q = courseOf(s).questions.find((q) => q.id === a.questions[a.index].id);
   const correct =
     a.selected.length === q.correct.length && q.correct.every((v) => a.selected.includes(v));
+  // `firstCorrectAt`: the attempt that first got it right; `wrong`: options ever picked
+  // wrongly; `sources`: whether terminals or the revival asked it.
   const record = l.answers[q.id] ?? {
     attempts: 0,
     correct: 0,
     firstCorrect: correct,
+    firstCorrectAt: null,
+    wrong: [],
+    sources: [],
     topic: q.topic,
   };
   record.attempts++;
   a.answered++;
+  const source = a.reason === 'revive' ? 'revive' : 'terminal';
+  if (!record.sources.includes(source)) record.sources.push(source);
   if (correct) {
     if (!record.correct) l.points += learningRules.points;
     record.correct++;
+    record.firstCorrectAt ??= record.attempts;
     a.correct++;
-  }
+  } else
+    for (const option of a.selected)
+      if (!q.correct.includes(option) && !record.wrong.includes(option)) record.wrong.push(option);
   l.answers[q.id] = record;
   a.lastCorrect = correct;
   a.phase = 'feedback';
@@ -165,14 +197,23 @@ export function closeLearning(s, id) {
     l.active = null;
     return complete && a.passed ? 'play' : 'defeat';
   }
-  // A passed terminal drops its reward once; every wrong answer, passed or not, calls an audit.
+  // A passed terminal drops its reward once, more for more right answers; a failed one (or one
+  // left after an answer) shuts for a while and swells the waves. Every wrong answer, passed
+  // or not, calls an audit.
   const node = s.nodes.find((n) => n.id === a.nodeId);
   if (complete && a.passed) {
     node.status = 'completed';
     if (!l.rewards.includes(node.id)) {
-      s.pickups.push({ x: node.x, y: node.y + 60, type: learningRules.terminalReward });
+      const pickups =
+        learningRules.terminalRewards.find((r) => a.correct >= r.correct)?.pickups ?? [];
+      pickups.forEach((type, i) =>
+        s.pickups.push({ x: node.x + (i - (pickups.length - 1) / 2) * 50, y: node.y + 60, type }),
+      );
       l.rewards.push(node.id);
     }
+  } else if (a.answered > 0) {
+    node.retryAt = s.t + learningRules.failLock;
+    l.surgeUntil = s.t + learningRules.surge.seconds;
   }
   l.audits += Math.min(learningRules.auditMax, a.answered - a.correct);
   l.active = null;
@@ -224,38 +265,73 @@ export function moveLearningRoom(s) {
   return true;
 }
 
+// A question's share of the grade: by the attempt that first got it right, 0 if none did.
+export function questionScore(record) {
+  const scores = learningGrading.attemptScore;
+  return record.firstCorrectAt ? scores[Math.min(record.firstCorrectAt, scores.length) - 1] : 0;
+}
+
+// The run's report card: totals, the grade, every topic and every question asked, in order.
 export function learningSummary(s) {
   const l = s.learning;
   if (!l) return null;
-  const entries = Object.values(l.answers);
+  const course = courseOf(s);
+  const asked = Object.entries(l.answers);
+  const entries = asked.map(([, q]) => q);
+  const share = (list) =>
+    list.length ? list.reduce((n, q) => n + questionScore(q), 0) / list.length : 0;
+  const score = share(entries);
   return {
     version: l.courseVersion,
+    course: course.title,
     points: l.points,
     answered: entries.length,
     firstCorrect: entries.filter((q) => q.firstCorrect).length,
     retries: entries.reduce((n, q) => n + Math.max(0, q.attempts - 1), 0),
     reviveUsed: l.reviveUsed,
-    topics: courseOf(s.map).topics.map((t, i) => ({
-      name: t.name,
-      mistakes: entries
-        .filter((q) => q.topic === i)
-        .reduce((n, q) => n + q.attempts - q.correct, 0),
-    })),
+    score,
+    grade: entries.length
+      ? learningGrading.grades.find((g) => score >= g.min).name
+      : learningGrading.grades.at(-1).name,
+    topics: course.topics.map((t, i) => {
+      const list = entries.filter((q) => q.topic === i);
+      return {
+        name: t.name,
+        asked: list.length,
+        score: share(list),
+        mistakes: list.reduce((n, q) => n + q.attempts - q.correct, 0),
+      };
+    }),
+    // Ids and numbers only (the run log keeps them); texts come from the course.
+    questions: asked
+      .map(([id, record]) => ({
+        id,
+        topic: record.topic,
+        attempts: record.attempts,
+        firstCorrectAt: record.firstCorrectAt,
+        score: questionScore(record),
+        revive: record.sources.includes('revive'),
+        wrong: [...record.wrong],
+      }))
+      .sort((a, b) => a.topic - b.topic),
   };
 }
 
 // Whether a saved learning state can go on with this build on `map`: same course and version,
 // the maze layout generation, and an open quiz that still matches the course's questions.
 export function validLearning(l, map) {
-  const course = courseOf(map);
+  const course = learningCourses[l?.course];
   if (
     !l ||
     !course ||
-    // Saves from before the second course have no `course`: it was this map's one.
-    (l.course ?? course.id) !== course.id ||
+    mapDefinitions[map]?.objective?.type !== 'learning' ||
     l.courseVersion !== course.version ||
     l.layout !== LEARNING_LAYOUT ||
     !Number.isInteger(l.audits) ||
+    !Number.isFinite(l.surgeUntil) ||
+    !Object.values(l.answers ?? {}).every(
+      (q) => Array.isArray(q.wrong) && Array.isArray(q.sources),
+    ) ||
     !Number.isInteger(l.roomIndex) ||
     l.roomIndex < 0 ||
     l.roomIndex >= mapDefinitions[map].rooms.length ||

@@ -3,7 +3,7 @@ import { test } from 'vitest';
 import { createHarness } from './helpers/game-harness.js';
 import { learningCourse } from '../data/learning-questions.js';
 import { incidentCourse } from '../data/learning-incidents.js';
-import { learningRules, learningRooms } from '../data/learning-rules.js';
+import { learningRules, learningRooms, learningGrading } from '../data/learning-rules.js';
 import { unitDefinitions } from '../data/enemies/units.js';
 import { validateLearningCourse, validLearning } from '../src/systems/learning.js';
 import {
@@ -22,7 +22,7 @@ import { createEnemyRenderer } from '../src/rendering/enemies.js';
 
 const mazes = learningRooms.filter((room) => room.maze).length;
 
-async function open(seed = 789, map = 'learningLab') {
+async function open(seed = 789, course = learningCourse.id) {
   const h = await createHarness({ createSession: false });
   const store = new Map();
   h.env.localStorage = {
@@ -31,7 +31,8 @@ async function open(seed = 789, map = 'learningLab') {
     removeItem: (k) => store.delete(k),
   };
   const game = h.createSession();
-  game.selectMap(map);
+  game.selectMap('learningCenter');
+  game.commands.chooseCourse(course);
   game.views.run().nextSeed = seed;
   game.start();
   // The tests drive the quizzes; the waves must not end the run meanwhile.
@@ -57,7 +58,7 @@ function startTest(game, k = 0) {
 function answer(game, correct = true) {
   const a = game.state.learning.active;
   if (a.phase === 'intro') game.commands.advanceLearning(a.id);
-  const q = courseOf(game.state.map).questions.find((q) => q.id === a.questions[a.index].id);
+  const q = courseOf(game.state).questions.find((q) => q.id === a.questions[a.index].id);
   for (const id of correct ? q.correct : [q.options.find((o) => !q.correct.includes(o.id)).id])
     game.commands.selectLearningAnswer(a.id, id);
   assert(game.commands.submitLearningAnswer(a.id));
@@ -65,11 +66,13 @@ function answer(game, correct = true) {
   assert.equal(game.commands.submitLearningAnswer(a.id), false);
   assert.equal(game.state.learning.points, points);
 }
+// `correct`: every answer right or wrong, or a list, one entry per question.
 function finishTest(game, correct = true) {
+  let n = 0;
   while (game.state.learning.active.phase !== 'result') {
     const a = game.state.learning.active;
     if (a.phase === 'feedback') game.commands.advanceLearning(a.id);
-    else answer(game, correct);
+    else answer(game, Array.isArray(correct) ? correct[n++] : correct);
   }
   const id = game.state.learning.active.id;
   game.commands.closeLearning(id);
@@ -97,6 +100,9 @@ test('learning content preserves all supplied questions and rejects invalid bank
   const broken = structuredClone(learningCourse);
   broken.questions[0].correct = ['missing'];
   assert.throws(() => validateLearningCourse(broken));
+  const sourced = structuredClone(learningCourse);
+  sourced.questions[0].explanation = 'По предоставленному учебному материалу: ответ.';
+  assert.throws(() => validateLearningCourse(sourced), /lead-in/);
 });
 
 test('the incident course keeps the scored test: keys, comments, open questions', () => {
@@ -120,7 +126,7 @@ test('the incident course keeps the scored test: keys, comments, open questions'
 });
 
 test('the incident map plays the same scheme with its own course and boss', async () => {
-  const { game } = await open(321, 'incidentLab');
+  const { game } = await open(321, incidentCourse.id);
   try {
     assert.equal(game.state.learning.course, 'critical-incidents');
     for (let i = 0; i < mazes; i++) {
@@ -143,15 +149,44 @@ test('the incident map plays the same scheme with its own course and boss', asyn
   }
 });
 
+test('one learning map: the course is picked beside it and old maps saves are dropped', async () => {
+  const { game, store, h } = await open(789, incidentCourse.id);
+  try {
+    assert.equal(game.state.map, 'learningCenter');
+    assert.equal(game.state.learning.course, incidentCourse.id);
+    assert.equal(game.commands.chooseCourse('missing'), undefined);
+    assert.equal(game.views.run().selectedCourse, incidentCourse.id, 'unknown course ignored');
+    const picker = game.views.heroSelect();
+    assert.equal(picker.showCourses, true);
+    assert.deepEqual(
+      picker.courses.map((c) => c.id),
+      [learningCourse.id, incidentCourse.id],
+    );
+    // The maze names come from the course.
+    assert.match(game.views.hud().progress, new RegExp(incidentCourse.rooms[0]));
+    game.pause();
+    const saved = JSON.parse(store.get(RUN_SNAPSHOT_KEY));
+    saved.map = 'incidentLab';
+    store.set(RUN_SNAPSHOT_KEY, JSON.stringify(saved));
+    const other = h.createSession();
+    assert.equal(other.resume(), false, 'a save of a removed map does not go on');
+    other.selectMap('empty');
+    assert.equal(other.views.heroSelect().showCourses, false);
+    other.dispose();
+  } finally {
+    game.dispose();
+  }
+});
+
 test('every run and every room gets its own connected maze', () => {
   const arenas = createArenas();
   const walls = new Set();
   for (let seed = 1; seed <= 12; seed++)
     for (let room = 0; room < mazes; room++) {
-      const layout = roomLayout('learningLab', seed, room);
-      assert.deepEqual(layout, roomLayout('learningLab', seed, room), 'same seed, same maze');
+      const layout = roomLayout('learningCenter', seed, room);
+      assert.deepEqual(layout, roomLayout('learningCenter', seed, room), 'same seed, same maze');
       walls.add(JSON.stringify(layout.walls));
-      const arena = arenas.forRoom('learningLab', `${seed}:${room}`, layout.walls);
+      const arena = arenas.forRoom('learningCenter', `${seed}:${room}`, layout.walls);
       // Every terminal, the door and the guards can be reached from the entry by a hero.
       for (const target of [
         ...layout.terminals,
@@ -194,13 +229,16 @@ test('a guard holds its terminal until beaten or worked around', async () => {
   }
 });
 
-test('a passed test pays an update bundle once; wrong answers call audits', async () => {
+test('a failed test shuts the terminal and swells the waves; rewards follow the score', async () => {
   const { game } = await open();
   try {
+    const count = (type) => game.state.pickups.filter((p) => p.type === type).length;
     const node = startTest(game);
     finishTest(game, false);
     assert.equal(node.status, 'available', 'a failed terminal waits for another try');
     assert.equal(game.state.learning.audits, learningRules.auditMax, 'audits are capped');
+    assert.equal(node.retryAt, game.state.t + learningRules.failLock);
+    assert.equal(game.state.learning.surgeUntil, game.state.t + learningRules.surge.seconds);
     const before = game.state.enemies.length;
     game.update(1 / 60);
     game.update(1 / 60);
@@ -209,16 +247,97 @@ test('a passed test pays an update bundle once; wrong answers call audits', asyn
       game.state.enemies.length - before >= learningRules.auditPack,
       'audit packs arrived: ' + (game.state.enemies.length - before),
     );
-    assert.equal(game.state.pickups.filter((p) => p.type === 'bundle').length, 0);
+    assert.equal(count('bundle') + count('food'), 0);
+    Object.assign(game.state.p, { x: node.x, y: node.y });
+    assert.equal(game.commands.startLearningTest(node.id), false, 'shut for a while');
+    assert.match(game.views.hud().progress, /недоступен/);
+    while (game.state.t < node.retryAt) {
+      if (game.mode === 'level') game.pickUpgrade(0);
+      game.update(1 / 60);
+    }
+    // All right: the update bundle and a capsule.
     startTest(game);
     finishTest(game);
     assert.equal(node.status, 'completed');
     assert.equal(game.state.learning.audits, 0);
-    assert.equal(
-      game.state.pickups.filter((p) => p.type === learningRules.terminalReward).length,
-      1,
-    );
+    assert.equal(count('bundle'), 1);
+    assert.equal(count('food'), 1);
     assert.equal(game.commands.startLearningTest(node.id), false, 'a passed terminal is done');
+    // Two of three: a capsule only.
+    const second = startTest(game, 1);
+    finishTest(game, [true, true, false]);
+    assert.equal(second.status, 'completed');
+    assert.equal(count('bundle'), 1);
+    assert.equal(count('food'), 2);
+    // Leaving a test before any answer costs nothing.
+    const third = startTest(game, 2);
+    game.commands.closeLearning(game.state.learning.active.id);
+    assert.equal(third.retryAt, 0);
+  } finally {
+    game.dispose();
+  }
+});
+
+test('the report card grades every question by the attempt that got it right', async () => {
+  const { game } = await open();
+  try {
+    startTest(game);
+    finishTest(game, [false, false, false]);
+    game.state.nodes.find((n) => n.room === 0).retryAt = 0;
+    startTest(game);
+    finishTest(game);
+    const s = game.state;
+    const records = Object.values(s.learning.answers);
+    for (const r of records) {
+      assert(r.sources.includes('terminal'));
+      if (r.firstCorrectAt !== 1) assert(r.wrong.length > 0, 'its wrong pick is kept');
+    }
+    game.state.p.hp = -1;
+    game.update(1 / 60);
+    game.commands.closeLearning(game.state.learning.active.id);
+    const report = game.views.run().result.learning;
+    assert.equal(report.preliminary, true, 'a defeat grades preliminarily');
+    const questions = report.topics.flatMap((t) => t.questions);
+    assert.equal(questions.length, records.length);
+    const expected =
+      records.reduce(
+        (n, r) =>
+          n +
+          (r.firstCorrectAt ? learningGrading.attemptScore[Math.min(r.firstCorrectAt, 3) - 1] : 0),
+        0,
+      ) / records.length;
+    assert.equal(report.percent, Math.round(expected * 100) + '%');
+    assert.equal(report.grade, learningGrading.grades.find((g) => expected >= g.min).name);
+    for (const q of questions) {
+      assert(q.text && q.verdict);
+      if (!q.firstTry) assert(q.correct.length && q.explanation, 'a missed one shows its key');
+    }
+  } finally {
+    game.dispose();
+  }
+});
+
+test('v5 saves gain the terminal lock, the surge and the report card fields', async () => {
+  const { game } = await open();
+  try {
+    startTest(game);
+    finishTest(game, [true, false, true]);
+    const saved = JSON.parse(JSON.stringify(snapshotRun(game.views.run())));
+    saved.version = 5;
+    delete saved.state.learning.surgeUntil;
+    for (const n of saved.state.nodes) delete n.retryAt;
+    for (const r of Object.values(saved.state.learning.answers)) {
+      delete r.firstCorrectAt;
+      delete r.wrong;
+      delete r.sources;
+    }
+    const migrated = migrateRunSnapshot(saved);
+    assert.equal(migrated.version, 6);
+    assert.equal(migrated.state.learning.surgeUntil, 0);
+    assert(migrated.state.nodes.every((n) => n.retryAt === 0));
+    assert(validLearning(migrated.state.learning, 'learningCenter'));
+    for (const r of Object.values(migrated.state.learning.answers))
+      assert.equal(r.firstCorrectAt, r.firstCorrect ? 1 : r.correct ? 2 : null);
   } finally {
     game.dispose();
   }
@@ -254,6 +373,9 @@ test('the door opens after every terminal, then three mazes lead to the hall bos
     assert.equal(game.mode, 'end');
     assert.equal(game.views.run().result.win, true);
     assert.equal(game.views.run().result.canContinue, false);
+    assert.equal(game.views.run().result.title, 'Курс пройден: Партионный учёт');
+    assert.equal(game.views.run().result.learning.preliminary, false);
+    assert.equal(game.views.run().result.learning.grade, 'Отлично');
     assert.equal(game.continueProduction(), false);
     assert.equal(h.env.Progression.data.runStats.all.games, 0, 'not ranked');
   } finally {
@@ -359,7 +481,7 @@ test('a saved run resumes in its maze and every quiz phase exactly', async () =>
       game.update(1 / 60);
     }
     const arenas = createArenas(),
-      maze = arenas.forRoom('learningLab', 'check', currentLayout(game.state).walls);
+      maze = arenas.forRoom('learningCenter', 'check', currentLayout(game.state).walls);
     startTest(game);
     for (const phase of ['intro', 'question', 'feedback', 'result']) {
       if (phase === 'question') game.commands.advanceLearning(game.state.learning.active.id);
@@ -422,6 +544,62 @@ test('the hall boss attacks and summons ordinary Pepsi within its cap', async ()
   }
 });
 
+test('the learning bosses: bigger, five times the health, every bug attack and a trick each', async () => {
+  for (const [map, unit] of [
+    [learningCourse.id, 'batch_accounting'],
+    [incidentCourse.id, 'critical_incident'],
+  ]) {
+    const { game } = await open(789, map);
+    try {
+      for (let i = 0; i < mazes; i++) {
+        clearMaze(game);
+        nextRoom(game);
+      }
+      game.update(1 / 60);
+      const boss = game.state.enemies.find((e) => e.boss),
+        spec = unitDefinitions[unit];
+      assert.equal(boss.unit, unit);
+      assert.equal(spec.hp, 9000);
+      assert(boss.r > 52 && spec.artScale > 1);
+      for (const kit of ['summon', 'pools', 'slow', 'barrage', 'phases'])
+        assert(spec[kit], unit + ' has ' + kit);
+      Object.assign(game.state.p, { x: boss.x + 120, y: boss.y });
+      let bombs = 0,
+        shots = 0;
+      for (let i = 0; i < 60 * 31; i++) {
+        if (game.mode === 'level') game.pickUpgrade(0);
+        game.update(1 / 60);
+        shots = Math.max(shots, game.state.enemyShots.length);
+        bombs += game.state.hazards.filter(
+          (h) => h.kind === 'blast' && Math.hypot(h.x - boss.x, h.y - boss.y) > boss.r,
+        ).length;
+      }
+      assert(shots >= spec.barrage.shots.count, 'a ring of shots: ' + shots);
+      assert(bombs > 0, 'bombs land around the boss');
+      if (spec.ward) {
+        boss.hp = boss.max;
+        for (const e of game.state.enemies) if (e.summonerId === boss.id) e.hp = 0;
+        game.update(1 / 60);
+        boss.summonCd = 0;
+        game.update(1 / 60);
+        const add = game.state.enemies.find((e) => e.summonerId === boss.id && e.hp > 0);
+        assert(add && boss.warded, 'its Pepsi ward it');
+        game.damage(boss, 1000, 0, 0, game.state.p, 'test');
+        const warded = boss.max - boss.hp;
+        for (const e of game.state.enemies) if (e.summonerId === boss.id) e.hp = 0;
+        game.update(1 / 60);
+        assert.equal(boss.warded, false);
+        boss.hp = boss.max;
+        game.damage(boss, 1000, 0, 0, game.state.p, 'test');
+        assert(warded < (boss.max - boss.hp) * 0.5, 'the ward cuts the damage');
+      }
+      if (spec.escalate) assert.equal(boss.escalation, 1, 'one level after 30 s');
+    } finally {
+      game.dispose();
+    }
+  }
+});
+
 test('v4 migration, old learning layouts and unknown courses are refused, no leaderboard', async () => {
   const { game, store, h } = await open();
   try {
@@ -430,7 +608,7 @@ test('v4 migration, old learning layouts and unknown courses are refused, no lea
     old.map = 'empty';
     delete old.state.learning;
     const migrated = migrateRunSnapshot(old);
-    assert.equal(migrated.version, 5);
+    assert.equal(migrated.version, 6);
     assert.equal(migrated.state.learning, null);
     for (const change of [(l) => (l.courseVersion = 999), (l) => (l.layout = 1)]) {
       startTest(game);
@@ -443,7 +621,7 @@ test('v4 migration, old learning layouts and unknown courses are refused, no lea
       other.dispose();
       game.commands.closeLearning(game.state.learning.active.id);
     }
-    assert.equal(normalizeRunEntry({ runId: 'abc', map: 'learningLab', time: 60 }), null);
+    assert.equal(normalizeRunEntry({ runId: 'abc', map: 'learningCenter', time: 60 }), null);
     assert.equal(validLearning({}), false);
   } finally {
     game.dispose();

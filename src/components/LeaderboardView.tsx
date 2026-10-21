@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import { AuthDialog } from './Account';
 import { Dialog } from './Dialog';
-import { statMetrics, formatStat, mapColumns, recordLabel } from '../app/views/stats.js';
-import { statPath } from '../app/cloud.js';
+import {
+  statMetrics,
+  leaderboardMetrics,
+  formatStat,
+  mapColumns,
+  recordLabel,
+} from '../app/views/stats.js';
+import { statPath, leaderboardSize } from '../app/cloud.js';
 import type { Metric } from '../app/types';
 import { useCloud, useStore } from './cloud-context';
 
@@ -12,10 +18,6 @@ const placeText = (place: number | null) =>
   place === null ? '' : Number.isFinite(place) ? `${place}-е место` : 'дальше 1000-го места';
 
 const scopes = [{ id: 'all', name: 'Все карты' }, ...mapColumns];
-const kinds = [
-  { id: 'record', name: 'Рекорды забега' },
-  { id: 'total', name: 'Итоги' },
-];
 
 // Reads one table; `rows` is null while loading, `error` when the server is unreachable.
 function useTable(field: string, scope: string) {
@@ -70,17 +72,13 @@ function useOwnPlace(field: string, scope: string) {
 }
 
 export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
-  const [kind, setKind] = useState('record');
   const [field, setField] = useState('bestTime');
   const [scope, setScope] = useState('all');
-  const metric = statMetrics.find((m) => m.field === field) as Metric;
+  const metric = leaderboardMetrics.find((m) => m.field === field) as Metric;
   const table = useTable(field, scope);
   const { uid, own } = useOwnPlace(field, scope);
   const inTop = table.rows?.some((row) => row.uid === uid);
-  const chooseKind = (next: string) => {
-    setKind(next);
-    setField(statMetrics.find((m) => m.kind === next)!.field);
-  };
+  const scopeName = scopes.find((s) => s.id === scope)?.name ?? '';
   return (
     <Dialog titleId="leaders-title" onClose={onClose}>
       <div
@@ -89,46 +87,36 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
         data-path={statPath(scope, field)}
       >
         <h2 id="leaders-title">Лидеры</h2>
-        <div className="account-tabs" role="tablist" aria-label="Раздел">
-          {kinds.map((k) => (
+        {/* What is compared: one row of records; where: a list of maps. */}
+        <div className="leaders-choices" role="group" aria-label="Рекорд">
+          {leaderboardMetrics.map((m) => (
             <button
-              key={k.id}
-              role="tab"
-              aria-selected={kind === k.id}
+              key={m.field}
+              aria-pressed={field === m.field}
               className="small"
-              onClick={() => chooseKind(k.id)}
+              data-field={m.field}
+              onClick={() => setField(m.field)}
             >
-              {k.name.toUpperCase()}
+              {'short' in m ? m.short : m.title}
             </button>
           ))}
         </div>
-        <div className="leaders-choices" aria-label="Показатель">
-          {statMetrics
-            .filter((m) => m.kind === kind)
-            .map((m) => (
-              <button
-                key={m.field}
-                aria-pressed={field === m.field}
-                className="small"
-                data-field={m.field}
-                onClick={() => setField(m.field)}
-              >
-                {m.title}
-              </button>
+        <label className="leaders-scope">
+          <span>Карта</span>
+          <select id="leadersScope" value={scope} onChange={(e) => setScope(e.target.value)}>
+            {scopes.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
-        </div>
-        <div className="leaders-choices" aria-label="Карта">
-          {scopes.map((s) => (
-            <button
-              key={s.id}
-              aria-pressed={scope === s.id}
-              className="small"
-              data-scope={s.id}
-              onClick={() => setScope(s.id)}
-            >
-              {s.name}
-            </button>
-          ))}
+          </select>
+        </label>
+        <div className="leaders-caption" id="leadersCaption">
+          <strong>
+            {metric.title} · {scopeName}
+          </strong>
+          <span>топ-{leaderboardSize}</span>
+          {'hint' in metric && metric.hint && <small>{metric.hint}</small>}
         </div>
         <ol className="leaders-list" id="leadersList" aria-busy={!table.rows && !table.error}>
           {table.error && <li className="leaders-note">Нет связи с сервером</li>}

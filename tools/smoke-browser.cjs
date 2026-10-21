@@ -74,7 +74,7 @@ const assets = require('./active-assets.json');
         await probe.keyboard.down('d');
         assert.equal(await held(), false, 'the bestiary keeps keys from the game');
         await probe.keyboard.up('d');
-        await probe.getByRole('button', { name: 'Дата-центр Utrace', exact: true }).click();
+        await probe.getByRole('button', { name: 'Карта', exact: true }).click();
         await probe.keyboard.down('d');
         assert.equal(await held(), false, 'the arena page keeps keys from the game');
         await probe.keyboard.up('d');
@@ -199,7 +199,7 @@ const assets = require('./active-assets.json');
             .click();
           await page.screenshot({ path: 'test-results/dialog-mobile.png' });
           await page.keyboard.press('Escape');
-          await page.getByRole('button', { name: 'Дата-центр Utrace', exact: true }).click();
+          await page.getByRole('button', { name: 'Карта', exact: true }).click();
           await page.screenshot({ path: 'test-results/arena-mobile.png' });
         }
         await page.goto(url);

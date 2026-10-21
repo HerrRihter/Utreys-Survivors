@@ -2,5 +2,5 @@
 export const primary = {
   background: 'var(--cyan)',
   color: '#041724',
-  boxShadow: '4px 4px 0 #008ba3',
+  boxShadow: '4px 4px 0 var(--accent-deep)',
 };

@@ -4,6 +4,7 @@ import { GoalList } from './menus/GoalList';
 import { primary } from './primary';
 import { RunRecords } from './LeaderboardView';
 import { useSession } from './session';
+import type { LearningReport } from '../app/types';
 
 type BuildItem = {
   id: string;
@@ -211,6 +212,46 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
   );
 }
 
+// The learning run's report card: the grade, then every topic and the questions it asked.
+function LearningReportCard({ report }: { report: LearningReport }) {
+  return (
+    <div className="learning-summary" id="learningReport">
+      <div className="learning-grade">
+        <strong>
+          Оценка: {report.grade} · {report.percent}
+        </strong>
+        {report.preliminary && <span> (промежуточная: зал не пройден)</span>}
+      </div>
+      <p>
+        Знания: {report.points} очков · с первого раза {report.firstCorrect}/{report.answered} ·
+        повторных ответов {report.retries} ·{' '}
+        {report.reviveUsed ? 'вторая жизнь использована' : 'без второй жизни'}
+      </p>
+      <div className="learning-report-list">
+        {report.topics.map((t) => (
+          <section key={t.name}>
+            <h3>
+              {t.name} · {t.percent} · ошибок {t.mistakes}
+            </h3>
+            {t.questions.map((q) => (
+              <div key={q.id} className={'learning-report-q' + (q.firstTry ? ' ok' : ' miss')}>
+                <p>{q.text}</p>
+                <small>
+                  {q.verdict} · попыток {q.attempts} · {q.percent}
+                  {q.revive ? ' · тест второй жизни' : ''}
+                </small>
+                {q.wrong.length > 0 && <small>Ошибочно выбрано: {q.wrong.join('; ')}</small>}
+                {q.correct.length > 0 && <small>Правильно: {q.correct.join('; ')}</small>}
+                {q.explanation && <small>{q.explanation}</small>}
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function EndScreen() {
   const session = useSession();
   const run = session.views.run();
@@ -226,25 +267,7 @@ export function EndScreen() {
         </div>
         <h2 id="endTitle">{result.title}</h2>
         <p id="endText">{result.text}</p>
-        {result.learning && (
-          <div className="learning-summary">
-            <strong>Знания: {result.learning.points} очков</strong>
-            <p>
-              С первого раза: {result.learning.firstCorrect}/{result.learning.answered} · Повторных
-              ответов: {result.learning.retries}
-            </p>
-            <p>
-              {result.learning.reviveUsed
-                ? 'Попытка второй жизни использована'
-                : 'Без второй жизни'}
-            </p>
-            {result.learning.topics.map((t) => (
-              <p key={t.name}>
-                {t.name}: ошибок {t.mistakes}
-              </p>
-            ))}
-          </div>
-        )}
+        {result.learning && <LearningReportCard report={result.learning} />}
         <div id="endStats" className="stats">
           {result.stats.map((stat: { value: string; label: string; best?: boolean }) => (
             <div key={stat.label} className={stat.best ? 'record-stat' : undefined}>
@@ -298,7 +321,7 @@ export function EndScreen() {
           </button>
         )}
         <p id="endSeed" className="end-seed">
-          Сид забега: <b>{result.seed}</b> · узлы, баги и события повторятся с тем же сидом
+          Сид забега: <b>{result.seed}</b> · {result.seedNote}
         </p>
         <button id="againSeed" className="small" onClick={session.commands.restartSameSeed}>
           ТОТ ЖЕ СИД

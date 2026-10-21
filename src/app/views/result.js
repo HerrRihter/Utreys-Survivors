@@ -1,6 +1,8 @@
 import { learningSummary } from '../../systems/learning.js';
+import { courseOf } from '../../systems/queries/learning.js';
 import { heroDefinitions } from '../../../data/characters/heroes.js';
 import { weaponDefinitions } from '../../../data/weapons.js';
+import { mapDefinitions } from '../../../data/maps/maps.js';
 import { seedText } from '../../core/rng.js';
 import { nearestGoals, newlyDone } from '../unlocks.js';
 import { clock, codes, slotKey } from './format.js';
@@ -24,7 +26,7 @@ export function resultView({
   return {
     ...resultHeader({ s, map, win, endless, opened, bonus }),
     canContinue: win && !endless && !s.learning,
-    learning: learningSummary(s),
+    learning: learningResult(s, win),
     stats: [
       ...resultStats({ s, endless, productionBest, before }),
       { value: String(s.level), label: 'УРОВЕНЬ' },
@@ -33,8 +35,68 @@ export function resultView({
     damage: damageReport(s, hero),
     build: upgrades.build(hero, s),
     seed: seedText(s.seed),
+    seedNote: seedNotes[mapDefinitions[s.map]?.objective?.type] ?? seedNotes.nodes,
     unlocked: newlyDone(progression, s.doneBefore),
     goals: nearestGoals(progression, 2),
+  };
+}
+
+// What the same seed repeats, by the map's objective.
+const seedNotes = {
+  nodes: 'узлы, баги и события повторятся с тем же сидом',
+  desks: 'сервисдески и события повторятся с тем же сидом',
+  learning: 'лабиринты, терминалы и их стражи повторятся с тем же сидом',
+};
+
+const percent = (share) => Math.round(share * 100) + '%';
+const attemptText = (n) =>
+  n === null
+    ? 'не решён'
+    : n === 1
+      ? 'с 1-й попытки'
+      : n === 2
+        ? 'со 2-й попытки'
+        : `с ${n}-й попытки`;
+
+// The learning run's report card: the grade, the topics and every question asked, grouped by
+// topic. A defeat's grade is preliminary: the hall was not passed. Null on other maps.
+export function learningResult(s, win) {
+  const summary = learningSummary(s);
+  if (!summary) return null;
+  const course = courseOf(s);
+  return {
+    grade: summary.grade,
+    percent: percent(summary.score),
+    preliminary: !win,
+    points: summary.points,
+    firstCorrect: summary.firstCorrect,
+    answered: summary.answered,
+    retries: summary.retries,
+    reviveUsed: summary.reviveUsed,
+    topics: summary.topics.map((t, i) => ({
+      name: t.name,
+      percent: t.asked ? percent(t.score) : '—',
+      mistakes: t.mistakes,
+      questions: summary.questions
+        .filter((q) => q.topic === i)
+        .map((item) => {
+          const q = course.questions.find((q) => q.id === item.id);
+          const texts = (ids) => ids.map((id) => q.options.find((o) => o.id === id)?.text ?? id);
+          return {
+            id: item.id,
+            text: q.text,
+            verdict: attemptText(item.firstCorrectAt),
+            attempts: item.attempts,
+            percent: percent(item.score),
+            firstTry: item.firstCorrectAt === 1,
+            revive: item.revive,
+            // What to review: the key and its explanation, unless it was right at once.
+            correct: item.firstCorrectAt === 1 ? [] : texts(q.correct),
+            wrong: texts(item.wrong),
+            explanation: item.firstCorrectAt === 1 ? '' : q.explanation,
+          };
+        }),
+    })),
   };
 }
 
@@ -42,28 +104,31 @@ function resultHeader({ s, map, win, endless, opened, bonus }) {
   if (s.learning)
     return {
       win,
-      tag: win ? map.victoryTag : 'УЧЕБНЫЙ ЗАБЕГ ОКОНЧЕН',
-      title: win ? 'Партионный учёт освоен' : 'Практика продолжается',
+      tag: win ? courseOf(s).victoryTag : 'УЧЕБНЫЙ ЗАБЕГ ОКОНЧЕН',
+      title: win ? `Курс пройден: ${courseOf(s).title}` : 'Практика продолжается',
       text: 'Учебный забег не идёт в рейтинг.',
     };
-  const loadText = `НАГРУЗКА ${s.load}`;
+  const loadText = `НАГРУЗКА ${s.load}` + (s.penza ? ' · ПЕНЗА' : '');
+  // A Penza run is 30% faster and stronger: it keeps codes and loads, not records.
+  const unrated = s.penza ? ' Пензенский забег не идёт в рейтинг и рекорды.' : '';
   if (endless)
     return {
       win: false,
       tag: `ПРОДАКШЕН · ${loadText}`,
       title: 'Продакшен упал',
-      text: 'Победа в забеге уже засчитана.',
+      text: 'Победа в забеге уже засчитана.' + unrated,
     };
   return {
     win,
     tag: (win ? map.victoryTag : 'ЗАБЕГ ОКОНЧЕН') + ' · ' + loadText,
     title: win ? 'Забег завершён' : 'Контур перегружен',
-    text: win
-      ? 'Шлюз ЦРПТ пройден.' +
-        (opened ? ` Открыта нагрузка ${s.load + 1}.` : '') +
-        (bonus ? ` Бонус нагрузки: +${codes(bonus)}.` : '') +
-        ' Можно продолжить в продакшене: сложность растёт каждую минуту.'
-      : 'Попробуй другую сборку.',
+    text:
+      (win
+        ? 'Шлюз ЦРПТ пройден.' +
+          (opened ? ` Открыта нагрузка ${s.load + 1}.` : '') +
+          (bonus ? ` Бонус нагрузки: +${codes(bonus)}.` : '') +
+          ' Можно продолжить в продакшене: сложность растёт каждую минуту.'
+        : 'Попробуй другую сборку.') + unrated,
   };
 }
 
