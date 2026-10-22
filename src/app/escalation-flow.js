@@ -22,7 +22,7 @@ import { incidentRules } from '../../data/incident-rules.js';
 // opening and closing it (the fight stops meanwhile, like a quiz), the player's commands, a
 // save after each one, and a toast when a command makes a new mistake — with the course's
 // explanation at the lower loads. The rules themselves are src/systems/escalation.js.
-export function createEscalationFlow({ run, input, snapshots, toast, setMode, changed }) {
+export function createEscalationFlow({ run, input, snapshots, runLog, toast, setMode, changed }) {
   function save() {
     if (!snapshots.save(run)) toast('Не удалось сохранить забег. Не закрывай вкладку.');
     changed();
@@ -113,6 +113,7 @@ export function createEscalationFlow({ run, input, snapshots, toast, setMode, ch
       const s = run.state;
       if (run.mode !== 'end' || !s?.incident || !answerReview(s.incident, key, answer))
         return false;
+      runLog?.updateIncident(s);
       changed();
       return true;
     },

@@ -61,7 +61,15 @@ export const GameFlow = {
       finish: lifecycle.finish,
       levelUp: levels.levelUp,
     });
-    const escalation = createEscalationFlow({ run, input, snapshots, toast, setMode, changed });
+    const escalation = createEscalationFlow({
+      run,
+      input,
+      snapshots,
+      runLog,
+      toast,
+      setMode,
+      changed,
+    });
     const navigation = createNavigation({ run, settings, progression, world, audio, ui, changed });
     const { levelUp, pickUpgrade, chooseCard, reroll, skip, armBanish } = levels;
     return {

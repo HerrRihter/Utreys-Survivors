@@ -30,7 +30,11 @@ function computeStats(runs, { min = 10, minRuns = 5 } = {}) {
   const learning = runs
     .filter((r) => r.learning)
     .map((r) => ({ hero: r.hero, win: r.win, ...r.learning }));
-  runs = runs.filter((r) => !r.learning);
+  // Incident shifts: their grade and the course questions of their mistakes.
+  const incident = runs
+    .filter((r) => r.incident)
+    .map((r) => ({ hero: r.hero, win: r.win, ...r.incident }));
+  runs = runs.filter((r) => !r.learning && !r.incident);
   // Production endings are logged as separate entries; they count toward production only.
   const base = runs.filter((r) => !r.endless);
   const production = runs.filter((r) => r.endless);
@@ -119,6 +123,7 @@ function computeStats(runs, { min = 10, minRuns = 5 } = {}) {
 
   return {
     learning,
+    incident,
     runs: runs.length,
     finished: base.length,
     wins: base.filter((r) => r.win).length,

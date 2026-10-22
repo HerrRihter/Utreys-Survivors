@@ -54,6 +54,7 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
         win,
         build: upgrades.build(run.selected, s),
       }),
+      s.runId,
     );
     s.offersLogged = offers.length;
     if (!s.statsRecorded && !practice(s)) {

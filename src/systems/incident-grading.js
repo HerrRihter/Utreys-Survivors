@@ -561,3 +561,32 @@ function questionOfKey(key, rules = incidentRules) {
   const list = /** @type {any[]} */ (kind === 'matrix' ? rules.matrix : rules.statuses);
   return list.find((x) => String(kind === 'matrix' ? x.level : x.id) === id).choice.question;
 }
+
+/**
+ * A shift's summary for the run journal (src/systems/run-log.js), without texts: the grade,
+ * the groups' scores, the course questions of the mistakes made, what happened in the shift.
+ * @param {IncidentState | null} inc
+ * @param {number} minute
+ */
+export function incidentSummary(inc, minute, rules = incidentRules) {
+  if (!inc) return null;
+  const grade = gradeShift(inc, minute, rules);
+  const round = (/** @type {number} */ n) => Math.round(n * 100) / 100;
+  /** @type {Record<string, number>} */
+  const mistakes = {};
+  for (const m of grade.mistakes)
+    if (m.question) mistakes[m.question] = (mistakes[m.question] ?? 0) + 1;
+  return {
+    rules: inc.rulesVersion,
+    grade: grade.grade,
+    share: round(grade.share),
+    groups: Object.fromEntries(Object.entries(grade.groups).map(([g, v]) => [g, round(v.score)])),
+    mistakes,
+    faults: inc.plan.filter((f) => f.cause != null && f.from == null).length,
+    tickets: inc.tickets.filter((t) => t.target != null).length,
+    falseEscalations: inc.tickets.filter((t) => t.target == null).length,
+    injects: inc.inbox.map((m) => m.inject),
+    collapsed: inc.collapseSince != null,
+    reviewed: Object.keys(inc.review ?? {}).length,
+  };
+}

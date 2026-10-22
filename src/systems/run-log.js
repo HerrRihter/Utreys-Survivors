@@ -1,4 +1,6 @@
 import { learningSummary } from './learning.js';
+import { incidentSummary } from './incident-grading.js';
+import { shiftMinute } from './queries/incident.js';
 import { currentCardId } from '../../data/characters/abilities.js';
 import { persisted } from '../core/storage.js';
 
@@ -6,7 +8,8 @@ import { persisted } from '../core/storage.js';
 // screen exports the journal as JSON for `tools/run-stats.cjs`. Only the newest `MAX_ENTRIES`
 // are kept so storage stays small.
 export const RUN_LOG_KEY = 'utreys-run-log-v1';
-export const RUN_LOG_VERSION = 2;
+// Version 2 added the learning summary, version 3 the incident shift's.
+export const RUN_LOG_VERSION = 3;
 export const MAX_ENTRIES = 300;
 
 // Level-up bookkeeping on the run state: every offer, what was taken and how.
@@ -41,6 +44,7 @@ export function logEntry({ s, hero, win, build, date = new Date() }) {
   return {
     version: RUN_LOG_VERSION,
     learning: learningSummary(s),
+    incident: s.incident ? incidentSummary(s.incident, shiftMinute(s)) : null,
     date: date.toISOString(),
     hero,
     map: s.map,
@@ -67,7 +71,8 @@ export function logEntry({ s, hero, win, build, date = new Date() }) {
 // An entry as the current build names things: level-up cards of renamed abilities (an older
 // journal has `ability_potion`) get their current ids. Entries are not rewritten in storage.
 export function normalizeLogEntry(entry) {
-  if (entry?.version === 1) entry = { ...entry, version: RUN_LOG_VERSION, learning: null };
+  if (entry?.version === 1) entry = { ...entry, version: 2, learning: null };
+  if (entry?.version === 2) entry = { ...entry, version: RUN_LOG_VERSION, incident: null };
   if (!Array.isArray(entry?.offers)) return entry;
   const cards = (list) => (Array.isArray(list) ? list.map(currentCardId) : list);
   return {
@@ -84,6 +89,7 @@ export function normalizeLogEntry(entry) {
 export function createRunLog({ storage }) {
   // Settings read the count on every render; keep it without parsing the journal each time.
   let count = null;
+  let lastRecorded = null;
   const file = persisted(storage, RUN_LOG_KEY, {
     normalize: (saved) => (Array.isArray(saved) ? saved.map(normalizeLogEntry) : []),
   });
@@ -91,16 +97,31 @@ export function createRunLog({ storage }) {
   return {
     entries,
     count: () => (count ??= entries().length),
-    record(entry) {
+    record(entry, runId = null) {
       const list = entries();
       list.push(entry);
       const kept = list.slice(-MAX_ENTRIES);
       if (!file.save(kept)) return false;
       count = kept.length;
+      lastRecorded = { runId, entry: JSON.stringify(entry) };
+      return true;
+    },
+    // PIR answers arrive after finish(). Update that exact ending, never append another.
+    updateIncident(s) {
+      if (!s.incident || !lastRecorded || lastRecorded.runId !== s.runId) return false;
+      const list = entries();
+      const index = list.findLastIndex((entry) => JSON.stringify(entry) === lastRecorded.entry);
+      if (index < 0) return false;
+      list[index].incident = incidentSummary(s.incident, shiftMinute(s));
+      if (!file.save(list)) return false;
+      lastRecorded.entry = JSON.stringify(list[index]);
       return true;
     },
     clear() {
-      if (file.save([])) count = 0;
+      if (file.save([])) {
+        count = 0;
+        lastRecorded = null;
+      }
     },
     // The export file's content.
     json: () =>
