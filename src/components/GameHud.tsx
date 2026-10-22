@@ -83,6 +83,19 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
 
       <div id="actions" className="actions">
         {!ownSound && <SoundButton id="sound" enabled={soundEnabled} />}
+        {/* The incident shift's console: closed while an enemy is close by. */}
+        {hud?.console && (
+          <button
+            id="console"
+            className="small"
+            disabled={!hud.console.canOpen}
+            title={hud.console.canOpen ? 'Пульт эскалации' : 'Рядом враги: сначала отбейся'}
+            aria-label={hud.console.canOpen ? 'Пульт эскалации' : 'Пульт: рядом враги'}
+            {...tap(commands.openConsole)}
+          >
+            {hud.console.canOpen ? 'ПУЛЬТ' : 'ПУЛЬТ · ВРАГИ'}
+          </button>
+        )}
         <button
           id="pause"
           className={hidden(!!hud?.showPause, 'small')}

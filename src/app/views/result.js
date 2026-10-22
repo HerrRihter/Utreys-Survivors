@@ -25,7 +25,7 @@ export function resultView({
   const endless = !!s.endless;
   return {
     ...resultHeader({ s, map, win, endless, opened, bonus }),
-    canContinue: win && !endless && !s.learning,
+    canContinue: win && !endless && !s.learning && !s.incident,
     learning: learningResult(s, win),
     stats: [
       ...resultStats({ s, endless, productionBest, before }),
@@ -46,6 +46,7 @@ const seedNotes = {
   nodes: 'узлы, баги и события повторятся с тем же сидом',
   desks: 'сервисдески и события повторятся с тем же сидом',
   learning: 'лабиринты, терминалы и их стражи повторятся с тем же сидом',
+  escalation: 'сбои, их причины и вводные смены повторятся с тем же сидом',
 };
 
 const percent = (share) => Math.round(share * 100) + '%';
@@ -101,6 +102,13 @@ export function learningResult(s, win) {
 }
 
 function resultHeader({ s, map, win, endless, opened, bonus }) {
+  if (s.incident)
+    return {
+      win,
+      tag: win ? map.victoryTag : 'СМЕНА ОКОНЧЕНА',
+      title: win ? 'Смена доиграна' : 'Смена сорвана',
+      text: 'Смена не идёт в рейтинг. Оценка — по регламенту критических инцидентов.',
+    };
   if (s.learning)
     return {
       win,
@@ -144,11 +152,15 @@ function resultStats({ s, endless, productionBest, before }) {
       { value: clock(s.t), label: 'ВСЕГО' },
     ];
   return [
-    { value: clock(s.t), label: 'ВРЕМЯ', best: !s.learning && s.t > before.maxTime },
+    {
+      value: clock(s.t),
+      label: 'ВРЕМЯ',
+      best: !s.learning && !s.incident && s.t > before.maxTime,
+    },
     {
       value: String(s.kills),
       label: 'ПРОТИВНИКОВ ПОБЕЖДЕНО',
-      best: !s.learning && s.kills > before.maxKills,
+      best: !s.learning && !s.incident && s.kills > before.maxKills,
     },
   ];
 }

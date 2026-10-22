@@ -7,8 +7,10 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
   // Run statistics (src/systems/run-records.js): every ending adds what is new since the
   // previous ending of the same run. Win, death, quitting to the menu and restarting all end
   // a run; a run continued in production ends again later. `victory` only from finish().
-  // Learning and Penza runs (their balance is not the game's) stay out of records and ratings.
-  const rated = (s) => !s.learning && !s.penza;
+  // Learning, incident shift and Penza runs (their balance is not the game's) stay out of
+  // records and ratings.
+  const practice = (s) => !!(s.learning || s.incident);
+  const rated = (s) => !practice(s) && !s.penza;
   function countRun(victory = false) {
     const s = run.state;
     if (!s?.runId || !rated(s)) return null;
@@ -54,7 +56,7 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
       }),
     );
     s.offersLogged = offers.length;
-    if (!s.statsRecorded && !s.learning) {
+    if (!s.statsRecorded && !practice(s)) {
       s.statsRecorded = true;
       const nodesMap = !mapDefinitions[s.map]?.objective;
       records.recordRunStats({

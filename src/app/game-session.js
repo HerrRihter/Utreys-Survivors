@@ -193,8 +193,9 @@ export const GameSession = {
     // world rectangle instead of inside the simulation.
     const visible = { x: 0, y: 0, width: 0, height: 0 };
     function step(dt) {
-      // A quiz stops the fight; tools calling update() directly are held too.
-      if (run.mode === 'quiz') return;
+      // A quiz or the escalation console stops the fight; tools calling update() directly are
+      // held too.
+      if (run.mode === 'quiz' || run.mode === 'console') return;
       input.updateMove();
       simulation.update(dt);
       const s = run.state;
@@ -238,7 +239,8 @@ export const GameSession = {
     input.bind();
     // Closing or hiding the tab keeps the run for "Continue".
     const keepRun = () => {
-      if (run.state && ['play', 'pause', 'level', 'quiz'].includes(run.mode)) snapshots.save(run);
+      if (run.state && ['play', 'pause', 'level', 'quiz', 'console'].includes(run.mode))
+        snapshots.save(run);
     };
     events.listen(window, 'pagehide', keepRun);
 

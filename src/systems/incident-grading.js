@@ -19,7 +19,9 @@ import {
 /** @typedef {import('./queries/incident.js').IncidentTicket} IncidentTicket */
 /**
  * @typedef {{ group: string, score: number, question: string | null, ticket: number | null,
- *   note: string }} GradeItem
+ *   note: string, pending: boolean }} GradeItem
+ *   `pending`: a step not taken yet (nothing chosen, a due time not passed). It scores like a
+ *   mistake in the grade, but it is no mistake made: the console teaches only those.
  * @typedef {{ groups: Record<string, { score: number, items: number }>, share: number,
  *   grade: string, items: GradeItem[], mistakes: GradeItem[] }} ShiftGrade
  */
@@ -39,8 +41,21 @@ export function gradeShift(inc, minute, rules = incidentRules) {
     /** @type {string | null} */ question,
     /** @type {string} */ note,
     /** @type {number | null} */ ticket = null,
-  ) => items.push({ group, score: Number(score), question, ticket, note });
+    pending = false,
+  ) => items.push({ group, score: Number(score), question, ticket, note, pending });
   const roles = /** @type {Record<string, any>} */ (rules.roles);
+  // Names for the notes: components, roles, the card's fields (incident-12's options).
+  const componentName = (/** @type {string} */ id) =>
+    rules.components.find((c) => c.id === id)?.label ?? id;
+  const roleName = (/** @type {string} */ id) => roles[id]?.name ?? id;
+  const fieldQuestion = incidentCourse(rules).questions.find(
+    (/** @type {any} */ q) => q.id === rules.ticket.question,
+  );
+  const fieldName = (/** @type {string} */ id) => {
+    const option = rules.ticket.fields.find((f) => f.id === id)?.option;
+    const text = fieldQuestion.options.find((/** @type {any} */ o) => o.id === option)?.text;
+    return text ? text.replace(/\s*\(.*\)$/, '') : id;
+  };
   const matrix = /** @type {any[]} */ (rules.matrix);
   const levels = /** @type {any[]} */ (rules.severity.levels);
   const grace = rules.escalation.grace;
@@ -70,10 +85,10 @@ export function gradeShift(inc, minute, rules = incidentRules) {
         : t.openedAt < alert.clientAt
           ? 0.7
           : 0.4;
-    add('detection', score, 'incident-1', 'Сбой: ' + f.component, t?.id ?? null);
+    add('detection', score, 'incident-1', 'Сбой: ' + componentName(f.component), t?.id ?? null);
   }
   for (const t of inc.tickets.filter((x) => x.target == null))
-    add('detection', 0, 'incident-1', 'Ложная эскалация: ' + t.component, t.id);
+    add('detection', 0, 'incident-1', 'Ложная эскалация: ' + componentName(t.component), t.id);
   inc.plan.forEach((f) => {
     if (f.cause != null || f.from != null || f.startedAt == null) return;
     const raised = inc.tickets.some(
@@ -100,13 +115,21 @@ export function gradeShift(inc, minute, rules = incidentRules) {
     const clients = clientsOf(inc, /** @type {number} */ (t.target), rules);
     const cause = rules.causes.find((c) => c.id === root.cause);
 
-    add('first', t.actions[0] === firstKey, 'incident-10', 'Первое действие', t.id);
+    add(
+      'first',
+      t.actions[0] === firstKey,
+      'incident-10',
+      'Первое действие',
+      t.id,
+      !t.actions.length,
+    );
     add(
       'creation',
       keyMatches(rules.protocol.creation.question, t.created, rules),
       'incident-11',
       'Заведение тикета',
       t.id,
+      t.created == null,
     );
 
     // The card.
@@ -127,12 +150,25 @@ export function gradeShift(inc, minute, rules = incidentRules) {
           : field === 'moderator'
             ? 'incident-7'
             : 'incident-12';
-      add('card', right, question, 'Поле карточки: ' + field, t.id);
+      add('card', right, question, 'Поле карточки: ' + fieldName(field), t.id, value == null);
     }
-    add('card', t.card.component === truth.component, null, 'Исходный компонент', t.id);
-    add('card', t.card.cause === truth.cause, null, 'Причина', t.id);
+    add(
+      'card',
+      t.card.component === truth.component,
+      null,
+      'Исходный компонент',
+      t.id,
+      t.card.component == null,
+    );
+    add('card', t.card.cause === truth.cause, null, 'Причина', t.id, t.card.cause == null);
     for (const missing of t.refused)
-      add('card', 0, 'incident-12', 'Перевод в работу без полей: ' + missing.join(', '), t.id);
+      add(
+        'card',
+        0,
+        'incident-12',
+        'Перевод в работу без полей: ' + missing.map(fieldName).join(', '),
+        t.id,
+      );
 
     // Severity and the questions that assess it.
     add(
@@ -146,6 +182,7 @@ export function gradeShift(inc, minute, rules = incidentRules) {
       )?.covers?.[0] ?? 'incident-3',
       'Критичность',
       t.id,
+      t.card.severity == null,
     );
     const asked = t.asked ?? [];
     add(
@@ -154,6 +191,7 @@ export function gradeShift(inc, minute, rules = incidentRules) {
       partsQuestion(rules.severity.questions, asked, 'incident-5'),
       'Вопросы для оценки критичности',
       t.id,
+      t.asked == null,
     );
 
     // The matrix.
@@ -163,8 +201,16 @@ export function gradeShift(inc, minute, rules = incidentRules) {
       'incident-15',
       'Уровень 1 в срок',
       t.id,
+      t.levels[1] == null && minute <= t.openedAt + matrix[0].within + grace,
     );
-    add('matrix', t.levels[2] != null, 'incident-16', 'Уровень 2: продуктовые команды', t.id);
+    add(
+      'matrix',
+      t.levels[2] != null,
+      'incident-16',
+      'Уровень 2: продуктовые команды',
+      t.id,
+      t.levels[2] == null,
+    );
     const firstRole = rules.clientEscalation.find((e) => clients.includes(e.client));
     if (firstRole) {
       const first = t.calls.find((c) => roles[c.role].level === 2);
@@ -219,7 +265,7 @@ export function gradeShift(inc, minute, rules = incidentRules) {
         (reached && managerAt == null && spaced) ||
           (managerAt != null && before.length >= rules.calls.attempts && spaced),
         'incident-19',
-        'Недозвон: ' + role,
+        'Недозвон: ' + roleName(role),
         t.id,
       );
     }
@@ -230,7 +276,7 @@ export function gradeShift(inc, minute, rules = incidentRules) {
     for (const c of t.calls)
       if (!c.answered && roles[c.role].manager) needed.add(roles[c.role].manager);
     const extra = [...new Set(t.calls.map((c) => c.role))].filter((r) => !needed.has(r));
-    for (const r of extra) add('calls', 0, 'incident-9', 'Лишний в War Room: ' + r, t.id);
+    for (const r of extra) add('calls', 0, 'incident-9', 'Лишний в War Room: ' + roleName(r), t.id);
     if (!extra.length) add('calls', 1, 'incident-9', 'Состав War Room', t.id);
 
     // Communications.
@@ -241,6 +287,7 @@ export function gradeShift(inc, minute, rules = incidentRules) {
       partsQuestion(rules.internal.parts, internalParts, 'incident-21'),
       'Сообщение в #CS_Critical и конференция',
       t.id,
+      !t.internal,
     );
     const declared =
       levels.find((l) => l.id === (t.card.severity ?? t.severityTruth)) ?? levels.at(-1);
@@ -251,7 +298,14 @@ export function gradeShift(inc, minute, rules = incidentRules) {
     let last = -Infinity;
     for (let guard = 0; due <= end && guard < 100; guard++) {
       const sent = t.updates.find((u) => u.at > last && u.at <= due + grace);
-      add('updates', !!sent, cadenceQuestion, 'Update к ' + Math.round(due) + '-й минуте', t.id);
+      add(
+        'updates',
+        !!sent,
+        cadenceQuestion,
+        'Update к ' + Math.round(due) + '-й минуте',
+        t.id,
+        !sent && minute <= due + grace,
+      );
       last = sent?.at ?? due;
       due = (sent?.at ?? due) + declared.update;
     }
@@ -325,11 +379,32 @@ export function gradeShift(inc, minute, rules = incidentRules) {
     const work = statuses.find((st) => st.card);
     const paused = statuses.find((st) => st.slaPaused);
     const after = statuses.find((st) => st.slaStopped);
-    add('statuses', t.statusAt[work.id] != null, 'incident-12', 'Тикет в работе', t.id);
+    add(
+      'statuses',
+      t.statusAt[work.id] != null,
+      'incident-12',
+      'Тикет в работе',
+      t.id,
+      t.statusAt[work.id] == null,
+    );
     if (impactDown(inc, t))
-      add('statuses', t.statusAt[solvedStatus.id] != null, 'incident-2', 'Тикет решён', t.id);
+      add(
+        'statuses',
+        t.statusAt[solvedStatus.id] != null,
+        'incident-2',
+        'Тикет решён',
+        t.id,
+        t.statusAt[solvedStatus.id] == null,
+      );
     if (t.statusAt[solvedStatus.id] != null)
-      add('statuses', t.statusAt[after.id] != null, 'incident-14', 'Постмортем', t.id);
+      add(
+        'statuses',
+        t.statusAt[after.id] != null,
+        'incident-14',
+        'Постмортем',
+        t.id,
+        t.statusAt[after.id] == null,
+      );
     if (t.workaroundAt != null)
       add(
         'statuses',
@@ -352,14 +427,19 @@ export function gradeShift(inc, minute, rules = incidentRules) {
       'Модератор при параллельных инцидентах',
     );
 
-  // The tracker's journal (incident-7).
-  if (inc.journal.length)
+  // The tracker's journal (incident-7). An action can be recorded any time: an unrecorded one
+  // is a step still to take.
+  if (inc.journal.length) {
+    const recorded = inc.journal.filter((e) => e.recorded).length;
     add(
       'journal',
-      inc.journal.filter((e) => e.recorded).length / inc.journal.length,
+      recorded / inc.journal.length,
       'incident-7',
       'Действия зафиксированы в трекере',
+      null,
+      recorded < inc.journal.length,
     );
+  }
 
   // Injects.
   for (const item of inc.inbox) {
@@ -368,7 +448,7 @@ export function gradeShift(inc, minute, rules = incidentRules) {
     const forFault = inc.injects.find((i) => i.id === item.inject)?.fault;
     const ticket = t ?? (forFault != null ? inc.tickets.find((x) => x.target === forFault) : null);
     const question = spec.choice?.question ?? spec.covers?.[0] ?? null;
-    const note = 'Вводная: ' + item.inject;
+    const note = 'Вводная: ' + (spec.text ?? spec.kind).slice(0, 70);
     if (spec.choice)
       add(
         'injects',
@@ -429,7 +509,14 @@ export function gradeShift(inc, minute, rules = incidentRules) {
       : step.parts
         ? partsRight(step.parts, answer)
         : keyMatches(step.question, answer, rules);
-    add('review', right, step.question ?? step.covers?.[0] ?? null, 'Разбор: ' + key);
+    add(
+      'review',
+      right,
+      step.question ?? step.covers?.[0] ?? null,
+      'Разбор: ' + key,
+      null,
+      !Array.isArray(answer),
+    );
   }
 
   /** @type {Record<string, { score: number, items: number }>} */

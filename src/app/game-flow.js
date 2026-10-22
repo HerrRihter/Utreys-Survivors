@@ -1,4 +1,5 @@
 import { createLearningFlow } from './learning-flow.js';
+import { createEscalationFlow } from './escalation-flow.js';
 import { createLevelUp } from './level-up.js';
 import { createRunLifecycle } from './run-lifecycle.js';
 import { createNavigation } from './navigation.js';
@@ -60,11 +61,13 @@ export const GameFlow = {
       finish: lifecycle.finish,
       levelUp: levels.levelUp,
     });
+    const escalation = createEscalationFlow({ run, input, snapshots, toast, setMode, changed });
     const navigation = createNavigation({ run, settings, progression, world, audio, ui, changed });
     const { levelUp, pickUpgrade, chooseCard, reroll, skip, armBanish } = levels;
     return {
       ...lifecycle,
       ...learning,
+      ...escalation,
       levelUp,
       pickUpgrade,
       chooseCard,

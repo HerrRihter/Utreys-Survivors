@@ -351,6 +351,8 @@ export function validateIncidentRules(rules, { course, units }) {
     'optional statuses',
   );
   fail(!!roles[rules.coordinator.moderator], 'coordinator.moderator');
+  positive(rules.console.safeRadius, 'console.safeRadius');
+  fail(Number.isInteger(rules.console.fullFeedback), 'console.fullFeedback');
   positive(rules.escalation.fixPenalty, 'escalation.fixPenalty');
   share(rules.escalation.slaRisk, 'escalation.slaRisk');
   fail(rules.escalation.grace >= 0, 'escalation.grace');

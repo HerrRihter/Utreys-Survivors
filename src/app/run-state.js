@@ -18,7 +18,7 @@ import { persisted } from '../core/storage.js';
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
- *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'quiz' | 'end',
+ *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'quiz' | 'console' | 'end',
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
  *   selectedCourse: string,
@@ -39,7 +39,7 @@ import { persisted } from '../core/storage.js';
 export function createRunState() {
   return {
     state: null, // the active run, null in the menu
-    mode: 'menu', // menu | play | pause | level | end
+    mode: 'menu', // menu | play | pause | level | quiz | console | end
     screen: 'menu', // menu | heroSelect | shop | achievements | settings | null (in a run)
     settingsOrigin: 'menu',
     selected: 'utrace',

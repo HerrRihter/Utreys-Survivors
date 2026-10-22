@@ -45,7 +45,8 @@ export const InputSystem = {
     // Off while another page (bestiary, arena preview) owns the keyboard; see disable().
     let enabled = true;
     function onKeyDown(e) {
-      if (!enabled || run.mode === 'quiz') return;
+      // A quiz or the escalation console stops the fight: its own buttons only.
+      if (!enabled || run.mode === 'quiz' || run.mode === 'console') return;
       if (
         e.code !== 'Escape' &&
         e.target?.matches?.('input,select,textarea,[contenteditable="true"]')

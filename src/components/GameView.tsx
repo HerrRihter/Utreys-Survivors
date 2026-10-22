@@ -1,4 +1,5 @@
 import { LearningScreen } from './LearningScreen';
+import { EscalationConsole } from './EscalationConsole';
 import { hudScale } from '../app/run-state.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '../app/useGameSession';
@@ -153,12 +154,13 @@ function GameScreens({
       {mode === 'menu' && screen === 'achievements' && <Achievements />}
       {mode === 'menu' && screen === 'encyclopedia' && <Encyclopedia />}
       {mode === 'quiz' && <LearningScreen />}
+      {mode === 'console' && <EscalationConsole />}
       {mode === 'level' && <LevelUpScreen hints={settings.hints} />}
       {mode === 'pause' && screen !== 'settings' && <PauseScreen />}
       {mode === 'end' && <EndScreen />}
       {screen === 'settings' && <Settings />}
       {/* Never over a running fight: the choice waits for the menu, pause or results. */}
-      {cloud && mode !== 'play' && mode !== 'level' && mode !== 'quiz' && (
+      {cloud && mode !== 'play' && mode !== 'level' && mode !== 'quiz' && mode !== 'console' && (
         <ConflictDialog cloud={cloud} />
       )}
     </>

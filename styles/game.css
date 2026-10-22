@@ -1786,6 +1786,15 @@ button:disabled {
     font: 700 20px/1 sans-serif;
     color: var(--cyan);
   }
+  /* The incident shift's console: a telephone, dimmed while enemies are close by. */
+  #console::before {
+    content: '☎';
+    font: 700 20px/1 sans-serif;
+    color: var(--cyan);
+  }
+  #console:disabled::before {
+    opacity: 0.4;
+  }
   #sound {
     min-width: 44px;
   }
@@ -2068,6 +2077,10 @@ button:disabled {
     width: calc(100% - 20px - 100px / var(--hud-scale, 1));
     box-sizing: border-box;
     font-size: 10px;
+  }
+  /* Three on the incident shift: the console's button joins them. */
+  body:has(#console) .node-progress {
+    width: calc(100% - 20px - 150px / var(--hud-scale, 1));
   }
 }
 
@@ -2567,7 +2580,8 @@ button:disabled {
 /* Touch: corner buttons stay at least 44 CSS px whatever the interface scale. */
 @media (pointer: coarse) {
   .actions #sound,
-  .actions #pause {
+  .actions #pause,
+  .actions #console {
     width: calc(44px / var(--hud-scale, 1));
     min-width: calc(44px / var(--hud-scale, 1));
     height: calc(44px / var(--hud-scale, 1));
@@ -3635,5 +3649,195 @@ body[data-mode='quiz'] #toast {
 .ability-controls button,
 #pause,
 .learning-hud button {
+  touch-action: none;
+}
+
+/* The incident shift's escalation console (src/components/EscalationConsole.tsx): tabs, the
+   ticket's card, messages put together from parts, metric charts. It scrolls inside on small
+   screens; the fight waits behind it. */
+.escalation-modal {
+  width: min(900px, 96vw);
+  text-align: left;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.escalation-modal h2 {
+  font-size: 26px;
+}
+.escalation-modal h3 {
+  margin: 14px 0 6px;
+  font-size: 0.95em;
+  color: var(--teal);
+}
+.escalation-modal p {
+  line-height: 1.5;
+}
+.esc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.esc-tab {
+  min-height: 40px;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.esc-tab.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: var(--line-soft);
+}
+.esc-body {
+  min-height: 200px;
+}
+.esc-section,
+.esc-ticket {
+  overflow-wrap: anywhere;
+}
+.esc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.esc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+.esc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.escalation-modal select,
+.escalation-modal input:not([type='checkbox']):not([type='radio']) {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 8px;
+  font: inherit;
+  max-width: 100%;
+}
+.esc-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.esc-times input {
+  width: 9em;
+}
+.esc-question {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  min-width: 0;
+}
+.esc-question legend {
+  padding: 0 4px;
+  line-height: 1.4;
+}
+.esc-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 4px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.esc-option input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--cyan);
+}
+.esc-option:focus-within {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.esc-list {
+  margin: 6px 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+.esc-status {
+  color: var(--teal-soft);
+}
+.esc-step {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 4px 0;
+}
+.esc-step.chosen {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.esc-metric,
+.esc-inbox {
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+.esc-chart {
+  margin: 8px 0;
+}
+.esc-chart figcaption {
+  font-size: 12px;
+  color: var(--muted);
+}
+.esc-chart svg {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+}
+.esc-line {
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.esc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+}
+.esc-line-0 {
+  stroke: #64ffda;
+  color: #64ffda;
+}
+.esc-line-1 {
+  stroke: #ffb74d;
+  color: #ffb74d;
+}
+.esc-line-2 {
+  stroke: #ff5252;
+  color: #ff5252;
+}
+.esc-line-3 {
+  stroke: #82b1ff;
+  color: #82b1ff;
+}
+.esc-line-4 {
+  stroke: #ea80fc;
+  color: #ea80fc;
+}
+.esc-line-5 {
+  stroke: #f2cc0c;
+  color: #f2cc0c;
+}
+#console {
   touch-action: none;
 }

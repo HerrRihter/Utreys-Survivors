@@ -157,6 +157,38 @@ const screens = [
       s.finish(true);
     },
   },
+  // Incident shift: the HUD with its console button, the console with a ticket open, the
+  // review on the results screen.
+  {
+    name: 'shift-hud',
+    hud: true,
+    open: (s) => {
+      s.selectMap('opsCenter');
+      s.start();
+      s.state.spawn = 9999;
+      s.update(0.016);
+    },
+  },
+  {
+    name: 'shift-console',
+    open: (s) => {
+      s.selectMap('opsCenter');
+      s.start();
+      s.state.spawn = 9999;
+      s.state.enemies.length = 0;
+      s.commands.openConsole();
+      s.commands.escalationOpen('artemis');
+    },
+  },
+  {
+    name: 'shift-review',
+    open: (s) => {
+      s.selectMap('opsCenter');
+      s.start();
+      s.state.t = 200;
+      s.finish(true);
+    },
+  },
 ];
 
 // A save with everything open, so every screen shows its full content.

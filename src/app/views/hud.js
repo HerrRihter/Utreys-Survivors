@@ -21,6 +21,8 @@ import { mapDefinitions } from '../../../data/maps/maps.js';
 import { openTickets } from '../../systems/node-objectives.js';
 import { defaultBindings } from '../run-state.js';
 import { clock, keyLabel, loadLabel, slotKey, withEmptySlots } from './format.js';
+import { shiftLine } from './escalation.js';
+import { consoleOpenable } from '../../systems/queries/incident.js';
 
 // HUD line for the running event; '' when none.
 function eventLabel(s) {
@@ -56,6 +58,7 @@ function lockLabel(s) {
 }
 
 function nodeProgress(s) {
+  if (s.incident) return shiftLine(s);
   if (s.learning) {
     const l = s.learning,
       room = currentRoom(s),
@@ -164,6 +167,8 @@ export function hudView({ run, progression, settings, upgrades }) {
     controls: run.touchOnly ? '' : controlsHint(settings.bindings),
     stick: run.stickView,
     build: upgrades ? hudBuild(run, upgrades) : null,
+    // The incident shift's console: offered in play, open only with no enemy close by.
+    console: s.incident && run.mode === 'play' ? { canOpen: consoleOpenable(s) } : null,
     // A test or a room exit within reach takes the tip's place under the hero.
     tip: run.mode === 'play' && run.tip?.left > 0 && !learningActionNear(s) ? run.tip.text : '',
   };

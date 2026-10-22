@@ -1,4 +1,5 @@
 import { learningView } from './views/learning.js';
+import { escalationResult, escalationView } from './views/escalation.js';
 import * as views from './views/index.js';
 
 // The session's read models for React: each call builds a screen's data from the current state.
@@ -17,6 +18,9 @@ export function createSessionViews({
   return {
     run: () => run,
     learning: () => learningView(read),
+    // The incident shift: its console, and its results (live: the review changes them).
+    escalation: () => escalationView(read),
+    shiftResult: () => escalationResult(run.state, !!run.result?.win),
     menu: () => views.menuView({ ...read, snapshot: snapshots.load() }),
     heroSelect: () => views.heroSelectView(read),
     shop: () => views.shopView(read),

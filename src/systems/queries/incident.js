@@ -478,3 +478,16 @@ export function shiftEscalated(inc, minute, rules = incidentRules) {
     )
   );
 }
+
+/**
+ * Whether the escalation console may open: a shift run with no living enemy within the
+ * console's safe radius of the hero.
+ * @param {{ incident: IncidentState | null, p: { x: number, y: number },
+ *   enemies: { x: number, y: number, hp: number }[] }} s
+ */
+export function consoleOpenable(s, rules = incidentRules) {
+  const r = rules.console.safeRadius;
+  return (
+    !!s.incident && !s.enemies.some((e) => e.hp > 0 && Math.hypot(e.x - s.p.x, e.y - s.p.y) < r)
+  );
+}

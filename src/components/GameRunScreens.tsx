@@ -1,10 +1,10 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Overlay } from './Overlay';
 import { GoalList } from './menus/GoalList';
 import { primary } from './primary';
 import { RunRecords } from './LeaderboardView';
 import { useSession } from './session';
-import type { LearningReport } from '../app/types';
+import type { LearningReport, ShiftReport } from '../app/types';
 
 type BuildItem = {
   id: string;
@@ -252,10 +252,89 @@ function LearningReportCard({ report }: { report: LearningReport }) {
   );
 }
 
+// The shift's results: the review (PIR) first, then the grade and every mistake with the
+// course's key and explanation.
+function ShiftReportCard({ report }: { report: ShiftReport }) {
+  const { commands } = useSession();
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
+  if (report.review.length)
+    return (
+      <div className="learning-summary" id="shiftReview">
+        <div className="learning-grade">
+          <strong>Разбор после смены (PIR)</strong>
+        </div>
+        <p>Ответь на вопросы разбора — после них будет оценка смены.</p>
+        {report.review.map((q) => {
+          const chosen = answers[q.key] ?? [];
+          return (
+            <fieldset key={q.key} className="esc-question">
+              <legend>{q.text}</legend>
+              {q.options.map((o) => (
+                <label key={o.id} className="esc-option">
+                  <input
+                    type={q.multiple ? 'checkbox' : 'radio'}
+                    name={'review-' + q.key}
+                    checked={chosen.includes(o.id)}
+                    onChange={() =>
+                      setAnswers({
+                        ...answers,
+                        [q.key]: q.multiple
+                          ? chosen.includes(o.id)
+                            ? chosen.filter((x) => x !== o.id)
+                            : [...chosen, o.id]
+                          : [o.id],
+                      })
+                    }
+                  />
+                  <span>{o.text}</span>
+                </label>
+              ))}
+            </fieldset>
+          );
+        })}
+        <button
+          className="primary"
+          disabled={report.review.some((q) => !answers[q.key]?.length)}
+          onClick={() => {
+            for (const q of report.review) commands.escalationReview(q.key, answers[q.key]);
+          }}
+        >
+          Завершить разбор
+        </button>
+      </div>
+    );
+  return (
+    <div className="learning-summary" id="shiftReport">
+      <div className="learning-grade">
+        <strong>
+          Оценка смены: {report.grade} · {report.percent}
+        </strong>
+        {report.preliminary && <span> (смена не доиграна)</span>}
+      </div>
+      <p>{report.groups.map((g) => `${g.name}: ${g.percent}`).join(' · ')}</p>
+      <div className="learning-report-list">
+        {report.mistakes.length === 0 && <p>Ошибок нет.</p>}
+        {report.mistakes.map((m, i) => (
+          <div key={i} className="learning-report-q">
+            <p>
+              {m.ticket ? m.ticket + ' · ' : ''}
+              {m.note}
+            </p>
+            {m.question && <small>{m.question}</small>}
+            {m.correct.length > 0 && <small>Правильно: {m.correct.join('; ')}</small>}
+            {m.explanation && <small>{m.explanation}</small>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function EndScreen() {
   const session = useSession();
   const run = session.views.run();
   const result = run.result;
+  const shift = session.views.shiftResult() as ShiftReport | null;
   if (!result) return null;
   const top = result.damage.slice(0, 6);
   const runId: string = run.state?.runId ?? '';
@@ -268,6 +347,7 @@ export function EndScreen() {
         <h2 id="endTitle">{result.title}</h2>
         <p id="endText">{result.text}</p>
         {result.learning && <LearningReportCard report={result.learning} />}
+        {shift && <ShiftReportCard report={shift} />}
         <div id="endStats" className="stats">
           {result.stats.map((stat: { value: string; label: string; best?: boolean }) => (
             <div key={stat.label} className={stat.best ? 'record-stat' : undefined}>

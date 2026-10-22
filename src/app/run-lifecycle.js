@@ -133,7 +133,7 @@ export function createRunLifecycle({
     // A first win on the load level opens the next one; higher levels pay more codes.
     let opened = false,
       bonus = 0;
-    if (win && !endless && !s.learning) {
+    if (win && !endless && !s.learning && !s.incident) {
       opened = loads.recordLoadWin(run.selected, s.load) && s.load < maxLoad;
       bonus = wallet.earn(Math.floor(s.earned * rewardPerLevel * (s.load - 1)));
       s.earned += bonus;
@@ -204,7 +204,14 @@ export function createRunLifecycle({
   // After a win: keep playing the same run in the endless production mode.
   function continueProduction() {
     const s = run.state;
-    if (run.mode !== 'end' || !run.result?.canContinue || !s || s.endless || s.learning)
+    if (
+      run.mode !== 'end' ||
+      !run.result?.canContinue ||
+      !s ||
+      s.endless ||
+      s.learning ||
+      s.incident
+    )
       return false;
     s.endless = true;
     s.endlessStart = s.t;

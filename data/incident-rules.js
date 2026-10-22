@@ -214,6 +214,11 @@ export const incidentRules = {
     cto: { name: 'CTO', level: 3, arrive: 15, miss: 0 },
     top: { name: 'ТОП-менеджмент Utrace', level: 4, arrive: 20, miss: 0 },
   },
+  // The console opens anywhere while no enemy is within `safeRadius` px of the hero; the
+  // fight stops while it is open. At load `fullFeedback` and below a mistake's toast explains
+  // it with the course; above, it only says that it was one.
+  console: { safeRadius: 300, fullFeedback: 1 },
+
   // The player is the coordinator: the senior of the shift, or the team lead when the senior
   // is away (incident-6, incident-8).
   // The moderator brings more people when one coordinator is not enough (incident-7).
