@@ -23,6 +23,15 @@
 //   passive    never attacks (a structure that only summons)
 //   labelAbove height of the name tag over the feet, for art taller than the radius
 //   collage    a body glued from other units' art: [unit, x, y, scale] (the learning bosses)
+//   artScale   the art drawn this many times larger (a bigger body than the art was made for)
+//   barrage    added to every strike: `shots` (a pattern as above), `bombs` (mortar marks
+//              thrown around the unit itself), `mortar` (marks at the player)
+//   ward       while any unit it summoned lives, takes `reduction` less damage
+//   escalate   every `every` s one level more, up to `max`: cooldown × `cooldown` per level,
+//              `shots` more in the barrage ring, `summon` × level `units` called; {level} in
+//              `message`
+//   onlyIn     comes only on maps whose objective has this type (the incident mode's
+//              monitoring foes); every other unit is in every stage of every map
 // Every enemy, bosses included, has this much more health and hits this much harder than
 // the numbers below.
 export const enemyHpScale = 1.15;
@@ -75,23 +84,51 @@ export const unitDefinitions = {
       },
     ],
   },
+  // The learning bosses do what every node bug does, all at once and harder: the shockwave,
+  // a ring of shots, bombs thrown around, marks at the player, report pools, a slowing hit,
+  // summons; each has a trick of its own.
   batch_accounting: {
     name: 'Партионный учёт',
-    hp: 1800,
+    hp: 9000,
     speed: 38,
-    damage: 16,
-    r: 52,
-    range: 120,
+    damage: 22,
+    r: 78,
+    range: 160,
     wind: 1.2,
-    cooldown: 2.8,
+    cooldown: 2.6,
     xp: 100,
     color: '#4da5ff',
     mark: 'BATCH',
     attack: 'pulse',
     boss: true,
     heavy: true,
-    labelAbove: 92,
+    artScale: 1.5,
+    labelAbove: 138,
+    slow: { amount: 0.35, duration: 2 },
     summon: { every: 7, count: 3, max: 12, reach: 4000, units: ['pepsi'] },
+    pools: { every: 6, count: 3, radius: 46, life: 4, scatter: 90, damage: 0.5, reach: 700 },
+    barrage: {
+      shots: { count: 12, radial: true, speed: 190, damage: 0.5 },
+      bombs: { radius: 60, delay: 1.1, count: 5, scatter: 260, damage: 0.7 },
+      mortar: { radius: 55, delay: 1.2, count: 2, scatter: 90, damage: 0.6 },
+    },
+    // Its trick: the batch reserve. While a Pepsi it called lives, it takes 70% less damage.
+    ward: { reduction: 0.7, color: '#4da5ff' },
+    phases: [
+      {
+        at: 0.66,
+        message: 'ПАРТИОННЫЙ УЧЁТ: резерв партий удвоен, залпы гуще',
+        summon: { units: ['pepsi'], count: 4 },
+        shots: { count: 10, radial: true, speed: 140, damage: 0.4 },
+      },
+      {
+        at: 0.33,
+        message: 'ПАРТИОННЫЙ УЧЁТ: срок резерва истекает, темп растёт',
+        summon: { units: ['pepsi'], count: 4 },
+        mortar: { radius: 60, delay: 1, count: 3, scatter: 120, damage: 0.6 },
+        enrage: { speed: 1.25, cooldown: 0.75 },
+      },
+    ],
     // Drawn as many Pepsi emblems glued together: [unit, x, y, scale].
     collage: [
       ['pepsi', -27, -41, 0.9],
@@ -107,21 +144,54 @@ export const unitDefinitions = {
   // The incident course's boss: one incident that hit many clients at once.
   critical_incident: {
     name: 'Критический инцидент',
-    hp: 1800,
+    hp: 9000,
     speed: 38,
-    damage: 16,
-    r: 52,
-    range: 120,
+    damage: 22,
+    r: 78,
+    range: 160,
     wind: 1.2,
-    cooldown: 2.8,
+    cooldown: 2.6,
     xp: 100,
     color: '#ff5d5d',
     mark: 'CRIT',
     attack: 'pulse',
     boss: true,
     heavy: true,
-    labelAbove: 92,
+    artScale: 1.5,
+    labelAbove: 138,
+    slow: { amount: 0.35, duration: 2 },
     summon: { every: 7, count: 3, max: 12, reach: 4000, units: ['pepsi', 'mars', 'baltika'] },
+    pools: { every: 6, count: 3, radius: 46, life: 4, scatter: 90, damage: 0.5, reach: 700 },
+    barrage: {
+      shots: { count: 10, radial: true, speed: 190, damage: 0.5 },
+      bombs: { radius: 60, delay: 1.1, count: 5, scatter: 260, damage: 0.7 },
+      mortar: { radius: 55, delay: 1.2, count: 2, scatter: 90, damage: 0.6 },
+    },
+    // Its trick: escalation, as in the matrix. Every 30 s (an update every 30 minutes) one
+    // level more, up to 4: faster strikes, a denser ring, more clients drawn in.
+    escalate: {
+      every: 30,
+      max: 4,
+      cooldown: 0.85,
+      shots: 3,
+      summon: 2,
+      units: ['pepsi', 'mars', 'baltika', 'mondelez'],
+      message: 'КРИТИЧЕСКИЙ ИНЦИДЕНТ: эскалация, уровень {level}',
+    },
+    phases: [
+      {
+        at: 0.66,
+        message: 'КРИТИЧЕСКИЙ ИНЦИДЕНТ: затронуты новые площадки',
+        summon: { units: ['inbev', 'ferrero', 'pepsi'], count: 4 },
+        mortar: { radius: 60, delay: 1, count: 3, scatter: 120, damage: 0.6 },
+      },
+      {
+        at: 0.33,
+        message: 'КРИТИЧЕСКИЙ ИНЦИДЕНТ: клиенты требуют update, темп растёт',
+        shots: { count: 8, radial: true, speed: 140, damage: 0.4 },
+        enrage: { speed: 1.25, cooldown: 0.75 },
+      },
+    ],
     // The logos of the clients one failure hit, glued together.
     collage: [
       ['baltika', -30, -36, 0.85],
@@ -360,6 +430,40 @@ export const unitDefinitions = {
     poise: 0.8,
     // Inspector: its wave slows the player.
     slow: { amount: 0.25, duration: 1.2 },
+  },
+  // Monitoring foes of the incident escalation mode: beating them opens its metrics
+  // (data/incident-rules.js).
+  grafana_filter: {
+    name: 'Фильтр Grafana',
+    hp: 40,
+    speed: 105,
+    damage: 5,
+    r: 13,
+    range: 40,
+    wind: 0.5,
+    cooldown: 0.8,
+    xp: 1,
+    color: '#ff9830',
+    mark: 'GF',
+    onlyIn: 'escalation',
+    // A fast weak swarm: all-round strike like L3.
+    burst: { reach: 14, ring: { r: 22, life: 0.25, color: '#ff9830' }, sound: 'hit' },
+  },
+  log_query: {
+    name: 'Запрос в логи',
+    hp: 220,
+    speed: 50,
+    damage: 10,
+    r: 22,
+    range: 50,
+    wind: 0.8,
+    cooldown: 1.2,
+    xp: 4,
+    color: '#9b7bff',
+    mark: 'LOG',
+    onlyIn: 'escalation',
+    // A slow armoured query: hits from the front do less.
+    frontDamageMultiplier: 0.7,
   },
   bug_aggregation: {
     name: 'Баг агрегации',

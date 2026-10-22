@@ -9,7 +9,7 @@ import { MapSelect } from './MapSelect';
 // ?dev adds the animation controls: motion, pause and mirroring.
 const devTools = devToolsEnabled(window.location.search);
 
-export const OpponentsView: React.FC = () => {
+export const OpponentsView: React.FC<{ penza: boolean }> = ({ penza }) => {
   const [filterCategory, setFilterCategory] = useState<'all' | 'regulators' | 'clients'>('all');
   const [motion, setMotion] = useState<'walk' | 'attack' | 'hurt'>('walk');
   const [frozen, setFrozen] = useState<boolean>(false);
@@ -23,7 +23,10 @@ export const OpponentsView: React.FC = () => {
   const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map());
 
   const [map, setMap] = useState<MapId>('empty');
-  const [kit] = useState(createPreviewKit);
+  // The radar redraws every frame and reads the mode through the ref.
+  const penzaRef = useRef(penza);
+  penzaRef.current = penza;
+  const [kit] = useState(() => createPreviewKit({ penza: () => penzaRef.current }));
   const { units } = kit;
 
   const filteredUnits = useMemo(() => {
@@ -212,15 +215,17 @@ export const OpponentsView: React.FC = () => {
           })}
         </div>
 
-        {/* Datacenter Schema Map */}
+        {/* The chosen map's plan */}
         <div className="opponents-schema">
-          <div className="eyebrow">ТОПОЛОГИЯ КЛАСТЕРА</div>
+          <div className="eyebrow">ПЛАН КАРТЫ</div>
           <h3>{currentArena.name}</h3>
-          <p>
-            Центральное серверное ядро Utrace окружено кольцевыми шинами передачи данных и шлюзами
-            валидации. Клиенты подключаются по периметру и создают входящий поток маркировки.
-          </p>
-          <canvas ref={canvasMapRef} width={550} height={550} aria-label="Карта дата-центра" />
+          <p>{currentArena.description}</p>
+          <canvas
+            ref={canvasMapRef}
+            width={550}
+            height={550}
+            aria-label={`План карты: ${currentArena.name}`}
+          />
         </div>
       </main>
 

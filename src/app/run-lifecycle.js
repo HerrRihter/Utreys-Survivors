@@ -1,4 +1,6 @@
 import { validLearning } from '../systems/learning.js';
+import { validIncident } from '../systems/escalation.js';
+import { courseOf } from '../systems/queries/learning.js';
 import { fromGraphJson } from '../core/graph-json.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
 import { heroDefinitions } from '../../data/characters/heroes.js';
@@ -17,6 +19,7 @@ import { codes } from './views/format.js';
 // update bundles and resuming a saved run. Level-up screens belong to `levels` (level-up.js).
 export function createRunLifecycle({
   run,
+  settings,
   progression,
   upgrades,
   world,
@@ -56,12 +59,16 @@ export function createRunLifecycle({
       heroDef: heroDefinitions[run.selected],
       levels,
       load,
+      // A new run takes the Penza mode from the settings; a resumed one keeps its own
+      // (restoreRun puts the saved flag back; saves from before the mode have none).
+      penza: !restoring && settings.penza,
       seed,
       runId: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       map: run.selectedMap,
       schedule,
       arenaSize: world.arena.size,
       baClient: run.baClient,
+      course: run.selectedCourse,
       doneBefore: achievements.list.filter((a) => achievements.achievementDone(a)).map((a) => a.id),
     });
     world.follow(run.state);
@@ -74,7 +81,8 @@ export function createRunLifecycle({
     run.tip = { text: '', left: 0 };
     setMode('play');
     const map = mapDefinitions[run.selectedMap];
-    toast(map.name.toUpperCase() + ' · ' + map.description);
+    // A learning run names its course; other maps describe themselves.
+    toast(map.name.toUpperCase() + ' · ' + (courseOf(run.state)?.title ?? map.description));
     audio.effect('ui');
     changed();
   }
@@ -125,7 +133,7 @@ export function createRunLifecycle({
     // A first win on the load level opens the next one; higher levels pay more codes.
     let opened = false,
       bonus = 0;
-    if (win && !endless && !s.learning) {
+    if (win && !endless && !s.learning && !s.incident) {
       opened = loads.recordLoadWin(run.selected, s.load) && s.load < maxLoad;
       bonus = wallet.earn(Math.floor(s.earned * rewardPerLevel * (s.load - 1)));
       s.earned += bonus;
@@ -196,7 +204,14 @@ export function createRunLifecycle({
   // After a win: keep playing the same run in the endless production mode.
   function continueProduction() {
     const s = run.state;
-    if (run.mode !== 'end' || !run.result?.canContinue || !s || s.endless || s.learning)
+    if (
+      run.mode !== 'end' ||
+      !run.result?.canContinue ||
+      !s ||
+      s.endless ||
+      s.learning ||
+      s.incident
+    )
       return false;
     s.endless = true;
     s.endlessStart = s.t;
@@ -233,6 +248,14 @@ export function createRunLifecycle({
       toast('Учебное сохранение несовместимо. Можно начать новый забег.');
       return false;
     }
+    // A shift saved under other incident rules is not judged by these ones.
+    if (
+      (saved.incident || mapDefinitions[snapshot.map]?.objective?.type === 'escalation') &&
+      !validIncident(saved.incident, snapshot.map)
+    ) {
+      toast('Сохранение смены несовместимо. Можно начать новую.');
+      return false;
+    }
     if (!heroDefinitions[snapshot.hero] || !shop.owned(snapshot.hero)) {
       snapshots.clear();
       ui.emit();
@@ -242,6 +265,7 @@ export function createRunLifecycle({
     if (mapDefinitions[snapshot.map]) run.selectedMap = snapshot.map;
     world.select(run.selectedMap);
     if (snapshot.baClient) run.baClient = snapshot.baClient;
+    if (saved.learning) run.selectedCourse = saved.learning.course;
     run.selectedLoad = snapshot.state.load || 1;
     run.nextSeed = snapshot.state.seed ?? null;
     start(true);

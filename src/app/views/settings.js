@@ -11,6 +11,7 @@ export function settingsView({ run, settings, audio, runLog = null, devTools = f
     shake: settings.shake,
     hints: settings.hints,
     damageNumbers: settings.damageNumbers,
+    penza: settings.penza,
     uiScale: settings.uiScale,
     scales: uiScales,
     capture: run.capture || null,

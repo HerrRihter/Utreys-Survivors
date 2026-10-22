@@ -2,4 +2,4 @@
 // in the account form and the leaderboard path a table reads.
 export { createAccount } from '../services/auth.js';
 export { LOGIN_MAX, PASSWORD_MIN } from '../services/login.js';
-export { statPath } from '../services/leaderboard.js';
+export { statPath, TABLE_SIZE as leaderboardSize } from '../services/leaderboard.js';

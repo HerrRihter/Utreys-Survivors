@@ -6,7 +6,9 @@ import { placeMortar } from './enemy-behaviors.js';
 //  attack 'pulse'      → a shockwave of radius `range` around the unit;
 //  melee with `burst`  → an all-round hit within range + burst.reach, shown as a ring;
 //  plain melee         → a frontal hit within range + 8 that needs a clear line to the player.
-// A boss phase may add a ring of shots or mortar marks to every strike.
+// A boss phase may add a ring of shots or mortar marks to every strike; a `barrage` adds its
+// own on top (a ring of shots, bombs around the unit, marks at the player), the ring denser by
+// `escalate.shots` per escalation level.
 const shotSpeed = 235,
   shotLife = 2;
 
@@ -47,6 +49,16 @@ export function resolveEnemyStrike(c, s, e, u, aim) {
     ay = Math.sin(angle);
   if (e.phaseShots) fire(s, e, angle, e.phaseShots);
   if (e.phaseMortar) placeMortar(c, s, e, u, e.phaseMortar, p);
+  if (u.barrage) {
+    const { shots, bombs, mortar } = u.barrage;
+    if (shots)
+      fire(s, e, angle, {
+        ...shots,
+        count: shots.count + (e.escalation || 0) * (u.escalate?.shots || 0),
+      });
+    if (bombs) placeMortar(c, s, e, u, { ...bombs, around: true }, e);
+    if (mortar) placeMortar(c, s, e, u, mortar, p);
+  }
   if (u.attack === 'projectile') {
     fire(s, e, angle, u.shots);
     c.effect('throw');

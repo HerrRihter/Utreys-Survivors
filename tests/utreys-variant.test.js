@@ -27,8 +27,8 @@ test('utreys-variant', async () => {
       'empty',
       'serverRoom',
       'pepsiDesk',
-      'learningLab',
-      'incidentLab',
+      'learningCenter',
+      'opsCenter',
     ]);
 
     // Verify new enemies: L3, CRPT, Pepsi, InBev, Mars

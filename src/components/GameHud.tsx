@@ -2,6 +2,7 @@ import type { LearningTerminal } from '../app/types';
 import { SoundButton } from './menus/SoundButton';
 import { BuildPanel } from './GameRunScreens';
 import { useHudVersion, useSession } from './session';
+import { tap } from './tap';
 
 const hidden = (visible: boolean, className = '') =>
   [className, visible ? '' : 'hidden'].filter(Boolean).join(' ') || undefined;
@@ -62,13 +63,13 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
       {learning && run.mode === 'play' && (learning.terminals.length > 0 || learning.exit) && (
         <div className="learning-hud">
           {learning.terminals.map((n: LearningTerminal) => (
-            <button key={n.id} className="primary" onClick={() => commands.startLearningTest(n.id)}>
+            <button key={n.id} className="primary" {...tap(() => commands.startLearningTest(n.id))}>
               Тест: {n.label}
             </button>
           ))}
           {learning.exit && (
             <>
-              <button className="primary" onClick={commands.moveLearningRoom}>
+              <button className="primary" {...tap(commands.moveLearningRoom)}>
                 {learning.exit}
               </button>
               <small>Неподобранные предметы останутся здесь</small>
@@ -82,11 +83,24 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
 
       <div id="actions" className="actions">
         {!ownSound && <SoundButton id="sound" enabled={soundEnabled} />}
+        {/* The incident shift's console: closed while an enemy is close by. */}
+        {hud?.console && (
+          <button
+            id="console"
+            className="small"
+            disabled={!hud.console.canOpen}
+            title={hud.console.canOpen ? 'Пульт эскалации' : 'Рядом враги: сначала отбейся'}
+            aria-label={hud.console.canOpen ? 'Пульт эскалации' : 'Пульт: рядом враги'}
+            {...tap(commands.openConsole)}
+          >
+            {hud.console.canOpen ? 'ПУЛЬТ' : 'ПУЛЬТ · ВРАГИ'}
+          </button>
+        )}
         <button
           id="pause"
           className={hidden(!!hud?.showPause, 'small')}
           aria-label="Пауза"
-          onClick={commands.pause}
+          {...tap(commands.pause)}
         >
           Ⅱ ПАУЗА
         </button>
@@ -124,8 +138,7 @@ export function GameHud({ soundEnabled }: { soundEnabled: boolean }) {
               aria-label={ability ? `${ability.name}: ${ability.status}` : undefined}
               title={ability?.title}
               disabled={ability ? ability.disabled : true}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => commands.activateAbility(slot)}
+              {...tap(() => commands.activateAbility(slot))}
             >
               {ability?.label}
             </button>

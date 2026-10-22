@@ -193,9 +193,10 @@ const datacenter = {
   },
 };
 
-// The learning maps: steady waves in the mazes (the rooms scale them, data/learning-rules.js),
-// no events, and the course's boss in the central hall.
-function learningSchedule(unit, message) {
+// The learning map: steady waves in the mazes (the rooms scale them, data/learning-rules.js),
+// twice the crowd of a calm stage, no events, and the course's boss in the central hall: its
+// unit and message come from the run's course (`course: true`).
+function learningSchedule() {
   return {
     ...datacenter,
     normal: {
@@ -203,8 +204,8 @@ function learningSchedule(unit, message) {
       firstDelay: 2,
       stages: datacenter.normal.stages.map((stage) => ({
         ...stage,
-        batch: 2,
-        cap: 14,
+        batch: 4,
+        cap: 28,
         interval: 4,
         minInterval: 3,
         timeFactor: 0,
@@ -216,7 +217,36 @@ function learningSchedule(unit, message) {
     elites: datacenter.elites,
     events: { times: [], types: [] },
     notifications: [],
-    boss: { unit, condition: 'learning-rooms-complete', message, sound: 'boss' },
+    boss: { course: true, condition: 'learning-rooms-complete', sound: 'boss' },
+  };
+}
+
+// The incident shift (data/incident-rules.js): the data centre's waves with the monitoring foes
+// in every stage at a small weight, which an ordered metric multiplies. No mid-run events: the
+// shift has its own. The boss is a punishment: the critical incident comes when an incident is
+// left to grow (`incident-escalated`), and beating it does not end the shift.
+function shiftSchedule() {
+  const monitoring = [
+    ['grafana_filter', 1],
+    ['log_query', 0.5],
+  ];
+  return {
+    ...datacenter,
+    normal: {
+      ...datacenter.normal,
+      stages: datacenter.normal.stages.map((stage) => ({
+        ...stage,
+        weights: [...stage.weights, ...monitoring],
+      })),
+    },
+    boss: {
+      unit: 'critical_incident',
+      condition: 'incident-escalated',
+      message: 'КРИТИЧЕСКИЙ ИНЦИДЕНТ: эскалация запоздала, сбой задел всех клиентов!',
+      sound: 'boss',
+    },
+    notifications: [{ time: 5, message: 'Ночная смена началась. Следи за операциями в комнатах.' }],
+    events: { times: [], types: [] },
   };
 }
 
@@ -265,12 +295,6 @@ export const waveSchedules = {
       { time: 90, message: 'Бэклог растёт: сервисдески выпускают всё больше тикетов!' },
     ],
   },
-  learningLab: learningSchedule(
-    'batch_accounting',
-    'ПАРТИОННЫЙ УЧЁТ: склеенные партии Пепси наступают!',
-  ),
-  incidentLab: learningSchedule(
-    'critical_incident',
-    'КРИТИЧЕСКИЙ ИНЦИДЕНТ: сбой задел всех клиентов разом!',
-  ),
+  learningCenter: learningSchedule(),
+  opsCenter: shiftSchedule(),
 };

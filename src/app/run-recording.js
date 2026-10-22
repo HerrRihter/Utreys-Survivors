@@ -7,9 +7,13 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
   // Run statistics (src/systems/run-records.js): every ending adds what is new since the
   // previous ending of the same run. Win, death, quitting to the menu and restarting all end
   // a run; a run continued in production ends again later. `victory` only from finish().
+  // Learning, incident shift and Penza runs (their balance is not the game's) stay out of
+  // records and ratings.
+  const practice = (s) => !!(s.learning || s.incident);
+  const rated = (s) => !practice(s) && !s.penza;
   function countRun(victory = false) {
     const s = run.state;
-    if (!s?.runId || s.learning) return null;
+    if (!s?.runId || !rated(s)) return null;
     const counted = s.statsCounted ?? { kills: 0, codes: 0 };
     const improved = records.recordRunResult({
       runId: s.runId,
@@ -33,9 +37,9 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
   function recordRun(win = false) {
     const s = run.state;
     if (!s || s.resultRecorded) return null;
-    if (!s.learning) records.recordTime(s.t, s.recordedTime);
-    if (!s.learning) records.recordLevel(s.level);
-    if (!s.learning) records.recordKills(s.kills);
+    if (rated(s)) records.recordTime(s.t, s.recordedTime);
+    if (rated(s)) records.recordLevel(s.level);
+    if (rated(s)) records.recordKills(s.kills);
     s.resultRecorded = true;
     s.recordedTime = s.t;
     // Evolutions assembled in this run open their encyclopedia entries.
@@ -50,9 +54,10 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
         win,
         build: upgrades.build(run.selected, s),
       }),
+      s.runId,
     );
     s.offersLogged = offers.length;
-    if (!s.statsRecorded && !s.learning) {
+    if (!s.statsRecorded && !practice(s)) {
       s.statsRecorded = true;
       const nodesMap = !mapDefinitions[s.map]?.objective;
       records.recordRunStats({
@@ -68,7 +73,7 @@ export function createRunRecording({ run, progression, upgrades, runLog }) {
         evolutions: s.evolutions + (s.stats.heroEvo ? 1 : 0),
       });
     }
-    if (!s.endless) return null;
+    if (!s.endless || !rated(s)) return null;
     return loads.recordProduction(
       run.selected,
       s.load,

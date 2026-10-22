@@ -88,7 +88,11 @@ export function speedFactor(e, u) {
   return (e.enraged ? u.enrage.speed : 1) * (e.phaseEnrage?.speed || 1);
 }
 export function cooldownFactor(e, u) {
-  return (e.enraged ? u.enrage.cooldown : 1) * (e.phaseEnrage?.cooldown || 1);
+  return (
+    (e.enraged ? u.enrage.cooldown : 1) *
+    (e.phaseEnrage?.cooldown || 1) *
+    (u.escalate ? u.escalate.cooldown ** (e.escalation || 0) : 1)
+  );
 }
 
 function summonAround(c, s, e, units, count) {
@@ -118,8 +122,24 @@ function enterPhase(c, s, e, phase, quiet) {
   s.shake = Math.max(s.shake, 6);
 }
 
-// Timers that run whatever the enemy is doing: healing, summons, pools, enrage, phases.
+// Timers that run whatever the enemy is doing: healing, summons, pools, enrage, phases, a
+// boss's ward and escalation.
 export function updateTraits(c, s, e, u, dt) {
+  // Escalation: every `every` s one level more, up to `max`: faster strikes, a denser ring of
+  // shots (src/systems/enemy-attacks.js) and a call for more units.
+  if (u.escalate && (e.escalation || 0) < u.escalate.max) {
+    const spec = u.escalate;
+    e.escalateCd = (e.escalateCd ?? spec.every) - dt;
+    if (e.escalateCd <= 0) {
+      e.escalateCd = spec.every;
+      e.escalation = (e.escalation || 0) + 1;
+      summonAround(c, s, e, spec.units, spec.summon * e.escalation);
+      c.toast(spec.message.replace('{level}', String(e.escalation)));
+      c.effect('boss');
+      s.fx.push({ kind: 'ring', x: e.x, y: e.y, r: 220, life: 0.7, max: 0.7, color: u.color });
+      s.shake = Math.max(s.shake, 5);
+    }
+  }
   if (u.enrage && !e.enraged && e.hp <= e.max * u.enrage.below) {
     e.enraged = true;
     s.fx.push({ kind: 'ring', x: e.x, y: e.y, r: e.r + 18, life: 0.4, max: 0.4, color: u.color });
@@ -196,13 +216,22 @@ export function updateTraits(c, s, e, u, dt) {
       }
     }
   }
+  // Ward: while any unit it called lives, the boss takes less damage (src/systems/combat.js).
+  if (u.ward) e.warded = s.enemies.some((o) => o.summonerId === e.id && o.hp > 0);
 }
 
-// Ground marks that explode after a delay (`blast`) and lingering zones (`pool`).
+// Ground marks that explode after a delay (`blast`) and lingering zones (`pool`). Marks
+// `around` the unit itself scatter out to `scatter` px beyond its body (bombs thrown about);
+// otherwise the first lands at `aim` and the rest around it.
 export function placeMortar(c, s, e, u, spec, aim) {
+  if (spec.around) aim = e;
   for (let i = 0; i < spec.count; i++) {
     const a = s.rng.random() * Math.PI * 2,
-      r = i === 0 ? 0 : spec.scatter * (0.5 + s.rng.random() * 0.5);
+      r = spec.around
+        ? e.r + 30 + s.rng.random() * spec.scatter
+        : i === 0
+          ? 0
+          : spec.scatter * (0.5 + s.rng.random() * 0.5);
     s.hazards.push({
       kind: 'blast',
       x: aim.x + Math.cos(a) * r,

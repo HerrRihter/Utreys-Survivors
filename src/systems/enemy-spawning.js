@@ -1,4 +1,4 @@
-import { currentRoom, currentLayout } from './queries/learning.js';
+import { currentRoom, currentLayout, courseOf } from './queries/learning.js';
 import { learningRules } from '../../data/learning-rules.js';
 import { clamp } from '../core/math.js';
 import { updateNodes, allNodesResolved } from './node-objectives.js';
@@ -10,17 +10,20 @@ import {
   unitRole,
 } from './wave-schedule.js';
 import { runModifiers, scaleEnemy, scaleWave, makeElite } from './difficulty.js';
+import { metricBoost, shiftEscalated, shiftMinute } from './queries/incident.js';
 import { production } from '../../data/difficulty.js';
 import { enemyDamageScale, enemyHpScale, unitDefinitions } from '../../data/enemies/units.js';
-// A learning room's wave size and limit, scaled by the room (later mazes bring more).
-const roomWave = (wave, room) =>
-  room?.waves
-    ? {
-        ...wave,
-        batch: Math.ceil(wave.batch * room.waves.batch),
-        cap: Math.round(wave.cap * room.waves.cap),
-      }
-    : wave;
+// A learning room's wave size and limit, scaled by the room (later mazes bring more) and
+// swollen for a while after a failed test.
+function roomWave(wave, room, s) {
+  if (!room?.waves) return wave;
+  const surge = s.t < s.learning.surgeUntil ? learningRules.surge : { batch: 1, cap: 1 };
+  return {
+    ...wave,
+    batch: Math.ceil(wave.batch * room.waves.batch * surge.batch),
+    cap: Math.round(wave.cap * room.waves.cap * surge.cap),
+  };
+}
 
 // Placing enemies: waves, recurring units, node guardians and the boss.
 export const EnemySpawning = {
@@ -115,9 +118,11 @@ export const EnemySpawning = {
         toast('Проверка: ошибка в ответе привела инспекторов');
       }
       if (room?.boss) {
-        if (allNodesResolved(s) && !s.bossSpawned && spawn(schedule.boss.unit, true, room.boss)) {
+        // The hall's boss is the course's.
+        const boss = courseOf(s).boss;
+        if (allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true, room.boss)) {
           s.bossSpawned = true;
-          toast(schedule.boss.message);
+          toast(boss.message);
           audio.effect(schedule.boss.sound);
         }
         return;
@@ -153,7 +158,7 @@ export const EnemySpawning = {
       }
       s.spawn -= dt;
       if (s.spawn <= 0) {
-        const wave = scaleWave(roomWave(normalWave(schedule, s.t), room), runModifiers(s));
+        const wave = scaleWave(roomWave(normalWave(schedule, s.t), room, s), runModifiers(s));
         s.spawn = wave.interval;
         count();
         // Shooters and tanks outlive the light crowd: their share of the wave limit is capped
@@ -168,7 +173,14 @@ export const EnemySpawning = {
         };
         check();
         for (let i = 0; i < wave.batch && combat < wave.cap; i++) {
-          const unit = selectWaveUnit(schedule, s.t, s.rng.random(), unitDefinitions, full),
+          const unit = selectWaveUnit(
+              schedule,
+              s.t,
+              s.rng.random(),
+              unitDefinitions,
+              full,
+              metricBoost(s.incident),
+            ),
             leader = track(spawn(unit)),
             pack = unitDefinitions[unit].pack || 1;
           if (leader) {
@@ -197,7 +209,13 @@ export const EnemySpawning = {
         }
       }
       const boss = schedule.boss;
-      if (boss && !room && allNodesResolved(s) && !s.bossSpawned && spawn(boss.unit, true)) {
+      // The incident shift's boss punishes an incident left to grow; elsewhere it comes once
+      // the objectives are done.
+      const bossDue =
+        boss?.condition === 'incident-escalated'
+          ? !!s.incident && shiftEscalated(s.incident, shiftMinute(s))
+          : allNodesResolved(s);
+      if (boss && !room && bossDue && !s.bossSpawned && spawn(boss.unit, true)) {
         s.bossSpawned = true;
         if (boss.heal) {
           const gain = Math.round(s.p.max * boss.heal * s.healFactor);

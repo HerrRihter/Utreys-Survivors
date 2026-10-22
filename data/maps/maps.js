@@ -4,9 +4,58 @@
 // on that map; `unlockHint` says so in the map picker.
 // `objective` is what clears the way to the CRPT (default: the five component nodes):
 //   { type: 'desks', unit, count }  — `count` structures of `unit` that must be destroyed.
-import { learningRooms, incidentRooms } from '../learning-rules.js';
+import { learningRooms } from '../learning-rules.js';
 
 export const nodeSpacing = 450;
+
+// The incident shift's floor (data/incident-rules.js): three component rooms above a central
+// hall and three below, each with a doorway in the middle of its wall to the hall. `rooms`
+// gives each component its room [x, y, width, height] and the spot of its operations panel;
+// `lamp` is where the outside receiver's lamp stands; `lanes` are the heights at which the
+// feeds' pipes cross the hall, one per feed in the rules' order.
+const shiftFloor = (() => {
+  const size = 2200,
+    wall = 40,
+    door = 240,
+    top = 680,
+    bottom = 1480;
+  const edges = [0, 733, 1466, size];
+  const centres = [366, 1100, 1833];
+  const racks = [];
+  for (const y of [top, bottom]) {
+    let x = 0;
+    for (const c of centres) {
+      racks.push([x, y, c - door / 2 - x, wall]);
+      x = c + door / 2;
+    }
+    racks.push([x, y, size - x, wall]);
+  }
+  for (const x of edges.slice(1, -1)) {
+    racks.push([x - wall / 2, 0, wall, top]);
+    racks.push([x - wall / 2, bottom + wall, wall, size - bottom - wall]);
+  }
+  const room = (/** @type {number} */ i, /** @type {boolean} */ up) => {
+    const y = up ? 0 : bottom + wall,
+      h = up ? top : size - bottom - wall;
+    return {
+      box: [edges[i], y, edges[i + 1] - edges[i], h],
+      panel: { x: centres[i], y: up ? 380 : bottom + wall + 300 },
+    };
+  };
+  return {
+    racks,
+    rooms: {
+      'inport-operation-processor': room(0, true),
+      artemis: room(1, true),
+      'production-aggreagtion': room(2, true),
+      'code-usage-report': room(0, false),
+      'logistic-processor': room(1, false),
+      'goods-reports': room(2, false),
+    },
+    lamp: { x: 1500, y: 1060 },
+    lanes: [790, 850, 1250, 1310, 1370],
+  };
+})();
 
 export const mapDefinitions = {
   empty: {
@@ -88,28 +137,33 @@ export const mapDefinitions = {
       [1600, 1650, 300, 250],
     ],
   },
-  learningLab: {
-    name: 'Учебный полигон',
+  // One map for every course: the course is chosen with the map (data/learning-courses.js)
+  // and brings its questions, room names and boss.
+  learningCenter: {
+    name: 'Учебный центр',
     description:
-      'Три случайных лабиринта с терминалами, затем центральный зал и «Партионный учёт».',
+      'Три случайных лабиринта с терминалами-тестами, затем центральный зал с боссом курса.',
     notes:
-      'Каждый забег — новые лабиринты. В каждом три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт пакет обновлений, ошибка — проверку. После трёх терминалов открывается дверь дальше. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
-    victoryTag: 'ПАРТИОННЫЙ УЧЁТ ОСВОЕН',
+      'Выбери курс. Каждый забег — новые лабиринты. В каждом три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт награду, провал на время закрывает терминал и зовёт врагов. После трёх терминалов открывается дверь дальше. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
     ranked: false,
     // Rooms are generated per run (data/learning-rules.js, src/world/maze.js); no fixed racks.
-    objective: { type: 'learning', label: 'Терминал', course: 'batch-accounting' },
+    objective: { type: 'learning', label: 'Терминал' },
     rooms: learningRooms,
   },
-  incidentLab: {
-    name: 'Полигон инцидентов',
+  // The incident escalation mode (docs/INCIDENT-ESCALATION-PLAN.md): a night shift in the
+  // component rooms; won by finishing the shift, graded by the escalation.
+  opsCenter: {
+    name: 'Ситуационный центр',
     description:
-      'Три случайных лабиринта по управлению критическими инцидентами, затем «Критический инцидент».',
+      'Ночная смена: шесть комнат производства, сбои, каскад и эскалация по регламенту критических инцидентов.',
     notes:
-      'Тот же полигон, другой курс: критичность и роли, Трекер и эскалация, коммуникации и разбор. В каждом лабиринте три терминала под охраной багов: победи стража или найди воркэраунд, затем пройди тест. Пройденный тест даёт пакет обновлений, ошибка — проверку. Знания дают вторую жизнь. Учебные забеги не идут в рейтинг.',
-    victoryTag: 'ИНЦИДЕНТ ЗАКРЫТ',
+      'Следи за операциями в комнатах: серые идут, зелёные готовы, красные упали. Заметил сбой — открывай эскалацию на пульте, заполняй карточку, зови людей по матрице и пиши клиенту. Метрики открываются победами над врагами нужного типа. Смена не идёт в рейтинг.',
+    victoryTag: 'СМЕНА ДОИГРАНА',
     ranked: false,
-    objective: { type: 'learning', label: 'Терминал', course: 'critical-incidents' },
-    rooms: incidentRooms,
+    objective: { type: 'escalation', label: 'Компонент' },
+    racks: shiftFloor.racks,
+    nodeZones: [],
+    shift: { rooms: shiftFloor.rooms, lamp: shiftFloor.lamp, lanes: shiftFloor.lanes },
   },
 };
 

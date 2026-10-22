@@ -5,6 +5,7 @@ import { cameraOrigin } from './camera.js';
 import { drawEdgeArrows } from './edge-arrows.js';
 import { drawEvent } from './events.js';
 import { drawDoor } from './learning.js';
+import { drawShift } from './production-ops.js';
 import { roomNodes } from '../systems/queries/learning.js';
 import { drawPickup, drawEliteAura, drawGem, drawCodeToken } from './pickups.js';
 import { drawFx } from './fx.js';
@@ -61,7 +62,8 @@ export const SceneRenderer = {
         bounds.minY = cy - 50;
         bounds.maxY = cy + view.H + 50;
         // The learning map's rooms share the arena: only the room in play is drawn.
-        drawNodes(ctx, roomNodes(s), s.enemies);
+        drawShift(ctx, s, bounds);
+        drawNodes(ctx, roomNodes(s), s.enemies, s.t);
         drawDoor(ctx, s);
         drawEvent(ctx, s);
         for (const h of s.hazards || []) {

@@ -1,9 +1,10 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Overlay } from './Overlay';
 import { GoalList } from './menus/GoalList';
 import { primary } from './primary';
 import { RunRecords } from './LeaderboardView';
 import { useSession } from './session';
+import type { LearningReport, ShiftReport } from '../app/types';
 
 type BuildItem = {
   id: string;
@@ -211,10 +212,129 @@ export function LevelUpScreen({ hints }: { hints: boolean }) {
   );
 }
 
+// The learning run's report card: the grade, then every topic and the questions it asked.
+function LearningReportCard({ report }: { report: LearningReport }) {
+  return (
+    <div className="learning-summary" id="learningReport">
+      <div className="learning-grade">
+        <strong>
+          Оценка: {report.grade} · {report.percent}
+        </strong>
+        {report.preliminary && <span> (промежуточная: зал не пройден)</span>}
+      </div>
+      <p>
+        Знания: {report.points} очков · с первого раза {report.firstCorrect}/{report.answered} ·
+        повторных ответов {report.retries} ·{' '}
+        {report.reviveUsed ? 'вторая жизнь использована' : 'без второй жизни'}
+      </p>
+      <div className="learning-report-list">
+        {report.topics.map((t) => (
+          <section key={t.name}>
+            <h3>
+              {t.name} · {t.percent} · ошибок {t.mistakes}
+            </h3>
+            {t.questions.map((q) => (
+              <div key={q.id} className={'learning-report-q' + (q.firstTry ? ' ok' : ' miss')}>
+                <p>{q.text}</p>
+                <small>
+                  {q.verdict} · попыток {q.attempts} · {q.percent}
+                  {q.revive ? ' · тест второй жизни' : ''}
+                </small>
+                {q.wrong.length > 0 && <small>Ошибочно выбрано: {q.wrong.join('; ')}</small>}
+                {q.correct.length > 0 && <small>Правильно: {q.correct.join('; ')}</small>}
+                {q.explanation && <small>{q.explanation}</small>}
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// The shift's results: the review (PIR) first, then the grade and every mistake with the
+// course's key and explanation.
+function ShiftReportCard({ report }: { report: ShiftReport }) {
+  const { commands } = useSession();
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
+  if (report.review.length)
+    return (
+      <div className="learning-summary" id="shiftReview">
+        <div className="learning-grade">
+          <strong>Разбор после смены (PIR)</strong>
+        </div>
+        <p>Ответь на вопросы разбора — после них будет оценка смены.</p>
+        {report.review.map((q) => {
+          const chosen = answers[q.key] ?? [];
+          return (
+            <fieldset key={q.key} className="esc-question">
+              <legend>{q.text}</legend>
+              {q.options.map((o) => (
+                <label key={o.id} className="esc-option">
+                  <input
+                    type={q.multiple ? 'checkbox' : 'radio'}
+                    name={'review-' + q.key}
+                    checked={chosen.includes(o.id)}
+                    onChange={() =>
+                      setAnswers({
+                        ...answers,
+                        [q.key]: q.multiple
+                          ? chosen.includes(o.id)
+                            ? chosen.filter((x) => x !== o.id)
+                            : [...chosen, o.id]
+                          : [o.id],
+                      })
+                    }
+                  />
+                  <span>{o.text}</span>
+                </label>
+              ))}
+            </fieldset>
+          );
+        })}
+        <button
+          className="primary"
+          disabled={report.review.some((q) => !answers[q.key]?.length)}
+          onClick={() => {
+            for (const q of report.review) commands.escalationReview(q.key, answers[q.key]);
+          }}
+        >
+          Завершить разбор
+        </button>
+      </div>
+    );
+  return (
+    <div className="learning-summary" id="shiftReport">
+      <div className="learning-grade">
+        <strong>
+          Оценка смены: {report.grade} · {report.percent}
+        </strong>
+        {report.preliminary && <span> (смена не доиграна)</span>}
+      </div>
+      <p>{report.groups.map((g) => `${g.name}: ${g.percent}`).join(' · ')}</p>
+      <div className="learning-report-list">
+        {report.mistakes.length === 0 && <p>Ошибок нет.</p>}
+        {report.mistakes.map((m, i) => (
+          <div key={i} className="learning-report-q">
+            <p>
+              {m.ticket ? m.ticket + ' · ' : ''}
+              {m.note}
+            </p>
+            {m.question && <small>{m.question}</small>}
+            {m.correct.length > 0 && <small>Правильно: {m.correct.join('; ')}</small>}
+            {m.explanation && <small>{m.explanation}</small>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function EndScreen() {
   const session = useSession();
   const run = session.views.run();
   const result = run.result;
+  const shift = session.views.shiftResult() as ShiftReport | null;
   if (!result) return null;
   const top = result.damage.slice(0, 6);
   const runId: string = run.state?.runId ?? '';
@@ -226,25 +346,8 @@ export function EndScreen() {
         </div>
         <h2 id="endTitle">{result.title}</h2>
         <p id="endText">{result.text}</p>
-        {result.learning && (
-          <div className="learning-summary">
-            <strong>Знания: {result.learning.points} очков</strong>
-            <p>
-              С первого раза: {result.learning.firstCorrect}/{result.learning.answered} · Повторных
-              ответов: {result.learning.retries}
-            </p>
-            <p>
-              {result.learning.reviveUsed
-                ? 'Попытка второй жизни использована'
-                : 'Без второй жизни'}
-            </p>
-            {result.learning.topics.map((t) => (
-              <p key={t.name}>
-                {t.name}: ошибок {t.mistakes}
-              </p>
-            ))}
-          </div>
-        )}
+        {result.learning && <LearningReportCard report={result.learning} />}
+        {shift && <ShiftReportCard report={shift} />}
         <div id="endStats" className="stats">
           {result.stats.map((stat: { value: string; label: string; best?: boolean }) => (
             <div key={stat.label} className={stat.best ? 'record-stat' : undefined}>
@@ -298,7 +401,7 @@ export function EndScreen() {
           </button>
         )}
         <p id="endSeed" className="end-seed">
-          Сид забега: <b>{result.seed}</b> · узлы, баги и события повторятся с тем же сидом
+          Сид забега: <b>{result.seed}</b> · {result.seedNote}
         </p>
         <button id="againSeed" className="small" onClick={session.commands.restartSameSeed}>
           ТОТ ЖЕ СИД

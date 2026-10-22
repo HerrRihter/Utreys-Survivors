@@ -44,12 +44,18 @@ const cosmetic = new Set([
   'speechPhraseIndex',
   'speechCursor',
 ]);
-export function stateHash(s, legacyProjection = false) {
+// Fields added after a fixture was taken, which its projection leaves out: `pre-learning`
+// before the learning map, `pre-incident` before the incident escalation mode; both before
+// the Penza run flag (false in these replays).
+export const projections = {
+  'pre-learning': ['learning', 'incident', 'penza'],
+  'pre-incident': ['incident', 'penza'],
+};
+export function stateHash(s, projection = null) {
+  const without = projections[projection] ?? [];
   const fields = toGraphJson(
     Object.fromEntries(
-      persistentKeys
-        .filter((key) => !legacyProjection || key !== 'learning')
-        .map((key) => [key, s[key]]),
+      persistentKeys.filter((key) => !without.includes(key)).map((key) => [key, s[key]]),
     ),
   );
   const text = JSON.stringify(fields, (key, value) => (cosmetic.has(key) ? undefined : value));
@@ -124,7 +130,7 @@ export async function replayContinuous(scenario, marks = []) {
   let step = 0;
   for (const mark of [...marks, scenario.steps]) {
     step = play(game, tape, step, mark, cursor);
-    hashes[mark] = stateHash(game.state, scenario.legacyProjection);
+    hashes[mark] = stateHash(game.state, scenario.projection);
   }
   const s = game.state;
   const out = { hashes, t: s.t, kills: s.kills, level: s.level, enemies: s.enemies.length };

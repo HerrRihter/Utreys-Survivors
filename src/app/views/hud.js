@@ -5,7 +5,9 @@ import {
   doorOpen,
   learningActionNear,
   mazeRooms,
+  roomName,
   roomNodes,
+  terminalLock,
 } from '../../systems/queries/learning.js';
 import {
   abilityRank,
@@ -19,6 +21,8 @@ import { mapDefinitions } from '../../../data/maps/maps.js';
 import { openTickets } from '../../systems/node-objectives.js';
 import { defaultBindings } from '../run-state.js';
 import { clock, keyLabel, loadLabel, slotKey, withEmptySlots } from './format.js';
+import { shiftLine } from './escalation.js';
+import { consoleOpenable } from '../../systems/queries/incident.js';
 
 // HUD line for the running event; '' when none.
 function eventLabel(s) {
@@ -47,18 +51,27 @@ function hudBuild(run, upgrades) {
 
 const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 
+// The longest lock of a failed terminal in the room, with the swollen waves; '' when none.
+function lockLabel(s) {
+  const lock = Math.max(0, ...roomNodes(s).map((n) => terminalLock(s, n)));
+  return lock > 0 ? ` · терминал недоступен ${Math.ceil(lock)} с, наплыв врагов` : '';
+}
+
 function nodeProgress(s) {
+  if (s.incident) return shiftLine(s);
   if (s.learning) {
     const l = s.learning,
       room = currentRoom(s),
       mazes = mazeRooms(s.map).length,
       terminals = roomNodes(s),
       tail = ` · ${l.points} очков · ${l.reviveUsed ? 'вторая жизнь использована' : 'вторая жизнь есть'}`;
-    if (!room.maze) return room.name + tail;
+    const name = roomName(s, l.roomIndex);
+    if (!room.maze) return name + tail;
     return (
-      `${room.name} ${l.roomIndex + 1}/${mazes}` +
+      `${name} ${l.roomIndex + 1}/${mazes}` +
       ` · терминалы ${terminals.filter((n) => n.status === 'completed').length}/${terminals.length}` +
       (doorOpen(s) ? ' · дверь открыта' : '') +
+      lockLabel(s) +
       tail
     );
   }
@@ -154,6 +167,8 @@ export function hudView({ run, progression, settings, upgrades }) {
     controls: run.touchOnly ? '' : controlsHint(settings.bindings),
     stick: run.stickView,
     build: upgrades ? hudBuild(run, upgrades) : null,
+    // The incident shift's console: offered in play, open only with no enemy close by.
+    console: s.incident && run.mode === 'play' ? { canOpen: consoleOpenable(s) } : null,
     // A test or a room exit within reach takes the tip's place under the hero.
     tip: run.mode === 'play' && run.tip?.left > 0 && !learningActionNear(s) ? run.tip.text : '',
   };

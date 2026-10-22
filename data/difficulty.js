@@ -33,6 +33,13 @@ export const production = {
   bossReward: 25,
 };
 
+// The hidden Penza mode as a run modifier: everything is 30% faster and stronger. `hero`
+// raises the run's starting stats and healing; `enemy` adds to the load modifiers above.
+export const penzaRun = {
+  hero: { damage: 0.3, haste: 0.3, speed: 0.3, heal: 0.3 },
+  enemy: { damage: 0.3, speed: 0.3 },
+};
+
 const zero = () => ({
   hp: 0,
   speed: 0,
@@ -45,12 +52,13 @@ const zero = () => ({
   workaround: 0,
 });
 
-// Summed modifiers of `level` plus `minutes` of production.
-export function loadModifiers(level, minutes = 0) {
+// Summed modifiers of `level` plus `minutes` of production, plus the Penza run's.
+export function loadModifiers(level, minutes = 0, penza = false) {
   const out = zero();
   for (const entry of loadLevels)
     if (entry.level <= level)
       for (const [key, value] of Object.entries(entry.mod)) out[key] += value;
   for (const [key, value] of Object.entries(production.perMinute)) out[key] += value * minutes;
+  if (penza) for (const [key, value] of Object.entries(penzaRun.enemy)) out[key] += value;
   return out;
 }

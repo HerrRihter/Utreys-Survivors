@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { unitDefinitions } from '../data/enemies/units.js';
 import { waveSchedules } from '../data/enemies/waves.js';
+import { mapDefinitions } from '../data/maps/maps.js';
 import { unitRole, selectWaveUnit } from '../src/systems/wave-schedule.js';
 import { createHarness } from './helpers/game-harness.js';
 import { test } from 'vitest';
@@ -9,6 +10,8 @@ test('enemy-roles', async () => {
   const regular = Object.keys(unitDefinitions).filter(
     (id) => !unitDefinitions[id].boss && !unitDefinitions[id].miniboss,
   );
+  // Units of one mode (`onlyIn`) are in its maps only; the rest is in every stage of every map.
+  const roster = regular.filter((id) => !unitDefinitions[id].onlyIn);
 
   // A quiet run: no waves, no node guardians nearby, the player far from walls.
   async function quiet() {
@@ -28,11 +31,19 @@ test('enemy-roles', async () => {
     for (let i = 0; i < Math.ceil(seconds / 0.05); i++) s.update(0.05);
   };
 
+  for (const [map, schedule] of Object.entries(waveSchedules))
+    for (const stage of schedule.normal.stages)
+      for (const [id] of stage.weights)
+        assert(
+          !unitDefinitions[id].onlyIn ||
+            unitDefinitions[id].onlyIn === mapDefinitions[map]?.objective?.type,
+          `${id} only in its mode, not on ${map}`,
+        );
   // Every stage of every map fields the whole roster, and every regular unit has one role.
   for (const schedule of Object.values(waveSchedules))
     for (const stage of schedule.normal.stages) {
       const ids = new Set(stage.weights.map(([id]) => id));
-      for (const id of regular) assert(ids.has(id), `${id} in stage ${stage.time}`);
+      for (const id of roster) assert(ids.has(id), `${id} in stage ${stage.time}`);
       assert(stage.strength > 0);
     }
   const roles = [

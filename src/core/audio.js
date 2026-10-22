@@ -3,6 +3,9 @@ import { createEventScope } from './lifecycle.js';
 import { persisted } from './storage.js';
 import { LEGACY_AUDIO_KEYS } from './migrations.js';
 
+// The Penza mode's battle playlist, played in turn from the first track.
+const penzaTracks = ['penza-strela', 'penza-chelovechek'];
+
 // The saved mix: sound on or off and the two volumes in 0..1.
 function normalizeAudio(saved) {
   const settings = { enabled: true, music: 0.3, effects: 0.65 };
@@ -14,9 +17,19 @@ function normalizeAudio(saved) {
   return settings;
 }
 // Music by mode, pooled sound effects and the persisted mix. No DOM controls: the UI calls
-// toggle()/setVolume() and re-reads `settings` when `onChange` fires.
+// toggle()/setVolume() and re-reads `settings` when `onChange` fires. `penza()` swaps the
+// battle music for the Penza mode's playlist.
 export const AudioSystem = {
-  create({ window, document, storage, performance, random, getMode, onChange = () => {} }) {
+  create({
+    window,
+    document,
+    storage,
+    performance,
+    random,
+    getMode,
+    penza = () => false,
+    onChange = () => {},
+  }) {
     const events = createEventScope();
     const root = new URL(AssetPaths.url('audio/'));
     const file = persisted(storage, 'utreys-audio', {
@@ -44,7 +57,8 @@ export const AudioSystem = {
     let unlocked = false,
       stopped = false,
       result = 'defeat',
-      current = null;
+      current = null,
+      penzaIndex = 0;
     function make(file) {
       if (!window.Audio) return null;
       const audio = new window.Audio(new URL(file, root).href);
@@ -67,7 +81,10 @@ export const AudioSystem = {
     }
     function sync() {
       const mode = getMode();
-      const wanted = mode === 'menu' ? 'tavern' : mode === 'end' ? result : 'battle';
+      // Out of battle the Penza playlist starts over from its first track.
+      if (mode === 'menu' || mode === 'end') penzaIndex = 0;
+      const battle = penza() ? penzaTracks[penzaIndex] : 'battle';
+      const wanted = mode === 'menu' ? 'tavern' : mode === 'end' ? result : battle;
       if (current?.name !== wanted) {
         current?.audio.pause();
         let audio = tracks.get(wanted);
@@ -75,15 +92,21 @@ export const AudioSystem = {
           audio = make('music/' + wanted + '.mp3');
           if (audio) {
             audio.loop = wanted === 'tavern' || wanted === 'battle';
+            if (penzaTracks.includes(wanted))
+              events.listen(audio, 'ended', () => {
+                penzaIndex = (penzaIndex + 1) % penzaTracks.length;
+                sync();
+              });
             tracks.set(wanted, audio);
           }
         }
         current = audio ? { name: wanted, audio } : null;
         if (audio) audio.currentTime = 0;
       }
-      if (quiet() || mode === 'pause' || mode === 'quiz') silenceEffects();
+      if (quiet() || mode === 'pause' || mode === 'quiz' || mode === 'console') silenceEffects();
       if (!current) return;
-      current.audio.volume = settings.music * (mode === 'level' || mode === 'quiz' ? 0.45 : 1);
+      current.audio.volume =
+        settings.music * (mode === 'level' || mode === 'quiz' || mode === 'console' ? 0.45 : 1);
       if (quiet() || mode === 'pause' || settings.music === 0) current.audio.pause();
       else if (current.audio.paused && !(current.audio.ended && !current.audio.loop))
         play(current.audio);
@@ -147,6 +170,11 @@ export const AudioSystem = {
     return {
       effect,
       sync,
+      // The battle playlist changed (the Penza mode): start it over from its first track.
+      restartBattle() {
+        penzaIndex = 0;
+        sync();
+      },
       finish(win) {
         result = win ? 'victory' : 'defeat';
         silenceEffects();

@@ -43,6 +43,23 @@ export function HeroSelect() {
           </select>
           <p id="mapDescription">{view.mapDescription}</p>
           {view.mapHint && <p>{view.mapHint}</p>}
+          {view.showCourses && (
+            <>
+              <label htmlFor="runCourse">КУРС</label>
+              <select
+                id="runCourse"
+                value={view.course}
+                onChange={(event) => commands.chooseCourse(event.target.value)}
+              >
+                {view.courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.name}
+                  </option>
+                ))}
+              </select>
+              <p id="courseDescription">{view.courseDescription}</p>
+            </>
+          )}
           <label htmlFor="runSeed">СИД ЗАБЕГА</label>
           <input
             id="runSeed"

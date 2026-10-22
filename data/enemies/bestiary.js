@@ -25,7 +25,7 @@ export const bestiary = {
     frequency: `Призыв каждые ${unitDefinitions.batch_accounting.summon.every} с`,
     description:
       'Множество склеенных значков Пепси. Ждёт в центральном зале учебного полигона, за тремя лабиринтами.',
-    tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
+    tactics: `Умеет всё, что баги узлов, сразу: круговой удар с замедлением, кольцо выстрелов, бомбы вокруг себя, метки под героем и лужи отчётов. Призывает по ${unitDefinitions.batch_accounting.summon.count} обычных Пепси, до ${unitDefinitions.batch_accounting.summon.max} живых. Резерв партии: пока жив хоть один призванный Пепси, босс получает на ${Math.round(unitDefinitions.batch_accounting.ward.reduction * 100)}% меньше урона — сначала зачищай свиту.`,
   },
   critical_incident: {
     category: 'clients',
@@ -37,7 +37,7 @@ export const bestiary = {
     frequency: `Призыв каждые ${unitDefinitions.critical_incident.summon.every} с`,
     description:
       'Склеенные логотипы клиентов, задетых одним сбоем. Ждёт в центральном зале полигона инцидентов, за тремя лабиринтами.',
-    tactics: `Уходи из зоны кругового удара. Босс призывает по ${unitDefinitions.critical_incident.summon.count} клиента — Пепси, Марс или Балтику, до ${unitDefinitions.critical_incident.summon.max} живых. Уничтожай подкрепления и продолжай атаковать босса.`,
+    tactics: `Умеет всё, что баги узлов, сразу: круговой удар с замедлением, кольцо выстрелов, бомбы вокруг себя, метки под героем и лужи отчётов. Призывает по ${unitDefinitions.critical_incident.summon.count} клиента — Пепси, Марс или Балтику, до ${unitDefinitions.critical_incident.summon.max} живых. Эскалация: каждые ${unitDefinitions.critical_incident.escalate.every} с уровень растёт до ${unitDefinitions.critical_incident.escalate.max} — удары чаще, кольцо гуще, клиентов больше. Затягивать бой нельзя.`,
   },
   l3: {
     category: 'regulators',
@@ -229,6 +229,30 @@ export const bestiary = {
     description:
       'Система Ветис. Контур ветеринарной прослеживаемости сопоставляет производственные партии с сопроводительными записями. Устойчивый проверяющий узел медленно приближается к ядру и проводит круговую проверку с ударной волной вокруг себя.',
     tactics: `Круговая проверка на ${unitDefinitions.vetis.range} px замедляет на ${Math.round(unitDefinitions.vetis.slow.amount * 100)}% на ${unitDefinitions.vetis.slow.duration} с, а под замедлением трудно уйти от остальных. Полностью выходи из круга подготовки, затем возвращайся в паузе.`,
+  },
+  grafana_filter: {
+    category: 'regulators',
+    badge: 'МОНИТОРИНГ · РОЙ',
+    badgeColor: unitDefinitions.grafana_filter.color,
+    role: 'Фильтр дашборда Grafana',
+    protocol: 'Метрики · Временные ряды',
+    frequency: `Высокая (каждые ${unitDefinitions.grafana_filter.cooldown} с)`,
+    aggregation: 'Графики компонентов и очереди Artemis',
+    description:
+      'Фильтр дашборда мониторинга. В режиме эскалации инцидента десяток таких фильтров, побеждённых быстро, открывает графики Grafana.',
+    tactics: `Быстрый слабый рой: ${unitDefinitions.grafana_filter.speed} px/s. Бьёт по кругу вплотную. Собирай в кучу и снимай площадными атаками, пока окно метрики не закрылось.`,
+  },
+  log_query: {
+    category: 'regulators',
+    badge: 'МОНИТОРИНГ · ТОЛСТЫЙ',
+    badgeColor: unitDefinitions.log_query.color,
+    role: 'Тяжёлый запрос в логи компонента',
+    protocol: 'Поиск по логам',
+    frequency: `Интервал атак — ${unitDefinitions.log_query.cooldown} с`,
+    aggregation: 'Ошибки и причины сбоев',
+    description:
+      'Медленный запрос по логам. В режиме эскалации инцидента несколько побеждённых запросов открывают логи сбоящего компонента: причину и обходное решение.',
+    tactics: `Медленный (${unitDefinitions.log_query.speed} px/s), но выносливый. Концентрируй урон на одном, чтобы уложиться в окно метрики.`,
   },
   bug_aggregation: {
     category: 'regulators',

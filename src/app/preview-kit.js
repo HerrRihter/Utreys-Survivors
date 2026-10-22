@@ -16,9 +16,11 @@ const maps = Object.entries(mapDefinitions).map(([id, map]) => ({ id, name: map.
 
 // What the catalog pages (arena plan, bestiary) draw and show, without a game session: their
 // own arenas, floor, nodes and enemy renderer, whose sprite caches live as long as the kit.
-export function createPreviewKit() {
+// `penza()` paints the floor in the Penza mode's colours (the game session owns the flag).
+/** @param {{ penza?: () => boolean }} [options] */
+export function createPreviewKit({ penza = () => false } = {}) {
   const arenas = createArenas();
-  const floor = createArenaFloor();
+  const floor = createArenaFloor({ penza });
   // A map as the previews show it: the learning map by a sample first maze (seed 1).
   const plan = (map) => {
     const layout = roomLayout(map, 1, 0),
@@ -56,7 +58,9 @@ export function createPreviewKit() {
         range: u.range,
         boss: !!u.boss,
         meta: OPPONENTS_META[unit],
-        timing: (u.boss ? 'ГЛАВНЫЙ БОСС · ' : '') + waveTiming(schedule(map), unit),
+        timing:
+          (u.boss ? 'ГЛАВНЫЙ БОСС · ' : '') +
+          waveTiming(schedule(map), unit, mapDefinitions[map].objective),
       };
     },
     drawArenaPlan(g, map, { close, labels, bounds }) {

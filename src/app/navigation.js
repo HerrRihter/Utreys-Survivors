@@ -1,5 +1,6 @@
 import { heroDefinitions } from '../../data/characters/heroes.js';
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { learningCourses } from '../../data/learning-courses.js';
 import { clampLoad, mapOpen } from './selection.js';
 
 // Menu screens and what is chosen on them: hero select, shop, achievements, encyclopedia and
@@ -30,6 +31,11 @@ export function createNavigation({ run, settings, progression, world, audio, ui,
   }
   function chooseBaClient(id) {
     run.baClient = id;
+    ui.emit();
+  }
+  function chooseCourse(id) {
+    if (!Object.hasOwn(learningCourses, id)) return;
+    run.selectedCourse = id;
     ui.emit();
   }
   function chooseMap(id) {
@@ -105,6 +111,13 @@ export function createNavigation({ run, settings, progression, world, audio, ui,
     settings.setUiScale(value);
     ui.emit();
   }
+  // The hidden Penza mode (a long press on the sound button).
+  function togglePenza() {
+    settings.toggle('penza');
+    audio.restartBattle();
+    audio.effect('boss');
+    changed();
+  }
   function toggleSetting(key) {
     settings.toggle(key);
     audio.effect('ui');
@@ -116,6 +129,7 @@ export function createNavigation({ run, settings, progression, world, audio, ui,
     chooseHero,
     chooseLoad,
     chooseBaClient,
+    chooseCourse,
     chooseMap,
     chooseSeed,
     openShop: () => openMenuScreen('shop'),
@@ -134,5 +148,6 @@ export function createNavigation({ run, settings, progression, world, audio, ui,
     resetBindings,
     setUiScale,
     toggleSetting,
+    togglePenza,
   };
 }

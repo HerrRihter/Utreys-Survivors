@@ -154,12 +154,14 @@ function validateSchedules(
       positive(schedule.elites.every, 'elites.every');
       const events = schedule.events;
       const types = Object.keys(events).filter((key) => key !== 'times' && key !== 'types');
+      // Learning rooms and the incident shift have no mid-run events.
+      const quiet = !!(maps[id].rooms || maps[id].shift);
       fail(
         Array.isArray(events.times) &&
-          (maps[id].rooms ? events.times.length === 0 : events.times.length > 0),
+          (quiet ? events.times.length === 0 : events.times.length > 0),
         'event times',
       );
-      if (maps[id].rooms) shape(events, ['times', 'types'], id + '.room events');
+      if (quiet) shape(events, ['times', 'types'], id + '.room events');
       events.times.forEach((time, i) => {
         positive(time, 'event time');
         if (i) fail(time > events.times[i - 1], 'event times must be ordered');
@@ -214,7 +216,15 @@ function validateSchedules(
         }
       }
     }
-    if (schedule.boss !== null) {
+    // The learning map's boss comes from the run's course (validated with the course).
+    if (schedule.boss?.course) {
+      shape(schedule.boss, ['course', 'condition', 'sound'], id + '.boss');
+      fail(
+        schedule.boss.condition === 'learning-rooms-complete' &&
+          maps[id].objective?.type === 'learning',
+        'course boss condition',
+      );
+    } else if (schedule.boss !== null) {
       shape(
         schedule.boss,
         [
@@ -233,9 +243,9 @@ function validateSchedules(
       unit(schedule.boss.unit);
       fail(
         schedule.boss.condition ===
-          (maps[id].objective?.type === 'learning'
-            ? 'learning-rooms-complete'
-            : 'all-nodes-resolved'),
+          ({ learning: 'learning-rooms-complete', escalation: 'incident-escalated' }[
+            maps[id].objective?.type
+          ] ?? 'all-nodes-resolved'),
         'boss condition',
       );
       fail(
@@ -318,6 +328,17 @@ function checkGameContracts() {
   const { unitDefinitions } = require('../data/enemies/units.js');
   const { nodeDefinitions } = require('../data/enemies/nodes.js');
   validateUnits(unitDefinitions);
+  // The incident escalation mode teaches its whole course and names only known units.
+  const { incidentRules } = require('../data/incident-rules.js');
+  const { learningCourses } = require('../data/learning-courses.js');
+  const { validateIncidentRules } = require('../src/systems/incident-validation.js');
+  validateIncidentRules(incidentRules, {
+    course: learningCourses[incidentRules.course],
+    units: unitDefinitions,
+  });
+  const { validateShiftMap } = require('../src/systems/incident-validation.js');
+  for (const map of Object.values(mapDefinitions))
+    if (map.objective?.type === 'escalation') validateShiftMap(map, incidentRules);
   const { unitArt } = require('../src/rendering/art/enemy-art.js');
   const { clientEmblems } = require('../src/rendering/art/client-emblems.js');
   for (const id of [...Object.keys(unitArt), ...Object.keys(clientEmblems)])
@@ -363,6 +384,12 @@ function validateUnits(units) {
       ['melee', 'projectile', 'pulse', 'mortar'].includes(unit.attack ?? 'melee'),
       `Unit contract: ${id}.attack`,
     );
+    // Units of one mode only: the objective types that may field them.
+    if (unit.onlyIn != null)
+      assert(
+        ['escalation'].includes(unit.onlyIn) && !unit.boss && !unit.miniboss,
+        `Unit contract: ${id}.onlyIn`,
+      );
     if (unit.frontDamageMultiplier != null)
       assert(
         unit.frontDamageMultiplier > 0 && unit.frontDamageMultiplier <= 1,

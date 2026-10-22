@@ -36,7 +36,11 @@ test('run-variety', async () => {
       const nodes = layoutNodes(map, seed);
       const desks = mapDefinitions[map].objective;
       assert.deepEqual(nodes, layoutNodes(map, seed), 'same seed, same layout');
-      if (desks?.type === 'learning') {
+      if (desks?.type === 'escalation') {
+        // The incident shift has no nodes: its objective is the escalation.
+        assert.deepEqual(nodes, []);
+        break;
+      } else if (desks?.type === 'learning') {
         // Three guarded terminals per maze, each clear of that maze's walls, spaced apart.
         const mazes = mapDefinitions[map].rooms.filter((room) => room.maze).length;
         assert.equal(nodes.length, 3 * mazes);
@@ -67,7 +71,8 @@ test('run-variety', async () => {
       }
       positions.add(nodes.map((n) => `${n.x},${n.y}`).join(';'));
     }
-    assert(positions.size > 30, `${map} layouts vary between seeds`);
+    if (mapDefinitions[map].objective?.type !== 'escalation')
+      assert(positions.size > 30, `${map} layouts vary between seeds`);
   }
   const plan = planEvents(waveSchedules.empty, 7);
   assert.deepEqual(plan, planEvents(waveSchedules.empty, 7));

@@ -109,6 +109,58 @@ test('progress is private and every write bumps rev by one', async () => {
   await assertFails(deleteDoc(ref(as('u1'))));
 });
 
+test('progress keeps the shape of a save', async () => {
+  const ref = doc(as('u1'), 'progress/u1');
+  const save = (data) => progress(1, { data });
+  await assertFails(setDoc(ref, save({ codes: 10, junk: 'x' })), 'unknown field');
+  await assertFails(setDoc(ref, save({ codes: 1e12 })), 'too many codes');
+  await assertFails(setDoc(ref, save({ codes: -5 })), 'negative codes');
+  await assertFails(setDoc(ref, save({ codes: '10' })), 'codes as text');
+  await assertFails(setDoc(ref, save({ unlocked: 'utrace' })), 'heroes not a list');
+  await assertFails(
+    setDoc(ref, save({ unlocked: Array.from({ length: 31 }, (_, i) => 'h' + i) })),
+    'too many heroes',
+  );
+  await assertFails(setDoc(ref, save({ runStats: { all: {}, extra: {} } })), 'runStats field');
+  await assertSucceeds(
+    setDoc(
+      ref,
+      save({
+        codes: 500,
+        kills: 1200,
+        unlocked: ['utrace'],
+        levels: { health: 2 },
+        stats: { wins: 1 },
+        weaponKills: {},
+        evolutionsSeen: [],
+        claimedAchievements: [],
+        loads: {},
+        production: {},
+        runStats: { all: {}, maps: {} },
+      }),
+    ),
+  );
+});
+
+// ---- bans ----
+
+test('a banned player can read but not write', async () => {
+  await seed({
+    'users/u1': { login: 'Вася', loginKey: 'вася' },
+    'progress/u1': { ...progress(1), updatedAt: 1 },
+    'banned/u1': { at: 1 },
+    'banned/u3': { at: 1 },
+  });
+  const db = as('u1');
+  await assertSucceeds(getDoc(doc(db, 'progress/u1')));
+  await assertFails(setDoc(doc(db, 'progress/u1'), progress(2)));
+  await assertFails(setDoc(statsRef(db), first()));
+  await assertFails(register(as('u3'), 'u3', 'Петя', 'петя'), 'a new login');
+  await assertFails(getDoc(doc(db, 'banned/u1')));
+  await assertFails(setDoc(doc(db, 'banned/u2'), { at: 1 }));
+  await assertSucceeds(setDoc(doc(as('u2'), 'progress/u2'), progress(1)), 'others still write');
+});
+
 // ---- statistics ----
 
 const scope = (games, kills, codes, more = {}) => ({

@@ -2,13 +2,15 @@ import { unitDefinitions } from '../../data/enemies/units.js';
 import { neonStroke } from './neon.js';
 import { clientEmblems, drawClientEmblem } from './art/client-emblems.js';
 import { enemyArt } from './art/enemy-art.js';
+import { drawPenzaOutfit, penzaLook } from './art/penza-outfits.js';
 import { browserCanvas, trimCanvas } from './offscreen.js';
 
 // Enemy bodies, name labels, attack telegraphs and ground hazards, with per-device-ratio
 // sprite and label caches. Each view (game session, bestiary) makes its own renderer.
 // `createCanvas` makes the offscreen canvases; without one (headless tests) everything is
-// painted directly.
-export function createEnemyRenderer({ createCanvas = browserCanvas } = {}) {
+// painted directly. `penza()` puts the hidden Penza mode's outfits (art/penza-outfits.js) on
+// over the usual art.
+export function createEnemyRenderer({ createCanvas = browserCanvas, penza = () => false } = {}) {
   const units = unitDefinitions;
   const labels = new Map();
 
@@ -174,39 +176,106 @@ export function createEnemyRenderer({ createCanvas = browserCanvas } = {}) {
     neonStroke(g, u.color, 0.8, 4);
 
     const hitFlash = e.hit > 0;
-    const angle = e.heading || 0;
-    // Brand emblems are logos and are never mirrored; other bodies mirror to show facing.
-    const flip = !clientEmblems[e.unit] && Math.cos(angle) < 0;
+    const flip = flipped(e);
     if (flip) g.scale(-1, 1);
+    // Art drawn at the usual size and enlarged for a bigger body (the learning bosses).
+    if (u.artScale) g.scale(u.artScale, u.artScale);
 
-    // Brand-specific skins share the same renderer in gameplay and previews.
-    if (!drawClientEmblem(g, e)) {
-      enemyArt(e.unit, u).draw(g, u, hitFlash, flip, e);
-    }
+    paintArt(g, e, u, hitFlash, flip);
+    if (penza()) drawPenzaOutfit(g, artBox(e, u), penzaLook(e, u), hitFlash);
 
     g.restore();
   }
 
-  // Parts that change every frame stay live: the seal's attack ring.
+  function paintArt(g, e, u, hitFlash, flip) {
+    // Brand-specific skins share the same renderer in gameplay and previews.
+    if (!drawClientEmblem(g, e)) {
+      enemyArt(e.unit, u).draw(g, u, hitFlash, flip, e);
+    }
+  }
+
+  // Brand emblems are logos and are never mirrored; other bodies mirror to show facing.
+  function flipped(e) {
+    return !clientEmblems[e.unit] && Math.cos(e.heading || 0) < 0;
+  }
+
+  // The unit art's drawn bounds around the feet, measured once per unit from its pixels,
+  // so the Penza outfits sit on each body's own shoulders and top. Without a canvas (headless
+  // tests) the bounds are guessed from the body radius.
+  const boxes = new Map();
+  function artBox(e, u) {
+    let box = boxes.get(e.unit);
+    if (box) return box;
+    box = { left: -u.r, right: u.r, top: -u.r * 2.2, bottom: 0 };
+    const size = 200,
+      canvas = createCanvas(size, size),
+      c = canvas?.getContext('2d');
+    if (c?.getImageData) {
+      c.translate(size / 2, size * 0.75);
+      paintArt(c, { unit: e.unit, heading: 0, hit: 0, animationTime: 0 }, u, false, false);
+      const pixels = c.getImageData(0, 0, size, size).data;
+      let left = size,
+        right = -1,
+        top = size,
+        bottom = -1;
+      for (let y = 0; y < size; y++)
+        for (let x = 0; x < size; x++)
+          if (pixels[(y * size + x) * 4 + 3] > 40) {
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y);
+          }
+      if (right >= 0)
+        box = {
+          left: left - size / 2,
+          right: right - size / 2,
+          top: top - size * 0.75,
+          bottom: Math.min(0, bottom - size * 0.75),
+        };
+    }
+    boxes.set(e.unit, box);
+    return box;
+  }
+
+  // Parts that change every frame stay live: the seal's attack ring and a boss's ward.
   function paintLive(g, e, u) {
+    const k = u.artScale ?? 1;
     if (u.attack === 'pulse' && e.action && !clientEmblems[e.unit]) {
       g.strokeStyle = '#ffd600bb';
       g.lineWidth = 3;
       g.beginPath();
-      g.arc(0, -16, 46, 0, Math.PI * 2);
+      g.arc(0, -16 * k, 46 * k, 0, Math.PI * 2);
       g.stroke();
+    }
+    if (e.warded) {
+      g.strokeStyle = u.ward.color;
+      g.lineWidth = 4;
+      g.beginPath();
+      g.arc(0, -16 * k, e.r + 26, 0, Math.PI * 2);
+      neonStroke(g, u.ward.color, 1.5, 8);
     }
   }
 
-  const spriteBox = { left: 72, top: 100, width: 144, height: 140 },
+  const baseBox = { left: 72, top: 100, width: 144, height: 140 },
     sprites = new Map();
+  // The sprite canvas around the feet, grown with the unit's art scale.
+  const spriteBox = (u) => {
+    const k = u.artScale ?? 1;
+    return k === 1
+      ? baseBox
+      : {
+          left: baseBox.left * k,
+          top: baseBox.top * k,
+          width: baseBox.width * k,
+          height: baseBox.height * k,
+        };
+  };
   function spriteKey(e, u) {
+    const side = (flipped(e) ? '|l' : '|r') + (e.hit > 0 ? '|h' : '');
     const frame = enemyArt(e.unit, u)?.frame;
     return (
-      e.unit +
-      (!clientEmblems[e.unit] && Math.cos(e.heading || 0) < 0 ? '|l' : '|r') +
-      (e.hit > 0 ? '|h' : '') +
-      (frame ? '|' + frame(e) : '')
+      e.unit + side + (frame ? '|' + frame(e) : '') + (penza() ? '|pz' + penzaLook(e, u).key : '')
     );
   }
   function cachedSprite(e, u, ratio) {
@@ -214,14 +283,12 @@ export function createEnemyRenderer({ createCanvas = browserCanvas } = {}) {
     let sprite = sprites.get(key);
     if (!sprite) {
       if (sprites.size > 600) sprites.clear();
-      const canvas = createCanvas(
-        Math.ceil(spriteBox.width * ratio),
-        Math.ceil(spriteBox.height * ratio),
-      );
+      const box = spriteBox(u);
+      const canvas = createCanvas(Math.ceil(box.width * ratio), Math.ceil(box.height * ratio));
       const c = canvas?.getContext('2d');
       if (!c) return null;
       c.scale(ratio, ratio);
-      c.translate(spriteBox.left, spriteBox.top);
+      c.translate(box.left, box.top);
       paintBody(c, e, u);
       // Crop in backing pixels; the reciprocal ratio below preserves their positions.
       sprite = trimCanvas(canvas, createCanvas);
@@ -244,11 +311,12 @@ export function createEnemyRenderer({ createCanvas = browserCanvas } = {}) {
     g.translate(x, y);
     if (sprite) {
       const sx = 1 / ratio,
-        sy = 1 / ratio;
+        sy = 1 / ratio,
+        box = spriteBox(u);
       g.drawImage(
         sprite.canvas,
-        -spriteBox.left + sprite.x * sx,
-        -spriteBox.top + sprite.y * sy,
+        -box.left + sprite.x * sx,
+        -box.top + sprite.y * sy,
         sprite.canvas.width * sx,
         sprite.canvas.height * sy,
       );
@@ -258,7 +326,8 @@ export function createEnemyRenderer({ createCanvas = browserCanvas } = {}) {
 
     // Draw unit name label above
     const labelOffset = u.labelAbove ?? (clientEmblems[e.unit] ? Math.max(u.r + 28, 60) : u.r + 28);
-    drawLabel(g, u, e.x, e.y - labelOffset, ratio || 2);
+    // A Penza cap sits above the art: the label moves up to clear it.
+    drawLabel(g, u, e.x, e.y - labelOffset - (penza() ? 12 : 0), ratio || 2);
   }
 
   return { telegraph, draw, hazard };

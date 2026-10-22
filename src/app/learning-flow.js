@@ -7,6 +7,7 @@ import {
   moveLearningRoom,
 } from '../systems/learning.js';
 import { unitDefinitions } from '../../data/enemies/units.js';
+import { learningRules } from '../../data/learning-rules.js';
 
 export function createLearningFlow({
   run,
@@ -62,8 +63,11 @@ export function createLearningFlow({
     advanceLearning: act(advanceLearning),
     closeLearning(id) {
       if (run.mode !== 'quiz') return false;
+      const surge = run.state.learning.surgeUntil;
       const outcome = closeLearning(run.state, id);
       if (!outcome) return false;
+      if (run.state.learning.surgeUntil !== surge)
+        toast(`Тест не сдан: терминал недоступен ${learningRules.failLock} с, врагов больше`);
       if (outcome === 'defeat') finish(false);
       else resumePlay();
       return true;

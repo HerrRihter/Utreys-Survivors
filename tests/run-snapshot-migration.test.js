@@ -27,12 +27,14 @@ test('run-snapshot-migration', async () => {
     ...prefixed('v3 ', './fixtures/run-snapshot-v3.json'),
   };
   const legacyKey = (version) => 'utreys-run-v' + version;
-  const currentVersion = 5;
+  const currentVersion = 7;
   // Values from the session's context, compared as plain data.
   const plain = (value) => JSON.parse(JSON.stringify(value));
 
   await (async () => {
     assert.deepEqual(LEGACY_RUN_SNAPSHOT_KEYS, [
+      legacyKey(6),
+      legacyKey(5),
       legacyKey(4),
       legacyKey(3),
       legacyKey(2),

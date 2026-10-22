@@ -28,11 +28,16 @@ service cloud.firestore {
     function userDoc(uid) {
       return /databases/$(database)/documents/users/$(uid);
     }
+    // banned/{uid}: written only by tools/ban-player.cjs. A banned player keeps playing on
+    // the device but can no longer write anything here.
+    function allowed() {
+      return !exists(/databases/$(database)/documents/banned/$(request.auth.uid));
+    }
 
     // logins/{key}: who owns a login. Created together with users/{uid}, never changed.
     match /logins/{key} {
       allow get: if signedIn();
-      allow create: if signedIn()
+      allow create: if signedIn() && allowed()
         && validKey(key)
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == request.auth.uid
@@ -43,7 +48,7 @@ service cloud.firestore {
     // users/{uid}: the login as typed. Public, because tables show it.
     match /users/{uid} {
       allow get: if true;
-      allow create: if owner(uid)
+      allow create: if owner(uid) && allowed()
         && request.resource.data.keys().hasOnly(['login', 'loginKey', 'createdAt'])
         && request.resource.data.login is string
         && keyOf(request.resource.data.login) == request.resource.data.loginKey
@@ -55,19 +60,42 @@ service cloud.firestore {
 
     // progress/{uid}: the saved meta-progression; every write bumps `rev` by one.
     match /progress/{uid} {
+      // A whole count the game could have saved (normalizeProgression clamps to 1e9).
+      function count(v) {
+        return v is int && v >= 0 && v <= 1000000000;
+      }
+      // The shape of normalizeProgression() in src/systems/progression/normalize.js, with room
+      // for more heroes, upgrades and maps; values inside the maps stay the game's to clamp.
+      function saveOk(d) {
+        return d.keys().hasOnly([
+            'codes', 'kills', 'unlocked', 'levels', 'stats', 'weaponKills', 'evolutionsSeen',
+            'claimedAchievements', 'loads', 'production', 'runStats'
+          ])
+          && count(d.get('codes', 0)) && count(d.get('kills', 0))
+          && d.get('unlocked', []) is list && d.get('unlocked', []).size() <= 30
+          && d.get('levels', {}) is map && d.get('levels', {}).size() <= 60
+          && d.get('stats', {}) is map && d.get('stats', {}).size() <= 40
+          && d.get('weaponKills', {}) is map && d.get('weaponKills', {}).size() <= 150
+          && d.get('evolutionsSeen', []) is list && d.get('evolutionsSeen', []).size() <= 150
+          && d.get('claimedAchievements', []) is list
+          && d.get('claimedAchievements', []).size() <= 150
+          && d.get('loads', {}) is map && d.get('loads', {}).size() <= 30
+          && d.get('production', {}) is map && d.get('production', {}).size() <= 30
+          && d.get('runStats', {}) is map && d.get('runStats', {}).keys().hasOnly(['all', 'maps']);
+      }
       function progressOk(next) {
         return next.keys().hasOnly(['data', 'schema', 'rev', 'device', 'updatedAt'])
           && next.data is map
-          && next.data.keys().size() <= 40
+          && saveOk(next.data)
           && next.schema == 1
           && next.device is string
           && next.device.size() <= 64
           && next.updatedAt == request.time;
       }
       allow get: if owner(uid);
-      allow create: if owner(uid) && progressOk(request.resource.data)
+      allow create: if owner(uid) && allowed() && progressOk(request.resource.data)
         && request.resource.data.rev == 1;
-      allow update: if owner(uid) && progressOk(request.resource.data)
+      allow update: if owner(uid) && allowed() && progressOk(request.resource.data)
         && request.resource.data.rev == resource.data.rev + 1;
       allow delete: if false;
     }
@@ -139,9 +167,13 @@ service cloud.firestore {
       allow get: if true;
       // Tables read 50 rows; a player's place is a count query, exact up to 1000.
       allow list: if request.query.limit <= 1000;
-      allow create: if owner(uid) && statsOk(request.resource.data, {});
-      allow update: if owner(uid) && statsOk(request.resource.data, resource.data);
+      allow create: if owner(uid) && allowed() && statsOk(request.resource.data, {});
+      allow update: if owner(uid) && allowed() && statsOk(request.resource.data, resource.data);
       allow delete: if false;
+    }
+
+    match /banned/{uid} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

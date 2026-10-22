@@ -8,6 +8,8 @@ export function App() {
     const requested = new URLSearchParams(window.location.search).get('view');
     return requested === 'arena' || requested === 'opponents' ? requested : 'game';
   });
+  // The Penza mode (owned by the game session) also recolours the catalog pages' maps.
+  const [penza, setPenza] = useState(false);
   useEffect(() => {
     document.body.dataset.view = currentView;
   }, [currentView]);
@@ -42,7 +44,7 @@ export function App() {
             className={currentView === 'arena' ? 'small is-current' : 'small'}
             onClick={() => setCurrentView('arena')}
           >
-            Дата-центр Utrace
+            Карта
           </button>
           <button
             type="button"
@@ -60,18 +62,19 @@ export function App() {
           active={currentView === 'game'}
           onNavigateToArena={() => setCurrentView('arena')}
           onNavigateToOpponents={() => setCurrentView('opponents')}
+          onPenzaChange={setPenza}
         />
       </div>
 
       {currentView === 'arena' && (
         <div className="view-frame">
-          <ArenaView />
+          <ArenaView penza={penza} />
         </div>
       )}
 
       {currentView === 'opponents' && (
         <div className="view-frame">
-          <OpponentsView />
+          <OpponentsView penza={penza} />
         </div>
       )}
     </div>

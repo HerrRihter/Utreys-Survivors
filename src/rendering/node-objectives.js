@@ -26,13 +26,14 @@ function drawDesk(g, node, guardian) {
 }
 
 // A learning terminal: guarded (its workaround circle and progress, the guard's health), open
-// for its test, or passed.
-function drawTerminal(g, node, guardian) {
+// for its test, shut for a while after a failed one, or passed. `t` is the run time.
+function drawTerminal(g, node, guardian, t) {
   const guarded = node.status === 'guarded',
-    done = node.status === 'completed';
+    done = node.status === 'completed',
+    lock = !guarded && !done ? Math.ceil(Math.max(0, (node.retryAt ?? 0) - t)) : 0;
   g.save();
   g.translate(node.x, node.y);
-  g.strokeStyle = done ? '#64ffda' : guarded ? '#ffb74d' : '#55bfff';
+  g.strokeStyle = done ? '#64ffda' : guarded ? '#ffb74d' : lock ? '#78909c' : '#55bfff';
   if (guarded) {
     g.lineWidth = 2;
     g.beginPath();
@@ -51,14 +52,22 @@ function drawTerminal(g, node, guardian) {
       ? '✓'
       : guarded
         ? Math.floor((node.progress / (node.need ?? workaroundSeconds)) * 100) + '%'
-        : '?',
+        : lock
+          ? String(lock)
+          : '?',
     0,
     8,
   );
   g.font = '12px sans-serif';
   g.fillText(node.label, 0, -55);
   g.fillText(
-    done ? 'Тест пройден' : guarded ? 'Победи стража или постой в круге' : 'Подойди и начни тест',
+    done
+      ? 'Тест пройден'
+      : guarded
+        ? 'Победи стража или постой в круге'
+        : lock
+          ? `Перезагрузка: ${lock} с`
+          : 'Подойди и начни тест',
     0,
     65,
   );
@@ -70,11 +79,11 @@ function drawTerminal(g, node, guardian) {
 }
 
 // `enemies` holds the node guardians; previews draw bare nodes without them.
-export function drawNodes(g, nodes, enemies = []) {
+export function drawNodes(g, nodes, enemies = [], t = 0) {
   for (const node of nodes || []) {
     const guardian = nodeGuardian({ enemies }, node);
     if (node.kind === 'learning-terminal') {
-      drawTerminal(g, node, guardian);
+      drawTerminal(g, node, guardian, t);
       continue;
     }
     if (node.kind === 'desk') {

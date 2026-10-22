@@ -108,7 +108,7 @@ const screens = [
     name: 'learning-hud',
     hud: true,
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       s.state.spawn = 9999;
       const terminal = s.state.nodes.find((n) => n.room === 0);
@@ -120,7 +120,7 @@ const screens = [
   {
     name: 'learning-intro',
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       const terminal = s.state.nodes.find((n) => n.room === 0);
       terminal.status = 'available';
@@ -131,7 +131,7 @@ const screens = [
   {
     name: 'learning-question',
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       const terminal = s.state.nodes.find((n) => n.room === 0);
       terminal.status = 'available';
@@ -143,7 +143,7 @@ const screens = [
   {
     name: 'learning-revive',
     open: (s) => {
-      s.selectMap('learningLab');
+      s.selectMap('learningCenter');
       s.start();
       s.state.p.hp = 0;
       s.update(0.016);
@@ -152,6 +152,38 @@ const screens = [
   {
     name: 'result',
     open: (s) => {
+      s.start();
+      s.state.t = 200;
+      s.finish(true);
+    },
+  },
+  // Incident shift: the HUD with its console button, the console with a ticket open, the
+  // review on the results screen.
+  {
+    name: 'shift-hud',
+    hud: true,
+    open: (s) => {
+      s.selectMap('opsCenter');
+      s.start();
+      s.state.spawn = 9999;
+      s.update(0.016);
+    },
+  },
+  {
+    name: 'shift-console',
+    open: (s) => {
+      s.selectMap('opsCenter');
+      s.start();
+      s.state.spawn = 9999;
+      s.state.enemies.length = 0;
+      s.commands.openConsole();
+      s.commands.escalationOpen('artemis');
+    },
+  },
+  {
+    name: 'shift-review',
+    open: (s) => {
+      s.selectMap('opsCenter');
       s.start();
       s.state.t = 200;
       s.finish(true);

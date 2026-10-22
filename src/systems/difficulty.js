@@ -5,8 +5,8 @@ import { unitDefinitions } from '../../data/enemies/units.js';
 export const productionMinutes = (s) =>
   s.endless ? Math.max(0, Math.floor((s.t - s.endlessStart) / 60)) : 0;
 
-// Modifiers in force right now: the run's load level plus production growth.
-export const runModifiers = (s) => loadModifiers(s.load, productionMinutes(s));
+// Modifiers in force right now: the run's load level, production growth and the Penza run.
+export const runModifiers = (s) => loadModifiers(s.load, productionMinutes(s), s.penza);
 
 // Enemy stats on spawn. `bosses` is the number of production CRPTs before this one.
 export function scaleEnemy(e, m, bosses = 0) {

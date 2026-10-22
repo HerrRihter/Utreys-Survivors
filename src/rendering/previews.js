@@ -21,15 +21,16 @@ export function drawArenaPlan(g, { floor, arena, nodes, close, labels, bounds })
   floor.draw(g, arena);
   drawNodes(g, nodes);
 
+  const { accent } = floor.palette();
   if (bounds && arena.collision) {
     drawCollision(g, arena.collision.outlines);
-    g.strokeStyle = '#00e5ff';
+    g.strokeStyle = accent;
     g.lineWidth = 5;
     g.strokeRect(0, 0, arena.size, arena.size);
   }
 
   if (labels) {
-    g.fillStyle = '#00e5ff';
+    g.fillStyle = accent;
     g.font = 'bold 24px monospace';
     g.textAlign = 'center';
     g.fillText('ЯДРО UTRACE', arena.size / 2, arena.size / 2);
@@ -45,16 +46,18 @@ export function drawRadar(g, { floor, arena, nodes, t }) {
   drawNodes(g, nodes);
 
   // Radar pulses from core
+  const { accent } = floor.palette();
   const pulse = 24 + ((t * 22) % 75);
-  const pulseAlpha = Math.max(0, 1 - (pulse - 24) / 75) * 0.45;
-  g.strokeStyle = `rgba(0, 229, 255, ${pulseAlpha})`;
+  g.globalAlpha = Math.max(0, 1 - (pulse - 24) / 75) * 0.45;
+  g.strokeStyle = accent;
   g.lineWidth = 3;
   g.beginPath();
   g.arc(1100, 1100, pulse, 0, Math.PI * 2);
   g.stroke();
+  g.globalAlpha = 1;
 
   // Center Core
-  g.fillStyle = '#00e5ff';
+  g.fillStyle = accent;
   g.beginPath();
   g.arc(1100, 1100, 22, 0, Math.PI * 2);
   g.fill();

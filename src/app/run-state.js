@@ -1,4 +1,5 @@
 import { baClientIds } from '../../data/characters/ba-specialization.js';
+import { learningCourses } from '../../data/learning-courses.js';
 import { persisted } from '../core/storage.js';
 
 /**
@@ -9,17 +10,18 @@ import { persisted } from '../core/storage.js';
  * @typedef {{ win: boolean, tag: string, title: string, text: string,
  *   stats: { value: string, label: string, best?: boolean }[],
  *   damage: { tag: string, name: string, amount: number, share: number }[],
- *   build: RunBuild, canContinue?: boolean, seed: string,
+ *   build: RunBuild, canContinue?: boolean, seed: string, seedNote: string,
  *   unlocked: { id: string, title: string, unlock: string }[],
- *   learning?: ReturnType<typeof import('../systems/learning.js').learningSummary>,
+ *   learning?: ReturnType<typeof import('./views/result.js').learningResult>,
  *   goals: import('./unlocks.js').UnlockGoal[] }} RunResult
  * @typedef {{ id: string, name: string, desc: string, icon: string, group: string,
  *   detail?: string, kind?: string, isNew?: boolean, evolves?: boolean, max?: number }} UpgradeChoice
  * @typedef {{ x: number, y: number, knobX: number, knobY: number }} StickView
  * @typedef {{
- *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'quiz' | 'end',
+ *   state: import('../systems/run-model.js').RunModel | null, mode: 'menu' | 'play' | 'pause' | 'level' | 'quiz' | 'console' | 'end',
  *   screen: 'menu' | 'heroSelect' | 'shop' | 'achievements' | 'encyclopedia' | 'settings' | null,
  *   settingsOrigin: string, selected: string, pendingHero: string, baClient: string,
+ *   selectedCourse: string,
  *   selectedMap: string, selectedLoad: number, seedInput: string,
  *   nextSeed: number | null, touchOnly: boolean, choice: UpgradeChoice[], banishArmed: boolean,
  *   capture: string | null, result: RunResult | null,
@@ -37,12 +39,13 @@ import { persisted } from '../core/storage.js';
 export function createRunState() {
   return {
     state: null, // the active run, null in the menu
-    mode: 'menu', // menu | play | pause | level | end
+    mode: 'menu', // menu | play | pause | level | quiz | console | end
     screen: 'menu', // menu | heroSelect | shop | achievements | settings | null (in a run)
     settingsOrigin: 'menu',
     selected: 'utrace',
     pendingHero: 'utrace',
     baClient: baClientIds[0],
+    selectedCourse: Object.keys(learningCourses)[0], // the course of the next learning run
     selectedMap: 'empty',
     selectedLoad: 1, // load level for the next run, clamped to what the hero has opened
     seedInput: '', // seed typed in hero select; empty means a random one
@@ -99,18 +102,19 @@ export function hudScale(uiScale, width, height) {
   return uiScale;
 }
 
-// Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings),
-// persisted separately from progress.
+// Interface preferences (screen shake, hints, damage numbers, UI scale, key bindings, the
+// hidden Penza mode), persisted separately from progress.
 function normalizeSettings(saved) {
   const settings = {
     shake: true,
     hints: true,
     damageNumbers: true,
+    penza: false,
     uiScale: 1,
     bindings: { ...defaultBindings },
   };
   if (saved && typeof saved === 'object') {
-    for (const key of ['shake', 'hints', 'damageNumbers'])
+    for (const key of ['shake', 'hints', 'damageNumbers', 'penza'])
       if (typeof saved[key] === 'boolean') settings[key] = saved[key];
     if (uiScales.includes(saved.uiScale)) settings.uiScale = saved.uiScale;
     if (saved.bindings && typeof saved.bindings === 'object')
@@ -133,6 +137,10 @@ export function createGameSettings({ storage }) {
     },
     get damageNumbers() {
       return settings.damageNumbers;
+    },
+    // The Penza mini-mode: its battle music, enemy outfits and red interface.
+    get penza() {
+      return settings.penza;
     },
     get uiScale() {
       return settings.uiScale;
